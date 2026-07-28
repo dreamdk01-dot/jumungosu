@@ -2548,12 +2548,14 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 'users' 테이블에 직접 회원 정보를 저장합니다.
+    // Supabase Auth 표준 회원가입 (닉네임/연락처/관심지역은 user_metadata로 저장)
     // ---------------------------------------------------------------
     try {
-      const { error } = await supabaseClient.from('users').insert([
-        { email, password: pw, nickname: name, phone, region },
-      ]);
+      const { error } = await supabaseClient.auth.signUp({
+        email,
+        password: pw,
+        options: { data: { nickname: name, phone, region, marketing_opt_in: marketingOptIn } },
+      });
       if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
 
       applyAuthSession(null, { nickname: name, email, phone, region, level: 0, role: 'USER' });
@@ -2796,6 +2798,20 @@
     updateAuthNavUI();
   }
 
+  // Supabase Auth의 user 객체(회원가입 시 넣어둔 user_metadata 포함)를
+  // 우리 사이트의 currentUser 형태로 변환
+  function buildUserFromSupabaseUser(supaUser){
+    const meta = (supaUser && supaUser.user_metadata) || {};
+    return {
+      nickname: meta.nickname || (supaUser.email ? supaUser.email.split('@')[0] : '회원'),
+      email: supaUser.email,
+      phone: meta.phone || '',
+      region: meta.region || '',
+      level: 0,
+      role: 'USER',
+    };
+  }
+
   async function submitPageSignup(){
     const email = document.getElementById('page-su-email').value.trim();
     const pw = document.getElementById('page-su-password').value.trim();
@@ -2829,12 +2845,15 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 'users' 테이블에 직접 회원 정보를 저장합니다.
+    // Supabase Auth 표준 회원가입. 비밀번호는 Supabase가 서버 측에서 안전하게
+    // 해싱해 저장하며, 닉네임/연락처/관심지역은 user_metadata로 함께 저장합니다.
     // ---------------------------------------------------------------
     try {
-      const { error } = await supabaseClient.from('users').insert([
-        { email, password: pw, nickname: name, phone, region },
-      ]);
+      const { error } = await supabaseClient.auth.signUp({
+        email,
+        password: pw,
+        options: { data: { nickname: name, phone, region, marketing_opt_in: marketingOptIn } },
+      });
       if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
 
       alert('회원가입이 완료되었습니다!');
@@ -2858,22 +2877,14 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 'users' 테이블에서 이메일+비밀번호가 일치하는 행을 직접 조회합니다.
+    // Supabase Auth 표준 로그인. 이메일/비밀번호 검증은 Supabase가 서버 측에서
+    // 안전하게 처리하며, 세션 반영 자체는 onAuthStateChange 리스너가 담당합니다
+    // (새로고침 후에도 로그인 상태가 유지되는 이유이기도 합니다).
     // ---------------------------------------------------------------
     try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('password', pw);
-      if (error) throw new Error(error.message || '로그인 중 오류가 발생했습니다.');
-      if (!data || data.length === 0) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+      if (error) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
 
-      const user = data[0];
-      applyAuthSession(null, {
-        nickname: user.nickname, email: user.email, phone: user.phone, region: user.region,
-        level: user.level || 0, role: user.role || 'USER',
-      });
       showToast('로그인되었습니다 👋');
       switchTab('home');
     } catch (err){
@@ -2914,7 +2925,8 @@
   }
 
   // 로그아웃: Supabase 세션 종료 후 비회원 상태로 복귀하고 상단바를 [로그인/회원가입]으로 되돌림
-  function logout(){
+  async function logout(){
+    try { await supabaseClient.auth.signOut(); } catch (e){ /* 세션이 이미 만료된 경우 등은 무시 */ }
     authToken = null;
     isLoggedIn = false;
     currentUser = null;
@@ -3303,6 +3315,20 @@
   renderTrendChart('signups', 'signups', 'var(--accent)');
   setAuthMode('login');
   updateAuthNavUI();
+
+  // Supabase 세션 상태 구독: 로그인/로그아웃/토큰 갱신이 일어날 때마다(그리고
+  // 새로고침 직후 기존 세션이 복원될 때도) 자동으로 호출되어 헤더 상태를
+  // '마이페이지 / 로그아웃'과 '로그인/회원가입' 사이에서 계속 동기화합니다.
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session && session.user){
+      applyAuthSession(session.access_token, buildUserFromSupabaseUser(session.user));
+    } else {
+      authToken = null;
+      isLoggedIn = false;
+      currentUser = null;
+      updateAuthNavUI();
+    }
+  });
 </script>
 
 </body>
