@@ -561,7 +561,11 @@
       </div>
     </div>
 
-    <!-- 주간 방문자 · 가입자 추이 (Y축/수치 모두 '명' 단위 실수치 표기) -->
+    <!--
+      최근 7일 방문자·가입자 추이 그래프는 현재 하드코딩된 데모 수치(62~105명 등)라서
+      실시간 연동된 회원 통계(총 누적 회원 수 / 오늘 신규 가입자 수)와 값이 어긋나 보일 수 있어
+      실제 집계 로직이 붙기 전까지 화면에서 숨겨둡니다. (관련 JS 호출도 하단에서 함께 주석 처리됨)
+
     <div class="rounded-lg p-4" style="background:var(--card);">
       <p class="font-mono text-xs mb-4" style="color:var(--muted);">최근 7일 방문자·가입자 추이 (단위: 명)</p>
 
@@ -579,6 +583,7 @@
         <div id="chart-signups-days" class="grid grid-cols-7 gap-2 text-center mt-1"></div>
       </div>
     </div>
+    -->
   </section>
 
   <!-- 신고된 게시글 관리 -->
@@ -671,7 +676,13 @@
 
       <!-- 참여자 리스트 -->
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
+            <button type="button" onclick="downloadParticipantsCSV()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⬇ 참여자 CSV 다운로드</button>
+          </div>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
@@ -814,6 +825,16 @@
     <input id="admin-password-input" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter') submitAdminPassword();" class="w-full px-3 py-2 rounded-md text-sm outline-none mb-3" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
     <button onclick="submitAdminPassword()" class="w-full py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">입장하기</button>
     <p id="admin-password-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
+  </div>
+</div>
+
+<!-- ===== 랜덤 추첨 당첨자 안내 모달 ===== -->
+<div id="winner-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.65);">
+  <div class="w-full max-w-xs rounded-lg p-6 text-center" style="background:var(--card-alt);">
+    <p class="text-3xl mb-2">🎉</p>
+    <h3 class="font-display text-lg mb-2" style="color:var(--primary);">당첨자 안내</h3>
+    <p id="winner-modal-body" class="text-sm mb-5" style="color:var(--text);"></p>
+    <button onclick="closeWinnerModal()" class="w-full py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">확인</button>
   </div>
 </div>
 
@@ -3248,14 +3269,79 @@
   function renderAdminParticipants(){
     const el = document.getElementById('admin-participant-list');
     document.getElementById('admin-participant-count').textContent = participants.length;
-    el.innerHTML = participants.map(p => `
-      <tr class="dashed-divider">
+    el.innerHTML = participants.map((p, i) => `
+      <tr class="dashed-divider" id="participant-row-${i}" style="transition:background-color .3s ease;">
         <td class="py-2 text-sm">${p.name}</td>
         <td class="py-2 font-mono text-xs" style="color:var(--muted);">${p.phone}</td>
         <td class="py-2 font-mono text-xs" style="color:var(--muted);">${p.email}</td>
         <td class="py-2 text-xs" style="color:var(--primary);">${p.vote}</td>
       </tr>
     `).join('');
+  }
+
+  // ---------- 이벤트 관리: 랜덤 추첨 / CSV 다운로드 ----------
+  function drawRandomWinner(){
+    if (!participants.length){
+      showToast('추첨할 참여자가 없어요 🙏');
+      return;
+    }
+
+    // 이전 하이라이트 제거
+    participants.forEach((_, i) => {
+      const row = document.getElementById(`participant-row-${i}`);
+      if (row) row.style.backgroundColor = '';
+    });
+
+    const winnerIndex = Math.floor(Math.random() * participants.length);
+    const winner = participants[winnerIndex];
+
+    // 당첨자 행 하이라이트 + 스크롤 이동
+    const row = document.getElementById(`participant-row-${winnerIndex}`);
+    if (row){
+      row.style.backgroundColor = 'rgba(255,184,0,0.18)';
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 당첨자 안내 팝업
+    document.getElementById('winner-modal-body').textContent =
+      `${winner.name} (${winner.vote} 투표)`;
+    document.getElementById('winner-modal').classList.remove('hidden');
+    document.getElementById('winner-modal').classList.add('flex');
+  }
+
+  function closeWinnerModal(){
+    document.getElementById('winner-modal').classList.add('hidden');
+    document.getElementById('winner-modal').classList.remove('flex');
+  }
+
+  function downloadParticipantsCSV(){
+    if (!participants.length){
+      showToast('다운로드할 참여자가 없어요 🙏');
+      return;
+    }
+
+    const header = ['이름', '연락처', '이메일', '투표 항목'];
+    const rows = participants.map(p => [p.name, p.phone, p.email, p.vote]);
+
+    // 셀 안에 쉼표/줄바꿈/큰따옴표가 있어도 깨지지 않도록 이스케이프 처리
+    const escapeCsvCell = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
+    const csvContent = [header, ...rows]
+      .map(row => row.map(escapeCsvCell).join(','))
+      .join('\r\n');
+
+    // 엑셀에서 한글이 깨지지 않도록 UTF-8 BOM을 붙여줍니다.
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const todayStr = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `주문의고수_투표참여자_${todayStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast('참여자 목록을 CSV로 다운로드했어요 ⬇');
   }
 
   // ---------- TOAST ----------
@@ -3322,8 +3408,10 @@
   renderAdminVoteStats();
   renderAdminParticipants();
   renderDashboardStats();
-  renderTrendChart('visitors', 'visitors', 'var(--tag-baemin)');
-  renderTrendChart('signups', 'signups', 'var(--accent)');
+  // 최근 7일 방문자·가입자 추이 그래프: 데모 수치와 실연동 통계 불일치로 화면에서 숨김 처리됨.
+  // (위 통계 대시보드 섹션의 그래프 HTML도 함께 주석 처리되어 있음. 실제 집계 붙이면 아래 두 줄 복원)
+  // renderTrendChart('visitors', 'visitors', 'var(--tag-baemin)');
+  // renderTrendChart('signups', 'signups', 'var(--accent)');
   setAuthMode('login');
   updateAuthNavUI();
 
