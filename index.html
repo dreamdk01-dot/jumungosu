@@ -2548,22 +2548,17 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 실제 회원가입 API 연동 (백엔드에서 USER 권한 + 초기 레벨 부여 후 JWT 발급)
+    // 'users' 테이블에 직접 회원 정보를 저장합니다.
     // ---------------------------------------------------------------
     try {
-      const res = await fetch(`${APP_CONFIG.API_BASE_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw, nickname: name, phone, region, marketingOptIn }),
-      });
-      if (!res.ok){
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || '회원가입에 실패했습니다.');
-      }
-      const data = await res.json(); // 기대 응답: { token, user: { nickname, email, phone, region, level, role } }
-      applyAuthSession(data.token, data.user);
+      const { error } = await supabaseClient.from('users').insert([
+        { email, password: pw, nickname: name, phone, region },
+      ]);
+      if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
+
+      applyAuthSession(null, { nickname: name, email, phone, region, level: 0, role: 'USER' });
       closeModal();
-      castVote({ name: data.user.nickname, phone: data.user.phone, email: data.user.email });
+      castVote({ name, phone, email });
     } catch (err){
       errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       errEl.classList.remove('hidden');
@@ -2834,33 +2829,16 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // Supabase Auth로 실제 회원가입. 비밀번호는 Supabase가 서버 측에서 안전하게
-    // 해싱해 저장하므로, 우리 쪽 DB 테이블에는 절대 비밀번호를 직접 넣지 않습니다.
-    // 닉네임/연락처/관심지역 같은 부가 정보는 별도 'profiles' 테이블에 저장합니다.
+    // 'users' 테이블에 직접 회원 정보를 저장합니다.
     // ---------------------------------------------------------------
     try {
-      const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: pw });
-      if (signUpError) throw new Error(signUpError.message || '회원가입에 실패했습니다.');
+      const { error } = await supabaseClient.from('users').insert([
+        { email, password: pw, nickname: name, phone, region },
+      ]);
+      if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
 
-      const userId = signUpData.user ? signUpData.user.id : null;
-      if (userId){
-        const { error: profileError } = await supabaseClient.from('profiles').insert({
-          id: userId,
-          nickname: name,
-          phone,
-          region,
-          marketing_opt_in: marketingOptIn,
-          role: 'USER',
-          level: 0,
-        });
-        if (profileError) throw new Error(profileError.message || '회원 프로필 저장에 실패했습니다.');
-      }
-
-      applyAuthSession(signUpData.session ? signUpData.session.access_token : null, {
-        nickname: name, email, phone, region, level: 0, role: 'USER',
-      });
-      showToast(`${name}님, 가입을 환영합니다! 🎉`);
-      switchTab('home');
+      alert('회원가입이 완료되었습니다!');
+      setAuthMode('login');
     } catch (err){
       errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       errEl.classList.remove('hidden');
@@ -2880,24 +2858,21 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // Supabase Auth로 실제 로그인. Supabase가 서버 측에서 이메일/비밀번호를
-    // 안전하게 검증하며, 우리 쪽 코드는 평문 비밀번호를 직접 비교하지 않습니다.
+    // 'users' 테이블에서 이메일+비밀번호가 일치하는 행을 직접 조회합니다.
     // ---------------------------------------------------------------
     try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
-      if (error) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
-
-      const userId = data.user ? data.user.id : null;
-      const { data: profile, error: profileError } = await supabaseClient
-        .from('profiles')
+      const { data, error } = await supabaseClient
+        .from('users')
         .select('*')
-        .eq('id', userId)
-        .single();
-      if (profileError) throw new Error('회원 정보를 불러오지 못했습니다.');
+        .eq('email', email)
+        .eq('password', pw);
+      if (error) throw new Error(error.message || '로그인 중 오류가 발생했습니다.');
+      if (!data || data.length === 0) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
 
-      applyAuthSession(data.session ? data.session.access_token : null, {
-        nickname: profile.nickname, email, phone: profile.phone, region: profile.region,
-        level: profile.level, role: profile.role,
+      const user = data[0];
+      applyAuthSession(null, {
+        nickname: user.nickname, email: user.email, phone: user.phone, region: user.region,
+        level: user.level || 0, role: user.role || 'USER',
       });
       showToast('로그인되었습니다 👋');
       switchTab('home');
@@ -2939,8 +2914,7 @@
   }
 
   // 로그아웃: Supabase 세션 종료 후 비회원 상태로 복귀하고 상단바를 [로그인/회원가입]으로 되돌림
-  async function logout(){
-    try { await supabaseClient.auth.signOut(); } catch (e){ /* 세션이 이미 만료된 경우 등은 무시 */ }
+  function logout(){
     authToken = null;
     isLoggedIn = false;
     currentUser = null;
