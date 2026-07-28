@@ -218,7 +218,7 @@
       <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
-      <button id="tab-admin" onclick="handleAdminNavClick()" class="nav-link tab-underline pb-1 px-3 py-1 rounded-full text-xs font-semibold" style="color:var(--bg); background:var(--primary);">관리자 페이지</button>
+      <button id="tab-admin" onclick="handleAdminNavClick()" class="hidden nav-link tab-underline pb-1 px-3 py-1 rounded-full text-xs font-semibold" style="color:var(--bg); background:var(--primary);">관리자 대시보드</button>
     </nav>
 
     <!-- mobile hamburger -->
@@ -237,7 +237,7 @@
       <button onclick="switchTab('board')" class="text-left py-2 nav-link" style="color:var(--text);">게시판</button>
       <button id="tab-auth-mobile" onclick="switchTab('auth')" class="text-left py-2 nav-link" style="color:var(--text);">로그인/회원가입</button>
       <button id="tab-logout-mobile" onclick="logout()" class="hidden text-left py-2 nav-link text-xs" style="color:var(--muted);">로그아웃</button>
-      <button onclick="handleAdminNavClick()" class="text-left py-2 nav-link font-semibold" style="color:var(--primary);">관리자 페이지 (테스트용)</button>
+      <button id="tab-admin-mobile" onclick="handleAdminNavClick()" class="hidden text-left py-2 nav-link font-semibold" style="color:var(--primary);">관리자 대시보드</button>
     </div>
   </div>
 </header>
@@ -515,11 +515,6 @@
         <h2 class="font-display text-2xl" style="color:var(--primary);">사장님 대시보드</h2>
         <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
       </div>
-      <!-- 운영자 로그인 상태 토글 (비밀번호: 1234) -->
-      <button id="admin-mod-toggle" onclick="toggleAdminModAuth()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border shrink-0" style="border-color:var(--line); color:var(--muted); background:transparent;">
-        <span id="admin-mod-toggle-dot" class="w-2 h-2 rounded-full shrink-0" style="background:var(--muted);"></span>
-        운영자 로그인 상태: <span id="admin-mod-toggle-label">OFF</span>
-      </button>
     </div>
     <p class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
 
@@ -811,20 +806,6 @@
     <button onclick="submitB2BProposal()" class="w-full mt-5 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">제안서 제출하기</button>
     <p id="b2b-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
     <p class="text-[11px] mt-3 text-center" style="color:var(--muted);">제출 내용은 <span style="color:var(--primary);">jumungosu@gmail.com</span>으로 전달됩니다.</p>
-  </div>
-</div>
-
-<!-- ===== ADMIN PASSWORD MODAL ===== -->
-<div id="admin-password-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.65);">
-  <div class="w-full max-w-xs rounded-lg p-6" style="background:var(--card-alt);">
-    <div class="flex items-start justify-between mb-1">
-      <h3 class="font-display text-lg" style="color:var(--primary);">관리자 로그인</h3>
-      <button onclick="closeAdminPasswordModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
-    </div>
-    <p class="text-xs mb-4" style="color:var(--muted);">비밀번호를 입력하면 할인 정보 관리 화면으로 이동합니다.</p>
-    <input id="admin-password-input" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter') submitAdminPassword();" class="w-full px-3 py-2 rounded-md text-sm outline-none mb-3" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-    <button onclick="submitAdminPassword()" class="w-full py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">입장하기</button>
-    <p id="admin-password-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
   </div>
 </div>
 
@@ -1378,10 +1359,12 @@
 
   const REPORT_BLIND_THRESHOLD = 5;
 
-  // 관리자(운영자) 로그인 상태 — 수정/삭제 버튼과 신고 관리 메뉴 접근에 사용
-  // 데모용 하드코딩 비밀번호입니다. 실서비스에서는 서버 측 인증으로 교체하세요.
-  let isAdminAuthenticated = false;
-  const ADMIN_MOD_PASSWORD = '1234';
+  // 관리자 권한 판별 — 하드코딩 비밀번호가 아니라, 현재 Supabase Auth 세션의
+  // 로그인 이메일이 관리자 이메일과 일치하는지로만 판단합니다.
+  const ADMIN_EMAIL = 'jumungosu@gmail.com';
+  function isAdminUser(){
+    return !!(isLoggedIn && currentUser && currentUser.email === ADMIN_EMAIL);
+  }
 
   // 유저별 추천/비추천 투표 기록: { [닉네임]: { post: {postId: 'like'|'dislike'}, comment: {commentId: 'like'|'dislike'} } }
   const userVotes = {};
@@ -1977,7 +1960,7 @@
 
   // 글쓴이 본인 또는 인증된 운영자만 수정/삭제 가능
   function canModifyPost(p){
-    return (isLoggedIn && currentUser && p.author === currentUser.name) || isAdminAuthenticated;
+    return (isLoggedIn && currentUser && p.author === currentUser.name) || isAdminUser();
   }
 
   function editPost(id){
@@ -2164,7 +2147,7 @@
 
   // 댓글 작성자 본인 또는 인증된 운영자만 삭제 가능
   function canModifyComment(c){
-    return (isLoggedIn && currentUser && c.author === currentUser.name) || isAdminAuthenticated;
+    return (isLoggedIn && currentUser && c.author === currentUser.name) || isAdminUser();
   }
 
   function deleteComment(postId, commentId){
@@ -2360,90 +2343,14 @@
     }, 150);
   }
 
-  // ---------- 관리자 페이지 진입 게이트 (비밀번호 모달) ----------
+  // ---------- 관리자 페이지 진입 게이트 (이메일 기반) ----------
+  // 하드코딩 비밀번호 대신, 현재 로그인된 Supabase Auth 계정의 이메일이
+  // ADMIN_EMAIL과 일치할 때만 관리자 대시보드로 이동합니다.
   function handleAdminNavClick(){
-    if (isAdminAuthenticated){
+    if (isAdminUser()){
       switchTab('admin');
     } else {
-      openAdminPasswordModal();
-    }
-  }
-
-  function openAdminPasswordModal(){
-    const modal = document.getElementById('admin-password-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.getElementById('admin-password-input').value = '';
-    document.getElementById('admin-password-error').classList.add('hidden');
-  }
-
-  function closeAdminPasswordModal(){
-    document.getElementById('admin-password-modal').classList.add('hidden');
-    document.getElementById('admin-password-modal').classList.remove('flex');
-  }
-
-  function submitAdminPassword(){
-    const pw = document.getElementById('admin-password-input').value;
-    const errEl = document.getElementById('admin-password-error');
-
-    if (pw === ADMIN_MOD_PASSWORD){
-      isAdminAuthenticated = true;
-      updateAdminModToggleUI();
-      renderAdminDiscountList();
-      renderBoardList();
-      renderReportedPosts();
-      closeAdminPasswordModal();
-      switchTab('admin');
-      showToast('관리자 모드로 접속했습니다.');
-    } else {
-      errEl.textContent = '비밀번호가 올바르지 않습니다.';
-      errEl.classList.remove('hidden');
-    }
-  }
-
-  // ---------- 관리자: 운영자 로그인 상태 토글 & 신고된 게시글 관리 ----------
-  function toggleAdminModAuth(){
-    if (isAdminAuthenticated){
-      isAdminAuthenticated = false;
-      updateAdminModToggleUI();
-      renderBoardList();
-      renderReportedPosts();
-      showToast('운영자 로그인 상태가 해제되었습니다.');
-      return;
-    }
-
-    const pw = prompt('운영자 비밀번호를 입력하세요.');
-    if (pw === null) return; // 취소
-
-    if (pw === ADMIN_MOD_PASSWORD){
-      isAdminAuthenticated = true;
-      updateAdminModToggleUI();
-      renderBoardList();
-      renderReportedPosts();
-      showToast('운영자 로그인 상태가 활성화되었습니다.');
-    } else {
-      showToast('비밀번호가 올바르지 않습니다.');
-    }
-  }
-
-  function updateAdminModToggleUI(){
-    const btn = document.getElementById('admin-mod-toggle');
-    const dot = document.getElementById('admin-mod-toggle-dot');
-    const label = document.getElementById('admin-mod-toggle-label');
-    if (!btn || !dot || !label) return;
-
-    if (isAdminAuthenticated){
-      btn.style.borderColor = 'var(--primary)';
-      btn.style.color = 'var(--primary)';
-      btn.style.background = 'rgba(255,184,0,0.12)';
-      dot.style.background = 'var(--primary)';
-      label.textContent = 'ON';
-    } else {
-      btn.style.borderColor = 'var(--line)';
-      btn.style.color = 'var(--muted)';
-      btn.style.background = 'transparent';
-      dot.style.background = 'var(--muted)';
-      label.textContent = 'OFF';
+      showToast('관리자 권한이 없습니다.');
     }
   }
 
@@ -2467,8 +2374,8 @@
   }
 
   function permanentlyDeletePost(id){
-    if (!isAdminAuthenticated){
-      showToast('운영자 인증이 필요합니다.');
+    if (!isAdminUser()){
+      showToast('관리자 권한이 없습니다.');
       return;
     }
     if (!confirm('이 게시글을 영구적으로 삭제하시겠습니까?')) return;
@@ -2482,8 +2389,8 @@
 
   // ---------- 로컬 B2B 마케팅: 지역 타겟 푸시/알림톡·SMS 발송 뼈대 ----------
   function sendLocalPushNotification(){
-    if (!isAdminAuthenticated){
-      showToast('운영자 로그인이 필요합니다.');
+    if (!isAdminUser()){
+      showToast('관리자 권한이 없습니다.');
       return;
     }
 
@@ -2920,6 +2827,8 @@
     const mobileBtn = document.getElementById('tab-auth-mobile');
     const desktopLogoutBtn = document.getElementById('tab-logout');
     const mobileLogoutBtn = document.getElementById('tab-logout-mobile');
+    const desktopAdminBtn = document.getElementById('tab-admin');
+    const mobileAdminBtn = document.getElementById('tab-admin-mobile');
 
     if (isLoggedIn && currentUser){
       const stats = computeUserStats(currentUser.name);
@@ -2939,6 +2848,16 @@
       mobileBtn.onclick = () => switchTab('auth');
       desktopLogoutBtn.classList.add('hidden');
       mobileLogoutBtn.classList.add('hidden');
+    }
+
+    // 일반 방문자/회원에게는 완전히 숨기고, 관리자 이메일로 로그인했을 때만 노출
+    const showAdminBtn = isAdminUser();
+    if (desktopAdminBtn) desktopAdminBtn.classList.toggle('hidden', !showAdminBtn);
+    if (mobileAdminBtn) mobileAdminBtn.classList.toggle('hidden', !showAdminBtn);
+
+    // 관리자 권한을 잃은 상태(로그아웃/일반 유저 전환)로 바뀌면 관리자 페이지에 남아있지 않도록 처리
+    if (!showAdminBtn && document.getElementById('page-admin') && !document.getElementById('page-admin').classList.contains('hidden')){
+      switchTab('home');
     }
 
     // 로그인 상태·지역 정보가 바뀌면 '주문의 고수' 지역 한정 포장 할인 노출 여부도 즉시 갱신
@@ -3378,6 +3297,10 @@
   // ---------- TABS ----------
   const PAGES = ['home', 'event', 'board', 'auth', 'admin'];
   function switchTab(tab){
+    if (tab === 'admin' && !isAdminUser()){
+      showToast('관리자 권한이 없습니다.');
+      return;
+    }
     PAGES.forEach(p => {
       document.getElementById('page-' + p).classList.toggle('hidden', p !== tab);
       const navBtn = document.getElementById('tab-' + p);
@@ -3402,7 +3325,6 @@
   renderBoardComposeAppSelect();
   renderBoardList();
   renderReportedPosts();
-  updateAdminModToggleUI();
   renderAdminCategorySelect();
   renderAdminDiscountList();
   renderAdminVoteStats();
