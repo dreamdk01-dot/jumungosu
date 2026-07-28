@@ -297,7 +297,6 @@
       <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
       <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
       <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
-      <button data-filter-app="jumungosu" onclick="toggleAppFilter('jumungosu')" class="chip px-4 py-2 rounded-full text-sm font-bold border-2" style="border-color:var(--primary); color:var(--primary); background:rgba(255,184,0,0.1);">⭐ 주문의 고수</button>
     </div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
@@ -954,8 +953,8 @@
 
 <script>
   // ---------- DATA ----------
-  const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요', jumungosu:'주문의 고수' };
-  const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)', jumungosu:'var(--primary)' };
+  const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
+  const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)' };
   const TYPE_COLOR = { '배달':'var(--type-delivery)', '포장':'var(--type-pickup)' };
   const CATEGORIES = ['치킨','피자','버거','한식','중식','일식/돈까스','회/해물','족발/보쌈','찜/탕','고기/구이','분식','카페/디저트','샐러드','샌드위치','아시안','양식','야식','도시락/죽'];
 
@@ -1188,9 +1187,6 @@
     { name:'팀홀튼', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'잠바주스', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'파스쿠찌', app:'coupang', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-
-    // ---- 주문의 고수 자체 동네 포장 할인 (region이 설정된 카드만, 가입 시 선택한 동네와 일치할 때만 노출) ----
-    { name:'주문의 고수 단골 도시락', app:'jumungosu', category:['도시락/죽'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['포장'], region:'경기도 화성시' },
   ];
 
   let nextDiscountId = rawDiscounts.length + 1;
@@ -1617,7 +1613,7 @@
           </div>
           <p class="font-bold text-sm mb-1">배달비 아까울 땐?</p>
           <p class="text-xs mb-2" style="color:var(--text);">로켓프레시 야식·밀키트 인기 기획전 바로가기</p>
-          <a href="https://www.coupang.com" target="_blank" rel="noopener sponsored" class="inline-block text-[11px] font-semibold" style="color:var(--primary);">지금 확인하기 →</a>
+          <a href="https://link.coupang.com/a/fLfG8u51c4" target="_blank" rel="noopener sponsored" class="inline-block text-[11px] font-semibold" style="color:var(--primary);">지금 확인하기 →</a>
           <p class="text-[9px] mt-2 leading-relaxed" style="color:var(--muted); opacity:0.65;">쿠팡 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다.</p>
         </div>
       </div>`;
