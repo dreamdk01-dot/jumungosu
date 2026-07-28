@@ -300,13 +300,7 @@
     </div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
-    <div class="flex gap-2 flex-wrap scrollbar-none mb-5" id="category-filters"></div>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 3 · 서비스 유형 선택</p>
-    <div class="flex gap-2 flex-wrap" id="type-filters">
-      <button data-filter-type="배달" onclick="toggleTypeFilter('배달')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--line); color:var(--muted);">배달</button>
-      <button data-filter-type="포장" onclick="toggleTypeFilter('포장')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--line); color:var(--muted);">포장</button>
-    </div>
+    <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
   </section>
 
   <!-- DISCOUNT LIST -->
@@ -955,7 +949,6 @@
   // ---------- DATA ----------
   const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
   const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)' };
-  const TYPE_COLOR = { '배달':'var(--type-delivery)', '포장':'var(--type-pickup)' };
   const CATEGORIES = ['치킨','피자','버거','한식','중식','일식/돈까스','회/해물','족발/보쌈','찜/탕','고기/구이','분식','카페/디저트','샐러드','샌드위치','아시안','양식','야식','도시락/죽'];
 
   // ---------------------------------------------------------------
@@ -1323,7 +1316,6 @@
 
   let activeAppFilters = [];
   let activeCategoryFilters = [];
-  let activeTypeFilters = [];
   let sortDirection = 'desc'; // 기본값: 할인가 높은순. null(기본순) | 'desc'(높은순) | 'asc'(낮은순)
   let isLoggedIn = false;
   let currentUser = null; // { name, email, phone }
@@ -1479,12 +1471,6 @@
     renderDiscountList();
   }
 
-  function toggleTypeFilter(type){
-    activeTypeFilters = activeTypeFilters.includes(type) ? activeTypeFilters.filter(t=>t!==type) : [...activeTypeFilters, type];
-    updateChipStyles('[data-filter-type]', 'filter-type', activeTypeFilters, TYPE_COLOR);
-    renderDiscountList();
-  }
-
   function updateChipStyles(selector, attr, activeList, colorMap){
     document.querySelectorAll(selector).forEach(btn => {
       const key = btn.getAttribute('data-' + attr);
@@ -1554,14 +1540,6 @@
 
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
   // 할인 정보를 배지 형태로 한눈에 비교할 수 있게 나열한다.
-  // 배달/포장 가능 여부를 텍스트 대신 작은 아이콘으로 표기 (🛵 배달 / 🛍️ 포장)
-  function renderTypeIcons(type){
-    const arr = type || [];
-    const icons = [];
-    if (arr.includes('배달')) icons.push('<span title="배달" aria-label="배달 가능">🛵</span>');
-    if (arr.includes('포장')) icons.push('<span title="포장" aria-label="포장 가능">🛍️</span>');
-    return icons.length ? `<span class="inline-flex items-center gap-1 shrink-0 text-xs" style="opacity:0.9;">${icons.join('')}</span>` : '';
-  }
 
   function brandGroupCardHtml(group){
     const sortedBadges = group.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
@@ -1579,8 +1557,6 @@
         <div class="flex items-center gap-2 text-sm">
           <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:11px;">${APP_LABEL[b.app]}</span>
           <span class="font-mono ${isMax ? 'font-bold' : ''}" style="color:${isMax ? 'var(--primary)' : 'var(--text)'};">${b.discountText}</span>
-          ${renderTypeIcons(b.type)}
-          ${isMax ? '<span class="text-[11px] ml-auto shrink-0" style="color:var(--primary);">최대 할인</span>' : ''}
         </div>`;
     }).join('');
 
@@ -1623,10 +1599,9 @@
     let filtered = discounts.filter(d => {
       const appOk = activeAppFilters.length === 0 || d.app.some(a => activeAppFilters.includes(a));
       const catOk = activeCategoryFilters.length === 0 || d.category.some(c => activeCategoryFilters.includes(c));
-      const typeOk = activeTypeFilters.length === 0 || (d.type || []).some(t => activeTypeFilters.includes(t));
       // 지역 한정 카드('주문의 고수' 자체 포장 할인)는 로그인한 유저의 우리 동네와 일치할 때만 노출
       const regionOk = !d.region || (isLoggedIn && currentUser && normalizeRegion(currentUser.region) === normalizeRegion(d.region));
-      return appOk && catOk && typeOk && regionOk;
+      return appOk && catOk && regionOk;
     });
 
     // 동일 브랜드는 카드 1개로 통합
