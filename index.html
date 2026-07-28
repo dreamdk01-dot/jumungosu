@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>주문의 고수 | 배달 할인 통합 정보</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cellipse cx='11' cy='8' rx='5' ry='6.2' fill='none' stroke='%23FFB800' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M11 14 L11 29' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M18 29 L26 4' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M23 29 L31 4' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -200,7 +201,7 @@
         <path d="M18 29 L26 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
         <path d="M23 29 L31 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span class="font-display text-xl tracking-wide" style="color:var(--primary);">주문의 고수</span>
+      <span class="font-display text-2xl sm:text-3xl tracking-wide" style="color:var(--primary);">주문의 고수</span>
     </button>
 
     <!-- desktop nav -->
@@ -241,7 +242,13 @@
   <section class="mt-8 mb-10">
     <div class="mb-4 flex items-center gap-2 flex-wrap">
       <h2 class="font-display text-2xl" style="color:var(--primary);">오늘의 할인</h2>
-      <select id="best3-category-select" onchange="handleBest3CategoryChange()" class="form-input px-2.5 py-1 rounded-md text-sm font-semibold outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--primary);"></select>
+      <div class="relative inline-block">
+        <button id="best3-category-btn" onclick="toggleBest3CategoryDropdown()" type="button" class="px-2.5 py-1 rounded-md text-sm font-semibold outline-none flex items-center gap-1" style="background:var(--card); border:1px solid var(--line); color:var(--primary);">
+          <span id="best3-category-btn-label">치킨</span>
+          <span class="text-xs">▾</span>
+        </button>
+        <div id="best3-category-dropdown" class="hidden absolute left-0 top-full mt-1 rounded-md py-1 z-30 max-h-72 overflow-y-auto" style="background:var(--card); border:1px solid var(--line); min-width:140px; box-shadow:0 8px 20px rgba(0,0,0,0.35);"></div>
+      </div>
       <h2 class="font-display text-2xl" style="color:var(--primary);">BEST 3</h2>
     </div>
 
@@ -298,15 +305,16 @@
 
   <!-- DISCOUNT LIST -->
   <section>
-    <div class="flex items-center justify-between mb-4 gap-3">
+    <div class="flex items-center justify-between mb-2 gap-3">
       <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트</h3>
       <div class="flex items-center gap-2 shrink-0">
-        <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">
+        <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
           <span id="sort-toggle-label">할인가 높은순</span> <span>↕</span>
         </button>
         <span class="font-mono text-xs whitespace-nowrap" style="color:var(--muted);"><span id="result-count">0</span>건</span>
       </div>
     </div>
+    <p class="text-[11px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 최대 할인 기준이며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
 
@@ -333,7 +341,7 @@
 <main id="page-event" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
     <h2 class="font-display text-2xl mb-1" style="color:var(--primary);">최애 후라이드 치킨 투표</h2>
-    <p class="text-sm mb-6" style="color:var(--muted);">투표에 참여하면 추첨을 통해 5분께 1등 치킨 기프티콘을 드려요.</p>
+    <p class="text-sm mb-6" style="color:var(--muted);"> 투표에 참여하면 추첨을 통해 5분께 선택하시는 배달 플랫폼 2만원권을 드려요.</p>
 
     <div class="rounded-lg p-5 mb-6" style="background:var(--card);">
       <div id="vote-options" class="space-y-3"></div>
@@ -430,14 +438,14 @@
 
     <!-- segmented control -->
     <div class="flex rounded-full p-1 mb-6" style="background:var(--card);">
-      <button id="auth-seg-signup" onclick="setAuthMode('signup')" class="flex-1 py-2 rounded-full text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">회원가입</button>
-      <button id="auth-seg-login" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-full text-sm font-semibold" style="color:var(--muted);">로그인</button>
+      <button id="auth-seg-login" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-full text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">로그인</button>
+      <button id="auth-seg-signup" onclick="setAuthMode('signup')" class="flex-1 py-2 rounded-full text-sm font-semibold" style="color:var(--muted);">회원가입</button>
     </div>
 
     <div class="rounded-lg p-5" style="background:var(--card);">
 
       <!-- signup fields -->
-      <div id="auth-signup-fields" class="space-y-4">
+      <div id="auth-signup-fields" class="space-y-4 hidden">
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">이메일 (아이디)</label>
           <input id="page-su-email" type="email" placeholder="you@example.com" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
@@ -475,7 +483,7 @@
       </div>
 
       <!-- login fields -->
-      <div id="auth-login-fields" class="space-y-3 hidden">
+      <div id="auth-login-fields" class="space-y-3">
         <div>
           <label class="text-xs font-medium block mb-1" style="color:var(--muted);">이메일</label>
           <input id="page-login-email" type="email" placeholder="you@example.com" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
@@ -488,26 +496,6 @@
       </div>
 
       <p id="page-auth-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
-
-      <!-- divider -->
-      <div class="flex items-center gap-3 my-5">
-        <div class="flex-1 dashed-divider"></div>
-        <span class="text-xs" style="color:var(--muted);">또는 소셜 계정으로 계속하기</span>
-        <div class="flex-1 dashed-divider"></div>
-      </div>
-
-      <!-- social login -->
-      <div class="space-y-2">
-        <button onclick="socialLogin('카카오')" class="w-full py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2" style="background:#FEE500; color:#1C1A17;">
-          <span>💬</span> 카카오로 계속하기
-        </button>
-        <button onclick="socialLogin('네이버')" class="w-full py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2" style="background:#03C75A; color:#ffffff;">
-          <span>N</span> 네이버로 계속하기
-        </button>
-        <button onclick="socialLogin('구글')" class="w-full py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2" style="background:#ffffff; color:#1C1A17; border:1px solid var(--line);">
-          <span>G</span> Google로 계속하기
-        </button>
-      </div>
     </div>
   </section>
 </main>
@@ -898,7 +886,7 @@
       <h3 class="font-display text-lg" style="color:var(--primary);">회원가입하고 투표하기</h3>
       <button onclick="closeModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
     </div>
-    <p class="text-xs mb-6" style="color:var(--muted);">추첨을 통해 5분께 1등 치킨 기프티콘을 드립니다 🎁</p>
+    <p class="text-xs mb-6" style="color:var(--muted);">추첨을 통해 5분께 선택하신 배달 플랫폼 2만원권을 드려요 🎁</p>
 
     <div class="space-y-4">
       <div>
@@ -984,6 +972,26 @@
     GOOGLE_CLIENT_ID: '48512443195-rmfnp1fe9qrb2nngoqr455k8ee3eml3f.apps.googleusercontent.com',
     GOOGLE_REDIRECT_URI: 'https://www.jumungosu.com/api/auth/callback/google',
   };
+
+  // ---------------------------------------------------------------
+  // Supabase 연동
+  // ⚠️ 이 파일은 번들러(Next.js/Vite 등)를 거치지 않는 순수 정적 HTML이라
+  // Vercel의 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // 환경변수를 이 파일이 직접 읽어올 방법이 없어(process.env는 브라우저에
+  // 존재하지 않음), 실제 Project URL과 anon key를 아래처럼 코드에 직접
+  // 넣었습니다. anon key는 원래 브라우저에 노출되도록 설계된 "공개" 키이며
+  // (실제 데이터 접근 제어는 Supabase의 RLS 정책이 담당) 하드코딩해도 안전합니다.
+  // ---------------------------------------------------------------
+  const SUPABASE_URL = 'https://sxuqkuqpopckhttvpwvh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4dXFrdXFwb3Bja2h0dHZwd3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDAyNTAsImV4cCI6MjEwMDgxNjI1MH0.zS4E8K1GUyGhd2rj_nYQRSoqXDFhGm1HpYid3YgXtxc';
+
+  const supabaseClient = window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  if (!supabaseClient){
+    console.warn('[주문의 고수] Supabase JS 라이브러리가 로드되지 않아 연동이 비활성화되어 있습니다. CDN 스크립트 로딩을 확인해주세요.');
+  }
 
   // 로그인 성공 시 백엔드가 발급한 JWT를 담아둡니다 (메모리 보관).
   // 새로고침하면 사라지므로, 실서비스에서는 백엔드가 httpOnly 쿠키로
@@ -1082,137 +1090,110 @@
 
   // 실데이터 원본 (등록일: 2026.7.9 기준). prefix: ''(정액 할인) | '최대' | '메뉴'(메뉴별 할인)
   const rawDiscounts = [
-    // ---- 배달의민족 ----
-    { name:'처갓집양념치킨', app:'baemin', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'뚜레쥬르', app:'baemin', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'페리카나', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'60계치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'미스터피자', app:'baemin', category:['피자'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'진교동찜닭', app:'baemin', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'또래오래', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'푸라닭', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'버거킹', app:'baemin', category:['버거'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'자담치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'멕시카나', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'요거트월드', app:'baemin', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'꾸브라꼬숯불치킨', app:'baemin', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'숙성고기 육칠이', app:'baemin', category:['고기/구이'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달'] },
+    // ---- 배달의민족 (오늘 기준 최신 목록) ----
+    { name:'처갓집양념치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'기영이숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'빽보이피자', app:'baemin', category:['피자'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'백억커피', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'진교동찜닭', app:'baemin', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'하남돼지집', app:'baemin', category:['고기/구이'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'치킨매니아', app:'baemin', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'육회야문연어', app:'baemin', category:['회/해물'], prefix:'', amount:5500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'냠냠숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:5500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'프레드피자', app:'baemin', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'꾸브라꼬숯불치킨', app:'baemin', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'네네치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'요아정', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'명랑핫도그', app:'baemin', category:['분식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
 
-    // ---- 쿠팡이츠 와우컬렉션 (실제 캡처 이미지에서 OCR 추출) ----
-    { name:'노랑통닭', app:'coupang', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'두찜', app:'coupang', category:['한식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'맥도날드', app:'coupang', category:['버거'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'BHC', app:'coupang', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'BBQ', app:'coupang', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'도미노피자', app:'coupang', category:['피자'], prefix:'', amount:9000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'기영이숯불두마리치킨', app:'coupang', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'스타벅스', app:'coupang', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'노브랜드버거', app:'coupang', category:['버거'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'던킨', app:'coupang', category:['카페/디저트'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'맘스터치', app:'coupang', category:['버거'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'멕시카나', app:'coupang', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'자담치킨', app:'coupang', category:['치킨'], prefix:'', amount:2500, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'네네치킨', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'꾸브라꼬숯불치킨', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'땅땅치킨', app:'coupang', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'또래오래', app:'coupang', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'바른치킨', app:'coupang', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'치킨매니아', app:'coupang', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'치킨인류', app:'coupang', category:['치킨'], prefix:'', amount:2500, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'치킨마루', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'돈치킨', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'오븐에빠진닭', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'디디치킨', app:'coupang', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'감탄계숯불치킨', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'왓더버거', app:'coupang', category:['버거'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'청년피자', app:'coupang', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'7번가피자', app:'coupang', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'피자에땅', app:'coupang', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'피자헛', app:'coupang', category:['피자'], prefix:'', amount:7500, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'반올림피자', app:'coupang', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'동궁찜닭', app:'coupang', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'파스쿠찌', app:'coupang', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'잠바주스', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'커피앳웍스', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['포장'] },
+    // ---- 땡겨요 (오늘 기준 최신 목록) ----
+    { name:'치킨플러스', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'또래오래', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'일미리금계찜닭', app:'ddangyo', category:['찜/탕'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'해두리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'피자헛', app:'ddangyo', category:['피자'], prefix:'', amount:11000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'도미노피자', app:'ddangyo', category:['피자'], prefix:'', amount:8000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'파파존스', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달'] },
+    { name:'떡참', app:'ddangyo', category:['분식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'맘스피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'아메리칸피자', app:'ddangyo', category:['피자'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'BBQ', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'설빙', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'푸라닭', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'버거킹', app:'ddangyo', category:['버거'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달'] },
+    { name:'뚜레쥬르', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'두찜', app:'ddangyo', category:['한식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'네네치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'프레드피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'자담치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'청년피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'호식이두마리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'멕시카나', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'bhc치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'후라이드참잘하는집', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달'] },
+    { name:'왓더버거', app:'ddangyo', category:['버거'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'기영이숯불두마리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'부어치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'바른치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'7번가피자', app:'ddangyo', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'훌랄라참숯치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'또봉이통닭', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'보끔당', app:'ddangyo', category:['한식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'오븐에빠진닭', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'꾸브라꼬숯불치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'땅땅치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'오븐마루치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
 
-    { name:'BHC', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'도미노피자', app:'yogiyo', category:['피자'], prefix:'', amount:7000, periodType:'월간', expiry:'7.31', type:['배달','포장'] },
-    { name:'인생아구찜', app:'yogiyo', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'순살킹', app:'yogiyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'오븐마루', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'배스킨라빈스', app:'yogiyo', category:['카페/디저트'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'또래오래', app:'yogiyo', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'후라이드참잘하는집', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'맘스터치', app:'yogiyo', category:['버거'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'청담강정', app:'yogiyo', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'디디치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'꾸브라꼬숯불치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'BBQ치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'국민낙곱새', app:'yogiyo', category:['찜/탕'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'파파존스', app:'yogiyo', category:['피자'], prefix:'', amount:8000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'계근상', app:'yogiyo', category:['찜/탕'], prefix:'', amount:8000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'청년피자', app:'yogiyo', category:['피자'], prefix:'', amount:7000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'티바두마리치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
+    // ---- 요기요 (오늘 기준 최신 목록, 편의점 픽업·% 적립 항목 제외) ----
+    { name:'굽네치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'푸라닭', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'BHC치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'호식이두마리치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'노랑통닭', app:'yogiyo', category:['치킨'], prefix:'메뉴', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'꾸브라꼬숯불치킨', app:'yogiyo', category:['치킨'], prefix:'메뉴', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'청년피자', app:'yogiyo', category:['피자'], prefix:'', amount:9000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'오븐마루', app:'yogiyo', category:['치킨'], prefix:'', amount:8000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'계근상', app:'yogiyo', category:['찜/탕'], prefix:'', amount:8000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'도미노피자', app:'yogiyo', category:['피자'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'멕시카나', app:'yogiyo', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'뚜레쥬르', app:'yogiyo', category:['카페/디저트'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'자담치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'공차', app:'yogiyo', category:['카페/디저트'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'또래오래', app:'yogiyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'청담강정', app:'yogiyo', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'디디치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'순살킹', app:'yogiyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
 
-    // ---- 땡겨요 ----
-    { name:'처갓집양념치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'파스쿠찌', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'미스터피자', app:'ddangyo', category:['피자'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'족발야시장', app:'ddangyo', category:['족발/보쌈'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'써브웨이', app:'ddangyo', category:['샌드위치'], prefix:'', amount:2500, periodType:'주간', expiry:'7.12', type:['포장'] },
-
-    // ---- 땡겨요 실캡처 추가분 (표시 금액에서 최초이용자 5,000원 할인 제외한 실제 브랜드 할인액) ----
-    { name:'프레드피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'왓더버거', app:'ddangyo', category:['버거'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'아메리칸피자', app:'ddangyo', category:['피자'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'7번가피자', app:'ddangyo', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'BBQ', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'bhc치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'자담치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'푸라닭', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'호식이두마리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'멕시카나', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'네네치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'후라이드참잘하는집', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'두찜', app:'ddangyo', category:['한식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'기영이숯불두마리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'부어치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'바른치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'훌랄라참숯치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'또봉이통닭', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'오븐에빠진닭', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'꾸브라꼬숯불치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'아라치', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'땅땅치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'오븐마루치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'치킨플러스', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'보끔당', app:'ddangyo', category:['한식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'또래오래', app:'ddangyo', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'일미리금계찜닭', app:'ddangyo', category:['찜/탕'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'해두리치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'버거킹', app:'ddangyo', category:['버거'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'배스킨라빈스', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'피자헛', app:'ddangyo', category:['피자'], prefix:'', amount:11000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'도미노피자', app:'ddangyo', category:['피자'], prefix:'', amount:8000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'파파존스', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'설빙', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'떡참', app:'ddangyo', category:['분식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'맘스피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'청년피자', app:'ddangyo', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'슬로우캘리', app:'ddangyo', category:['샐러드'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'본도시락', app:'ddangyo', category:['도시락/죽'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-
-    // ---- 신규 독립 카테고리 샘플 (회/해물 등 18개 카테고리 필터가 전부 동작하도록 보완, 실데이터와 앱 겹치지 않게 요기요/땡겨요로 배치) ----
-    { name:'광어회', app:'yogiyo', category:['회/해물'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'홍콩반점', app:'yogiyo', category:['중식'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'스시로', app:'yogiyo', category:['일식/돈까스'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'벽제갈비', app:'ddangyo', category:['고기/구이'], prefix:'', amount:6000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'김밥천국', app:'yogiyo', category:['분식'], prefix:'', amount:1500, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
-    { name:'샐러드박스', app:'ddangyo', category:['샐러드'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['포장'] },
-    { name:'마마쌀국수', app:'yogiyo', category:['아시안'], prefix:'', amount:3000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'아웃백', app:'yogiyo', category:['양식'], prefix:'', amount:8000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'한신포차 안주세트', app:'yogiyo', category:['야식'], prefix:'', amount:4000, periodType:'주간', expiry:'7.12', type:['배달'] },
-    { name:'본죽', app:'ddangyo', category:['도시락/죽'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['배달','포장'] },
+    // ---- 쿠팡이츠 (오늘 기준 최신 목록, 편의점 픽업 제외) ----
+    { name:'bhc', app:'coupang', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'BBQ', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'던킨', app:'coupang', category:['카페/디저트'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'배스킨라빈스', app:'coupang', category:['카페/디저트'], prefix:'', amount:20000, randomAmounts:[3500,12000,20000], isRandom:true, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'버거킹', app:'coupang', category:['버거'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'푸라닭', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'자담치킨', app:'coupang', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'페리카나', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'원할머니보쌈족발', app:'coupang', category:['족발/보쌈'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'멕시카나', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'꾸브라꼬숯불치킨', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'뚜레쥬르', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'스타벅스', app:'coupang', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'맘스터치앤피자', app:'coupang', category:['버거'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'맘스터치피자앤치킨', app:'coupang', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'또래오래', app:'coupang', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'감탄계숯불치킨', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'치킨인류', app:'coupang', category:['치킨'], prefix:'', amount:2500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'디디치킨', app:'coupang', category:['치킨'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'도미노피자', app:'coupang', category:['피자'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'피자헛', app:'coupang', category:['피자'], prefix:'', amount:7500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'7번가피자', app:'coupang', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'오구쌀피자', app:'coupang', category:['피자'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'써브웨이', app:'coupang', category:['샌드위치'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'본도시락', app:'coupang', category:['도시락/죽'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'아웃백스테이크하우스', app:'coupang', category:['양식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'팀홀튼', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'잠바주스', app:'coupang', category:['카페/디저트'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'파스쿠찌', app:'coupang', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
 
     // ---- 주문의 고수 자체 동네 포장 할인 (region이 설정된 카드만, 가입 시 선택한 동네와 일치할 때만 노출) ----
     { name:'주문의 고수 단골 도시락', app:'jumungosu', category:['도시락/죽'], prefix:'', amount:2000, periodType:'주간', expiry:'7.12', type:['포장'], region:'경기도 화성시' },
@@ -1232,12 +1213,25 @@
     periodType: r.periodType,
     expiry: r.expiry,
     badge: r.name.slice(0, 2),
+    isRandom: r.isRandom || false,
+    randomAmounts: r.randomAmounts || null,
+    minAmount: typeof r.minAmount === 'number' ? r.minAmount : null,
   }));
 
   // "8,000" 형태로 천단위 콤마. 관리자 페이지에서 수동 등록한 항목은 customDiscountText를 그대로 사용.
   function formatDiscount(d){
     if (d.customDiscountText) return d.customDiscountText;
     const amt = d.amount.toLocaleString('ko-KR');
+    // 랜덤 쿠폰(추첨형) 할인: 실제로 받을 수 있는 금액이 여러 단계 중 무작위로 정해지는 경우,
+    // 최대 금액만 보여주면 착시를 줄 수 있어 가능한 금액 전체를 나열해 보여줌
+    if (d.isRandom){
+      if (Array.isArray(d.randomAmounts) && d.randomAmounts.length){
+        const list = d.randomAmounts.map(n => `${n.toLocaleString('ko-KR')}원`).join(' / ');
+        return `${list} 중 랜덤 당첨`;
+      }
+      const minAmt = (typeof d.minAmount === 'number' ? d.minAmount : 0).toLocaleString('ko-KR');
+      return `${minAmt}원 ~ 최대 ${amt}원 (랜덤)`;
+    }
     if (d.prefix === '최대') return `최대 ${amt}원 할인`;
     if (d.prefix === '메뉴') return `메뉴별 ${amt}원 할인`;
     return `${amt}원 할인`;
@@ -1292,15 +1286,42 @@
 
   let best3Category = '치킨';
 
+  // 커스텀 드롭다운: 네이티브 <select>는 모바일에서 OS 피커가 뜨고 '완료'를 눌러야
+  // 값이 확정되는 방식이라, PC처럼 한 번 탭하면 바로 선택되도록 직접 만든 드롭다운입니다.
   function renderBest3CategorySelect(){
-    const el = document.getElementById('best3-category-select');
-    if (!el) return;
-    el.innerHTML = BEST3_CATEGORY_OPTIONS.map(c => `<option value="${c}" ${c === best3Category ? 'selected' : ''}>${c}</option>`).join('');
+    const btnLabel = document.getElementById('best3-category-btn-label');
+    const dropdown = document.getElementById('best3-category-dropdown');
+    if (!btnLabel || !dropdown) return;
+
+    btnLabel.textContent = best3Category;
+    dropdown.innerHTML = BEST3_CATEGORY_OPTIONS.map(c => `
+      <button type="button" onclick="selectBest3Category('${c}')" class="w-full text-left px-3 py-2 text-sm" style="color:${c === best3Category ? 'var(--primary)' : 'var(--text)'}; font-weight:${c === best3Category ? '700' : '500'};">${c}</button>
+    `).join('');
   }
 
-  function handleBest3CategoryChange(){
-    const el = document.getElementById('best3-category-select');
-    best3Category = el.value;
+  function toggleBest3CategoryDropdown(){
+    document.getElementById('best3-category-dropdown').classList.toggle('hidden');
+  }
+
+  function closeBest3CategoryDropdown(){
+    document.getElementById('best3-category-dropdown').classList.add('hidden');
+  }
+
+  // 드롭다운 바깥을 탭하면 자동으로 닫히도록 처리
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('best3-category-dropdown');
+    const btn = document.getElementById('best3-category-btn');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+    if (!dropdown.contains(e.target) && !btn.contains(e.target)){
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // 옵션을 탭하는 즉시 선택 확정 + 드롭다운 닫기 + BEST 3 갱신 (모바일/PC 동일한 한 번의 탭으로 완료)
+  function selectBest3Category(category){
+    best3Category = category;
+    renderBest3CategorySelect();
+    closeBest3CategoryDropdown();
     renderBest3();
   }
 
@@ -1314,7 +1335,7 @@
   let activeAppFilters = [];
   let activeCategoryFilters = [];
   let activeTypeFilters = [];
-  let sortDirection = null; // null(기본순) | 'desc'(높은순) | 'asc'(낮은순)
+  let sortDirection = 'desc'; // 기본값: 할인가 높은순. null(기본순) | 'desc'(높은순) | 'asc'(낮은순)
   let isLoggedIn = false;
   let currentUser = null; // { name, email, phone }
   let hasVoted = false;
@@ -1426,7 +1447,7 @@
       <div class="rounded-md p-4" style="background:var(--surface);">
         <div class="flex items-center gap-2 mb-3">
           <div class="w-9 h-9 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${d.badge.slice(0,2)}</div>
-          <p class="font-bold text-sm leading-tight">${d.name}</p>
+          <p class="font-bold text-base leading-tight">${d.name}</p>
         </div>
         <p class="font-mono text-2xl font-bold mb-2" style="color:var(--primary);">${formatDiscount(d)}</p>
         <div class="flex gap-1 flex-wrap">
@@ -1530,7 +1551,7 @@
       }
       const group = map.get(key);
       d.app.forEach(a => {
-        group.badges.push({ app: a, sortValue: getSortValue(d), discountText: formatDiscount(d) });
+        group.badges.push({ app: a, id: d.id, type: d.type || [], sortValue: getSortValue(d), discountText: formatDiscount(d), isRandom: !!d.isRandom });
       });
     });
     return Array.from(map.values());
@@ -1542,17 +1563,33 @@
 
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
   // 할인 정보를 배지 형태로 한눈에 비교할 수 있게 나열한다.
+  // 배달/포장 가능 여부를 텍스트 대신 작은 아이콘으로 표기 (🛵 배달 / 🛍️ 포장)
+  function renderTypeIcons(type){
+    const arr = type || [];
+    const icons = [];
+    if (arr.includes('배달')) icons.push('<span title="배달" aria-label="배달 가능">🛵</span>');
+    if (arr.includes('포장')) icons.push('<span title="포장" aria-label="포장 가능">🛍️</span>');
+    return icons.length ? `<span class="inline-flex items-center gap-1 shrink-0 text-xs" style="opacity:0.9;">${icons.join('')}</span>` : '';
+  }
+
   function brandGroupCardHtml(group){
     const sortedBadges = group.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
     const maxBadge = sortedBadges[0];
+    // discountText가 이미 '최대'를 포함하고 있으면(최대-prefix 항목 등) 그대로 쓰고,
+    // 랜덤 추첨형 할인은 헤드라인에서만 간결하게 "최대 X원 (랜덤 당첨)"로 요약해서 보여줌
+    // (배지 줄에는 formatDiscount()가 만든 전체 추첨 금액 목록이 그대로 노출됨)
+    const headlineText = maxBadge.isRandom
+      ? `최대 ${maxBadge.sortValue.toLocaleString('ko-KR')}원 (랜덤 당첨)`
+      : (/최대/.test(maxBadge.discountText) ? maxBadge.discountText : `최대 ${maxBadge.discountText}`);
 
     const badgeRows = sortedBadges.map((b, i) => {
       const isMax = i === 0;
       return `
-        <div class="flex items-center gap-2 text-xs">
-          <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[b.app]}</span>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:11px;">${APP_LABEL[b.app]}</span>
           <span class="font-mono ${isMax ? 'font-bold' : ''}" style="color:${isMax ? 'var(--primary)' : 'var(--text)'};">${b.discountText}</span>
-          ${isMax ? '<span class="text-[10px] ml-auto shrink-0" style="color:var(--primary);">최대 할인</span>' : ''}
+          ${renderTypeIcons(b.type)}
+          ${isMax ? '<span class="text-[11px] ml-auto shrink-0" style="color:var(--primary);">최대 할인</span>' : ''}
         </div>`;
     }).join('');
 
@@ -1561,8 +1598,8 @@
         <div class="flex items-center gap-3 mb-3">
           <div class="w-11 h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
           <div class="flex-1 min-w-0">
-            <p class="font-bold text-sm truncate">${escapeHtml(group.displayName)}</p>
-            <p class="font-mono text-base font-extrabold" style="color:var(--accent);">최대 ${maxBadge.discountText}</p>
+            <p class="font-bold text-base sm:text-lg truncate">${escapeHtml(group.displayName)}</p>
+            <p class="font-mono text-lg sm:text-xl font-extrabold" style="color:var(--accent);">${headlineText}</p>
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
@@ -2188,7 +2225,7 @@
       : (p.totalDiscount || '0');
 
     return `
-        <div class="inline-block px-3 py-1.5 rounded-md font-display text-xl font-extrabold mb-3" style="background:rgba(255,90,54,0.15); color:var(--accent); border:1px solid rgba(255,90,54,0.35);">
+        <div class="inline-block text-lg font-semibold mb-3" style="color:var(--accent);">
           총 ${amountText}원 할인
         </div>
         <div class="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -2805,22 +2842,38 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 실제 회원가입 API 연동. 서버는 이메일 중복 확인, 비밀번호 해싱(bcrypt 등),
-    // USER 권한 부여, 초기 레벨(0) 설정 후 JWT를 발급해 내려줘야 합니다.
+    // Supabase Auth로 실제 회원가입. 비밀번호는 Supabase가 서버 측에서 안전하게
+    // 해싱해 저장하므로, 우리 쪽 DB 테이블에는 절대 비밀번호를 직접 넣지 않습니다.
+    // 닉네임/연락처/관심지역 같은 부가 정보는 별도 'profiles' 테이블에 저장합니다.
     // ---------------------------------------------------------------
+    if (!supabaseClient){
+      errEl.textContent = 'Supabase 연동 설정이 완료되지 않았습니다. (SUPABASE_URL / SUPABASE_ANON_KEY를 확인해주세요)';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
     try {
-      const res = await fetch(`${APP_CONFIG.API_BASE_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw, nickname: name, phone, region, marketingOptIn }),
-      });
-      if (!res.ok){
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || '회원가입에 실패했습니다.');
+      const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: pw });
+      if (signUpError) throw new Error(signUpError.message || '회원가입에 실패했습니다.');
+
+      const userId = signUpData.user ? signUpData.user.id : null;
+      if (userId){
+        const { error: profileError } = await supabaseClient.from('profiles').insert({
+          id: userId,
+          nickname: name,
+          phone,
+          region,
+          marketing_opt_in: marketingOptIn,
+          role: 'USER',
+          level: 0,
+        });
+        if (profileError) throw new Error(profileError.message || '회원 프로필 저장에 실패했습니다.');
       }
-      const data = await res.json(); // 기대 응답: { token, user: { nickname, email, phone, region, level, role } }
-      applyAuthSession(data.token, data.user);
-      showToast(`${data.user.nickname}님, 가입을 환영합니다! 🎉`);
+
+      applyAuthSession(signUpData.session ? signUpData.session.access_token : null, {
+        nickname: name, email, phone, region, level: 0, role: 'USER',
+      });
+      showToast(`${name}님, 가입을 환영합니다! 🎉`);
       switchTab('home');
     } catch (err){
       errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
@@ -2841,91 +2894,36 @@
     errEl.classList.add('hidden');
 
     // ---------------------------------------------------------------
-    // 실제 로그인 API 연동. 서버가 이메일/비밀번호를 검증하고 JWT(또는
-    // 세션)를 발급합니다. 응답의 user.role/level은 DB에 저장된 실제 값입니다
-    // (신규 소셜/일반 가입과 마찬가지로 기본은 USER 권한).
+    // Supabase Auth로 실제 로그인. Supabase가 서버 측에서 이메일/비밀번호를
+    // 안전하게 검증하며, 우리 쪽 코드는 평문 비밀번호를 직접 비교하지 않습니다.
     // ---------------------------------------------------------------
+    if (!supabaseClient){
+      errEl.textContent = 'Supabase 연동 설정이 완료되지 않았습니다. (SUPABASE_URL / SUPABASE_ANON_KEY를 확인해주세요)';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
     try {
-      const res = await fetch(`${APP_CONFIG.API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw }),
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+      if (error) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+
+      const userId = data.user ? data.user.id : null;
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      if (profileError) throw new Error('회원 정보를 불러오지 못했습니다.');
+
+      applyAuthSession(data.session ? data.session.access_token : null, {
+        nickname: profile.nickname, email, phone: profile.phone, region: profile.region,
+        level: profile.level, role: profile.role,
       });
-      if (!res.ok){
-        throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
-      }
-      const data = await res.json(); // 기대 응답: { token, user: { nickname, email, phone, region, level, role } }
-      applyAuthSession(data.token, data.user);
       showToast('로그인되었습니다 👋');
       switchTab('home');
     } catch (err){
       errEl.textContent = err.message || '로그인 중 오류가 발생했습니다.';
       errEl.classList.remove('hidden');
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // 소셜 로그인 (OAuth 2.0 Authorization Code 흐름 시작점)
-  // 사용자를 각 제공자의 인증 페이지로 리다이렉트합니다. 인증이 끝나면
-  // 브라우저가 APP_CONFIG의 REDIRECT_URI(+ ?code=...&state=...)로 돌아오고,
-  // 이 파일의 handleOAuthCallback()이 그 code를 백엔드로 전달해 액세스
-  // 토큰 교환 → 회원 DB 조회/신규가입(USER 권한) → JWT 발급까지 처리합니다.
-  // ⚠️ 이 파일은 서버가 없는 단일 정적 페이지 데모라 실제로 리다이렉트를
-  // 실행하면 되돌아올 콜백 서버가 없습니다. 아래 window.location.href
-  // 이동은 실제 배포(도메인 + 백엔드 콜백 라우트) 환경에서만 정상 동작합니다.
-  // ---------------------------------------------------------------
-  function socialLogin(provider){
-    const state = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
-    let authUrl = '';
-
-    if (provider === '카카오'){
-      authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code`
-        + `&client_id=${encodeURIComponent(APP_CONFIG.KAKAO_CLIENT_ID)}`
-        + `&redirect_uri=${encodeURIComponent(APP_CONFIG.KAKAO_REDIRECT_URI)}`
-        + `&state=${state}`;
-    } else if (provider === '네이버'){
-      authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code`
-        + `&client_id=${encodeURIComponent(APP_CONFIG.NAVER_CLIENT_ID)}`
-        + `&redirect_uri=${encodeURIComponent(APP_CONFIG.NAVER_REDIRECT_URI)}`
-        + `&state=${state}`;
-    } else if (provider === '구글'){
-      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code`
-        + `&client_id=${encodeURIComponent(APP_CONFIG.GOOGLE_CLIENT_ID)}`
-        + `&redirect_uri=${encodeURIComponent(APP_CONFIG.GOOGLE_REDIRECT_URI)}`
-        + `&scope=${encodeURIComponent('openid email profile')}`
-        + `&state=${state}`;
-    } else {
-      showToast('지원하지 않는 로그인 방식입니다.');
-      return;
-    }
-
-    showToast(`${provider} 로그인 페이지로 이동합니다...`);
-    window.location.href = authUrl;
-  }
-
-  // 소셜 로그인 후 제공자가 REDIRECT_URI(현재 페이지)로 돌려보낸 인가 코드를
-  // 백엔드로 전달해 액세스 토큰 교환 + 회원 조회/생성 + JWT 발급을 요청합니다.
-  async function handleOAuthCallback(){
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (!code) return;
-
-    try {
-      const res = await fetch(`${APP_CONFIG.API_BASE_URL}/api/auth/oauth/callback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, redirectUri: window.location.origin + window.location.pathname }),
-      });
-      if (!res.ok) throw new Error('소셜 로그인 처리에 실패했습니다.');
-
-      const data = await res.json(); // 기대 응답: { token, user: { nickname, email, phone, region, level, role } }
-      applyAuthSession(data.token, data.user);
-      showToast(`${data.user.nickname}님, 환영합니다!`);
-    } catch (err){
-      showToast(err.message || '소셜 로그인 처리 중 오류가 발생했습니다.');
-    } finally {
-      // 주소창의 ?code=...&state=... 쿼리 제거
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
@@ -2960,9 +2958,11 @@
     if (typeof renderDiscountList === 'function') renderDiscountList();
   }
 
-  // 로그아웃: 토큰/세션 폐기 후 비회원 상태로 복귀하고 상단바를 [로그인/회원가입]으로 되돌림
-  function logout(){
-    // 실서비스에서는 여기서 백엔드 로그아웃(토큰 무효화) API도 함께 호출하세요.
+  // 로그아웃: Supabase 세션 종료 후 비회원 상태로 복귀하고 상단바를 [로그인/회원가입]으로 되돌림
+  async function logout(){
+    if (supabaseClient){
+      try { await supabaseClient.auth.signOut(); } catch (e){ /* 세션이 이미 만료된 경우 등은 무시 */ }
+    }
     authToken = null;
     isLoggedIn = false;
     currentUser = null;
@@ -3033,11 +3033,40 @@
     { day: '7/12', visitors: 1250, signups: 105 },
   ];
 
-  function renderDashboardStats(){
+  async function renderDashboardStats(){
     document.getElementById('stat-today-visitors').textContent = dashboardStats.todayVisitors.toLocaleString('ko-KR');
     document.getElementById('stat-total-visitors').textContent = dashboardStats.totalVisitors.toLocaleString('ko-KR');
+    // 회원 수 두 항목은 우선 데모 값으로 먼저 그려두고, 아래에서 Supabase 실측치로 교체합니다.
     document.getElementById('stat-today-signups').textContent = dashboardStats.todaySignups.toLocaleString('ko-KR');
     document.getElementById('stat-total-members').textContent = dashboardStats.totalMembers.toLocaleString('ko-KR');
+
+    if (!supabaseClient) return;
+
+    try {
+      // 총 누적 회원 수 = profiles 테이블 전체 행 수
+      const { count: totalCount, error: totalErr } = await supabaseClient
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      if (!totalErr && typeof totalCount === 'number'){
+        dashboardStats.totalMembers = totalCount;
+        document.getElementById('stat-total-members').textContent = totalCount.toLocaleString('ko-KR');
+      }
+
+      // 오늘 신규 가입자 수 = created_at이 오늘 00:00 이후인 행 수
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { count: todayCount, error: todayErr } = await supabaseClient
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', todayStart.toISOString());
+      if (!todayErr && typeof todayCount === 'number'){
+        dashboardStats.todaySignups = todayCount;
+        document.getElementById('stat-today-signups').textContent = todayCount.toLocaleString('ko-KR');
+      }
+    } catch (e){
+      // Supabase 연동 실패 시 데모 값을 그대로 유지 (화면이 비지 않도록)
+      console.warn('[주문의 고수] 회원 수 조회 실패, 데모 값으로 표시합니다.', e);
+    }
   }
 
   // 막대그래프: 각 막대 위에 정확한 숫자('명')를 직접 표기 (비율/퍼센트 표기 없음)
@@ -3077,21 +3106,48 @@
     el.innerHTML = adminGroupsCache.length
       ? adminGroupsCache.map((g, i) => {
           const sorted = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
-          const summary = sorted.map(b => `${APP_LABEL[b.app]} ${b.discountText}`).join(' · ');
+          const platformRows = sorted.map(b => `
+        <div class="flex items-center justify-between gap-2 py-1 flex-wrap">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[b.app]}</span>
+            <span class="font-mono text-xs truncate" style="color:var(--text);">${b.discountText}</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0 text-[11px]" style="color:var(--muted);">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('배달') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '배달')"> 배달
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('포장') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '포장')"> 포장
+            </label>
+          </div>
+        </div>`).join('');
+
           return `
-      <div class="flex items-center gap-3 rounded-md px-3 py-2" style="background:var(--surface);">
-        <div class="w-8 h-8 shrink-0 rounded font-mono text-[10px] flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${g.badge.slice(0,2)}</div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">${escapeHtml(g.displayName)}</p>
-          <p class="text-[10px] truncate" style="color:var(--muted);">${summary}</p>
+      <div class="rounded-md px-3 py-2" style="background:var(--surface);">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 shrink-0 rounded font-mono text-[10px] flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${g.badge.slice(0,2)}</div>
+          <p class="flex-1 min-w-0 text-sm font-semibold truncate">${escapeHtml(g.displayName)}</p>
+          <div class="flex gap-2 shrink-0">
+            <button onclick="editAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--muted);">수정</button>
+            <button onclick="deleteAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--accent);">삭제</button>
+          </div>
         </div>
-        <div class="flex gap-2 shrink-0">
-          <button onclick="editAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--muted);">수정</button>
-          <button onclick="deleteAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--accent);">삭제</button>
-        </div>
+        <div class="mt-1.5 pl-11 space-y-0.5 dashed-divider pt-2">${platformRows}</div>
       </div>`;
         }).join('')
       : `<p class="text-xs" style="color:var(--muted);">등록된 브랜드가 없습니다.</p>`;
+  }
+
+  // 관리자 페이지에서 특정 플랫폼 항목의 배달/포장 여부를 직접 토글.
+  // discounts 배열을 바로 수정하기 때문에 메인 화면 할인 리스트에도 즉시 반영됩니다.
+  function toggleAdminDiscountType(discountId, type){
+    const entry = discounts.find(d => d.id === discountId);
+    if (!entry) return;
+    const current = entry.type || [];
+    entry.type = current.includes(type) ? current.filter(t => t !== type) : [...current, type];
+    renderAdminDiscountList();
+    renderDiscountList();
+    renderBest3();
   }
 
   // 수정 모드일 때 채워진 브랜드 그룹 key (신규 등록 시에는 null)
@@ -3295,9 +3351,8 @@
   renderDashboardStats();
   renderTrendChart('visitors', 'visitors', 'var(--tag-baemin)');
   renderTrendChart('signups', 'signups', 'var(--accent)');
-  setAuthMode('signup');
+  setAuthMode('login');
   updateAuthNavUI();
-  handleOAuthCallback();
 </script>
 
 </body>
