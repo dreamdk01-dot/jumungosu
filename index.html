@@ -256,8 +256,8 @@
   <!-- FILTERS -->
   <section class="mb-8">
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
-    <div class="relative mb-5">
-      <input id="brand-search-input" type="text" placeholder="예) BHC, 도미노피자, 써브웨이" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+    <div class="relative mb-5 max-w-[320px]">
+      <input id="brand-search-input" type="text" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
       <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
     </div>
