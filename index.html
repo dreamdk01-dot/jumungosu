@@ -236,7 +236,7 @@
       </div>
       <div class="dashed-divider mt-5 pt-4 flex items-center justify-between">
         <div class="barcode" id="barcode"></div>
-        <span class="font-mono text-xs" style="color:var(--muted);">NO. JG-0711-BEST</span>
+        <span class="font-mono text-xs" id="best3-updated-badge" style="color:var(--muted);"></span>
       </div>
     </div>
   </section>
@@ -262,13 +262,6 @@
 
   <!-- FILTERS -->
   <section class="mb-8">
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
-    <div class="relative mb-5 max-w-[320px]">
-      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
-      <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
-    </div>
-
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
     <div class="flex gap-2 flex-wrap mb-5" id="app-filters">
       <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
@@ -281,10 +274,20 @@
     <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
   </section>
 
+  <!-- 브랜드 검색 (STEP 2와 할인 리스트 사이 — 검색 즉시 바로 아래 결과가 보이도록 배치) -->
+  <section class="mb-6">
+    <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
+    <div class="relative max-w-[320px]">
+      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
+      <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
+    </div>
+  </section>
+
   <!-- DISCOUNT LIST -->
   <section>
     <div class="flex items-center justify-between mb-2 gap-3">
-      <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트</h3>
+      <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트 <span id="discount-list-updated" class="font-mono text-xs align-middle" style="color:var(--muted);"></span></h3>
       <div class="flex items-center gap-2 shrink-0">
         <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
           <span id="sort-toggle-label">할인가 높은순</span> <span>↕</span>
@@ -659,7 +662,6 @@
             <thead>
               <tr class="text-left" style="color:var(--muted);">
                 <th class="font-mono text-xs font-normal pb-2">이름</th>
-                <th class="font-mono text-xs font-normal pb-2">연락처</th>
                 <th class="font-mono text-xs font-normal pb-2">이메일</th>
                 <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
               </tr>
@@ -681,7 +683,6 @@
               <tr class="text-left" style="color:var(--muted);">
                 <th class="font-mono text-xs font-normal pb-2">당첨 일시</th>
                 <th class="font-mono text-xs font-normal pb-2">이름</th>
-                <th class="font-mono text-xs font-normal pb-2">연락처</th>
                 <th class="font-mono text-xs font-normal pb-2">이메일</th>
                 <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
                 <th class="font-mono text-xs font-normal pb-2 text-right">삭제</th>
@@ -848,7 +849,14 @@
       <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--card-alt);">
         <div id="user-info-exp-bar" class="h-full" style="width:0%; background:var(--primary);"></div>
       </div>
-      <p class="text-[10px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
+      <p id="user-info-exp-remain-label" class="text-[10px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
+    </div>
+
+    <!-- 출석체크 -->
+    <div class="rounded-lg p-4 mb-5 text-center" style="background:var(--surface);">
+      <p class="text-xs mb-2" style="color:var(--muted);">출석체크</p>
+      <button id="user-info-attendance-btn" type="button" onclick="checkInAttendance()" class="w-full py-2.5 rounded-md font-semibold text-sm transition" style="background:var(--primary); color:#1C1A17;">오늘 출석체크 하기 (+100 EXP)</button>
+      <p class="text-[11px] mt-2" style="color:var(--muted);">총 누적 출석: <span id="user-info-attendance-count">0</span>일</p>
     </div>
 
     <div class="space-y-4 mb-6">
@@ -861,13 +869,19 @@
         <p id="user-info-email" class="text-sm font-semibold" style="color:var(--text);">-</p>
       </div>
       <div>
-        <p class="text-xs mb-1" style="color:var(--muted);">휴대폰 번호</p>
-        <p id="user-info-phone" class="text-sm font-semibold" style="color:var(--text);">-</p>
-      </div>
-      <div>
         <p class="text-xs mb-1" style="color:var(--muted);">우리 동네</p>
         <p id="user-info-region" class="text-sm font-semibold" style="color:var(--text);">-</p>
       </div>
+    </div>
+
+    <!-- 경험치(EXP) 획득 방법 안내 -->
+    <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
+      <p class="text-xs font-semibold mb-2" style="color:var(--primary);">💡 경험치(EXP) 획득 방법</p>
+      <ul class="text-[11px] leading-relaxed list-disc list-inside space-y-0.5" style="color:var(--muted);">
+        <li>게시글/댓글 추천 1개당 <span style="color:var(--text); font-weight:600;">+100 EXP</span></li>
+        <li>매일 출석체크 <span style="color:var(--text); font-weight:600;">+100 EXP</span> (하루 1회)</li>
+        <li>가입 기간 30일(1달)마다 <span style="color:var(--text); font-weight:600;">+1,000 EXP</span> 자동 적립</li>
+      </ul>
     </div>
 
     <div class="dashed-divider pt-4 flex justify-end">
@@ -971,6 +985,54 @@
   const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
   const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)' };
   const CATEGORIES = ['치킨','피자','버거','한식','중식','일식/돈까스','회/해물','족발/보쌈','찜/탕','고기/구이','분식','카페/디저트','샐러드','샌드위치','아시안','양식','야식','도시락/죽'];
+
+  // 할인 데이터가 마지막으로 등록/수정/삭제된 날짜(KST, YYYY-MM-DD). Supabase의 app_config
+  // 테이블에 저장되어 모든 방문자 기기에서 동일하게 보이며, 아래 값은 DB 조회 전(또는 실패 시)
+  // 잠깐 보여줄 기본값일 뿐입니다.
+  const DISCOUNT_DATA_UPDATED_AT = '2026-07-29';
+  let discountUpdatedAtValue = DISCOUNT_DATA_UPDATED_AT;
+
+  // 메인 화면 로딩 시 DB에서 최신 날짜를 조회해 배지를 다시 그린다.
+  async function loadDiscountUpdatedAt(){
+    try {
+      const { data, error } = await supabaseClient.rpc('get_discount_updated_at');
+      if (error) throw error;
+      if (data){
+        discountUpdatedAtValue = data;
+      }
+    } catch (e){
+      console.warn('[주문의 고수] 할인 업데이트 날짜 조회 실패 (app_config/get_discount_updated_at 확인 필요)', e);
+    }
+    renderUpdatedBadges();
+  }
+
+  // 관리자가 할인 정보를 등록/수정/삭제할 때 호출 — Supabase에 오늘 날짜(KST)로 기록하고 배지를 다시 그린다.
+  async function markDiscountDataUpdated(){
+    try {
+      const { data, error } = await supabaseClient.rpc('mark_discount_updated');
+      if (error) throw error;
+      if (data) discountUpdatedAtValue = data;
+    } catch (e){
+      console.warn('[주문의 고수] 할인 업데이트 날짜 기록 실패 (mark_discount_updated RPC 확인 필요)', e);
+    }
+    renderUpdatedBadges();
+  }
+
+  function formatUpdatedBadge(dateStr){
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `UPDATED ${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+  }
+
+  // BEST3 영수증 하단 + 할인 리스트 제목의 "UPDATED MM/DD" 배지를 함께 그린다.
+  function renderUpdatedBadges(){
+    const badge = formatUpdatedBadge(discountUpdatedAtValue);
+    const best3El = document.getElementById('best3-updated-badge');
+    const listEl = document.getElementById('discount-list-updated');
+    if (best3El) best3El.textContent = badge;
+    if (listEl) listEl.textContent = `(${badge})`;
+  }
 
   // ---------------------------------------------------------------
   // 실서비스 연동 설정: 프론트엔드가 알아도 되는 "공개" 값만 둡니다.
@@ -1396,19 +1458,19 @@
   ];
 
   const participants = [
-    { name:'김*연', phone:'010-12**-**34', email:'so***@naver.com', vote:'BBQ 황금올리브' },
-    { name:'이*준', phone:'010-45**-**78', email:'jh***@gmail.com', vote:'BHC 뿌링클' },
+    { name:'김*연', email:'so***@naver.com', vote:'BBQ 황금올리브' },
+    { name:'이*준', email:'jh***@gmail.com', vote:'BHC 뿌링클' },
   ];
 
-  // ---------- 자유게시판 ----------
+  // ---------- 자유게시판 (Supabase posts/comments/post_likes/comment_likes/*_reports 테이블과 연동) ----------
   let activeBoardTab = 'food'; // 'food' | 'recipe'
   let boardPage = 1;
   const POSTS_PER_PAGE = 5;
   const expandedPostIds = new Set();
   let boardComposeImageDataUrl = null;
+  let boardComposeImageFile = null;        // 실제로 Supabase Storage에 업로드할 File 객체
+  let boardComposeExistingImageUrl = null; // 수정 모드에서 새 파일을 고르지 않았을 때 유지할 기존 이미지 URL
   let editingPostId = null;
-  let nextPostId = 5;
-  let nextCommentId = 2;
 
   const REPORT_BLIND_THRESHOLD = 5;
 
@@ -1421,30 +1483,22 @@
     return !!(isLoggedIn && currentUser && currentUser.email === ADMIN_EMAIL);
   }
 
-  // 유저별 추천/비추천 투표 기록: { [닉네임]: { post: {postId: 'like'|'dislike'}, comment: {commentId: 'like'|'dislike'} } }
-  const userVotes = {};
-
-  // 유저별 신고 기록 (1인 1회 제한): { [닉네임]: { post: {postId: true}, comment: {commentId: true} } }
-  const userReports = {};
+  // 로그인한 '나'의 추천/신고 기록 캐시. Supabase post_likes/comment_likes/post_reports/comment_reports
+  // 테이블에서 로그인 시(loadMyBoardInteractions) 불러와 채워지며, 실제 판정은 항상 서버 RPC가 최종 처리합니다.
+  const userVotes = { post: {}, comment: {} };
+  const userReports = { post: {}, comment: {} };
 
   function getUserVoteMap(){
-    if (!currentUser) return null;
-    if (!userVotes[currentUser.name]) userVotes[currentUser.name] = { post: {}, comment: {} };
-    return userVotes[currentUser.name];
+    return isLoggedIn ? userVotes : null;
   }
 
   function getUserReportMap(){
-    if (!currentUser) return null;
-    if (!userReports[currentUser.name]) userReports[currentUser.name] = { post: {}, comment: {} };
-    return userReports[currentUser.name];
+    return isLoggedIn ? userReports : null;
   }
 
-  const boardPosts = [
-    { id:1, board:'food', author:'김짠돌', totalDiscount:12000, app:'coupang', brandMenu:'BBQ 뿌링클', comboDetail:'삼성카드 2천원 + 브랜드할인 5천원 + 신규 5천원', content:'이 조합 진짜 꿀팁입니다! 신규 가입 혜택까지 다 몰아서 썼어요 🔥', image:null, likes:34, dislikes:1, reportCount:0, comments:[{ id:1, author:'이수진', text:'오 이 조합 대박이네요! 저도 오늘 써봐야겠어요', likes:0, dislikes:0, reportCount:0 }] },
-    { id:2, board:'food', author:'테스트회원', totalDiscount:8000, app:'yogiyo', brandMenu:'도미노 불고기 피자', comboDetail:'신규 4천원 + 브랜드 4천원', content:'신규 가입 쿠폰이랑 브랜드 자체 할인을 같이 적용하니까 거의 반값에 먹었어요!', image:null, likes:150, dislikes:3, reportCount:0, comments:[] },
-    { id:3, board:'recipe', author:'이수진', title:'치킨 시킬 때 이렇게 드세요', content:'치킨무 국물에 마요네즈를 살짝 섞으면 디핑소스가 배로 맛있어져요. 한번 꼭 해보세요.', image:null, likes:40, dislikes:0, reportCount:0, comments:[] },
-    { id:4, board:'recipe', author:'테스트회원', title:'짜장면 + 계란후라이 조합 추천', content:'짜장면 위에 반숙 계란후라이를 올려서 비벼 드시면 고소함이 두 배가 됩니다.', image:null, likes:0, dislikes:0, reportCount:0, comments:[] },
-  ];
+  // 게시글 목록은 더 이상 하드코딩된 데모 데이터가 아니라, loadBoardPostsFromDB()가
+  // Supabase posts/comments 테이블에서 불러와 채웁니다. (초기값은 빈 배열)
+  let boardPosts = [];
 
   // 금지어 필터 (비속어·불법 광고 홍보성 텍스트 자동 감지)
   // 실서비스에서는 전문 비속어 필터링 API/서비스 연동을 권장합니다. 여기서는 동작 방식을 보여주는 예시 목록입니다.
@@ -1467,17 +1521,86 @@
     return str.length > len ? str.slice(0, len) + '…' : str;
   }
 
-  // 경험치/레벨 산정: 추천(따봉) 1개당 100점, 10,000점당 레벨 1단계 상승
+  // ---------- 레벨 시스템: 구간별 필요 경험치 + Lv.50 만렙 캡 ----------
+  // Lv.1~10  : 레벨당 1,000 EXP (Lv.10 누적 9,000)
+  // Lv.10~20 : 레벨당 2,000 EXP (Lv.20 누적 29,000)
+  // Lv.20~30 : 레벨당 3,000 EXP (Lv.30 누적 59,000)
+  // Lv.30~40 : 레벨당 4,000 EXP (Lv.40 누적 99,000)
+  // Lv.40~50 : 레벨당 5,000 EXP (Lv.50 누적 149,000, 만렙)
+  // 총 EXP 자체는 만렙 이후에도 계속 누적되지만, 레벨 표시는 50에서 멈춥니다.
+  const LEVEL_BRACKETS = [
+    { fromLevel: 1, toLevel: 10, perLevel: 1000, startExp: 0 },
+    { fromLevel: 10, toLevel: 20, perLevel: 2000, startExp: 9000 },
+    { fromLevel: 20, toLevel: 30, perLevel: 3000, startExp: 29000 },
+    { fromLevel: 30, toLevel: 40, perLevel: 4000, startExp: 59000 },
+    { fromLevel: 40, toLevel: 50, perLevel: 5000, startExp: 99000 },
+  ];
+  const MAX_LEVEL = 50;
+  const MAX_LEVEL_EXP = 149000; // Lv.50 도달에 필요한 누적 EXP
+
+  // 총 누적 EXP → { level, remain(다음 레벨까지), progressPct } 로 변환하는 공용 함수.
+  // 헤더 라벨, 내 정보 모달, 게시판/댓글의 [Lv.n] 배지가 모두 이 함수 하나로 통일되어 계산됩니다.
+  function getLevelInfo(exp){
+    exp = Math.max(0, exp || 0);
+
+    if (exp >= MAX_LEVEL_EXP){
+      // 만렙 이후에도 EXP는 계속 쌓이지만 레벨/게이지는 100%로 고정 표시
+      return { level: MAX_LEVEL, remain: 0, progressPct: 100, expIntoLevel: exp - MAX_LEVEL_EXP, expForNextLevel: null };
+    }
+
+    for (const b of LEVEL_BRACKETS){
+      const bracketMaxExp = b.startExp + (b.toLevel - b.fromLevel) * b.perLevel;
+      if (exp < bracketMaxExp){
+        const levelsIntoBracket = Math.floor((exp - b.startExp) / b.perLevel);
+        const level = b.fromLevel + levelsIntoBracket;
+        const currentLevelStartExp = b.startExp + levelsIntoBracket * b.perLevel;
+        const expIntoLevel = exp - currentLevelStartExp;
+        const remain = b.perLevel - expIntoLevel;
+        const progressPct = Math.round((expIntoLevel / b.perLevel) * 100);
+        return { level, remain, progressPct, expIntoLevel, expForNextLevel: b.perLevel };
+      }
+    }
+    // 이론상 도달하지 않지만 방어적으로 만렙 반환
+    return { level: MAX_LEVEL, remain: 0, progressPct: 100, expIntoLevel: exp - MAX_LEVEL_EXP, expForNextLevel: null };
+  }
+
+  // 하루의 기준을 한국시간(Asia/Seoul, UTC+9) 자정으로 맞추기 위한 "오늘 날짜(KST)" 헬퍼.
+  // Supabase 함수들도 동일하게 KST 자정 기준으로 날짜를 계산하도록 맞춰뒀습니다.
+  function getTodayKST(){
+    const now = new Date();
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    return kst.toISOString().slice(0, 10);
+  }
+
+  // 경험치 산정: 추천(따봉) 1개당 100점
   function computeUserStats(userName){
     const posts = boardPosts.filter(p => p.author === userName);
     const exp = posts.reduce((sum, p) => sum + p.likes * 100, 0);
-    const level = Math.floor(exp / 10000);
-    const remain = 10000 - (exp % 10000);
-    const progressPct = Math.round(((exp % 10000) / 10000) * 100);
-    return { exp, level, remain, progressPct };
+    return { exp, ...getLevelInfo(exp) };
   }
 
-  // 작성자 닉네임 왼쪽에 붙는 [Lv.n] 배지 (경험치 데이터와 실시간 연동)
+  // 로그인한 '나'의 총 경험치: 게시글/댓글 추천 EXP + 출석체크 누적 EXP + 가입 기간(30일당) 보너스 EXP
+  // (다른 회원의 글에 붙는 [Lv.n] 배지는 출석/가입일 정보가 없어 computeUserStats()만 사용합니다)
+  function computeMyTotalStats(){
+    if (!currentUser) return { exp: 0, ...getLevelInfo(0) };
+
+    const postExp = computeUserStats(currentUser.name).exp;
+    const attendanceExp = (currentUser.attendanceCount || 0) * 100;
+
+    let tenureExp = 0;
+    if (currentUser.joinedAt){
+      const joinedTime = new Date(currentUser.joinedAt).getTime();
+      if (!isNaN(joinedTime)){
+        const daysSinceJoin = Math.floor((Date.now() - joinedTime) / (1000 * 60 * 60 * 24));
+        tenureExp = Math.floor(daysSinceJoin / 30) * 1000;
+      }
+    }
+
+    const exp = postExp + attendanceExp + tenureExp;
+    return { exp, ...getLevelInfo(exp) };
+  }
+
+  // 작성자 닉네임 왼쪽에 붙는 [Lv.n] 배지 (경험치 데이터와 실시간 연동, 동일한 구간별 레벨 공식 사용)
   function authorLevelBadge(authorName){
     const { level } = computeUserStats(authorName);
     return `<span class="font-mono text-[10px] font-semibold mr-1" style="color:var(--primary);">[Lv.${level}]</span>`;
@@ -1793,7 +1916,6 @@
     if (voter){
       participants.unshift({
         name: maskName(voter.name),
-        phone: maskPhone(voter.phone),
         email: maskEmail(voter.email),
         vote: opt.label
       });
@@ -1805,10 +1927,6 @@
   function maskName(name){
     if (!name || name.length < 2) return name || '익명';
     return name[0] + '*' + name.slice(2);
-  }
-  function maskPhone(phone){
-    if (!phone) return '010-****-****';
-    return phone.slice(0, 7) + '**-**' + phone.slice(-2);
   }
   function maskEmail(email){
     if (!email || !email.includes('@')) return '***@***.com';
@@ -1864,6 +1982,15 @@
 
   function openBoardCompose(){
     requireLogin(() => {
+      editingPostId = null;
+      boardComposeImageDataUrl = null;
+      boardComposeImageFile = null;
+      boardComposeExistingImageUrl = null;
+      document.getElementById('board-compose-image').value = '';
+      document.getElementById('board-compose-image-preview').classList.add('hidden');
+      document.getElementById('board-compose-image-label').textContent = '사진 첨부 (선택)';
+      document.getElementById('board-compose-submit-btn').textContent = '등록하기';
+
       const isFood = activeBoardTab === 'food';
       document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isFood);
       document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isFood);
@@ -1886,6 +2013,8 @@
     document.getElementById('board-compose-error').classList.add('hidden');
     document.getElementById('board-compose-submit-btn').textContent = '등록하기';
     boardComposeImageDataUrl = null;
+    boardComposeImageFile = null;
+    boardComposeExistingImageUrl = null;
     editingPostId = null;
   }
 
@@ -1906,24 +2035,129 @@
       label.textContent = '사진 첨부 (선택)';
       preview.classList.add('hidden');
       boardComposeImageDataUrl = null;
+      boardComposeImageFile = null;
       return;
     }
 
+    boardComposeImageFile = file; // 실제 업로드는 submitBoardPost에서 uploadBoardImageIfNeeded()가 처리
     label.textContent = file.name;
     const reader = new FileReader();
     reader.onload = (e) => {
-      boardComposeImageDataUrl = e.target.result;
+      boardComposeImageDataUrl = e.target.result; // 로컬 미리보기 전용 (DB에는 저장되지 않음)
       preview.src = boardComposeImageDataUrl;
       preview.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
   }
 
-  function submitBoardPost(){
-    requireLogin(() => {
+  // 게시글 첨부 이미지를 Supabase Storage(board-images 버킷)에 업로드하고 공개 URL을 반환한다.
+  // 새로 고른 파일이 없으면(수정 시 기존 이미지 유지) 기존 URL을, 이미지 자체가 없으면 null을 반환.
+  async function uploadBoardImageIfNeeded(){
+    if (!boardComposeImageFile) return boardComposeExistingImageUrl;
+
+    const ext = (boardComposeImageFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('board-images')
+      .upload(path, boardComposeImageFile, { cacheControl: '3600', upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { data } = supabaseClient.storage.from('board-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  // Supabase posts/comments 테이블에서 게시글 전체를 불러와 boardPosts를 채운다.
+  // (기존 렌더링 함수들이 기대하는 필드명(camelCase)에 맞춰 매핑만 해주고,
+  //  postCardHtml/renderCommentsSection 등 화면 쪽 코드는 전혀 손대지 않아도 되도록 함)
+  async function loadBoardPostsFromDB(){
+    try {
+      const { data: posts, error: postsErr } = await supabaseClient
+        .from('posts')
+        .select('id, board, author, author_id, title, content, image, total_discount, app, brand_menu, combo_detail, likes, dislikes, report_count, created_at')
+        .order('created_at', { ascending: false });
+      if (postsErr) throw postsErr;
+
+      const { data: comments, error: commentsErr } = await supabaseClient
+        .from('comments')
+        .select('id, post_id, author, content, likes, dislikes, report_count, created_at')
+        .order('created_at', { ascending: true });
+      if (commentsErr) throw commentsErr;
+
+      const commentsByPost = {};
+      (comments || []).forEach(c => {
+        if (!commentsByPost[c.post_id]) commentsByPost[c.post_id] = [];
+        commentsByPost[c.post_id].push({
+          id: c.id,
+          author: c.author,
+          text: c.content,
+          likes: c.likes,
+          dislikes: c.dislikes,
+          reportCount: c.report_count,
+        });
+      });
+
+      boardPosts = (posts || []).map(p => ({
+        id: p.id,
+        board: p.board,
+        author: p.author,
+        title: p.title,
+        content: p.content,
+        image: p.image,
+        totalDiscount: p.total_discount,
+        app: p.app,
+        brandMenu: p.brand_menu,
+        comboDetail: p.combo_detail,
+        likes: p.likes,
+        dislikes: p.dislikes,
+        reportCount: p.report_count,
+        comments: commentsByPost[p.id] || [],
+      }));
+    } catch (e){
+      console.warn('[주문의 고수] 게시글 목록 조회 실패 (posts/comments 테이블 확인 필요)', e);
+      boardPosts = [];
+    }
+
+    await loadMyBoardInteractions();
+    renderBoardList();
+    renderReportedPosts();
+    updateAuthNavUI(); // 게시글 추천 EXP가 반영되도록 헤더의 [Lv.n] 라벨도 다시 계산
+  }
+
+  // 로그인한 경우, 내가 이미 추천/신고한 글·댓글 내역을 불러와 userVotes/userReports 캐시를 채운다.
+  // RLS 정책상 본인 행만 조회되므로 다른 회원의 투표·신고 내역은 절대 노출되지 않는다.
+  async function loadMyBoardInteractions(){
+    userVotes.post = {};
+    userVotes.comment = {};
+    userReports.post = {};
+    userReports.comment = {};
+
+    if (!isLoggedIn) return;
+
+    try {
+      const [postLikesRes, commentLikesRes, postReportsRes, commentReportsRes] = await Promise.all([
+        supabaseClient.from('post_likes').select('post_id, vote_type'),
+        supabaseClient.from('comment_likes').select('comment_id, vote_type'),
+        supabaseClient.from('post_reports').select('post_id'),
+        supabaseClient.from('comment_reports').select('comment_id'),
+      ]);
+
+      (postLikesRes.data || []).forEach(r => { userVotes.post[r.post_id] = r.vote_type; });
+      (commentLikesRes.data || []).forEach(r => { userVotes.comment[r.comment_id] = r.vote_type; });
+      (postReportsRes.data || []).forEach(r => { userReports.post[r.post_id] = true; });
+      (commentReportsRes.data || []).forEach(r => { userReports.comment[r.comment_id] = true; });
+    } catch (e){
+      console.warn('[주문의 고수] 내 추천/신고 기록 조회 실패 (post_likes 등 테이블 확인 필요)', e);
+    }
+  }
+
+  async function submitBoardPost(){
+    requireLogin(async () => {
       const errEl = document.getElementById('board-compose-error');
       const editingExisting = editingPostId ? boardPosts.find(x => x.id === editingPostId) : null;
       const isFood = editingExisting ? editingExisting.board === 'food' : activeBoardTab === 'food';
+
+      let payload;
 
       if (isFood){
         const amountRaw = document.getElementById('board-compose-amount').value.trim();
@@ -1944,35 +2178,15 @@
         }
         errEl.classList.add('hidden');
 
-        if (editingPostId){
-          const p = boardPosts.find(x => x.id === editingPostId);
-          if (p && canModifyPost(p)){
-            p.totalDiscount = amount;
-            p.app = app;
-            p.brandMenu = brandMenu;
-            p.comboDetail = comboDetail;
-            p.content = detail;
-            p.image = boardComposeImageDataUrl;
-          }
-          showToast('게시글이 수정되었습니다.');
-        } else {
-          boardPosts.unshift({
-            id: nextPostId++,
-            board: 'food',
-            author: currentUser.name,
-            totalDiscount: amount,
-            app,
-            brandMenu,
-            comboDetail,
-            content: detail,
-            image: boardComposeImageDataUrl,
-            likes: 0,
-            dislikes: 0,
-            reportCount: 0,
-            comments: [],
-          });
-          showToast('게시글이 등록되었습니다 🎉');
-        }
+        payload = {
+          board: 'food',
+          title: null,
+          total_discount: amount,
+          app,
+          brand_menu: brandMenu,
+          combo_detail: comboDetail,
+          content: detail,
+        };
       } else {
         const title = document.getElementById('board-compose-title').value.trim();
         const content = document.getElementById('board-compose-content').value.trim();
@@ -1988,33 +2202,77 @@
         }
         errEl.classList.add('hidden');
 
+        payload = {
+          board: 'recipe',
+          title,
+          total_discount: null,
+          app: null,
+          brand_menu: null,
+          combo_detail: null,
+          content,
+        };
+      }
+
+      try {
+        try {
+          payload.image = await uploadBoardImageIfNeeded();
+        } catch (uploadErr){
+          console.warn('[주문의 고수] 이미지 업로드 실패 (board-images 버킷/정책 확인 필요)', uploadErr);
+          errEl.textContent = '이미지 업로드에 실패했어요. 잠시 후 다시 시도해주세요.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+
         if (editingPostId){
           const p = boardPosts.find(x => x.id === editingPostId);
-          if (p && canModifyPost(p)){
-            p.title = title;
-            p.content = content;
-            p.image = boardComposeImageDataUrl;
-          }
+          if (!p || !canModifyPost(p)) return;
+
+          const { error } = await supabaseClient.from('posts').update(payload).eq('id', editingPostId);
+          if (error) throw error;
+
+          p.totalDiscount = payload.total_discount;
+          p.app = payload.app;
+          p.brandMenu = payload.brand_menu;
+          p.comboDetail = payload.combo_detail;
+          p.title = payload.title;
+          p.content = payload.content;
+          p.image = payload.image;
           showToast('게시글이 수정되었습니다.');
         } else {
+          const { data, error } = await supabaseClient
+            .from('posts')
+            .insert({ ...payload, author: currentUser.name, author_id: currentUser.id })
+            .select()
+            .single();
+          if (error) throw error;
+
           boardPosts.unshift({
-            id: nextPostId++,
-            board: 'recipe',
-            author: currentUser.name,
-            title,
-            content,
-            image: boardComposeImageDataUrl,
-            likes: 0,
-            dislikes: 0,
-            reportCount: 0,
+            id: data.id,
+            board: data.board,
+            author: data.author,
+            title: data.title,
+            content: data.content,
+            image: data.image,
+            totalDiscount: data.total_discount,
+            app: data.app,
+            brandMenu: data.brand_menu,
+            comboDetail: data.combo_detail,
+            likes: data.likes,
+            dislikes: data.dislikes,
+            reportCount: data.report_count,
             comments: [],
           });
           showToast('게시글이 등록되었습니다 🎉');
         }
-      }
 
-      closeBoardCompose();
-      renderBoardList();
+        closeBoardCompose();
+        renderBoardList();
+        refreshMyStatsUI();
+      } catch (e){
+        console.warn('[주문의 고수] 게시글 저장 실패 (posts 테이블/RLS 확인 필요)', e);
+        errEl.textContent = '게시글 저장에 실패했어요. 잠시 후 다시 시도해주세요.';
+        errEl.classList.remove('hidden');
+      }
     });
   }
 
@@ -2044,6 +2302,8 @@
     }
 
     boardComposeImageDataUrl = p.image || null;
+    boardComposeImageFile = null;            // 수정 진입 시에는 아직 새로 고른 파일이 없음
+    boardComposeExistingImageUrl = p.image || null; // 새 파일을 안 고르면 이 URL을 그대로 유지
     const preview = document.getElementById('board-compose-image-preview');
     const label = document.getElementById('board-compose-image-label');
     if (p.image){
@@ -2056,68 +2316,82 @@
     document.getElementById('board-compose').classList.remove('hidden');
   }
 
-  function deletePost(id){
+  async function deletePost(id){
     const p = boardPosts.find(x => x.id === id);
     if (!p || !canModifyPost(p)) return;
     if (!confirm('정말 이 글을 삭제하시겠습니까?')) return;
 
-    const idx = boardPosts.findIndex(x => x.id === id);
-    if (idx > -1) boardPosts.splice(idx, 1);
-    renderBoardList();
-    renderReportedPosts();
-    showToast('게시글이 삭제되었습니다.');
+    try {
+      const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+      if (error) throw error;
+
+      const idx = boardPosts.findIndex(x => x.id === id);
+      if (idx > -1) boardPosts.splice(idx, 1);
+      renderBoardList();
+      renderReportedPosts();
+      refreshMyStatsUI();
+      showToast('게시글이 삭제되었습니다.');
+    } catch (e){
+      console.warn('[주문의 고수] 게시글 삭제 실패 (posts 테이블/RLS 확인 필요)', e);
+      showToast('게시글 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
   }
 
-  // ---------- 추천/비추천 (로그인 필요 + 1인 1표 토글) ----------
+  // ---------- 추천/비추천 (로그인 필요 + 1인 1표 토글, Supabase RPC로 서버에서 최종 판정) ----------
   function voteOnPost(id, type){
-    requireLogin(() => {
+    requireLogin(async () => {
       const p = boardPosts.find(x => x.id === id);
       if (!p) return;
-      const voteMap = getUserVoteMap();
-      const prev = voteMap.post[id];
 
-      if (prev === type){
-        // 같은 버튼 다시 클릭 → 투표 취소
-        if (type === 'like') p.likes = Math.max(0, p.likes - 1);
-        else p.dislikes = Math.max(0, p.dislikes - 1);
-        delete voteMap.post[id];
-      } else if (prev){
-        // 반대 버튼 클릭 → 투표 변경
-        if (prev === 'like') p.likes = Math.max(0, p.likes - 1);
-        else p.dislikes = Math.max(0, p.dislikes - 1);
-        if (type === 'like') p.likes += 1; else p.dislikes += 1;
-        voteMap.post[id] = type;
-      } else {
-        // 최초 투표
-        if (type === 'like') p.likes += 1; else p.dislikes += 1;
-        voteMap.post[id] = type;
+      try {
+        const { data, error } = await supabaseClient.rpc('toggle_post_vote', { p_post_id: id, p_vote_type: type });
+        if (error) throw error;
+
+        const row = Array.isArray(data) ? data[0] : data;
+        p.likes = row.likes;
+        p.dislikes = row.dislikes;
+
+        const voteMap = getUserVoteMap();
+        if (row.my_vote){
+          voteMap.post[id] = row.my_vote;
+        } else {
+          delete voteMap.post[id];
+        }
+        renderBoardList();
+        refreshMyStatsUI();
+      } catch (e){
+        console.warn('[주문의 고수] 게시글 추천/비추천 실패 (toggle_post_vote RPC 확인 필요)', e);
+        showToast('추천 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
       }
-      renderBoardList();
     });
   }
 
   function voteOnComment(postId, commentId, type){
-    requireLogin(() => {
+    requireLogin(async () => {
       const p = boardPosts.find(x => x.id === postId);
       const c = p && p.comments.find(x => x.id === commentId);
       if (!c) return;
-      const voteMap = getUserVoteMap();
-      const prev = voteMap.comment[commentId];
 
-      if (prev === type){
-        if (type === 'like') c.likes = Math.max(0, c.likes - 1);
-        else c.dislikes = Math.max(0, c.dislikes - 1);
-        delete voteMap.comment[commentId];
-      } else if (prev){
-        if (prev === 'like') c.likes = Math.max(0, c.likes - 1);
-        else c.dislikes = Math.max(0, c.dislikes - 1);
-        if (type === 'like') c.likes += 1; else c.dislikes += 1;
-        voteMap.comment[commentId] = type;
-      } else {
-        if (type === 'like') c.likes += 1; else c.dislikes += 1;
-        voteMap.comment[commentId] = type;
+      try {
+        const { data, error } = await supabaseClient.rpc('toggle_comment_vote', { p_comment_id: commentId, p_vote_type: type });
+        if (error) throw error;
+
+        const row = Array.isArray(data) ? data[0] : data;
+        c.likes = row.likes;
+        c.dislikes = row.dislikes;
+
+        const voteMap = getUserVoteMap();
+        if (row.my_vote){
+          voteMap.comment[commentId] = row.my_vote;
+        } else {
+          delete voteMap.comment[commentId];
+        }
+        renderBoardList();
+        refreshMyStatsUI();
+      } catch (e){
+        console.warn('[주문의 고수] 댓글 추천/비추천 실패 (toggle_comment_vote RPC 확인 필요)', e);
+        showToast('추천 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
       }
-      renderBoardList();
     });
   }
 
@@ -2158,7 +2432,7 @@
   }
 
   function reportPost(id){
-    requireLogin(() => {
+    requireLogin(async () => {
       const p = boardPosts.find(x => x.id === id);
       if (!p) return;
       if ((p.reportCount || 0) >= REPORT_BLIND_THRESHOLD){
@@ -2170,19 +2444,35 @@
         alert('이미 신고한 게시글입니다.');
         return;
       }
-      reportMap.post[id] = true;
-      p.reportCount = (p.reportCount || 0) + 1;
-      if (p.reportCount >= REPORT_BLIND_THRESHOLD){
-        notifyAdminBlindContent('게시글', p.title);
+
+      try {
+        const { data, error } = await supabaseClient.rpc('report_post', { p_post_id: id });
+        if (error) throw error;
+
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row.already_reported){
+          alert('이미 신고한 게시글입니다.');
+          reportMap.post[id] = true;
+          return;
+        }
+
+        reportMap.post[id] = true;
+        p.reportCount = row.report_count;
+        if (p.reportCount >= REPORT_BLIND_THRESHOLD){
+          notifyAdminBlindContent('게시글', p.title);
+        }
+        renderBoardList();
+        renderReportedPosts();
+        showToast('신고가 접수되었습니다.');
+      } catch (e){
+        console.warn('[주문의 고수] 게시글 신고 실패 (report_post RPC 확인 필요)', e);
+        showToast('신고 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
       }
-      renderBoardList();
-      renderReportedPosts();
-      showToast('신고가 접수되었습니다.');
     });
   }
 
   function reportComment(postId, commentId){
-    requireLogin(() => {
+    requireLogin(async () => {
       const p = boardPosts.find(x => x.id === postId);
       const c = p && p.comments.find(x => x.id === commentId);
       if (!c) return;
@@ -2195,13 +2485,29 @@
         alert('이미 신고한 댓글입니다.');
         return;
       }
-      reportMap.comment[commentId] = true;
-      c.reportCount = (c.reportCount || 0) + 1;
-      if (c.reportCount >= REPORT_BLIND_THRESHOLD){
-        notifyAdminBlindContent('댓글', `${p.title} 게시글의 댓글`);
+
+      try {
+        const { data, error } = await supabaseClient.rpc('report_comment', { p_comment_id: commentId });
+        if (error) throw error;
+
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row.already_reported){
+          alert('이미 신고한 댓글입니다.');
+          reportMap.comment[commentId] = true;
+          return;
+        }
+
+        reportMap.comment[commentId] = true;
+        c.reportCount = row.report_count;
+        if (c.reportCount >= REPORT_BLIND_THRESHOLD){
+          notifyAdminBlindContent('댓글', `${p.title} 게시글의 댓글`);
+        }
+        renderBoardList();
+        showToast('신고가 접수되었습니다.');
+      } catch (e){
+        console.warn('[주문의 고수] 댓글 신고 실패 (report_comment RPC 확인 필요)', e);
+        showToast('신고 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
       }
-      renderBoardList();
-      showToast('신고가 접수되었습니다.');
     });
   }
 
@@ -2210,21 +2516,30 @@
     return (isLoggedIn && currentUser && c.author === currentUser.name) || isAdminUser();
   }
 
-  function deleteComment(postId, commentId){
+  async function deleteComment(postId, commentId){
     const p = boardPosts.find(x => x.id === postId);
     if (!p) return;
     const c = p.comments.find(x => x.id === commentId);
     if (!c || !canModifyComment(c)) return;
     if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
 
-    const idx = p.comments.findIndex(x => x.id === commentId);
-    if (idx > -1) p.comments.splice(idx, 1);
-    renderBoardList();
-    showToast('댓글이 삭제되었습니다.');
+    try {
+      const { error } = await supabaseClient.from('comments').delete().eq('id', commentId);
+      if (error) throw error;
+
+      const idx = p.comments.findIndex(x => x.id === commentId);
+      if (idx > -1) p.comments.splice(idx, 1);
+      renderBoardList();
+      refreshMyStatsUI();
+      showToast('댓글이 삭제되었습니다.');
+    } catch (e){
+      console.warn('[주문의 고수] 댓글 삭제 실패 (comments 테이블/RLS 확인 필요)', e);
+      showToast('댓글 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
   }
 
   function submitComment(id){
-    requireLogin(() => {
+    requireLogin(async () => {
       const input = document.getElementById(`comment-input-${id}`);
       const text = input.value.trim();
       if (!text) return;
@@ -2233,8 +2548,30 @@
         return;
       }
       const p = boardPosts.find(x => x.id === id);
-      p.comments.push({ id: nextCommentId++, author: currentUser.name, text, likes: 0, dislikes: 0, reportCount: 0 });
-      renderBoardList();
+      if (!p) return;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('comments')
+          .insert({ post_id: id, author: currentUser.name, author_id: currentUser.id, content: text })
+          .select()
+          .single();
+        if (error) throw error;
+
+        p.comments.push({
+          id: data.id,
+          author: data.author,
+          text: data.content,
+          likes: data.likes,
+          dislikes: data.dislikes,
+          reportCount: data.report_count,
+        });
+        input.value = '';
+        renderBoardList();
+      } catch (e){
+        console.warn('[주문의 고수] 댓글 등록 실패 (comments 테이블/RLS 확인 필요)', e);
+        showToast('댓글 등록에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
     });
   }
 
@@ -2433,18 +2770,27 @@
       : `<p class="text-xs" style="color:var(--muted);">블라인드 처리된 게시글이 없습니다.</p>`;
   }
 
-  function permanentlyDeletePost(id){
+  async function permanentlyDeletePost(id){
     if (!isAdminUser()){
       showToast('관리자 권한이 없습니다.');
       return;
     }
     if (!confirm('이 게시글을 영구적으로 삭제하시겠습니까?')) return;
 
-    const idx = boardPosts.findIndex(p => p.id === id);
-    if (idx > -1) boardPosts.splice(idx, 1);
-    renderReportedPosts();
-    renderBoardList();
-    showToast('게시글이 영구 삭제되었습니다.');
+    try {
+      const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+      if (error) throw error;
+
+      const idx = boardPosts.findIndex(p => p.id === id);
+      if (idx > -1) boardPosts.splice(idx, 1);
+      renderReportedPosts();
+      renderBoardList();
+      refreshMyStatsUI();
+      showToast('게시글이 영구 삭제되었습니다.');
+    } catch (e){
+      console.warn('[주문의 고수] 게시글 영구 삭제 실패 (posts 테이블/RLS 확인 필요)', e);
+      showToast('영구 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
   }
 
   // ---------- 로컬 B2B 마케팅: 지역 타겟 푸시/알림톡·SMS 발송 뼈대 ----------
@@ -2792,14 +3138,42 @@
     authToken = token;
     isLoggedIn = true;
     currentUser = {
+      id: user.id || null, // Supabase Auth uid — posts/comments author_id, 투표/신고 RPC에 사용
       name: user.nickname,
       email: user.email,
       phone: user.phone || '',
       region: user.region || '',
       level: typeof user.level === 'number' ? user.level : 0,
       role: user.role || 'USER', // 서버가 내려주는 실제 권한. 신규 가입/소셜 로그인은 항상 일반 회원(USER)
+      attendanceCount: 0,       // 아래 loadMyProfileStats()가 Supabase profiles 테이블 실측치로 채워줌
+      lastAttendanceDate: null,
+      joinedAt: null,
     };
     updateAuthNavUI();
+    loadMyProfileStats();
+    // 로그인 상태가 바뀌었으니 '내가 이미 추천/신고한' 캐시도 다시 채우고 게시판을 다시 그린다.
+    loadMyBoardInteractions().then(renderBoardList);
+  }
+
+  // 로그인 시(또는 세션 복원 시) Supabase profiles 테이블에서 본인의 출석/가입일 정보를 불러온다.
+  // (다른 회원의 정보는 조회하지 않으며, RPC 내부에서 auth.uid() 기준으로만 조회되어 안전함)
+  async function loadMyProfileStats(){
+    if (!currentUser) return;
+    try {
+      const { data, error } = await supabaseClient.rpc('get_my_profile_stats');
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row){
+        currentUser.attendanceCount = Number(row.attendance_count) || 0;
+        currentUser.lastAttendanceDate = row.last_attendance_date || null;
+        currentUser.joinedAt = row.joined_at || null;
+      }
+    } catch (e){
+      console.warn('[주문의 고수] 내 프로필(출석/가입일) 조회 실패 (get_my_profile_stats RPC 확인 필요)', e);
+    }
+    updateAuthNavUI();
+    const modal = document.getElementById('user-info-modal');
+    if (modal && modal.classList.contains('flex')) renderUserInfoModalContent();
   }
 
   // Supabase Auth의 user 객체(회원가입 시 넣어둔 user_metadata 포함)를
@@ -2807,6 +3181,7 @@
   function buildUserFromSupabaseUser(supaUser){
     const meta = (supaUser && supaUser.user_metadata) || {};
     return {
+      id: supaUser.id,
       nickname: meta.nickname || (supaUser.email ? supaUser.email.split('@')[0] : '회원'),
       email: supaUser.email,
       phone: meta.phone || '',
@@ -2938,9 +3313,10 @@
     const mobileAdminBtn = document.getElementById('tab-admin-mobile');
 
     if (isLoggedIn && currentUser){
-      const stats = computeUserStats(currentUser.name);
-      const inLevelExp = stats.exp % 10000;
-      const profileLabel = `[Lv.${stats.level}] ${currentUser.name}님 (${inLevelExp.toLocaleString('ko-KR')}/10,000 XP)`;
+      const stats = computeMyTotalStats();
+      const profileLabel = stats.level >= MAX_LEVEL
+        ? `[Lv.${stats.level} MAX] ${currentUser.name}님 (${stats.exp.toLocaleString('ko-KR')} XP)`
+        : `[Lv.${stats.level}] ${currentUser.name}님 (${stats.expIntoLevel.toLocaleString('ko-KR')}/${stats.expForNextLevel.toLocaleString('ko-KR')} XP)`;
 
       desktopBtn.textContent = profileLabel;
       desktopBtn.onclick = openUserInfoModal;
@@ -2978,6 +3354,7 @@
     isLoggedIn = false;
     currentUser = null;
     updateAuthNavUI();
+    loadMyBoardInteractions().then(renderBoardList); // 내 추천/신고 표시 초기화
     showToast('로그아웃되었습니다.');
     switchTab('home');
   }
@@ -2987,20 +3364,89 @@
       showToast('로그인이 필요합니다.');
       return;
     }
-    document.getElementById('user-info-name').textContent = currentUser.name || '-';
-    document.getElementById('user-info-email').textContent = currentUser.email || '-';
-    document.getElementById('user-info-phone').textContent = currentUser.phone || '-';
-    document.getElementById('user-info-region').textContent = currentUser.region || '-';
-
-    const stats = computeUserStats(currentUser.name);
-    document.getElementById('user-info-level').textContent = stats.level;
-    document.getElementById('user-info-exp').textContent = stats.exp.toLocaleString('ko-KR');
-    document.getElementById('user-info-exp-remain').textContent = stats.remain.toLocaleString('ko-KR');
-    document.getElementById('user-info-exp-bar').style.width = stats.progressPct + '%';
+    renderUserInfoModalContent();
 
     const modal = document.getElementById('user-info-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+  }
+
+  // 게시글/댓글 추천·삭제 등으로 내 EXP가 바뀔 수 있는 액션 직후 호출.
+  // 헤더의 [Lv.n] 라벨과, 열려있다면 '내 정보' 모달까지 한 번에 최신 값으로 갱신한다.
+  function refreshMyStatsUI(){
+    updateAuthNavUI();
+    const modal = document.getElementById('user-info-modal');
+    if (modal && modal.classList.contains('flex')) renderUserInfoModalContent();
+  }
+
+  // 내 정보 모달의 레벨/EXP 게이지 + 출석체크 버튼 상태를 최신 currentUser 값으로 다시 그린다.
+  // (모달을 처음 열 때 뿐 아니라, 출석체크 직후·프로필 통계 재조회 직후에도 재사용됨)
+  function renderUserInfoModalContent(){
+    if (!currentUser) return;
+
+    document.getElementById('user-info-name').textContent = currentUser.name || '-';
+    document.getElementById('user-info-email').textContent = currentUser.email || '-';
+    document.getElementById('user-info-region').textContent = currentUser.region || '-';
+
+    const stats = computeMyTotalStats();
+    document.getElementById('user-info-level').textContent = stats.level >= MAX_LEVEL ? `${stats.level} MAX` : stats.level;
+    document.getElementById('user-info-exp').textContent = stats.exp.toLocaleString('ko-KR');
+    document.getElementById('user-info-exp-remain-label').textContent = stats.level >= MAX_LEVEL
+      ? '🎉 만렙(Lv.50)을 달성했어요!'
+      : `다음 레벨까지 ${stats.remain.toLocaleString('ko-KR')} XP`;
+    document.getElementById('user-info-exp-bar').style.width = stats.progressPct + '%';
+
+    document.getElementById('user-info-attendance-count').textContent = (currentUser.attendanceCount || 0).toLocaleString('ko-KR');
+
+    const todayStr = getTodayKST();
+    const checkedInToday = currentUser.lastAttendanceDate === todayStr;
+    const btn = document.getElementById('user-info-attendance-btn');
+    if (btn){
+      if (checkedInToday){
+        btn.textContent = '✅ 오늘 출석 완료';
+        btn.disabled = true;
+        btn.style.background = 'var(--card-alt)';
+        btn.style.color = 'var(--muted)';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.textContent = '오늘 출석체크 하기 (+100 EXP)';
+        btn.disabled = false;
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#1C1A17';
+        btn.style.cursor = 'pointer';
+      }
+    }
+  }
+
+  // 출석체크: Supabase의 check_in_attendance() RPC(SECURITY DEFINER)가 하루 1회만
+  // 인정되도록 서버에서 판단하고, attendance_count/last_attendance_date를 갱신해 돌려준다.
+  async function checkInAttendance(){
+    if (!isLoggedIn || !currentUser) return;
+
+    const btn = document.getElementById('user-info-attendance-btn');
+    if (btn) btn.disabled = true; // 응답 오기 전 중복 클릭 방지
+
+    try {
+      const { data, error } = await supabaseClient.rpc('check_in_attendance');
+      if (error) throw error;
+
+      const row = Array.isArray(data) ? data[0] : data;
+      currentUser.attendanceCount = Number(row?.attendance_count) || 0;
+      currentUser.lastAttendanceDate = getTodayKST();
+
+      if (row?.already_checked_in){
+        showToast('이미 오늘 출석체크를 완료했어요 ✅');
+      } else {
+        showToast('출석체크 완료! 100 EXP가 적립되었습니다.');
+      }
+
+      renderUserInfoModalContent();
+      updateAuthNavUI();
+    } catch (e){
+      console.warn('[주문의 고수] 출석체크 실패 (check_in_attendance RPC 확인 필요)', e);
+      showToast('출석체크에 실패했어요. 잠시 후 다시 시도해주세요.');
+      if (btn) btn.disabled = false;
+    }
   }
 
   function closeUserInfoModal(){
@@ -3224,6 +3670,7 @@
     if (!entry) return;
     const current = entry.type || [];
     entry.type = current.includes(type) ? current.filter(t => t !== type) : [...current, type];
+    markDiscountDataUpdated();
     renderAdminDiscountList();
     renderDiscountList();
     renderBest3();
@@ -3261,6 +3708,7 @@
       if (brandGroupKey(discounts[i].name) === group.key) discounts.splice(i, 1);
     }
     if (editingBrandKey === group.key) resetAdminDiscountForm();
+    markDiscountDataUpdated();
     renderAdminDiscountList();
     renderDiscountList();
     showToast('브랜드가 삭제되었습니다.');
@@ -3328,6 +3776,7 @@
 
     const wasEditing = !!editingBrandKey;
     resetAdminDiscountForm();
+    markDiscountDataUpdated();
     renderAdminDiscountList();
     renderDiscountList();
     showToast(wasEditing ? '브랜드 정보가 수정되었습니다.' : '브랜드가 등록되었습니다 ✅');
@@ -3357,7 +3806,6 @@
     el.innerHTML = participants.map((p, i) => `
       <tr class="dashed-divider" id="participant-row-${i}" style="transition:background-color .3s ease;">
         <td class="py-2 text-sm">${p.name}</td>
-        <td class="py-2 font-mono text-xs" style="color:var(--muted);">${p.phone}</td>
         <td class="py-2 font-mono text-xs" style="color:var(--muted);">${p.email}</td>
         <td class="py-2 text-xs" style="color:var(--primary);">${p.vote}</td>
       </tr>
@@ -3398,7 +3846,6 @@
     try {
       const { error } = await supabaseClient.from('winners').insert({
         name: winner.name,
-        phone: winner.phone,
         email: winner.email,
         vote_label: winner.vote,
       });
@@ -3425,7 +3872,7 @@
     try {
       const { data, error } = await supabaseClient
         .from('winners')
-        .select('id, name, phone, email, vote_label, drawn_at')
+        .select('id, name, email, vote_label, drawn_at')
         .order('drawn_at', { ascending: false });
 
       if (error) throw error;
@@ -3437,7 +3884,6 @@
         <tr class="dashed-divider">
           <td class="py-2 font-mono text-xs" style="color:var(--muted);">${formatWinnerDate(w.drawn_at)}</td>
           <td class="py-2 text-sm">${w.name || '-'}</td>
-          <td class="py-2 font-mono text-xs" style="color:var(--muted);">${w.phone || '-'}</td>
           <td class="py-2 font-mono text-xs" style="color:var(--muted);">${w.email || '-'}</td>
           <td class="py-2 text-xs" style="color:var(--primary);">${w.vote_label || '-'}</td>
           <td class="py-2 text-right">
@@ -3483,8 +3929,8 @@
       return;
     }
 
-    const header = ['이름', '연락처', '이메일', '투표 항목'];
-    const rows = participants.map(p => [p.name, p.phone, p.email, p.vote]);
+    const header = ['이름', '이메일', '투표 항목'];
+    const rows = participants.map(p => [p.name, p.email, p.vote]);
 
     // 셀 안에 쉼표/줄바꿈/큰따옴표가 있어도 깨지지 않도록 이스케이프 처리
     const escapeCsvCell = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
@@ -3549,12 +3995,12 @@
   renderBest3CategorySelect();
   renderBest3();
   renderBarcode();
+  loadDiscountUpdatedAt(); // Supabase app_config에서 최신 할인 업데이트 날짜를 불러와 배지 렌더링
   renderCategoryChips();
   renderDiscountList();
   renderVoteOptions();
   renderBoardComposeAppSelect();
-  renderBoardList();
-  renderReportedPosts();
+  loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
   renderAdminCategorySelect();
   renderAdminDiscountList();
   renderAdminVoteStats();
