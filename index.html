@@ -157,6 +157,13 @@
   header{
     padding-top: max(32px, calc(env(safe-area-inset-top, 0px) + 16px));
   }
+
+  /* type="search" 사용 시 브라우저 기본 취소(x) 버튼이 커스텀 × 버튼과 겹치지 않도록 숨김 */
+  #search_brand::-webkit-search-cancel-button,
+  #search_brand::-webkit-search-decoration{
+    -webkit-appearance: none;
+    appearance: none;
+  }
 </style>
 </head>
 <body class="min-h-screen">
@@ -257,7 +264,7 @@
   <section class="mb-8">
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
     <div class="relative mb-5 max-w-[320px]">
-      <input id="brand-search-input" type="text" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
       <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
     </div>
@@ -1520,7 +1527,7 @@
 
   function clearBrandSearch(){
     brandSearchQuery = '';
-    document.getElementById('brand-search-input').value = '';
+    document.getElementById('search_brand').value = '';
     document.getElementById('brand-search-clear').classList.add('hidden');
     renderDiscountList();
   }
