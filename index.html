@@ -286,8 +286,8 @@
 
   <!-- DISCOUNT LIST -->
   <section>
-    <div class="flex items-center justify-between mb-2 gap-3">
-      <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트 <span id="discount-list-updated" class="font-mono text-xs align-middle" style="color:var(--muted);"></span></h3>
+    <div class="flex items-center justify-between mb-1 gap-3">
+      <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트</h3>
       <div class="flex items-center gap-2 shrink-0">
         <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
           <span id="sort-toggle-label">할인가 높은순</span> <span>↕</span>
@@ -295,6 +295,7 @@
         <span class="font-mono text-xs whitespace-nowrap" style="color:var(--muted);"><span id="result-count">0</span>건</span>
       </div>
     </div>
+    <p id="discount-list-updated" class="font-mono text-[11px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>
     <p class="text-[11px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 최대 할인 기준이며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
@@ -1031,7 +1032,7 @@
     const best3El = document.getElementById('best3-updated-badge');
     const listEl = document.getElementById('discount-list-updated');
     if (best3El) best3El.textContent = badge;
-    if (listEl) listEl.textContent = `(${badge})`;
+    if (listEl) listEl.textContent = badge;
   }
 
   // ---------------------------------------------------------------
@@ -3043,7 +3044,7 @@
     <p class="${ARTICLE_HEAD}" style="color:var(--accent);">제5조 (면책조항)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">
       ① 회사는 제휴 배달 앱 및 프랜차이즈가 제공하는 할인 정보를 단순히 수집·매개하여 전달하는 역할을 할 뿐이며, 회원과 배달 앱 간에 체결되는 주문, 결제, 배송 등 거래의 당사자가 아닙니다.<br>
-      ② 할인 정보의 변경, 조기 종료, 재고 소진 등으로 실제 주문 시 표시된 내용과 차이가 발생할 수 있으며, 이에 대한 책임은 해당 배달 앱 및 프랜차이즈에 있습니다.<br>
+      ② 할인 정보의 변경, 조기 종료, 재고 소진 등 제휴사 및 외부 사정에 따라 실제 주문 시 표시된 내용과 차이가 발생할 수 있으며, 회사는 이로 인해 회원에게 발생한 손해에 대해 책임을 지지 않습니다.<br>
       ③ 회사는 회원이 서비스에서 확인한 정보를 이용하여 발생한 손해에 대해 회사의 고의 또는 중대한 과실이 없는 한 책임을 지지 않습니다.
     </p>
 
