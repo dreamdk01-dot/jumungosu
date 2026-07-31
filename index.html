@@ -859,6 +859,20 @@
   </div>
 </div>
 
+<!-- ===== PC 전용 공유 팝업 (링크 + 복사 버튼) ===== -->
+<div id="pc-share-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
+  <div class="w-full max-w-sm rounded-lg p-5" style="background:var(--card-alt);">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-display text-base" style="color:var(--primary);">공유하기</h3>
+      <button type="button" onclick="closePcShareModal()" class="text-xl leading-none" style="color:var(--muted); background:none; border:none;" aria-label="닫기">×</button>
+    </div>
+    <div class="flex gap-2">
+      <input id="pc-share-url-input" type="text" readonly onclick="this.select()" class="flex-1 min-w-0 px-3 py-2.5 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      <button type="button" onclick="copyPcShareUrl()" class="shrink-0 px-4 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">복사</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 게시글 첨부 이미지 확대보기(라이트박스) ===== -->
 <div id="image-lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.9);" onclick="closeImageLightbox()">
   <button type="button" onclick="closeImageLightbox()" class="absolute top-4 right-4 text-3xl leading-none" style="color:#fff; background:none; border:none;" aria-label="닫기">×</button>
@@ -3154,6 +3168,7 @@
       ? (p.board === 'food' ? `[${APP_LABEL[p.app] || ''}] ${p.brandMenu || ''} 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 할인!` : (p.title || '이 글을 확인해보세요!'))
       : '이 글을 확인해보세요!';
 
+    // 모바일: 기존 그대로 네이티브 공유 시트(카카오톡/문자/메일 등)
     if (navigator.share && isMobileDevice()){
       try {
         await navigator.share({ title: shareTitle, text: shareText, url });
@@ -3163,12 +3178,37 @@
       return;
     }
 
+    // PC: 아이콘을 여러 개 늘어놓지 않고, 링크 + 복사 버튼만 있는 작은 팝업만 띄운다.
+    openPcShareModal(url);
+  }
+
+  function openPcShareModal(url){
+    const input = document.getElementById('pc-share-url-input');
+    input.value = url;
+    const modal = document.getElementById('pc-share-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    lockBodyScroll();
+    setTimeout(() => input.select(), 50);
+  }
+
+  function closePcShareModal(){
+    const modal = document.getElementById('pc-share-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    unlockBodyScroll();
+  }
+
+  async function copyPcShareUrl(){
+    const input = document.getElementById('pc-share-url-input');
+    input.select();
     try {
-      await navigator.clipboard.writeText(url);
-      showToast('게시글 링크가 복사되었습니다 📋');
+      await navigator.clipboard.writeText(input.value);
+      showToast('링크가 복사되었습니다 📋');
+      closePcShareModal();
     } catch (e){
       console.warn('[주문의 고수] 링크 복사 실패', e);
-      showToast('링크 복사에 실패했어요. 주소창의 URL을 직접 복사해주세요.');
+      showToast('복사에 실패했어요. Ctrl+C로 직접 복사해주세요.');
     }
   }
 
