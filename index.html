@@ -901,7 +901,7 @@
 
 <!-- ===== USER INFO MODAL ===== -->
 <div id="user-info-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
-  <div class="w-full max-w-sm rounded-lg p-6" style="background:var(--card-alt);">
+  <div class="w-full max-w-sm rounded-lg p-6 overflow-y-auto" style="background:var(--card-alt); max-height:90vh; -webkit-overflow-scrolling:touch;">
     <div class="flex items-start justify-between mb-5">
       <h3 class="font-display text-lg" style="color:var(--primary);">내 정보</h3>
       <button onclick="closeUserInfoModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
@@ -1004,7 +1004,7 @@
 
 <!-- ===== SIGNUP MODAL (event page vote flow) ===== -->
 <div id="signup-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
-  <div class="w-full max-w-sm rounded-xl p-7" style="background:var(--card-alt);">
+  <div class="w-full max-w-sm rounded-xl p-7 overflow-y-auto" style="background:var(--card-alt); max-height:90vh; -webkit-overflow-scrolling:touch;">
     <div class="flex items-start justify-between mb-1.5">
       <h3 class="font-display text-lg" style="color:var(--primary);">회원가입하고 투표하기</h3>
       <button onclick="closeModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
