@@ -915,76 +915,83 @@
 
 <!-- ===== USER INFO MODAL ===== -->
 <div id="user-info-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
-  <div class="w-full max-w-sm rounded-lg p-6 overflow-y-auto" style="background:var(--card-alt); max-height:90vh; -webkit-overflow-scrolling:touch;">
+  <div class="w-full max-w-sm md:max-w-2xl rounded-lg p-6 overflow-y-auto" style="background:var(--card-alt); max-height:90vh; -webkit-overflow-scrolling:touch;">
     <div class="flex items-start justify-between mb-5">
       <h3 class="font-display text-lg" style="color:var(--primary);">내 정보</h3>
       <button onclick="closeUserInfoModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
     </div>
 
-    <!-- 레벨 / 경험치 게이지 -->
-    <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
-      <div class="flex items-center justify-between mb-2">
-        <span class="font-display text-lg" style="color:var(--primary);">Lv.<span id="user-info-level">0</span></span>
-        <span class="font-mono text-xs" style="color:var(--muted);"><span id="user-info-exp">0</span> XP</span>
-      </div>
-      <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--card-alt);">
-        <div id="user-info-exp-bar" class="h-full" style="width:0%; background:var(--primary);"></div>
-      </div>
-      <p id="user-info-exp-remain-label" class="text-[10px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
-    </div>
-
-    <!-- 출석체크 -->
-    <div class="rounded-lg p-4 mb-5 text-center" style="background:var(--surface);">
-      <p class="text-xs mb-2" style="color:var(--muted);">출석체크</p>
-      <button id="user-info-attendance-btn" type="button" onclick="checkInAttendance()" class="w-full py-2.5 rounded-md font-semibold text-sm transition" style="background:var(--primary); color:#1C1A17;">오늘 출석체크 하기 (+100 EXP)</button>
-      <p class="text-[11px] mt-2" style="color:var(--muted);">총 누적 출석: <span id="user-info-attendance-count">0</span>일</p>
-    </div>
-
-    <div class="space-y-4 mb-6">
+    <!-- PC(md 이상)에서는 2단으로, 모바일에서는 지금처럼 한 줄로 쌓이도록 함 -->
+    <div class="md:grid md:grid-cols-2 md:gap-6 md:items-start">
       <div>
-        <p class="text-xs mb-1" style="color:var(--muted);">닉네임</p>
-        <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
-          <span id="user-info-name">-</span>
-          <span id="user-info-role-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
-          <button type="button" id="user-info-nickname-edit-toggle" onclick="toggleNicknameEditForm()" class="text-[11px] font-semibold" style="color:var(--muted); text-decoration:underline;">수정</button>
-        </p>
-        <p id="user-info-nickname-cooldown-msg" class="text-[11px] mt-1 hidden" style="color:var(--accent);"></p>
+        <!-- 레벨 / 경험치 게이지 -->
+        <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-display text-lg" style="color:var(--primary);">Lv.<span id="user-info-level">0</span></span>
+            <span class="font-mono text-xs" style="color:var(--muted);"><span id="user-info-exp">0</span> XP</span>
+          </div>
+          <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--card-alt);">
+            <div id="user-info-exp-bar" class="h-full" style="width:0%; background:var(--primary);"></div>
+          </div>
+          <p id="user-info-exp-remain-label" class="text-[10px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
+        </div>
 
-        <div id="user-info-nickname-edit-form" class="hidden mt-2 space-y-2">
-          <div class="flex gap-2">
-            <input id="user-info-nickname-input" type="text" autocomplete="off" spellcheck="false" oninput="resetNicknameCheck('myinfo')" placeholder="새 닉네임" class="flex-1 min-w-0 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-            <button type="button" onclick="checkNicknameDuplicate('myinfo')" class="shrink-0 px-3 py-2 rounded-md text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
-          </div>
-          <p id="myinfo-nickname-check-msg" class="text-[11px] hidden"></p>
-          <div class="flex gap-2">
-            <button type="button" onclick="submitNicknameChange()" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">닉네임 저장</button>
-            <button type="button" onclick="toggleNicknameEditForm(false)" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
-          </div>
+        <!-- 출석체크 -->
+        <div class="rounded-lg p-4 mb-5 text-center" style="background:var(--surface);">
+          <p class="text-xs mb-2" style="color:var(--muted);">출석체크</p>
+          <button id="user-info-attendance-btn" type="button" onclick="checkInAttendance()" class="w-full py-2.5 rounded-md font-semibold text-sm transition" style="background:var(--primary); color:#1C1A17;">오늘 출석체크 하기 (+100 EXP)</button>
+          <p class="text-[11px] mt-2" style="color:var(--muted);">총 누적 출석: <span id="user-info-attendance-count">0</span>일</p>
         </div>
       </div>
-      <div>
-        <p class="text-xs mb-1" style="color:var(--muted);">이메일 주소</p>
-        <p id="user-info-email" class="text-sm font-semibold" style="color:var(--text);">-</p>
-      </div>
-      <div>
-        <p class="text-xs mb-1" style="color:var(--muted);">우리 동네</p>
-        <p id="user-info-region" class="text-sm font-semibold" style="color:var(--text);">-</p>
-      </div>
-      <div>
-        <p class="text-xs mb-1" style="color:var(--muted);">가입일</p>
-        <p id="user-info-joined" class="text-sm font-semibold" style="color:var(--text);">-</p>
-      </div>
-    </div>
 
-    <!-- 비밀번호 변경 -->
-    <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
-      <p class="text-xs font-semibold mb-3" style="color:var(--primary);">🔒 비밀번호 변경</p>
-      <div class="space-y-2">
-        <input id="user-info-current-password" type="password" autocomplete="current-password" placeholder="현재 비밀번호" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
-        <input id="user-info-new-password" type="password" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
-        <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
-        <p id="user-info-password-msg" class="text-[11px] hidden"></p>
-        <button type="button" onclick="submitPasswordChange()" class="w-full py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">비밀번호 변경하기</button>
+      <div>
+        <div class="space-y-4 mb-6">
+          <div>
+            <p class="text-xs mb-1" style="color:var(--muted);">닉네임</p>
+            <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
+              <span id="user-info-name">-</span>
+              <span id="user-info-role-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
+              <button type="button" id="user-info-nickname-edit-toggle" onclick="toggleNicknameEditForm()" class="text-[11px] font-semibold" style="color:var(--muted); text-decoration:underline;">수정</button>
+            </p>
+            <p id="user-info-nickname-cooldown-msg" class="text-[11px] mt-1 hidden" style="color:var(--accent);"></p>
+
+            <div id="user-info-nickname-edit-form" class="hidden mt-2 space-y-2">
+              <div class="flex gap-2">
+                <input id="user-info-nickname-input" type="text" autocomplete="off" spellcheck="false" oninput="resetNicknameCheck('myinfo')" placeholder="새 닉네임" class="flex-1 min-w-0 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+                <button type="button" onclick="checkNicknameDuplicate('myinfo')" class="shrink-0 px-3 py-2 rounded-md text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
+              </div>
+              <p id="myinfo-nickname-check-msg" class="text-[11px] hidden"></p>
+              <div class="flex gap-2">
+                <button type="button" onclick="submitNicknameChange()" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">닉네임 저장</button>
+                <button type="button" onclick="toggleNicknameEditForm(false)" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs mb-1" style="color:var(--muted);">이메일 주소</p>
+            <p id="user-info-email" class="text-sm font-semibold" style="color:var(--text);">-</p>
+          </div>
+          <div>
+            <p class="text-xs mb-1" style="color:var(--muted);">우리 동네</p>
+            <p id="user-info-region" class="text-sm font-semibold" style="color:var(--text);">-</p>
+          </div>
+          <div>
+            <p class="text-xs mb-1" style="color:var(--muted);">가입일</p>
+            <p id="user-info-joined" class="text-sm font-semibold" style="color:var(--text);">-</p>
+          </div>
+        </div>
+
+        <!-- 비밀번호 변경 -->
+        <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
+          <p class="text-xs font-semibold mb-3" style="color:var(--primary);">🔒 비밀번호 변경</p>
+          <div class="space-y-2">
+            <input id="user-info-current-password" type="password" autocomplete="current-password" placeholder="현재 비밀번호" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+            <input id="user-info-new-password" type="password" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+            <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+            <p id="user-info-password-msg" class="text-[11px] hidden"></p>
+            <button type="button" onclick="submitPasswordChange()" class="w-full py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">비밀번호 변경하기</button>
+          </div>
+        </div>
       </div>
     </div>
 
