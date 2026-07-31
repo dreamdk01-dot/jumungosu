@@ -510,9 +510,10 @@
       <div class="flex items-center gap-2">
         <h2 class="font-display text-2xl" style="color:var(--primary);">사장님 대시보드</h2>
         <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
+        <span id="admin-dashboard-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
       </div>
     </div>
-    <p class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
+    <p id="admin-dashboard-role-desc" class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
   </section>
 
   <!-- 홈 배너 관리 -->
@@ -536,7 +537,7 @@
         <select id="admin-banner-promo-post" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
       </div>
     </div>
-    <button type="button" onclick="saveHomeBannerConfig()" class="mt-4 px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">배너 저장하기</button>
+    <button type="button" id="admin-banner-save-btn" onclick="saveHomeBannerConfig()" class="mt-4 px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">배너 저장하기</button>
   </section>
 
   <!-- 통계 대시보드 -->
@@ -658,7 +659,7 @@
         <p class="font-mono text-xs mb-3" style="color:var(--muted);">이번 주 투표 후보 관리</p>
         <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
         <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
-        <button type="button" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">후보 저장하기</button>
+        <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">후보 저장하기</button>
         <p class="text-[11px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 주 득표수는 0표로 초기화돼요.</p>
       </div>
 
@@ -674,7 +675,7 @@
           <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
           <div class="flex items-center gap-2">
             <button type="button" onclick="loadEventParticipants()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
-            <button type="button" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
+            <button type="button" id="admin-draw-winner-btn" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
             <button type="button" onclick="downloadParticipantsCSV()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⬇ 참여자 CSV 다운로드</button>
           </div>
         </div>
@@ -924,7 +925,10 @@
     <div class="space-y-4 mb-6">
       <div>
         <p class="text-xs mb-1" style="color:var(--muted);">닉네임</p>
-        <p id="user-info-name" class="text-sm font-semibold" style="color:var(--text);">-</p>
+        <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
+          <span id="user-info-name">-</span>
+          <span id="user-info-role-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
+        </p>
       </div>
       <div>
         <p class="text-xs mb-1" style="color:var(--muted);">이메일 주소</p>
@@ -1585,13 +1589,29 @@
 
   const REPORT_BLIND_THRESHOLD = 5;
 
-  // 관리자 권한 판별 — 하드코딩 비밀번호가 아니라, 현재 Supabase Auth 세션의
-  // 로그인 이메일이 관리자 이메일과 일치하는지로만 판단합니다.
-  const ADMIN_EMAIL = 'jumungosu@gmail.com';
+  // ---------- 관리자 권한 (2단계) ----------
+  // 마스터: 관리자 페이지의 모든 등록/수정/삭제(쓰기) 작업이 가능한 유일한 계정.
+  // 매니저: 관리자 페이지 접근(조회)만 가능하고, 실제 데이터를 바꾸는 작업은 할 수 없음.
+  // 하드코딩 비밀번호가 아니라 현재 로그인된 Supabase Auth 세션의 이메일로만 판단합니다.
+  const ADMIN_EMAIL = 'jumungosu@gmail.com'; // = 마스터 이메일 (하위 호환을 위해 이름 유지)
+  const MASTER_EMAIL = ADMIN_EMAIL;
+  const MANAGER_EMAILS = ['jumungosu@gmail.com', 'dream3359@naver.com', 'withcarrot@gmail.com'];
   // '아이디 저장' 체크 시 로그인 이메일을 저장해두는 LocalStorage 키
   const SAVED_EMAIL_KEY = 'jumungosu_saved_login_email';
+
+  // 쓰기 권한(등록/수정/삭제) — 기존 코드 곳곳에서 이미 이 이름으로 "마스터 전용 작업"을 게이트하고 있음
   function isAdminUser(){
-    return !!(isLoggedIn && currentUser && currentUser.email === ADMIN_EMAIL);
+    return !!(isLoggedIn && currentUser && currentUser.email === MASTER_EMAIL);
+  }
+  // 관리자 페이지 접근(조회) 권한 — 마스터를 포함한 매니저 목록 전체
+  function isManagerUser(){
+    return !!(isLoggedIn && currentUser && MANAGER_EMAILS.includes(currentUser.email));
+  }
+  // 헤더/내 정보 등에 붙일 역할 뱃지 텍스트 ('MASTER' | 'MANAGER' | '')
+  function getUserRoleBadge(){
+    if (isAdminUser()) return 'MASTER';
+    if (isManagerUser()) return 'MANAGER';
+    return '';
   }
 
   // 로그인한 '나'의 추천/신고 기록 캐시. Supabase post_likes/comment_likes/post_reports/comment_reports
@@ -2103,7 +2123,7 @@
   // 이번 주 후보 목록을 Supabase(vote_events)에 저장한다. (관리자 전용, 저장 시 이번 주 득표는 0표로 시작)
   async function saveVoteEventOptions(){
     if (!isAdminUser()){
-      showToast('관리자 권한이 없습니다.');
+      showToast('마스터 권한이 필요합니다.');
       return;
     }
 
@@ -3392,7 +3412,7 @@
   // 관리자가 홈 배너 설정을 저장 — 4개 키를 각각 set_home_banner_config RPC로 기록한다.
   async function saveHomeBannerConfig(){
     if (!isAdminUser()){
-      showToast('관리자 권한이 없습니다.');
+      showToast('마스터 권한이 필요합니다.');
       return;
     }
 
@@ -3459,9 +3479,9 @@
 
   // ---------- 관리자 페이지 진입 게이트 (이메일 기반) ----------
   // 하드코딩 비밀번호 대신, 현재 로그인된 Supabase Auth 계정의 이메일이
-  // ADMIN_EMAIL과 일치할 때만 관리자 대시보드로 이동합니다.
+  // 매니저 목록(마스터 포함)에 있을 때만 관리자 대시보드로 이동합니다.
   function handleAdminNavClick(){
-    if (isAdminUser()){
+    if (isManagerUser()){
       switchTab('admin');
     } else {
       showToast('관리자 권한이 없습니다.');
@@ -3489,7 +3509,7 @@
 
   async function permanentlyDeletePost(id){
     if (!isAdminUser()){
-      showToast('관리자 권한이 없습니다.');
+      showToast('마스터 권한이 필요합니다.');
       return;
     }
     if (!confirm('이 게시글을 영구적으로 삭제하시겠습니까?')) return;
@@ -3977,6 +3997,40 @@
   }
 
   // ---------- 로그인 상태에 따른 상단 메뉴 전환 (로그인/회원가입 ↔ 내 정보) ----------
+  // 관리자 대시보드 상단의 역할 뱃지 + 안내 문구를 현재 로그인 계정 기준으로 갱신
+  function renderAdminRoleBadge(){
+    const badgeEl = document.getElementById('admin-dashboard-role-badge');
+    const descEl = document.getElementById('admin-dashboard-role-desc');
+    if (!badgeEl || !descEl) return;
+
+    if (isAdminUser()){
+      badgeEl.textContent = 'MASTER';
+      badgeEl.style.background = 'var(--primary)';
+      badgeEl.style.color = '#1C1A17';
+      descEl.textContent = '할인 정보와 이벤트 현황을 관리하세요. (등록·수정·삭제 가능)';
+    } else if (isManagerUser()){
+      badgeEl.textContent = 'MANAGER';
+      badgeEl.style.background = 'var(--type-delivery)';
+      badgeEl.style.color = '#1C1A17';
+      descEl.textContent = '할인 정보와 이벤트 현황을 조회할 수 있어요. (등록·수정·삭제는 마스터 계정만 가능)';
+    } else {
+      badgeEl.textContent = '';
+    }
+
+    // 마스터 전용 저장/추첨 버튼은 매니저 계정에게 시각적으로도 비활성화 처리
+    // (실제 차단은 각 함수 내부의 isAdminUser() 게이트가 이미 담당하며, 이건 UX 보조 장치일 뿐)
+    const masterOnlyIds = ['admin-discount-submit-btn', 'admin-vote-save-btn', 'admin-banner-save-btn', 'admin-draw-winner-btn'];
+    const isMaster = isAdminUser();
+    masterOnlyIds.forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.disabled = !isMaster;
+      btn.style.opacity = isMaster ? '1' : '0.5';
+      btn.style.cursor = isMaster ? 'pointer' : 'not-allowed';
+      btn.title = isMaster ? '' : '마스터 계정만 사용할 수 있어요';
+    });
+  }
+
   function updateAuthNavUI(){
     const desktopBtn = document.getElementById('tab-auth');
     const mobileBtn = document.getElementById('tab-auth-mobile');
@@ -3987,9 +4041,11 @@
 
     if (isLoggedIn && currentUser){
       const stats = computeMyTotalStats();
-      const profileLabel = stats.level >= MAX_LEVEL
+      const roleBadge = getUserRoleBadge();
+      const roleTag = roleBadge ? ` [${roleBadge}]` : '';
+      const profileLabel = (stats.level >= MAX_LEVEL
         ? `[Lv.${stats.level} MAX] ${currentUser.name}님 (${stats.exp.toLocaleString('ko-KR')} XP)`
-        : `[Lv.${stats.level}] ${currentUser.name}님 (${stats.expIntoLevel.toLocaleString('ko-KR')}/${stats.expForNextLevel.toLocaleString('ko-KR')} XP)`;
+        : `[Lv.${stats.level}] ${currentUser.name}님 (${stats.expIntoLevel.toLocaleString('ko-KR')}/${stats.expForNextLevel.toLocaleString('ko-KR')} XP)`) + roleTag;
 
       desktopBtn.textContent = profileLabel;
       desktopBtn.onclick = openUserInfoModal;
@@ -4006,10 +4062,11 @@
       mobileLogoutBtn.classList.add('hidden');
     }
 
-    // 일반 방문자/회원에게는 완전히 숨기고, 관리자 이메일로 로그인했을 때만 노출
-    const showAdminBtn = isAdminUser();
+    // 일반 방문자/회원에게는 완전히 숨기고, 매니저(마스터 포함) 이메일로 로그인했을 때만 노출
+    const showAdminBtn = isManagerUser();
     if (desktopAdminBtn) desktopAdminBtn.classList.toggle('hidden', !showAdminBtn);
     if (mobileAdminBtn) mobileAdminBtn.classList.toggle('hidden', !showAdminBtn);
+    renderAdminRoleBadge();
 
     // 관리자 권한을 잃은 상태(로그아웃/일반 유저 전환)로 바뀌면 관리자 페이지에 남아있지 않도록 처리
     if (!showAdminBtn && document.getElementById('page-admin') && !document.getElementById('page-admin').classList.contains('hidden')){
@@ -4061,6 +4118,15 @@
     if (!currentUser) return;
 
     document.getElementById('user-info-name').textContent = currentUser.name || '-';
+    const roleBadgeEl = document.getElementById('user-info-role-badge');
+    const roleBadgeText = getUserRoleBadge();
+    if (roleBadgeEl){
+      roleBadgeEl.classList.toggle('hidden', !roleBadgeText);
+      if (roleBadgeText){
+        roleBadgeEl.textContent = roleBadgeText;
+        roleBadgeEl.style.background = roleBadgeText === 'MASTER' ? 'var(--primary)' : 'var(--type-delivery)';
+      }
+    }
     document.getElementById('user-info-email').textContent = currentUser.email || '-';
     document.getElementById('user-info-region').textContent = currentUser.region || '-';
     document.getElementById('user-info-joined').textContent = formatJoinedDate(currentUser.joinedAt);
@@ -4355,6 +4421,10 @@
   // 관리자 페이지에서 특정 플랫폼 항목의 배달/포장 여부를 직접 토글.
   // discounts 배열을 바로 수정하기 때문에 메인 화면 할인 리스트에도 즉시 반영됩니다.
   function toggleAdminDiscountType(discountId, type){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
     const entry = discounts.find(d => d.id === discountId);
     if (!entry) return;
     const current = entry.type || [];
@@ -4389,6 +4459,10 @@
   }
 
   function deleteAdminBrand(index){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
     const group = adminGroupsCache[index];
     if (!group) return;
     if (!confirm(`'${group.displayName}' 브랜드의 모든 플랫폼 할인 정보를 삭제하시겠습니까?`)) return;
@@ -4416,6 +4490,10 @@
   }
 
   function submitAdminDiscount(){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
     const name = document.getElementById('admin-name').value.trim();
     const badge = document.getElementById('admin-badge').value.trim() || name.slice(0, 2);
     const category = document.getElementById('admin-category').value;
@@ -4523,6 +4601,10 @@
 
   // ---------- 이벤트 관리: 랜덤 추첨 / CSV 다운로드 ----------
   async function drawRandomWinner(){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
     if (!participants.length){
       showToast('추첨할 참여자가 없어요 🙏');
       return;
@@ -4614,6 +4696,10 @@
   }
 
   async function deleteWinner(winnerId){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
     if (!confirm('해당 당첨 내역을 삭제하시겠습니까?')) return;
 
     try {
@@ -4690,7 +4776,7 @@
   // ---------- TABS ----------
   const PAGES = ['home', 'event', 'board', 'auth', 'admin'];
   function switchTab(tab){
-    if (tab === 'admin' && !isAdminUser()){
+    if (tab === 'admin' && !isManagerUser()){
       showToast('관리자 권한이 없습니다.');
       return;
     }
