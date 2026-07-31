@@ -822,6 +822,12 @@
   </div>
 </div>
 
+<!-- ===== 게시글 첨부 이미지 확대보기(라이트박스) ===== -->
+<div id="image-lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.9);" onclick="closeImageLightbox()">
+  <button type="button" onclick="closeImageLightbox()" class="absolute top-4 right-4 text-3xl leading-none" style="color:#fff; background:none; border:none;" aria-label="닫기">×</button>
+  <img id="image-lightbox-img" src="" onclick="event.stopPropagation()" class="max-w-full max-h-full rounded-md" style="object-fit:contain;" alt="첨부 이미지 원본">
+</div>
+
 <!-- ===== BOARD LOGIN PROMPT MODAL ===== -->
 <div id="board-login-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
   <div class="w-full max-w-sm rounded-lg p-6 text-center" style="background:var(--card-alt);">
@@ -2732,6 +2738,32 @@
   // 정보만 보여주며, 다른 회원의 닉네임을 눌러도 그 사람의 개인정보(이메일·연락처·동네 등)는
   // 조회할 수 없도록 설계되어 있습니다.
   // 🔥 할인의 고수 카드 본문: 총 할인 금액(대형 강조) → 배달앱+브랜드/메뉴 → 할인 조합 상세 → 상세 공유 내용
+  // 게시글 첨부 이미지: 세로로 긴 인증샷 등이 잘리지 않도록 object-contain으로 전체를 보여주고,
+  // 클릭하면 원본 크기로 볼 수 있는 라이트박스가 뜨도록 한다.
+  function postImageHtml(image){
+    if (!image) return '';
+    const safeUrl = image.replace(/'/g, '%27');
+    return `
+        <button type="button" onclick="openImageLightbox('${safeUrl}')" class="block w-full rounded-md mb-1 overflow-hidden" style="background:var(--card-alt); border:none; padding:0; cursor:zoom-in;">
+          <img src="${image}" class="w-full max-h-80 object-contain" alt="첨부 이미지" loading="lazy">
+        </button>
+        <p class="text-[11px] mb-3" style="color:var(--muted);">🔍 이미지를 누르면 원본 크기로 볼 수 있어요</p>`;
+  }
+
+  function openImageLightbox(url){
+    document.getElementById('image-lightbox-img').src = url;
+    const modal = document.getElementById('image-lightbox-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeImageLightbox(){
+    const modal = document.getElementById('image-lightbox-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('image-lightbox-img').src = '';
+  }
+
   function foodPostBodyHtml(p, expanded){
     const amountText = (typeof p.totalDiscount === 'number' && !isNaN(p.totalDiscount))
       ? p.totalDiscount.toLocaleString('ko-KR')
@@ -2747,7 +2779,7 @@
         </div>
         <p class="text-xs mb-3" style="color:var(--muted); text-decoration:underline; text-decoration-color:var(--line);">(${escapeHtml(p.comboDetail || '')})</p>
         ${p.content ? `<p class="text-sm mb-3" style="color:var(--text); white-space:pre-line;">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 120))}</p>` : ''}
-        ${p.image ? `<img src="${p.image}" class="w-full rounded-md mb-3 max-h-64 object-cover" alt="첨부 이미지">` : ''}`;
+        ${postImageHtml(p.image)}`;
   }
 
   // 배달 꿀조합 & 레시피 카드 본문: 제목 + 자유 텍스트
@@ -2755,7 +2787,7 @@
     return `
         <p class="font-bold text-sm mb-1">${escapeHtml(p.title)}</p>
         <p class="text-sm mb-3" style="color:var(--text); white-space:pre-line;">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 120))}</p>
-        ${p.image ? `<img src="${p.image}" class="w-full rounded-md mb-3 max-h-64 object-cover" alt="첨부 이미지">` : ''}`;
+        ${postImageHtml(p.image)}`;
   }
 
   function postCardHtml(p){
