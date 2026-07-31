@@ -874,6 +874,10 @@
         <p class="text-xs mb-1" style="color:var(--muted);">우리 동네</p>
         <p id="user-info-region" class="text-sm font-semibold" style="color:var(--text);">-</p>
       </div>
+      <div>
+        <p class="text-xs mb-1" style="color:var(--muted);">가입일</p>
+        <p id="user-info-joined" class="text-sm font-semibold" style="color:var(--text);">-</p>
+      </div>
     </div>
 
     <!-- 경험치(EXP) 획득 방법 안내 -->
@@ -882,7 +886,7 @@
       <ul class="text-[11px] leading-relaxed list-disc list-inside space-y-0.5" style="color:var(--muted);">
         <li>게시글/댓글 추천 1개당 <span style="color:var(--text); font-weight:600;">+100 EXP</span></li>
         <li>매일 출석체크 <span style="color:var(--text); font-weight:600;">+100 EXP</span> (하루 1회)</li>
-        <li>가입 기간 30일(1달)마다 <span style="color:var(--text); font-weight:600;">+1,000 EXP</span> 자동 적립</li>
+        <li>가입 기간 1달마다 <span style="color:var(--text); font-weight:600;">+1,000 EXP</span> 자동 적립</li>
       </ul>
     </div>
 
@@ -1583,6 +1587,16 @@
     const now = new Date();
     const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     return kst.toISOString().slice(0, 10);
+  }
+
+  // '내 정보' 모달의 가입일 표시: YYYY.MM.DD (가입 N일째) — 30일마다 EXP가 자동 적립되는 기준일을 바로 확인할 수 있게 함
+  function formatJoinedDate(joinedAt){
+    if (!joinedAt) return '-';
+    const d = new Date(joinedAt);
+    if (isNaN(d.getTime())) return '-';
+    const pad = n => String(n).padStart(2, '0');
+    const daysSinceJoin = Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
+    return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} (가입 ${daysSinceJoin + 1}일째)`;
   }
 
   // 경험치 산정: 추천(따봉) 1개당 100점
@@ -3499,6 +3513,7 @@
     document.getElementById('user-info-name').textContent = currentUser.name || '-';
     document.getElementById('user-info-email').textContent = currentUser.email || '-';
     document.getElementById('user-info-region').textContent = currentUser.region || '-';
+    document.getElementById('user-info-joined').textContent = formatJoinedDate(currentUser.joinedAt);
 
     const stats = computeMyTotalStats();
     document.getElementById('user-info-level').textContent = stats.level >= MAX_LEVEL ? `${stats.level} MAX` : stats.level;
