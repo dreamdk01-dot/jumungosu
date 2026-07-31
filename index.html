@@ -346,7 +346,9 @@
       <aside class="sm:col-span-1">
         <nav class="flex flex-col gap-2">
           <button id="board-tab-food" onclick="switchBoardTab('food')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🔥 할인의 고수</button>
-          <button id="board-tab-recipe" onclick="switchBoardTab('recipe')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">배달 꿀조합 & 레시피</button>
+          <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
+          <button id="board-tab-recipe" onclick="switchBoardTab('recipe')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🍕 배달 꿀조합 & 레시피</button>
+          <button id="board-tab-free" onclick="switchBoardTab('free')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
         </nav>
       </aside>
 
@@ -359,7 +361,12 @@
         <div id="board-compose" class="hidden rounded-lg p-4 mb-5 space-y-3" style="background:var(--card);">
           <p class="text-xs font-bold rounded-md px-3 py-2" style="background:rgba(255,90,54,0.14); color:var(--accent); border:1px solid var(--accent);">⚠️ 욕설, 비속어, 음란성 사진 및 부적절한 광고 내용을 작성할 경우 서비스 이용이 제한될 수 있습니다. 부적절한 콘텐츠는 유저 신고에 의해 즉시 블라인드 처리됩니다.</p>
 
-          <!-- 🔥 할인의 고수 전용 입력 필드 -->
+          <div>
+            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">카테고리 선택</label>
+            <select id="board-compose-category" onchange="handleComposeCategoryChange()" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
+          </div>
+
+          <!-- 🔥 할인의 고수 / 🚨 실시간 할인 제보 공용 입력 필드 (할인 정보) -->
           <div id="board-compose-food-fields" class="space-y-3">
             <div>
               <label class="text-xs font-medium block mb-1" style="color:var(--muted);">총 할인 금액</label>
@@ -383,7 +390,7 @@
             </div>
           </div>
 
-          <!-- 배달 꿀조합 & 레시피 전용 입력 필드 -->
+          <!-- 배달 꿀조합 & 레시피 / 오늘 뭐 먹지? 공용 입력 필드 (제목 + 자유 내용) -->
           <div id="board-compose-recipe-fields" class="space-y-3 hidden">
             <input id="board-compose-title" type="text" placeholder="제목을 입력하세요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             <textarea id="board-compose-content" rows="4" placeholder="내용을 입력하세요" class="w-full px-3 py-2 rounded-md text-sm outline-none resize-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></textarea>
@@ -1718,7 +1725,21 @@
   const participants = [];
 
   // ---------- 자유게시판 (Supabase posts/comments/post_likes/comment_likes/*_reports 테이블과 연동) ----------
-  let activeBoardTab = 'food'; // 'food' | 'recipe'
+  // 카테고리 4종. formType이 'discount'면 할인 정보 입력폼(총액/앱/브랜드/조합), 'simple'이면 제목+내용 자유 글쓰기폼을 사용.
+  const BOARD_CATEGORIES = [
+    { key: 'food',     label: '🔥 할인의 고수',        formType: 'discount' },
+    { key: 'realtime', label: '🚨 실시간 할인 제보',    formType: 'discount' },
+    { key: 'recipe',   label: '🍕 배달 꿀조합 & 레시피', formType: 'simple' },
+    { key: 'free',     label: '💬 오늘 뭐 먹지?',       formType: 'simple' },
+  ];
+  function getBoardCategoryMeta(key){
+    return BOARD_CATEGORIES.find(c => c.key === key) || BOARD_CATEGORIES[0];
+  }
+  function isDiscountFormCategory(key){
+    return getBoardCategoryMeta(key).formType === 'discount';
+  }
+
+  let activeBoardTab = 'food'; // BOARD_CATEGORIES의 key 중 하나
   let boardPage = 1;
   const POSTS_PER_PAGE = 5;
   const expandedPostIds = new Set();
@@ -2527,19 +2548,34 @@
   function switchBoardTab(tab){
     activeBoardTab = tab;
     boardPage = 1;
-    const foodBtn = document.getElementById('board-tab-food');
-    const recipeBtn = document.getElementById('board-tab-recipe');
 
-    if (tab === 'food'){
-      foodBtn.style.background = '#FEE500'; foodBtn.style.color = '#1C1A17'; foodBtn.style.border = 'none';
-      recipeBtn.style.background = 'var(--card)'; recipeBtn.style.color = 'var(--muted)'; recipeBtn.style.border = '1px solid var(--line)';
-    } else {
-      recipeBtn.style.background = '#FEE500'; recipeBtn.style.color = '#1C1A17'; recipeBtn.style.border = 'none';
-      foodBtn.style.background = 'var(--card)'; foodBtn.style.color = 'var(--muted)'; foodBtn.style.border = '1px solid var(--line)';
-    }
+    BOARD_CATEGORIES.forEach(c => {
+      const btn = document.getElementById(`board-tab-${c.key}`);
+      if (!btn) return;
+      if (c.key === tab){
+        btn.style.background = '#FEE500'; btn.style.color = '#1C1A17'; btn.style.border = 'none';
+      } else {
+        btn.style.background = 'var(--card)'; btn.style.color = 'var(--muted)'; btn.style.border = '1px solid var(--line)';
+      }
+    });
 
     closeBoardCompose();
     renderBoardList();
+  }
+
+  // 글쓰기 모달의 카테고리 드롭다운 옵션을 채운다
+  function renderBoardComposeCategorySelect(){
+    const el = document.getElementById('board-compose-category');
+    if (!el) return;
+    el.innerHTML = BOARD_CATEGORIES.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+  }
+
+  // 선택된 카테고리의 formType에 따라 할인 입력폼/자유 글쓰기폼 중 하나만 보여준다
+  function handleComposeCategoryChange(){
+    const category = document.getElementById('board-compose-category').value;
+    const isDiscount = isDiscountFormCategory(category);
+    document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
+    document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
   }
 
   function openBoardCompose(){
@@ -2554,9 +2590,10 @@
       document.getElementById('board-compose-image-label').textContent = '사진 첨부 (선택)';
       document.getElementById('board-compose-submit-btn').textContent = '등록하기';
 
-      const isFood = activeBoardTab === 'food';
-      document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isFood);
-      document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isFood);
+      const categorySelect = document.getElementById('board-compose-category');
+      categorySelect.value = activeBoardTab;
+      handleComposeCategoryChange();
+
       document.getElementById('board-compose').classList.remove('hidden');
     });
   }
@@ -2897,12 +2934,12 @@
   async function submitBoardPost(){
     requireLogin(async () => {
       const errEl = document.getElementById('board-compose-error');
-      const editingExisting = editingPostId ? boardPosts.find(x => x.id === editingPostId) : null;
-      const isFood = editingExisting ? editingExisting.board === 'food' : activeBoardTab === 'food';
+      const category = document.getElementById('board-compose-category').value;
+      const isDiscount = isDiscountFormCategory(category);
 
       let payload;
 
-      if (isFood){
+      if (isDiscount){
         const amountRaw = document.getElementById('board-compose-amount').value.trim();
         const app = document.getElementById('board-compose-app').value;
         const brandMenu = document.getElementById('board-compose-brand').value.trim();
@@ -2922,7 +2959,7 @@
         errEl.classList.add('hidden');
 
         payload = {
-          board: 'food',
+          board: category,
           title: null,
           total_discount: amount,
           app,
@@ -2946,7 +2983,7 @@
         errEl.classList.add('hidden');
 
         payload = {
-          board: 'recipe',
+          board: category,
           title,
           total_discount: null,
           app: null,
@@ -3037,11 +3074,12 @@
     if (!p || !canModifyPost(p)) return;
 
     editingPostId = id;
-    const isFood = p.board === 'food';
-    document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isFood);
-    document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isFood);
+    const isDiscount = isDiscountFormCategory(p.board);
+    document.getElementById('board-compose-category').value = p.board;
+    document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
+    document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
 
-    if (isFood){
+    if (isDiscount){
       document.getElementById('board-compose-amount').value = p.totalDiscount;
       document.getElementById('board-compose-app').value = p.app;
       document.getElementById('board-compose-brand').value = p.brandMenu;
@@ -3172,7 +3210,7 @@
     const url = buildPostShareUrl(postId, board);
     const shareTitle = '주문의 고수';
     const shareText = p
-      ? (p.board === 'food' ? `[${APP_LABEL[p.app] || ''}] ${p.brandMenu || ''} 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 할인!` : (p.title || '이 글을 확인해보세요!'))
+      ? (isDiscountFormCategory(p.board) ? `[${APP_LABEL[p.app] || ''}] ${p.brandMenu || ''} 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 할인!` : (p.title || '이 글을 확인해보세요!'))
       : '이 글을 확인해보세요!';
 
     // 모바일: 기존 그대로 네이티브 공유 시트(카카오톡/문자/메일 등)
@@ -3225,7 +3263,8 @@
     const postId = params.get('post');
     if (!postId) return;
 
-    const board = params.get('type') === 'recipe' ? 'recipe' : 'food';
+    const typeParam = params.get('type');
+    const board = BOARD_CATEGORIES.some(c => c.key === typeParam) ? typeParam : 'food';
     const targetId = isNaN(Number(postId)) ? postId : Number(postId);
 
     switchTab('board');
@@ -3542,7 +3581,7 @@
 
     const expanded = expandedPostIds.has(p.id);
     const canModify = canModifyPost(p);
-    const bodyHtml = p.board === 'food' ? foodPostBodyHtml(p, expanded) : recipePostBodyHtml(p, expanded);
+    const bodyHtml = isDiscountFormCategory(p.board) ? foodPostBodyHtml(p, expanded) : recipePostBodyHtml(p, expanded);
 
     return `
       <div id="board-post-${p.id}" class="rounded-lg p-4" style="background:var(--card);">
@@ -3652,7 +3691,7 @@
   function renderAdminBannerPostSelect(){
     const select = document.getElementById('admin-banner-promo-post');
     if (!select) return;
-    const foodPosts = boardPosts.filter(p => p.board === 'food');
+    const foodPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
     select.innerHTML = '<option value="">(자동: 할인액 1위 게시글)</option>' +
       foodPosts.map(p => `<option value="${p.id}">[${APP_LABEL[p.app] || p.app}] ${escapeHtml(p.brandMenu || '')} · 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 (${escapeHtml(p.author)})</option>`).join('');
 
@@ -3700,29 +3739,31 @@
   }
 
   function goToTopDiscountPost(){
-    const foodPosts = boardPosts.filter(p => p.board === 'food').slice().sort((a, b) => b.id - a.id);
+    const discountPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
 
     // 관리자가 지정한 글이 있고 실제로 존재하면 그 글로, 아니면 할인액이 가장 큰 글로 자동 이동
-    let targetId = null;
-    if (homeBannerConfig.promoPostId && foodPosts.some(p => String(p.id) === String(homeBannerConfig.promoPostId))){
-      targetId = homeBannerConfig.promoPostId;
-    } else if (foodPosts.length){
-      targetId = foodPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0].id;
+    let target = null;
+    if (homeBannerConfig.promoPostId){
+      target = discountPosts.find(p => String(p.id) === String(homeBannerConfig.promoPostId)) || null;
+    }
+    if (!target && discountPosts.length){
+      target = discountPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0];
     }
 
     switchTab('board');
-    switchBoardTab('food');
+    switchBoardTab(target ? target.board : 'food');
 
-    if (targetId == null) return;
+    if (!target) return;
 
-    const idx = foodPosts.findIndex(p => String(p.id) === String(targetId));
+    const sameBoardPosts = boardPosts.filter(p => p.board === target.board).slice().sort((a, b) => b.id - a.id);
+    const idx = sameBoardPosts.findIndex(p => String(p.id) === String(target.id));
     if (idx > -1){
       boardPage = Math.floor(idx / POSTS_PER_PAGE) + 1;
       renderBoardList();
     }
 
     setTimeout(() => {
-      const el = document.getElementById(`board-post-${targetId}`);
+      const el = document.getElementById(`board-post-${target.id}`);
       if (!el) return;
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.classList.add('post-highlight-flash');
@@ -5278,6 +5319,7 @@
   renderDiscountList();
   initEventVoting(); // 이번 주 후보 로드 → 득표 집계/내 투표 여부 → 관리자 참여자 목록 순서로 진행
   renderBoardComposeAppSelect();
+  renderBoardComposeCategorySelect();
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
   renderAdminCategorySelect();
   renderAdminDiscountList();
