@@ -5203,7 +5203,11 @@
 
     // 이미 알고 있는 경로(/, /home, /event, /board, /auth, /admin)라면 주소는 그대로 두고,
     // 낯선 경로(옛날 북마크 등)로 들어온 경우에만 홈 경로로 정리한다.
-    const normalizedPath = (rawPath in PATH_TO_TAB) ? rawPath : (TAB_TO_PATH[initialTab] || '/home');
+    // 공유 링크(?post=1&type=food)의 쿼리스트링은 뒤에서 handleSharedPostDeepLink()가 읽어야
+    // 하므로, 정규화할 때도 반드시 location.search를 그대로 붙여서 유지한다.
+    const normalizedPath = (rawPath in PATH_TO_TAB)
+      ? (rawPath + location.search)
+      : (TAB_TO_PATH[initialTab] || '/home');
     history.replaceState({ tab: initialTab }, '', normalizedPath);
   })();
 
