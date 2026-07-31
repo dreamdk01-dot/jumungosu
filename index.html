@@ -3140,6 +3140,12 @@
     return `${location.origin}/board?post=${postId}&type=${board}`;
   }
 
+  // 모바일 기기 여부 판별 — PC(윈도우 등)의 navigator.share()는 공유 앱 목록을 못 불러오고
+  // 멈추는 경우가 있어(네이티브 공유 시트 버그), 실제 모바일에서만 네이티브 공유를 사용한다.
+  function isMobileDevice(){
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  }
+
   async function sharePost(postId, board){
     const p = boardPosts.find(x => x.id === postId);
     const url = buildPostShareUrl(postId, board);
@@ -3148,7 +3154,7 @@
       ? (p.board === 'food' ? `[${APP_LABEL[p.app] || ''}] ${p.brandMenu || ''} 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 할인!` : (p.title || '이 글을 확인해보세요!'))
       : '이 글을 확인해보세요!';
 
-    if (navigator.share){
+    if (navigator.share && isMobileDevice()){
       try {
         await navigator.share({ title: shareTitle, text: shareText, url });
       } catch (e){
