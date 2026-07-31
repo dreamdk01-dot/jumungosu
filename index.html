@@ -397,7 +397,7 @@
             <input id="board-compose-image" type="file" accept="image/*" class="hidden" onchange="handleBoardImageChange(event)">
             <div class="relative mt-2">
               <img id="board-compose-image-preview" class="hidden w-full rounded-md max-h-48 object-contain" style="background:var(--card-alt);" alt="첨부 이미지 미리보기">
-              <button type="button" id="board-compose-redact-btn" onclick="openImageRedactEditor()" class="hidden absolute top-2 right-2 text-xs font-semibold px-2.5 py-1.5 rounded-full" style="background:rgba(0,0,0,0.7); color:#fff;">이미지 가리기 ✏️</button>
+              <button type="button" id="board-compose-redact-btn" onclick="openImageRedactEditor()" class="hidden absolute top-2 right-2 text-xs font-semibold px-2.5 py-1.5 rounded-full" style="background:rgba(0,0,0,0.7); color:#fff;">🧽 개인정보 지우개</button>
             </div>
           </div>
           <div class="flex gap-2">
@@ -835,13 +835,14 @@
 <div id="image-redact-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.85);">
   <div class="w-full max-w-lg rounded-lg p-4 flex flex-col" style="background:var(--card-alt); max-height:92vh;">
     <div class="flex items-center justify-between mb-1 shrink-0">
-      <h3 class="font-display text-base" style="color:var(--primary);">이미지 가리기</h3>
+      <h3 class="font-display text-base" style="color:var(--primary);">🧽 개인정보 지우개</h3>
       <button type="button" onclick="closeImageRedactEditor()" class="text-xl leading-none" style="color:var(--muted); background:none; border:none;" aria-label="닫기">×</button>
     </div>
     <p class="text-xs mb-2 shrink-0" style="color:var(--muted);">주소·전화번호·결제정보 등 가리고 싶은 부분을 드래그(또는 손가락으로 밀기)해서 선택하세요.</p>
     <div class="flex-1 overflow-auto rounded-md flex items-center justify-center" style="background:#000; min-height:200px;">
       <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair;"></canvas>
     </div>
+    <p class="text-[11px] mt-2 shrink-0" style="color:var(--accent);">⚠️ 이름·전화번호·주소·카드번호 등 개인정보가 사진에 남아있지 않은지 꼼꼼히 확인 후 등록해주세요. 가려지지 않은 정보로 인한 문제는 작성자 본인에게 책임이 있어요.</p>
     <div class="flex items-center justify-between gap-2 mt-3 shrink-0">
       <button type="button" onclick="undoLastRedaction()" class="text-xs font-semibold px-3 py-2 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↩ 실행 취소</button>
       <div class="flex gap-2">
@@ -2356,7 +2357,7 @@
     document.getElementById('board-compose-image-label').textContent = '가려진 이미지 (다시 첨부하면 초기화)';
 
     closeImageRedactEditor();
-    showToast('이미지 가리기가 완료됐어요 ✅');
+    showToast('개인정보 지우개 편집이 완료됐어요 ✅');
   }
 
   // 캔버스 드래그/터치 이벤트는 페이지 로드 시 한 번만 등록 (모달을 열 때마다 다시 붙이지 않음)
