@@ -2746,7 +2746,7 @@
           <span class="font-bold text-sm" style="color:var(--text);">${escapeHtml(p.brandMenu || '')}</span>
         </div>
         <p class="text-xs mb-3" style="color:var(--muted); text-decoration:underline; text-decoration-color:var(--line);">(${escapeHtml(p.comboDetail || '')})</p>
-        ${p.content ? `<p class="text-sm mb-3" style="color:var(--text);">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 60))}</p>` : ''}
+        ${p.content ? `<p class="text-sm mb-3" style="color:var(--text); white-space:pre-line;">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 120))}</p>` : ''}
         ${p.image ? `<img src="${p.image}" class="w-full rounded-md mb-3 max-h-64 object-cover" alt="첨부 이미지">` : ''}`;
   }
 
@@ -2754,7 +2754,7 @@
   function recipePostBodyHtml(p, expanded){
     return `
         <p class="font-bold text-sm mb-1">${escapeHtml(p.title)}</p>
-        <p class="text-sm mb-3" style="color:var(--text);">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 60))}</p>
+        <p class="text-sm mb-3" style="color:var(--text); white-space:pre-line;">${expanded ? escapeHtml(p.content) : escapeHtml(truncateText(p.content, 120))}</p>
         ${p.image ? `<img src="${p.image}" class="w-full rounded-md mb-3 max-h-64 object-cover" alt="첨부 이미지">` : ''}`;
   }
 
