@@ -449,8 +449,12 @@
           <p id="page-su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
         </div>
         <div>
-          <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임 <span style="color:var(--primary);">(가입 시 회원 레벨이 자동으로 부여돼요)</span></label>
-          <input id="signup_nickname" name="signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임</label>
+          <div class="flex gap-2">
+            <input id="signup_nickname" name="signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore oninput="resetNicknameCheck('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            <button type="button" onclick="checkNicknameDuplicate('page-su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
+          </div>
+          <p id="page-su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">관심 지역 설정 (할인받을 동네)</label>
@@ -928,7 +932,21 @@
         <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
           <span id="user-info-name">-</span>
           <span id="user-info-role-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
+          <button type="button" id="user-info-nickname-edit-toggle" onclick="toggleNicknameEditForm()" class="text-[11px] font-semibold" style="color:var(--muted); text-decoration:underline;">수정</button>
         </p>
+        <p id="user-info-nickname-cooldown-msg" class="text-[11px] mt-1 hidden" style="color:var(--accent);"></p>
+
+        <div id="user-info-nickname-edit-form" class="hidden mt-2 space-y-2">
+          <div class="flex gap-2">
+            <input id="user-info-nickname-input" type="text" autocomplete="off" spellcheck="false" oninput="resetNicknameCheck('myinfo')" placeholder="새 닉네임" class="flex-1 min-w-0 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            <button type="button" onclick="checkNicknameDuplicate('myinfo')" class="shrink-0 px-3 py-2 rounded-md text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
+          </div>
+          <p id="myinfo-nickname-check-msg" class="text-[11px] hidden"></p>
+          <div class="flex gap-2">
+            <button type="button" onclick="submitNicknameChange()" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">닉네임 저장</button>
+            <button type="button" onclick="toggleNicknameEditForm(false)" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
+          </div>
+        </div>
       </div>
       <div>
         <p class="text-xs mb-1" style="color:var(--muted);">이메일 주소</p>
@@ -941,6 +959,18 @@
       <div>
         <p class="text-xs mb-1" style="color:var(--muted);">가입일</p>
         <p id="user-info-joined" class="text-sm font-semibold" style="color:var(--text);">-</p>
+      </div>
+    </div>
+
+    <!-- 비밀번호 변경 -->
+    <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
+      <p class="text-xs font-semibold mb-3" style="color:var(--primary);">🔒 비밀번호 변경</p>
+      <div class="space-y-2">
+        <input id="user-info-current-password" type="password" autocomplete="current-password" placeholder="현재 비밀번호" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+        <input id="user-info-new-password" type="password" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+        <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+        <p id="user-info-password-msg" class="text-[11px] hidden"></p>
+        <button type="button" onclick="submitPasswordChange()" class="w-full py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">비밀번호 변경하기</button>
       </div>
     </div>
 
@@ -1000,8 +1030,12 @@
         <p id="su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
       </div>
       <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임 <span style="color:var(--primary);">(가입 시 회원 레벨이 자동으로 부여돼요)</span></label>
-        <input id="signup_nickname_vote" name="vote_signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임</label>
+        <div class="flex gap-2">
+          <input id="signup_nickname_vote" name="vote_signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore oninput="resetNicknameCheck('su')" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <button type="button" onclick="checkNicknameDuplicate('su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">중복 확인</button>
+        </div>
+        <p id="su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">관심 지역 설정 (할인받을 동네)</label>
@@ -1285,6 +1319,91 @@
   function isEmailCheckPassed(prefix, email){
     const state = emailCheckState[prefix];
     return !!(state && state.checkedEmail === email && state.isAvailable);
+  }
+
+  // ---------- 회원가입: 닉네임 유효성 검사 + 중복 확인 ----------
+  // 관리자 사칭 및 특정 정치인 이름 도용 방지용 금칙 닉네임 목록. 필요하면 이 배열에 자유롭게 추가하세요.
+  const NICKNAME_FORBIDDEN_WORDS = [
+    // 1. 관리자 / 시스템 사칭 방지
+    '관리자', '운영자', 'admin', 'administrator', 'manager', 'master',
+    'sysop', 'system', 'root', 'support', 'official', '공지', '공지사항', '주문의고수', '주문고수',
+    // 2. 전·현직 대통령 및 주요 정치인 (정치적 분쟁 방지)
+    '대통령', '윤석열', '이재명', '문재인', '박근혜', '이명박', '노무현', '김대중', '김영삼', '전두환', '노태우', '박정희', '이승만', '한동훈',
+    // 3. 분란 및 비하성 키워드
+    '일베', '메갈', '페미', '틀딱', '좌빨', '수꼴',
+  ];
+
+  // 닉네임 형식 검사: 실패하면 에러 메시지 문자열을, 통과하면 null을 반환한다.
+  function validateNicknameFormat(nickname){
+    if (!nickname) return '닉네임을 입력해주세요.';
+    if (/\s/.test(nickname)) return '닉네임에는 띄어쓰기를 사용할 수 없습니다.';
+    if (!/^[가-힣a-zA-Z0-9]+$/.test(nickname)) return '닉네임에는 한글/영문/숫자만 사용할 수 있습니다. (특수문자 불가)';
+    if (nickname.length < 2 || nickname.length > 12) return '닉네임은 2~12자로 입력해주세요.';
+    if (containsBannedWord(nickname)) return '닉네임에 부적절한 표현이 포함되어 있습니다.';
+    const lower = nickname.toLowerCase();
+    if (NICKNAME_FORBIDDEN_WORDS.some(w => lower.includes(w.toLowerCase()))) return '사용할 수 없는 닉네임입니다.';
+    return null;
+  }
+
+  // prefix별 "마지막에 확인한 닉네임"과 "사용 가능했는지" 여부. emailCheckState와 동일한 패턴.
+  const nicknameCheckState = {};
+
+  function resetNicknameCheck(prefix){
+    delete nicknameCheckState[prefix];
+    const idMap = { 'page-su': 'page-su-nickname-check-msg', 'su': 'su-nickname-check-msg', 'myinfo': 'myinfo-nickname-check-msg' };
+    const msgEl = document.getElementById(idMap[prefix]);
+    if (msgEl) msgEl.classList.add('hidden');
+  }
+
+  async function checkNicknameDuplicate(prefix){
+    const inputIdMap = { 'page-su': 'signup_nickname', 'su': 'signup_nickname_vote', 'myinfo': 'user-info-nickname-input' };
+    const msgIdMap = { 'page-su': 'page-su-nickname-check-msg', 'su': 'su-nickname-check-msg', 'myinfo': 'myinfo-nickname-check-msg' };
+    const nicknameInput = document.getElementById(inputIdMap[prefix]);
+    const msgEl = document.getElementById(msgIdMap[prefix]);
+    if (!nicknameInput || !msgEl) return;
+
+    const nickname = nicknameInput.value.trim();
+    const formatError = validateNicknameFormat(nickname);
+
+    if (formatError){
+      msgEl.textContent = formatError;
+      msgEl.style.color = 'var(--accent)';
+      msgEl.classList.remove('hidden');
+      delete nicknameCheckState[prefix];
+      return;
+    }
+
+    msgEl.textContent = '확인 중...';
+    msgEl.style.color = 'var(--muted)';
+    msgEl.classList.remove('hidden');
+
+    try {
+      // 닉네임은 auth.users의 user_metadata(jsonb) 안에 있어 anon 키로 직접 조회할 수 없으므로,
+      // 존재 여부만 boolean으로 안전하게 반환하는 check_nickname_exists() RPC를 사용합니다.
+      const { data, error } = await supabaseClient.rpc('check_nickname_exists', { p_nickname: nickname });
+      if (error) throw error;
+
+      const exists = !!data;
+      nicknameCheckState[prefix] = { checkedNickname: nickname, isAvailable: !exists };
+
+      if (exists){
+        msgEl.textContent = '이미 사용 중인 닉네임입니다.';
+        msgEl.style.color = 'var(--accent)';
+      } else {
+        msgEl.textContent = '사용 가능한 닉네임입니다.';
+        msgEl.style.color = 'var(--type-delivery)';
+      }
+    } catch (e){
+      console.warn('[주문의 고수] 닉네임 중복 확인 실패 (check_nickname_exists RPC 확인 필요)', e);
+      msgEl.textContent = '중복 확인에 실패했어요. 잠시 후 다시 시도해주세요.';
+      msgEl.style.color = 'var(--accent)';
+      delete nicknameCheckState[prefix];
+    }
+  }
+
+  function isNicknameCheckPassed(prefix, nickname){
+    const state = nicknameCheckState[prefix];
+    return !!(state && state.checkedNickname === nickname && state.isAvailable);
   }
 
   // 실데이터 원본 (등록일: 2026.7.9 기준). prefix: ''(정액 할인) | '최대' | '메뉴'(메뉴별 할인)
@@ -3565,6 +3684,17 @@
       errEl.classList.remove('hidden');
       return;
     }
+    const nicknameFormatError = validateNicknameFormat(name);
+    if (nicknameFormatError){
+      errEl.textContent = nicknameFormatError;
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if (!isNicknameCheckPassed('su', name)){
+      errEl.textContent = '닉네임 중복 확인을 먼저 완료해주세요.';
+      errEl.classList.remove('hidden');
+      return;
+    }
     if (pw.length < 8){
       errEl.textContent = '비밀번호는 8자 이상이어야 합니다.';
       errEl.classList.remove('hidden');
@@ -3838,6 +3968,7 @@
       attendanceCount: 0,       // 아래 loadMyProfileStats()가 Supabase profiles 테이블 실측치로 채워줌
       lastAttendanceDate: null,
       joinedAt: null,
+      nicknameUpdatedAt: null,
     };
     updateAuthNavUI();
     loadMyProfileStats();
@@ -3860,6 +3991,7 @@
         currentUser.attendanceCount = Number(row.attendance_count) || 0;
         currentUser.lastAttendanceDate = row.last_attendance_date || null;
         currentUser.joinedAt = row.joined_at || null;
+        currentUser.nicknameUpdatedAt = row.nickname_updated_at || null;
       }
     } catch (e){
       console.warn('[주문의 고수] 내 프로필(출석/가입일) 조회 실패 (get_my_profile_stats RPC 확인 필요)', e);
@@ -3907,6 +4039,17 @@
     }
     if (!isEmailCheckPassed('page-su', email)){
       errEl.textContent = '이메일 중복 확인을 먼저 완료해주세요.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    const nicknameFormatError = validateNicknameFormat(name);
+    if (nicknameFormatError){
+      errEl.textContent = nicknameFormatError;
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if (!isNicknameCheckPassed('page-su', name)){
+      errEl.textContent = '닉네임 중복 확인을 먼저 완료해주세요.';
       errEl.classList.remove('hidden');
       return;
     }
@@ -4158,6 +4301,150 @@
         btn.style.color = '#1C1A17';
         btn.style.cursor = 'pointer';
       }
+    }
+
+    updateNicknameEditUI();
+  }
+
+  // 닉네임 옆 '수정' 버튼/쿨다운 안내를 최신 currentUser.nicknameUpdatedAt 기준으로 갱신한다.
+  function updateNicknameEditUI(){
+    const toggleBtn = document.getElementById('user-info-nickname-edit-toggle');
+    const cooldownMsg = document.getElementById('user-info-nickname-cooldown-msg');
+    if (!toggleBtn || !cooldownMsg || !currentUser) return;
+
+    const nextAllowed = getNicknameNextAllowedDate();
+    if (nextAllowed && nextAllowed.getTime() > Date.now()){
+      const pad = n => String(n).padStart(2, '0');
+      cooldownMsg.textContent = `닉네임은 ${nextAllowed.getFullYear()}.${pad(nextAllowed.getMonth()+1)}.${pad(nextAllowed.getDate())} 이후에 다시 변경할 수 있어요. (변경 후 14일 제한)`;
+      cooldownMsg.classList.remove('hidden');
+      toggleBtn.classList.add('hidden');
+      document.getElementById('user-info-nickname-edit-form').classList.add('hidden');
+    } else {
+      cooldownMsg.classList.add('hidden');
+      toggleBtn.classList.remove('hidden');
+    }
+  }
+
+  // 마지막 닉네임 변경일 + 14일 = 다음 변경 가능일. 변경 이력이 없으면 null(언제든 변경 가능).
+  function getNicknameNextAllowedDate(){
+    if (!currentUser || !currentUser.nicknameUpdatedAt) return null;
+    const last = new Date(currentUser.nicknameUpdatedAt);
+    if (isNaN(last.getTime())) return null;
+    return new Date(last.getTime() + 14 * 24 * 60 * 60 * 1000);
+  }
+
+  function toggleNicknameEditForm(show){
+    const form = document.getElementById('user-info-nickname-edit-form');
+    const shouldShow = typeof show === 'boolean' ? show : form.classList.contains('hidden');
+    form.classList.toggle('hidden', !shouldShow);
+    if (shouldShow){
+      document.getElementById('user-info-nickname-input').value = currentUser ? currentUser.name : '';
+      resetNicknameCheck('myinfo');
+    }
+  }
+
+  // 닉네임 변경: 형식 검사 → 중복 확인 통과 여부 확인 → update_my_nickname() RPC(서버가 14일 쿨다운을 최종 판정)
+  async function submitNicknameChange(){
+    const input = document.getElementById('user-info-nickname-input');
+    const newNickname = input.value.trim();
+
+    const formatError = validateNicknameFormat(newNickname);
+    if (formatError){
+      showToast(formatError);
+      return;
+    }
+    if (!isNicknameCheckPassed('myinfo', newNickname)){
+      showToast('닉네임 중복 확인을 먼저 완료해주세요.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient.rpc('update_my_nickname', { p_new_nickname: newNickname });
+      if (error) throw error;
+
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row || !row.success){
+        showToast((row && row.message) || '닉네임 변경에 실패했어요.');
+        if (row && row.next_allowed_at) currentUser.nicknameUpdatedAt = new Date(new Date(row.next_allowed_at).getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+        renderUserInfoModalContent();
+        return;
+      }
+
+      currentUser.name = newNickname;
+      currentUser.nicknameUpdatedAt = new Date().toISOString();
+
+      // RPC가 DB(auth.users)는 이미 갱신했지만, 브라우저에 캐시된 로그인 세션의 user_metadata는
+      // 그대로라 새로고침 시 옛 닉네임으로 보일 수 있다. 세션도 함께 갱신해 즉시 반영되게 한다.
+      try {
+        await supabaseClient.auth.updateUser({ data: { nickname: newNickname } });
+      } catch (syncErr){
+        console.warn('[주문의 고수] 닉네임 변경 후 세션 동기화 실패 (다음 로그인 시 정상 반영됨)', syncErr);
+      }
+
+      toggleNicknameEditForm(false);
+      renderUserInfoModalContent();
+      updateAuthNavUI();
+      showToast('닉네임이 변경되었습니다 ✅');
+    } catch (e){
+      console.warn('[주문의 고수] 닉네임 변경 실패 (update_my_nickname RPC 확인 필요)', e);
+      showToast('닉네임 변경에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  }
+
+  // 비밀번호 변경: 현재 비밀번호로 재인증(signInWithPassword) 후, 통과 시에만 새 비밀번호로 업데이트한다.
+  // (세션이 이미 로그인돼 있어도, 자리를 비운 사이 남이 바꾸지 못하도록 현재 비밀번호를 한 번 더 확인)
+  async function submitPasswordChange(){
+    const currentPw = document.getElementById('user-info-current-password').value;
+    const newPw = document.getElementById('user-info-new-password').value;
+    const newPwConfirm = document.getElementById('user-info-new-password-confirm').value;
+    const msgEl = document.getElementById('user-info-password-msg');
+
+    const showMsg = (text, isError) => {
+      msgEl.textContent = text;
+      msgEl.style.color = isError ? 'var(--accent)' : 'var(--type-delivery)';
+      msgEl.classList.remove('hidden');
+    };
+
+    if (!currentPw || !newPw || !newPwConfirm){
+      showMsg('모든 항목을 입력해주세요.', true);
+      return;
+    }
+    if (newPw.length < 8){
+      showMsg('새 비밀번호는 8자 이상이어야 합니다.', true);
+      return;
+    }
+    if (newPw !== newPwConfirm){
+      showMsg('새 비밀번호가 일치하지 않습니다.', true);
+      return;
+    }
+    if (newPw === currentPw){
+      showMsg('현재 비밀번호와 다른 비밀번호를 입력해주세요.', true);
+      return;
+    }
+
+    showMsg('변경 중...', false);
+
+    try {
+      const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
+        email: currentUser.email,
+        password: currentPw,
+      });
+      if (reauthError){
+        showMsg('현재 비밀번호가 올바르지 않습니다.', true);
+        return;
+      }
+
+      const { error: updateError } = await supabaseClient.auth.updateUser({ password: newPw });
+      if (updateError) throw updateError;
+
+      document.getElementById('user-info-current-password').value = '';
+      document.getElementById('user-info-new-password').value = '';
+      document.getElementById('user-info-new-password-confirm').value = '';
+      showMsg('비밀번호가 변경되었습니다 ✅', false);
+      showToast('비밀번호가 변경되었습니다 ✅');
+    } catch (e){
+      console.warn('[주문의 고수] 비밀번호 변경 실패', e);
+      showMsg('비밀번호 변경에 실패했어요. 잠시 후 다시 시도해주세요.', true);
     }
   }
 
