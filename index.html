@@ -3137,7 +3137,7 @@
 
   // ---------- 게시글 공유 (모바일: 네이티브 공유 시트 / PC: 링크 복사) ----------
   function buildPostShareUrl(postId, board){
-    return `${location.origin}${location.pathname}?post=${postId}&board=${board}`;
+    return `${location.origin}/board?post=${postId}&type=${board}`;
   }
 
   async function sharePost(postId, board){
@@ -3166,13 +3166,13 @@
     }
   }
 
-  // 공유된 링크(?post=ID&board=food)로 들어온 경우, 게시판의 해당 글로 자동 이동해 하이라이트한다.
+  // 공유된 링크(/board?post=ID&type=food)로 들어온 경우, 게시판의 해당 글로 자동 이동해 하이라이트한다.
   function handleSharedPostDeepLink(){
     const params = new URLSearchParams(location.search);
     const postId = params.get('post');
     if (!postId) return;
 
-    const board = params.get('board') === 'recipe' ? 'recipe' : 'food';
+    const board = params.get('type') === 'recipe' ? 'recipe' : 'food';
     const targetId = isNaN(Number(postId)) ? postId : Number(postId);
 
     switchTab('board');
@@ -5153,7 +5153,15 @@
 
   // ---------- TABS ----------
   const PAGES = ['home', 'event', 'board', 'auth', 'admin'];
-  function switchTab(tab){
+
+  // 탭 ↔ URL 경로 매핑. 뒤로가기(popstate) 시에도 같은 매핑으로 어느 탭인지 복원한다.
+  const TAB_TO_PATH = { home: '/home', event: '/event', board: '/board', auth: '/auth', admin: '/admin' };
+  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/event': 'event', '/board': 'board', '/auth': 'auth', '/admin': 'admin' };
+
+  // pushHistory=false로 호출하면(popstate 등) 주소는 이미 바뀌어 있는 상태이므로 새로 pushState하지 않는다.
+  function switchTab(tab, pushHistory){
+    if (pushHistory === undefined) pushHistory = true;
+
     if (tab === 'admin' && !isManagerUser()){
       showToast('관리자 권한이 없습니다.');
       return;
@@ -5168,9 +5176,37 @@
     });
     document.getElementById('mobile-menu').classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    if (pushHistory){
+      const path = TAB_TO_PATH[tab] || '/home';
+      if (location.pathname !== path){
+        history.pushState({ tab }, '', path);
+      }
+    }
   }
 
+  // 브라우저 뒤로가기/앞으로가기: 주소창의 경로를 보고 해당 탭으로만 전환한다.
+  // (pushHistory=false → switchTab이 다시 pushState하지 않아 히스토리가 꼬이지 않음)
+  window.addEventListener('popstate', (event) => {
+    const tab = (event.state && event.state.tab) || PATH_TO_TAB[location.pathname] || 'home';
+    switchTab(tab, false);
+  });
+
   // ---------- INIT ----------
+  // 새로고침/직접 접속 시 주소(경로)에 맞는 탭을 먼저 보여준다.
+  // (관리자 페이지는 아직 로그인 세션이 확인되기 전이라 권한이 없으면 홈으로 대체)
+  (function initRouteFromPath(){
+    const rawPath = location.pathname;
+    let initialTab = PATH_TO_TAB[rawPath] || 'home';
+    if (initialTab === 'admin' && !isManagerUser()) initialTab = 'home';
+    switchTab(initialTab, false);
+
+    // 이미 알고 있는 경로(/, /home, /event, /board, /auth, /admin)라면 주소는 그대로 두고,
+    // 낯선 경로(옛날 북마크 등)로 들어온 경우에만 홈 경로로 정리한다.
+    const normalizedPath = (rawPath in PATH_TO_TAB) ? rawPath : (TAB_TO_PATH[initialTab] || '/home');
+    history.replaceState({ tab: initialTab }, '', normalizedPath);
+  })();
+
   trackSiteVisit();
   applySavedLoginEmail();
   renderSidoOptions('su');
