@@ -1763,6 +1763,19 @@
     return BANNED_WORDS.some(w => lower.includes(w.toLowerCase()));
   }
 
+  // ---------- 모달 열림 중 배경(뒤) 스크롤 방지 ----------
+  // 모달이 여러 개 겹쳐 열릴 수도 있으니(예: 내 정보 모달 위에 이용약관 모달) 카운터로 관리해서,
+  // 마지막 모달까지 전부 닫혀야 배경 스크롤이 다시 풀리도록 한다.
+  let openModalCount = 0;
+  function lockBodyScroll(){
+    openModalCount++;
+    document.body.style.overflow = 'hidden';
+  }
+  function unlockBodyScroll(){
+    openModalCount = Math.max(0, openModalCount - 1);
+    if (openModalCount === 0) document.body.style.overflow = '';
+  }
+
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
   }
@@ -2475,12 +2488,14 @@
     const modal = document.getElementById('board-login-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 
   function closeBoardLoginPrompt(){
     const modal = document.getElementById('board-login-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    unlockBodyScroll();
   }
 
   function goToSignupFromBoard(){
@@ -2638,6 +2653,7 @@
       const modal = document.getElementById('image-redact-modal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      lockBodyScroll();
     };
     img.onerror = () => {
       showToast('이미지를 불러오지 못했어요. 다시 시도해주세요.');
@@ -2649,6 +2665,7 @@
     const modal = document.getElementById('image-redact-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    unlockBodyScroll();
     redactSourceImage = null;
     redactRects = [];
     redactDragStart = null;
@@ -2826,6 +2843,7 @@
     renderReportedPosts();
     updateAuthNavUI(); // 게시글 추천 EXP가 반영되도록 헤더의 [Lv.n] 라벨도 다시 계산
     renderAdminBannerPostSelect();
+    handleSharedPostDeepLink(); // ?post=ID&board=food 형태로 공유된 링크면 해당 글로 자동 이동
   }
 
   // 로그인한 경우, 내가 이미 추천/신고한 글·댓글 내역을 불러와 userVotes/userReports 캐시를 채운다.
@@ -3117,6 +3135,66 @@
     renderBoardList();
   }
 
+  // ---------- 게시글 공유 (모바일: 네이티브 공유 시트 / PC: 링크 복사) ----------
+  function buildPostShareUrl(postId, board){
+    return `${location.origin}${location.pathname}?post=${postId}&board=${board}`;
+  }
+
+  async function sharePost(postId, board){
+    const p = boardPosts.find(x => x.id === postId);
+    const url = buildPostShareUrl(postId, board);
+    const shareTitle = '주문의 고수';
+    const shareText = p
+      ? (p.board === 'food' ? `[${APP_LABEL[p.app] || ''}] ${p.brandMenu || ''} 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 할인!` : (p.title || '이 글을 확인해보세요!'))
+      : '이 글을 확인해보세요!';
+
+    if (navigator.share){
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url });
+      } catch (e){
+        // 사용자가 공유를 취소한 경우 등은 별도 안내 없이 무시
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('게시글 링크가 복사되었습니다 📋');
+    } catch (e){
+      console.warn('[주문의 고수] 링크 복사 실패', e);
+      showToast('링크 복사에 실패했어요. 주소창의 URL을 직접 복사해주세요.');
+    }
+  }
+
+  // 공유된 링크(?post=ID&board=food)로 들어온 경우, 게시판의 해당 글로 자동 이동해 하이라이트한다.
+  function handleSharedPostDeepLink(){
+    const params = new URLSearchParams(location.search);
+    const postId = params.get('post');
+    if (!postId) return;
+
+    const board = params.get('board') === 'recipe' ? 'recipe' : 'food';
+    const targetId = isNaN(Number(postId)) ? postId : Number(postId);
+
+    switchTab('board');
+    switchBoardTab(board);
+
+    const posts = boardPosts.filter(p => p.board === board).slice().sort((a, b) => b.id - a.id);
+    const idx = posts.findIndex(p => String(p.id) === String(targetId));
+    if (idx > -1){
+      boardPage = Math.floor(idx / POSTS_PER_PAGE) + 1;
+      expandedPostIds.add(posts[idx].id);
+      renderBoardList();
+    }
+
+    setTimeout(() => {
+      const el = document.getElementById(`board-post-${targetId}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('post-highlight-flash');
+      setTimeout(() => el.classList.remove('post-highlight-flash'), 2200);
+    }, 200);
+  }
+
   // ---------- 신고 → 5회 누적 자동 블라인드 + 운영자 메일 알림 ----------
   function notifyAdminBlindContent(type, title){
     // -----------------------------------------------------------------
@@ -3342,6 +3420,7 @@
     const modal = document.getElementById('image-lightbox-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 
   function closeImageLightbox(){
@@ -3349,6 +3428,7 @@
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.getElementById('image-lightbox-img').src = '';
+    unlockBodyScroll();
   }
 
   function foodPostBodyHtml(p, expanded){
@@ -3427,6 +3507,7 @@
           <button onclick="likePost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">👍 <span>${p.likes}</span></button>
           <button onclick="dislikePost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">👎 <span>${p.dislikes}</span></button>
           <button onclick="reportPost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">🚨 신고</button>
+          <button onclick="sharePost(${p.id}, '${p.board}')" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">🔗 공유</button>
           <button onclick="togglePostExpand(${p.id})" class="text-xs font-semibold ml-auto" style="color:var(--primary);">${expanded ? '접기' : `더보기 · 댓글 ${p.comments.length}`}</button>
         </div>
         ${expanded ? renderCommentsSection(p) : ''}
@@ -3653,10 +3734,12 @@
   function openModal(){
     document.getElementById('signup-modal').classList.remove('hidden');
     document.getElementById('signup-modal').classList.add('flex');
+    lockBodyScroll();
   }
   function closeModal(){
     document.getElementById('signup-modal').classList.add('hidden');
     document.getElementById('signup-modal').classList.remove('flex');
+    unlockBodyScroll();
   }
   async function submitSignup(){
     const email = document.getElementById('su-email').value.trim();
@@ -3743,12 +3826,14 @@
     const modal = document.getElementById('b2b-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 
   function closeB2BModal(){
     const modal = document.getElementById('b2b-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    unlockBodyScroll();
   }
 
   function updateB2BFileLabel(){
@@ -3924,11 +4009,13 @@
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 
   function closeTermsModal(){
     document.getElementById('terms-modal').classList.add('hidden');
     document.getElementById('terms-modal').classList.remove('flex');
+    unlockBodyScroll();
   }
 
   // ---------- AUTH PAGE ----------
@@ -4245,6 +4332,7 @@
     const modal = document.getElementById('user-info-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 
   // 게시글/댓글 추천·삭제 등으로 내 EXP가 바뀔 수 있는 액션 직후 호출.
@@ -4482,6 +4570,7 @@
   function closeUserInfoModal(){
     document.getElementById('user-info-modal').classList.add('hidden');
     document.getElementById('user-info-modal').classList.remove('flex');
+    unlockBodyScroll();
   }
 
   function handleWithdraw(){
@@ -4919,6 +5008,7 @@
       `${winner.name} (${winner.vote} 투표)`;
     document.getElementById('winner-modal').classList.remove('hidden');
     document.getElementById('winner-modal').classList.add('flex');
+    lockBodyScroll();
 
     // 당첨 기록을 Supabase winners 테이블에 저장해서, 추첨 후에도
     // 당첨자 리스트를 별도로 모아볼 수 있게 합니다. (테이블/RLS는 SQL로 별도 생성 필요)
@@ -4940,6 +5030,7 @@
   function closeWinnerModal(){
     document.getElementById('winner-modal').classList.add('hidden');
     document.getElementById('winner-modal').classList.remove('flex');
+    unlockBodyScroll();
   }
 
   // Supabase winners 테이블에서 지금까지의 당첨자 목록을 불러와 렌더링
