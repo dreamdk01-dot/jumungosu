@@ -600,25 +600,6 @@
     </div>
   </section>
 
-  <!-- 로컬 B2B 마케팅 관리 (푸시/문자) -->
-  <section class="mb-12">
-    <h3 class="font-display text-xl mb-4" style="color:var(--text);">로컬 B2B 마케팅 관리 (푸시/문자)</h3>
-    <p class="text-xs mb-4" style="color:var(--muted);">특정 동네 회원에게 '주문의 고수' 자체 포장 할인 소식을 발송해요. 발송은 상단 '운영자 로그인 상태'가 ON일 때만 가능합니다.</p>
-
-    <div class="rounded-lg p-4 space-y-3" style="background:var(--card);">
-      <div>
-        <label class="text-xs font-medium block mb-1" style="color:var(--muted);">타겟 지역 (시/군/구)</label>
-        <input id="local-push-region" type="text" placeholder="예) 화성시" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      </div>
-      <div>
-        <label class="text-xs font-medium block mb-1" style="color:var(--muted);">발송 메시지</label>
-        <textarea id="local-push-message" rows="3" placeholder="예) 오늘 밤 11시까지 화성시 단독 포장 15% 할인! 지금 바로 픽업하세요 🎉" class="w-full px-3 py-2 rounded-md text-sm outline-none resize-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></textarea>
-      </div>
-      <button onclick="sendLocalPushNotification()" class="w-full py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">단독 포장 특가 알림 발송</button>
-      <p id="local-push-status" class="text-xs hidden" style="color:var(--muted);"></p>
-    </div>
-  </section>
-
   <!-- 할인 정보 관리 -->
   <section class="mb-12">
     <h3 class="font-display text-xl mb-4" style="color:var(--text);">할인 정보 관리</h3>
@@ -626,7 +607,8 @@
     <div class="grid lg:grid-cols-5 gap-5">
       <!-- 등록된 브랜드 목록 -->
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
+        <input id="admin-discount-search" type="text" oninput="renderAdminDiscountList()" placeholder="🔍 브랜드명으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
         <div id="admin-discount-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
       </div>
 
@@ -696,13 +678,14 @@
             <button type="button" onclick="downloadParticipantsCSV()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⬇ 참여자 CSV 다운로드</button>
           </div>
         </div>
-        <div class="overflow-x-auto">
+        <input id="admin-participant-search" type="text" oninput="renderAdminParticipants()" placeholder="🔍 이름 · 이메일 · 투표 항목으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <div class="overflow-x-auto overflow-y-auto rounded-md" style="max-height:340px; border:1px solid var(--line);">
           <table class="w-full text-sm">
-            <thead>
+            <thead style="position:sticky; top:0; background:var(--card); z-index:1;">
               <tr class="text-left" style="color:var(--muted);">
-                <th class="font-mono text-xs font-normal pb-2">이름</th>
-                <th class="font-mono text-xs font-normal pb-2">이메일</th>
-                <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이름</th>
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이메일</th>
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">투표 항목</th>
               </tr>
             </thead>
             <tbody id="admin-participant-list" class="dashed-divider"></tbody>
@@ -3527,53 +3510,6 @@
     }
   }
 
-  // ---------- 로컬 B2B 마케팅: 지역 타겟 푸시/알림톡·SMS 발송 뼈대 ----------
-  function sendLocalPushNotification(){
-    if (!isAdminUser()){
-      showToast('관리자 권한이 없습니다.');
-      return;
-    }
-
-    const region = document.getElementById('local-push-region').value.trim();
-    const message = document.getElementById('local-push-message').value.trim();
-    const statusEl = document.getElementById('local-push-status');
-
-    if (!region || !message){
-      showToast('타겟 지역과 메시지를 모두 입력해주세요.');
-      return;
-    }
-
-    // 데모 환경에는 실제 회원 DB가 없어, 현재 로그인된 데모 유저의 지역과 비교해 매칭 여부만 안내합니다.
-    const matched = currentUser && currentUser.region && currentUser.region.includes(region);
-
-    // -----------------------------------------------------------------
-    // 지역 타겟 푸시/알림톡·SMS 발송 뼈대 (카카오 알림톡 / SMS API 등)
-    // 실제 연동 시 아래 fetch 호출의 엔드포인트·키를 채우고 주석을 해제하세요.
-    // -----------------------------------------------------------------
-    const payload = { region, message, channel: 'kakao_alimtalk_or_sms' };
-
-    // [예시 1] 카카오 알림톡 (Solapi, NHN Cloud 등 대행 API 공통 패턴):
-    // fetch('https://api.solapi.com/messages/v4/send-many', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json', 'Authorization': 'HMAC-SHA256 여기에_발급받은_인증키' },
-    //   body: JSON.stringify({
-    //     messages: targetMembers.map(m => ({ to: m.phone, from: '발신번호', kakaoOptions: { pfId: '카카오채널ID', templateId: '알림톡템플릿ID' }, text: message }))
-    //   })
-    // });
-
-    // [예시 2] SMS 문자 API (알리고 등):
-    // fetch('https://apis.aligo.in/send/', {
-    //   method: 'POST',
-    //   body: new URLSearchParams({ key: 'API_KEY', user_id: 'ID', sender: '발신번호', receiver: '수신자번호목록', msg: message })
-    // });
-
-    console.log('[지역 타겟 알림 발송 트리거]', payload);
-
-    statusEl.textContent = `'${region}' 지역 대상 알림 발송이 트리거되었습니다. (데모 기준 현재 로그인 유저 지역 일치: ${matched ? '예' : '아니오'})`;
-    statusEl.classList.remove('hidden');
-    showToast('지역 타겟 알림 발송이 요청되었습니다.');
-  }
-
   // ---------- MODAL (event page quick signup) ----------
   function openModal(){
     document.getElementById('signup-modal').classList.remove('hidden');
@@ -4369,8 +4305,21 @@
     adminGroupsCache = groupDiscountsByBrand(discounts);
     document.getElementById('admin-discount-count').textContent = adminGroupsCache.length;
 
-    el.innerHTML = adminGroupsCache.length
-      ? adminGroupsCache.map((g, i) => {
+    const searchInput = document.getElementById('admin-discount-search');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    // 검색은 화면 표시만 걸러내고, editAdminBrand(i)/deleteAdminBrand(i)의 i는 항상
+    // adminGroupsCache의 실제 인덱스를 그대로 사용한다. (필터링 중에도 수정/삭제가 정확히 동작하도록)
+    const groupsWithIndex = adminGroupsCache
+      .map((g, i) => ({ g, i }))
+      .filter(({ g }) => !query || g.displayName.toLowerCase().includes(query));
+
+    if (!groupsWithIndex.length){
+      el.innerHTML = `<p class="text-xs" style="color:var(--muted);">${query ? '검색 결과가 없어요.' : '등록된 브랜드가 없습니다.'}</p>`;
+      return;
+    }
+
+    el.innerHTML = groupsWithIndex.map(({ g, i }) => {
           const sorted = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
           const platformRows = sorted.map(b => `
         <div class="flex items-center justify-between gap-2 py-1 flex-wrap">
@@ -4400,8 +4349,7 @@
         </div>
         <div class="mt-1.5 pl-11 space-y-0.5 dashed-divider pt-2">${platformRows}</div>
       </div>`;
-        }).join('')
-      : `<p class="text-xs" style="color:var(--muted);">등록된 브랜드가 없습니다.</p>`;
+        }).join('');
   }
 
   // 관리자 페이지에서 특정 플랫폼 항목의 배달/포장 여부를 직접 토글.
@@ -4544,11 +4492,31 @@
   function renderAdminParticipants(){
     const el = document.getElementById('admin-participant-list');
     document.getElementById('admin-participant-count').textContent = participants.length;
-    el.innerHTML = participants.map((p, i) => `
+
+    const searchInput = document.getElementById('admin-participant-search');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    // 검색은 화면 표시만 걸러내고, participant-row-i의 i는 항상 원본 participants 배열의
+    // 실제 인덱스를 그대로 사용한다. (랜덤 추첨 시 하이라이트/스크롤 대상과 어긋나지 않도록)
+    const rows = participants
+      .map((p, i) => ({ p, i }))
+      .filter(({ p }) => {
+        if (!query) return true;
+        return (p.name || '').toLowerCase().includes(query)
+          || (p.email || '').toLowerCase().includes(query)
+          || (p.vote || '').toLowerCase().includes(query);
+      });
+
+    if (!rows.length){
+      el.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-xs" style="color:var(--muted);">${query ? '검색 결과가 없어요.' : '아직 참여자가 없어요.'}</td></tr>`;
+      return;
+    }
+
+    el.innerHTML = rows.map(({ p, i }) => `
       <tr class="dashed-divider" id="participant-row-${i}" style="transition:background-color .3s ease;">
-        <td class="py-2 text-sm">${p.name}</td>
-        <td class="py-2 font-mono text-xs" style="color:var(--muted);">${p.email}</td>
-        <td class="py-2 text-xs" style="color:var(--primary);">${p.vote}</td>
+        <td class="py-2 text-sm px-2">${p.name}</td>
+        <td class="py-2 font-mono text-xs px-2" style="color:var(--muted);">${p.email}</td>
+        <td class="py-2 text-xs px-2" style="color:var(--primary);">${p.vote}</td>
       </tr>
     `).join('');
   }
@@ -4560,11 +4528,12 @@
       return;
     }
 
-    // 이전 하이라이트 제거
-    participants.forEach((_, i) => {
-      const row = document.getElementById(`participant-row-${i}`);
-      if (row) row.style.backgroundColor = '';
-    });
+    // 검색어가 남아있으면 당첨자 행이 필터링돼서 안 보일 수 있으니 초기화하고 다시 그린다.
+    const searchInput = document.getElementById('admin-participant-search');
+    if (searchInput && searchInput.value){
+      searchInput.value = '';
+    }
+    renderAdminParticipants();
 
     const winnerIndex = Math.floor(Math.random() * participants.length);
     const winner = participants[winnerIndex];
