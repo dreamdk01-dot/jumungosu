@@ -1631,9 +1631,9 @@
   //    Base를 연 상태에서 Help(물음표 아이콘) → "API documentation" 클릭하면
   //    문서 맨 위에 "The ID of this base is appXXXXXXXXXXXXXX" 로 표시됨
   // 3) AIRTABLE_TABLE_NAME : 위 필드들을 만들어둔 테이블 이름 (탭 이름과 정확히 일치해야 함)
-  const AIRTABLE_PAT = "patLQX6fi6mZuDyJh.ce3a7469d5f5048916708ef9c874ce187c7809fdac244cf690a6631454a3e8c5";   // 예: "patAbCdEfGhIjKlMn.0123456789abcdef..."
-  const AIRTABLE_BASE_ID = "appl0GzxmRCEna4zV";              // 예: "appAbCdEfGhIjKlMn"
-  const AIRTABLE_TABLE_NAME = "Imported table";                          // 예: "할인목록" (Airtable 테이블 이름과 동일하게)
+  const AIRTABLE_PAT = "여기에_Personal_Access_Token_붙여넣기";   // 예: "patAbCdEfGhIjKlMn.0123456789abcdef..."
+  const AIRTABLE_BASE_ID = "여기에_Base_ID_붙여넣기";              // 예: "appAbCdEfGhIjKlMn"
+  const AIRTABLE_TABLE_NAME = "할인목록";                          // 예: "할인목록" (Airtable 테이블 이름과 동일하게)
   // ▲▲▲ 여기까지 교체 ▲▲▲
 
   // 새로고침 없이도 최신 데이터를 반영하기 위해 이 주기(ms)마다 자동으로 Airtable을 다시 조회합니다.
@@ -1646,22 +1646,78 @@
       && !AIRTABLE_BASE_ID.includes('여기에');
   }
 
-  const AIRTABLE_PLATFORM_LABEL_TO_APP = { '배달의민족':'baemin', '요기요':'yogiyo', '쿠팡이츠':'coupang', '땡겨요':'ddangyo' };
+  // Airtable 필드명이 정확히 일치하지 않아도(띄어쓰기, 흔히 쓰는 다른 이름 등) 인식할 수 있도록
+  // 항목별로 허용할 필드명 후보 목록을 정의합니다. 앞에 있는 이름부터 우선 확인합니다.
+  const AIRTABLE_FIELD_ALIASES = {
+    name: ['브랜드명', '브랜드', '상호명', '이름', 'Name', 'Brand'],
+    platform: ['플랫폼', '앱', '배달앱', '플랫폼명', 'App', 'Platform'],
+    category: ['카테고리', '분류', 'Category'],
+    amount: ['할인금액', '금액', '할인가', '할인 금액', 'Amount', 'Price'],
+    minOrder: ['최소주문금액', '최소주문액', '최소 주문금액', '최소주문', 'MinOrder'],
+    startDate: ['시작일', '할인시작일', '시작 일', 'StartDate', 'Start'],
+    endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
+    badge: ['대표이미지', '뱃지', '아이콘', '대표 이미지', 'Badge'],
+  };
+
+  // fields 객체에서 alias 후보 중 값이 있는 첫 필드를 찾아 반환 (공백 문자열/undefined/null은 '없음'으로 취급)
+  function pickAirtableField(fields, key){
+    const aliases = AIRTABLE_FIELD_ALIASES[key] || [];
+    for (const alias of aliases){
+      const v = fields[alias];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return null;
+  }
+
+  // 플랫폼 값(단일 선택/연결/문자열 등 어떤 형태로 와도)을 baemin/yogiyo/coupang/ddangyo 중 하나로 정규화
+  const AIRTABLE_PLATFORM_ALIASES = {
+    baemin: ['배달의민족', '배민', 'baemin'],
+    yogiyo: ['요기요', 'yogiyo'],
+    coupang: ['쿠팡이츠', '쿠팡', 'coupang'],
+    ddangyo: ['땡겨요', 'ddangyo'],
+  };
+  function resolveAirtableApp(rawValue){
+    const v = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+    const norm = (v || '').toString().trim().toLowerCase().replace(/\s+/g, '');
+    if (!norm) return null;
+    for (const [app, aliases] of Object.entries(AIRTABLE_PLATFORM_ALIASES)){
+      if (aliases.some(a => a.toLowerCase().replace(/\s+/g, '') === norm)) return app;
+    }
+    return null;
+  }
+
+  // "4,000원", "4000", 4000 등 다양한 표기를 숫자로 관대하게 파싱. 파싱 불가하면 null.
+  function parseAirtableNumber(rawValue){
+    if (rawValue === null || rawValue === undefined || rawValue === '') return null;
+    if (typeof rawValue === 'number') return Number.isFinite(rawValue) ? rawValue : null;
+    const cleaned = rawValue.toString().replace(/[^0-9.-]/g, '');
+    if (!cleaned) return null;
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // 필수값 누락으로 건너뛴 레코드의 원본 fields를 모아둠 → 콘솔에서 실제 Airtable 필드명을 바로 확인할 수 있게 함
+  let airtableSkippedSamples = [];
 
   // Airtable 레코드 1건을 사이트 내부에서 쓰는 할인 데이터 형태로 변환.
-  // 필수값(브랜드명/플랫폼/할인금액)이 비어있으면 null을 반환해 해당 레코드는 건너뜁니다.
+  // 브랜드명/플랫폼/할인금액 세 가지만 최소 요건이며, 그 외 필드는 비어 있어도 기본값으로 채워 최대한 살려서 등록합니다.
   function mapAirtableRecordToDiscount(record, id){
     const f = record.fields || {};
-    const name = (f['브랜드명'] || '').toString().trim();
-    const app = AIRTABLE_PLATFORM_LABEL_TO_APP[(f['플랫폼'] || '').toString().trim()];
-    const amount = Number(f['할인금액']);
+    const name = (pickAirtableField(f, 'name') || '').toString().trim();
+    const app = resolveAirtableApp(pickAirtableField(f, 'platform'));
+    const amount = parseAirtableNumber(pickAirtableField(f, 'amount'));
 
-    if (!name || !app || !Number.isFinite(amount) || amount <= 0) return null;
+    if (!name || !app || amount === null || amount <= 0){
+      if (airtableSkippedSamples.length < 5) airtableSkippedSamples.push({ recordId: record.id, fields: f });
+      return null;
+    }
 
-    const categoryRaw = (f['카테고리'] || '').toString().trim();
+    const categoryRaw = (pickAirtableField(f, 'category') || '').toString().trim();
     const category = categoryRaw ? categoryRaw.split(',').map(c => c.trim()).filter(Boolean) : ['기타'];
-    const minOrderNum = Number(f['최소주문금액']);
-    const badgeRaw = (f['대표이미지'] || '').toString().trim();
+    const minOrderNum = parseAirtableNumber(pickAirtableField(f, 'minOrder'));
+    const badgeRaw = (pickAirtableField(f, 'badge') || '').toString().trim();
+    const startDateRaw = pickAirtableField(f, 'startDate');
+    const endDateRaw = pickAirtableField(f, 'endDate');
 
     return {
       id,
@@ -1678,10 +1734,10 @@
       isRandom: false,
       randomAmounts: null,
       minAmount: null,
-      minOrder: Number.isFinite(minOrderNum) && minOrderNum > 0 ? minOrderNum : null,
-      // Airtable Date 필드는 'YYYY-MM-DD' 문자열로 내려옵니다.
-      startDate: f['시작일'] || null,
-      endDate: f['종료일'] || null,
+      minOrder: (typeof minOrderNum === 'number' && minOrderNum > 0) ? minOrderNum : null,
+      // Airtable Date 필드는 보통 'YYYY-MM-DD' 문자열로 내려옵니다. 값이 없으면 상시/즉시 노출로 처리.
+      startDate: startDateRaw ? startDateRaw.toString().slice(0, 10) : null,
+      endDate: endDateRaw ? endDateRaw.toString().slice(0, 10) : null,
       source: 'airtable',       // Airtable에서 불러온 항목 표시 (다음 동기화 때 이 표시가 있는 항목만 교체됨)
     };
   }
@@ -1720,6 +1776,7 @@
       return;
     }
     try {
+      airtableSkippedSamples = [];
       const records = await fetchAllAirtableRecords();
       let idCursor = nextDiscountId;
       const mapped = records
@@ -1733,6 +1790,9 @@
       discounts.push(...mapped);
 
       console.log(`[주문의 고수] Airtable에서 할인 정보 ${mapped.length}건을 불러왔습니다. (전체 ${records.length}건 중 필수값 누락 제외)`);
+      if (mapped.length === 0 && records.length > 0){
+        console.warn('[주문의 고수] 모든 레코드가 필수값(브랜드명/플랫폼/할인금액) 누락으로 제외됐습니다. 아래 실제 Airtable 필드명을 확인하고 코드의 AIRTABLE_FIELD_ALIASES 목록에 그 이름을 추가하거나, Airtable 필드명을 브랜드명/플랫폼/할인금액으로 맞춰주세요:', airtableSkippedSamples);
+      }
 
       // 데이터가 바뀌었으니 화면을 다시 그림 (공개 화면 + 관리자 화면 모두)
       if (typeof renderCategoryChips === 'function') renderCategoryChips();
