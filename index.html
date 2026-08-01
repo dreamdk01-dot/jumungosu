@@ -1659,11 +1659,25 @@
     badge: ['대표이미지', '뱃지', '아이콘', '대표 이미지', 'Badge'],
   };
 
-  // fields 객체에서 alias 후보 중 값이 있는 첫 필드를 찾아 반환 (공백 문자열/undefined/null은 '없음'으로 취급)
+  // 필드명에 눈에 안 보이는 문자(제로폭 공백 등)가 섞여있거나, 한글이 다른 유니코드 방식으로
+  // 인코딩돼 있어도(예: 자모가 분리된 형태) 같은 글자로 인식하도록 정규화합니다.
+  function normalizeAirtableKey(s){
+    return (s || '').toString()
+      .normalize('NFC')                         // 한글 자모 분리 표기를 완성형으로 통일
+      .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // 제로폭 공백, BOM, 줄바꿈 없는 공백 등 제거
+      .trim();
+  }
+
+  // fields 객체에서 alias 후보 중 값이 있는 첫 필드를 찾아 반환 (공백 문자열/undefined/null은 '없음'으로 취급).
+  // 필드명이 눈으로 보기엔 같아도 보이지 않는 문자 차이로 못 찾는 경우를 막기 위해, 정규화한 값끼리 비교합니다.
   function pickAirtableField(fields, key){
     const aliases = AIRTABLE_FIELD_ALIASES[key] || [];
+    const normalizedFieldEntries = Object.keys(fields).map(k => [normalizeAirtableKey(k), k]);
     for (const alias of aliases){
-      const v = fields[alias];
+      const normAlias = normalizeAirtableKey(alias);
+      const matched = normalizedFieldEntries.find(([normKey]) => normKey === normAlias);
+      if (!matched) continue;
+      const v = fields[matched[1]];
       if (v !== undefined && v !== null && v !== '') return v;
     }
     return null;
@@ -1678,10 +1692,10 @@
   };
   function resolveAirtableApp(rawValue){
     const v = Array.isArray(rawValue) ? rawValue[0] : rawValue;
-    const norm = (v || '').toString().trim().toLowerCase().replace(/\s+/g, '');
+    const norm = normalizeAirtableKey(v).toLowerCase().replace(/\s+/g, '');
     if (!norm) return null;
     for (const [app, aliases] of Object.entries(AIRTABLE_PLATFORM_ALIASES)){
-      if (aliases.some(a => a.toLowerCase().replace(/\s+/g, '') === norm)) return app;
+      if (aliases.some(a => normalizeAirtableKey(a).toLowerCase().replace(/\s+/g, '') === norm)) return app;
     }
     return null;
   }
