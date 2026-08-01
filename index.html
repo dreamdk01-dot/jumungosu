@@ -622,7 +622,21 @@
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
         <div class="flex items-center justify-between gap-2 mb-2">
           <p class="font-mono text-xs" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
-          <button type="button" id="admin-discount-sort-btn" onclick="toggleAdminDiscountSortByExpiry()" class="font-mono text-[11px] px-2.5 py-1.5 rounded-full" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⏳ 할인기간 남은순</button>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <button type="button" id="admin-app-filter-btn" onclick="toggleAdminAppFilterDropdown()" class="font-mono text-[11px] px-2.5 py-1.5 rounded-full flex items-center gap-1" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">
+                <span id="admin-app-filter-label">배달앱 전체</span><span style="font-size:9px;">▾</span>
+              </button>
+              <div id="admin-app-filter-dropdown" class="hidden absolute right-0 mt-1.5 rounded-md p-2 z-20" style="background:var(--card); border:1px solid var(--line); min-width:150px; box-shadow:0 6px 16px rgba(0,0,0,0.35);">
+                <label class="flex items-center gap-2 px-1.5 py-1.5 rounded cursor-pointer text-xs" style="color:var(--text);">
+                  <input type="checkbox" id="admin-app-filter-all" onchange="toggleAdminAppFilterAll()" class="w-3.5 h-3.5"> 전체
+                </label>
+                <div class="my-1 dashed-divider"></div>
+                <div id="admin-app-filter-options" class="space-y-0.5"></div>
+              </div>
+            </div>
+            <button type="button" id="admin-discount-sort-btn" onclick="toggleAdminDiscountSortByExpiry()" class="font-mono text-[11px] px-2.5 py-1.5 rounded-full" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⏳ 할인기간 남은순</button>
+          </div>
         </div>
         <input id="admin-discount-search" type="text" oninput="renderAdminDiscountList()" placeholder="🔍 브랜드명으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
         <div id="admin-discount-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
@@ -4952,6 +4966,63 @@
     renderAdminDiscountList();
   }
 
+  // 관리자 브랜드 목록: 특정 배달앱에 할인이 등록된 브랜드만 골라볼 수 있는 필터.
+  // 비어있으면(전체) 필터를 적용하지 않고 모든 브랜드를 보여준다.
+  let adminAppFilters = [];
+
+  // 드롭다운 안의 개별 앱 체크박스 목록을 그려준다. (선택된 앱은 checked 상태로 반영)
+  function renderAdminAppFilterOptions(){
+    const el = document.getElementById('admin-app-filter-options');
+    if (!el) return;
+    el.innerHTML = ADMIN_PLATFORM_KEYS.map(app => `
+      <label class="flex items-center gap-2 px-1.5 py-1.5 rounded cursor-pointer text-xs" style="color:var(--text);">
+        <input type="checkbox" class="w-3.5 h-3.5" data-app-filter="${app}" onchange="toggleAdminAppFilterItem('${app}')" ${adminAppFilters.includes(app) ? 'checked' : ''}>
+        <span class="font-semibold px-1.5 py-0.5 rounded" style="background:${APP_COLOR[app]}; color:${app === 'ddangyo' ? '#ffffff' : '#1C1A17'}; font-size:10px;">${APP_LABEL[app]}</span>
+      </label>
+    `).join('');
+  }
+
+  // 체크박스 상태 / 버튼 라벨 / 버튼 강조 스타일을 현재 adminAppFilters 값에 맞춰 동기화
+  function updateAdminAppFilterUI(){
+    const allCb = document.getElementById('admin-app-filter-all');
+    if (allCb) allCb.checked = adminAppFilters.length === 0;
+    document.querySelectorAll('[data-app-filter]').forEach(cb => {
+      cb.checked = adminAppFilters.includes(cb.getAttribute('data-app-filter'));
+    });
+    const label = document.getElementById('admin-app-filter-label');
+    if (label) label.textContent = adminAppFilters.length === 0 ? '배달앱 전체' : adminAppFilters.map(a => APP_LABEL[a]).join(', ');
+    const btn = document.getElementById('admin-app-filter-btn');
+    if (btn){
+      btn.style.background = adminAppFilters.length ? 'var(--primary)' : 'var(--surface)';
+      btn.style.color = adminAppFilters.length ? '#1C1A17' : 'var(--text)';
+    }
+  }
+
+  function toggleAdminAppFilterDropdown(){
+    const dd = document.getElementById('admin-app-filter-dropdown');
+    if (dd) dd.classList.toggle('hidden');
+  }
+
+  function toggleAdminAppFilterItem(app){
+    adminAppFilters = adminAppFilters.includes(app) ? adminAppFilters.filter(a => a !== app) : [...adminAppFilters, app];
+    updateAdminAppFilterUI();
+    renderAdminDiscountList();
+  }
+
+  function toggleAdminAppFilterAll(){
+    adminAppFilters = [];
+    updateAdminAppFilterUI();
+    renderAdminDiscountList();
+  }
+
+  // 드롭다운 바깥을 클릭하면 자동으로 닫히도록 처리
+  document.addEventListener('click', function(e){
+    const dd = document.getElementById('admin-app-filter-dropdown');
+    const btn = document.getElementById('admin-app-filter-btn');
+    if (!dd || !btn || dd.classList.contains('hidden')) return;
+    if (!dd.contains(e.target) && !btn.contains(e.target)) dd.classList.add('hidden');
+  });
+
   function renderAdminDiscountList(){
     const el = document.getElementById('admin-discount-list');
     adminGroupsCache = groupDiscountsByBrand(discounts);
@@ -4974,10 +5045,11 @@
     // adminGroupsCache의 실제 인덱스를 그대로 사용한다. (필터링 중에도 수정/삭제가 정확히 동작하도록)
     const groupsWithIndex = adminGroupsCache
       .map((g, i) => ({ g, i }))
-      .filter(({ g }) => !query || g.displayName.toLowerCase().includes(query));
+      .filter(({ g }) => !query || g.displayName.toLowerCase().includes(query))
+      .filter(({ g }) => !adminAppFilters.length || g.badges.some(b => adminAppFilters.includes(b.app)));
 
     if (!groupsWithIndex.length){
-      el.innerHTML = `<p class="text-xs" style="color:var(--muted);">${query ? '검색 결과가 없어요.' : '등록된 브랜드가 없습니다.'}</p>`;
+      el.innerHTML = `<p class="text-xs" style="color:var(--muted);">${query || adminAppFilters.length ? '검색 결과가 없어요.' : '등록된 브랜드가 없습니다.'}</p>`;
       return;
     }
 
@@ -5495,6 +5567,7 @@
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
   renderAdminCategorySelect();
   renderAdminPlatformFields();
+  renderAdminAppFilterOptions();
   renderAdminDiscountList();
   renderAdminVoteStats();
   renderAdminParticipants();
