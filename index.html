@@ -645,24 +645,12 @@
             <input id="admin-badge" type="text" maxlength="2" placeholder="미입력 시 브랜드명 앞 2글자" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
           </div>
           <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">플랫폼별 할인 금액 (원 · 비워두면 미등록)</label>
-            <div class="grid grid-cols-2 gap-2">
-              <input id="admin-amount-baemin" type="text" inputmode="numeric" placeholder="배달의민족" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-              <input id="admin-amount-yogiyo" type="text" inputmode="numeric" placeholder="요기요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-              <input id="admin-amount-coupang" type="text" inputmode="numeric" placeholder="쿠팡이츠" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-              <input id="admin-amount-ddangyo" type="text" inputmode="numeric" placeholder="땡겨요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-            </div>
+            <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">플랫폼별 할인 설정 (금액을 입력한 플랫폼만 등록되며, 배달/포장 여부와 할인기간을 플랫폼마다 따로 지정할 수 있어요)</label>
+            <div id="admin-platform-form-rows" class="space-y-2"></div>
           </div>
           <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">최소주문금액 (원 · 선택, 위에서 체크된 모든 플랫폼에 공통 적용)</label>
+            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">최소주문금액 (원 · 선택, 위에서 금액을 입력한 모든 플랫폼에 공통 적용)</label>
             <input id="admin-minorder" type="text" inputmode="numeric" placeholder="예) 18000" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          </div>
-          <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">할인기간 (선택 · 비워두면 상시 할인으로 등록되고, 나중에 언제든 다시 수정할 수 있어요)</label>
-            <div class="grid grid-cols-2 gap-2">
-              <input id="admin-start-date" type="date" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-              <input id="admin-end-date" type="date" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-            </div>
           </div>
           <div class="flex gap-2">
             <button id="admin-discount-submit-btn" onclick="submitAdminDiscount()" class="flex-1 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">등록하기</button>
@@ -5047,6 +5035,33 @@
   // 수정 모드일 때 채워진 브랜드 그룹 key (신규 등록 시에는 null)
   let editingBrandKey = null;
   const ADMIN_PLATFORM_KEYS = ['baemin', 'yogiyo', 'coupang', 'ddangyo'];
+  const ADMIN_PLATFORM_LABEL = { baemin:'배달의민족', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
+
+  // 브랜드 할인 등록 폼의 '플랫폼별 할인 설정' 영역을 4개 플랫폼(배민/요기요/쿠팡이츠/땡겨요) 행으로 렌더링.
+  // 각 행은 할인 금액, 배달/포장 여부, 할인기간(시작일·종료일)을 플랫폼별로 독립적으로 입력받는다.
+  function renderAdminPlatformFormRows(){
+    const el = document.getElementById('admin-platform-form-rows');
+    if (!el) return;
+    el.innerHTML = ADMIN_PLATFORM_KEYS.map(app => `
+      <div class="p-2.5 rounded-md" style="background:var(--surface); border:1px solid var(--line);">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[app]}; color:#1C1A17;">${APP_LABEL[app]}</span>
+          <input id="admin-amount-${app}" type="text" inputmode="numeric" placeholder="${ADMIN_PLATFORM_LABEL[app]} 할인 금액(원)" class="flex-1 min-w-0 px-2 py-1.5 rounded-md text-sm outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
+        </div>
+        <div class="flex items-center gap-3 mb-1.5 pl-0.5">
+          <label class="flex items-center gap-1 text-[11px] cursor-pointer" style="color:var(--muted);">
+            <input id="admin-type-${app}-delivery" type="checkbox" checked class="w-3.5 h-3.5"> 배달
+          </label>
+          <label class="flex items-center gap-1 text-[11px] cursor-pointer" style="color:var(--muted);">
+            <input id="admin-type-${app}-pickup" type="checkbox" checked class="w-3.5 h-3.5"> 포장
+          </label>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <input id="admin-start-date-${app}" type="date" class="w-full px-2 py-1.5 rounded-md text-xs outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
+          <input id="admin-end-date-${app}" type="date" class="w-full px-2 py-1.5 rounded-md text-xs outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
+        </div>
+      </div>`).join('');
+  }
 
   function editAdminBrand(index){
     const group = adminGroupsCache[index];
@@ -5061,11 +5076,14 @@
     ADMIN_PLATFORM_KEYS.forEach(app => {
       const entry = discounts.find(d => brandGroupKey(d.name) === group.key && d.app.includes(app));
       document.getElementById(`admin-amount-${app}`).value = entry ? entry.amount : '';
+      const type = entry ? (entry.type || []) : ['배달', '포장'];
+      document.getElementById(`admin-type-${app}-delivery`).checked = type.includes('배달');
+      document.getElementById(`admin-type-${app}-pickup`).checked = type.includes('포장');
+      document.getElementById(`admin-start-date-${app}`).value = (entry && entry.startDate) ? entry.startDate : '';
+      document.getElementById(`admin-end-date-${app}`).value = (entry && entry.endDate) ? entry.endDate : '';
     });
 
     document.getElementById('admin-minorder').value = (firstEntry && typeof firstEntry.minOrder === 'number') ? firstEntry.minOrder : '';
-    document.getElementById('admin-start-date').value = (firstEntry && firstEntry.startDate) ? firstEntry.startDate : '';
-    document.getElementById('admin-end-date').value = (firstEntry && firstEntry.endDate) ? firstEntry.endDate : '';
 
     document.getElementById('admin-discount-submit-btn').textContent = '수정 완료';
     showToast(`'${group.displayName}' 브랜드 정보를 수정 중입니다.`);
@@ -5096,10 +5114,12 @@
     document.getElementById('admin-category').value = '';
     ADMIN_PLATFORM_KEYS.forEach(app => {
       document.getElementById(`admin-amount-${app}`).value = '';
+      document.getElementById(`admin-type-${app}-delivery`).checked = true;
+      document.getElementById(`admin-type-${app}-pickup`).checked = true;
+      document.getElementById(`admin-start-date-${app}`).value = '';
+      document.getElementById(`admin-end-date-${app}`).value = '';
     });
     document.getElementById('admin-minorder').value = '';
-    document.getElementById('admin-start-date').value = '';
-    document.getElementById('admin-end-date').value = '';
     document.getElementById('admin-discount-error').classList.add('hidden');
     document.getElementById('admin-discount-submit-btn').textContent = '등록하기';
     editingBrandKey = null;
@@ -5133,12 +5153,20 @@
         return;
       }
     }
+    // 플랫폼별 배달/포장 여부는 최소 하나는 체크되어 있어야 함
+    for (const app of filledPlatforms){
+      const delivery = document.getElementById(`admin-type-${app}-delivery`).checked;
+      const pickup = document.getElementById(`admin-type-${app}-pickup`).checked;
+      if (!delivery && !pickup){
+        errEl.textContent = `${ADMIN_PLATFORM_LABEL[app]}의 배달/포장 중 최소 1개는 선택해주세요.`;
+        errEl.classList.remove('hidden');
+        return;
+      }
+    }
     errEl.classList.add('hidden');
 
     const minOrderRaw = document.getElementById('admin-minorder').value.trim();
     const minOrder = minOrderRaw ? parseInt(minOrderRaw.replace(/[^0-9]/g, ''), 10) : null;
-    const startDate = document.getElementById('admin-start-date').value || null;
-    const endDate = document.getElementById('admin-end-date').value || null;
 
     // 수정 모드라면 기존 브랜드의 모든 플랫폼 항목을 먼저 제거한 뒤 새로 등록
     if (editingBrandKey){
@@ -5149,6 +5177,11 @@
 
     filledPlatforms.forEach(app => {
       const amount = parseInt(platformValues[app].replace(/[^0-9]/g, ''), 10);
+      const type = [];
+      if (document.getElementById(`admin-type-${app}-delivery`).checked) type.push('배달');
+      if (document.getElementById(`admin-type-${app}-pickup`).checked) type.push('포장');
+      const startDate = document.getElementById(`admin-start-date-${app}`).value || null;
+      const endDate = document.getElementById(`admin-end-date-${app}`).value || null;
       discounts.push({
         id: nextDiscountId++,
         name,
@@ -5156,7 +5189,7 @@
         category: [category],
         amount,
         prefix: '',
-        type: ['배달', '포장'],
+        type,
         customPeriodText: '방금 등록',
         badge,
         minOrder: (typeof minOrder === 'number' && !isNaN(minOrder)) ? minOrder : null,
@@ -5476,6 +5509,7 @@
   renderBoardComposeCategorySelect();
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
   renderAdminCategorySelect();
+  renderAdminPlatformFormRows();
   renderAdminDiscountList();
   renderAdminVoteStats();
   renderAdminParticipants();
