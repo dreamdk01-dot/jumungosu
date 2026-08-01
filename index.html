@@ -1712,7 +1712,7 @@
 
   // 선택된 카테고리 내에서 할인액이 가장 큰 3건을 BEST 3로 자동 선정
   function getBest3Ids(){
-    const pool = discounts.filter(d => d.category.includes(best3Category));
+    const pool = discounts.filter(d => d.category.includes(best3Category) && isDiscountLiveNow(d));
     return pool.slice().sort((a, b) => getSortValue(b) - getSortValue(a)).slice(0, 3).map(d => d.id);
   }
 
@@ -2179,13 +2179,22 @@
       </div>`;
   }
 
+  // 일반 사용자 화면(할인 리스트/BEST3)에 지금 시점 기준으로 노출해도 되는 할인인지 판단.
+  // 시작일이 아직 안 지났으면(미래) 숨기고, 종료일이 이미 지났으면(만료) 숨긴다. (KST 자정 기준)
+  function isDiscountLiveNow(d){
+    const today = getTodayKST();
+    if (d.startDate && d.startDate > today) return false;
+    if (d.endDate && d.endDate < today) return false;
+    return true;
+  }
+
   function renderDiscountList(){
     let filtered = discounts.filter(d => {
       const appOk = activeAppFilters.length === 0 || d.app.some(a => activeAppFilters.includes(a));
       const catOk = activeCategoryFilters.length === 0 || d.category.some(c => activeCategoryFilters.includes(c));
       // 지역 한정 카드('주문의 고수' 자체 포장 할인)는 로그인한 유저의 우리 동네와 일치할 때만 노출
       const regionOk = !d.region || (isLoggedIn && currentUser && normalizeRegion(currentUser.region) === normalizeRegion(d.region));
-      return appOk && catOk && regionOk;
+      return appOk && catOk && regionOk && isDiscountLiveNow(d);
     });
 
     // 동일 브랜드는 카드 1개로 통합
