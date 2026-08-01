@@ -1599,6 +1599,12 @@
     endDate: r.endDate || null,                                     // 할인 종료일/사용기한 'YYYY-MM-DD' (선택)
   }));
 
+  // 할인 시작일(startDate)이 지정돼 있고 아직 그 날짜(KST 자정 기준)가 되지 않았다면 노출 대상에서 제외.
+  // startDate가 없으면 항상 노출 가능(상시 또는 종료일만 있는 할인)한 것으로 간주.
+  function isDiscountLive(d){
+    return !d.startDate || d.startDate <= getTodayKST();
+  }
+
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
   function getDiscountDaysLeft(d){
     if (!d.endDate) return null;
@@ -1715,7 +1721,7 @@
 
   // 선택된 카테고리 내에서 할인액이 가장 큰 3건을 BEST 3로 자동 선정
   function getBest3Ids(){
-    const pool = discounts.filter(d => d.category.includes(best3Category));
+    const pool = discounts.filter(d => d.category.includes(best3Category) && isDiscountLive(d));
     return pool.slice().sort((a, b) => getSortValue(b) - getSortValue(a)).slice(0, 3).map(d => d.id);
   }
 
@@ -2188,7 +2194,9 @@
       const catOk = activeCategoryFilters.length === 0 || d.category.some(c => activeCategoryFilters.includes(c));
       // 지역 한정 카드('주문의 고수' 자체 포장 할인)는 로그인한 유저의 우리 동네와 일치할 때만 노출
       const regionOk = !d.region || (isLoggedIn && currentUser && normalizeRegion(currentUser.region) === normalizeRegion(d.region));
-      return appOk && catOk && regionOk;
+      // 할인 시작일이 아직 안 됐으면(예: 8/11부터 시작하는 이벤트가 8/2에 미리 보이는 문제) 목록에서 제외
+      const liveOk = isDiscountLive(d);
+      return appOk && catOk && regionOk && liveOk;
     });
 
     // 동일 브랜드는 카드 1개로 통합
