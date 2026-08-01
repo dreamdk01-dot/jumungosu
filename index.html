@@ -1753,6 +1753,7 @@
 
       const res = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${AIRTABLE_PAT}` },
+        cache: 'no-store', // 브라우저가 이전 응답을 캐시해서 방금 Airtable에서 수정한 값이 늦게 반영되는 것을 방지
       });
       if (!res.ok){
         const bodyText = await res.text().catch(() => '');
@@ -1809,6 +1810,10 @@
     if (!isAirtableConfigured()) return;
     setInterval(loadDiscountsFromAirtable, AIRTABLE_POLL_INTERVAL_MS);
   }
+
+  // Airtable에서 방금 수정한 내용이 바로 반영되는지 테스트하고 싶을 때, 브라우저 개발자도구 콘솔에서
+  // refreshDiscountsFromAirtable() 을 직접 실행하면 5분 폴링을 기다리지 않고 즉시 재동기화됩니다.
+  window.refreshDiscountsFromAirtable = loadDiscountsFromAirtable;
 
   // 할인 시작일(startDate)이 지정돼 있고 아직 그 날짜(KST 자정 기준)가 되지 않았다면 노출 대상에서 제외.
   // startDate가 없으면 항상 노출 가능(상시 또는 종료일만 있는 할인)한 것으로 간주.
