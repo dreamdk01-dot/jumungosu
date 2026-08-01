@@ -516,7 +516,7 @@
 </main>
 
 <!-- ===== ADMIN PAGE ===== -->
-<main id="page-admin" class="max-w-5xl mx-auto px-4 pb-20 hidden">
+<main id="page-admin" class="max-w-5xl mx-auto px-4 pb-20 hidden" style="display:none;">
   <section class="mt-8 mb-2">
     <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
       <div class="flex items-center gap-2">
@@ -5446,7 +5446,11 @@
       return;
     }
     PAGES.forEach(p => {
-      document.getElementById('page-' + p).classList.toggle('hidden', p !== tab);
+      const pageEl = document.getElementById('page-' + p);
+      const isActive = (p === tab);
+      pageEl.classList.toggle('hidden', !isActive);
+      // 클래스만으로 안 가려지는 경우(캐시/CSS 우선순위 문제)를 대비해 인라인 스타일로도 이중 확인
+      pageEl.style.display = isActive ? '' : 'none';
       const navBtn = document.getElementById('tab-' + p);
       if (navBtn && p !== 'admin'){
         navBtn.classList.toggle('active', p === tab);
