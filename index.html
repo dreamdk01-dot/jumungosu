@@ -465,7 +465,7 @@
           <p id="page-su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
         </div>
         <div>
-          <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">관심 지역 설정 (할인받을 동네)</label>
+          <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">[선택] 관심 지역 설정 (할인받을 동네)</label>
           <div class="flex gap-2">
             <select id="page-su-sido" onchange="updateSigunguOptions('page-su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
             <select id="page-su-sigungu" onchange="updateRegionPreview('page-su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
@@ -1081,7 +1081,7 @@
         <p id="su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
       </div>
       <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">관심 지역 설정 (할인받을 동네)</label>
+        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">[선택] 관심 지역 설정 (할인받을 동네)</label>
         <div class="flex gap-2">
           <select id="su-sido" onchange="updateSigunguOptions('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
           <select id="su-sigungu" onchange="updateRegionPreview('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
@@ -3925,8 +3925,8 @@
     const marketingOptIn = document.getElementById('su-marketing').checked;
     const errEl = document.getElementById('signup-error');
 
-    if (!email || !pw || !pwConfirm || !name || !region){
-      errEl.textContent = '모든 항목을 입력하고 우리 동네를 검색해주세요.';
+    if (!email || !pw || !pwConfirm || !name){
+      errEl.textContent = '필수 항목을 모두 입력해주세요.';
       errEl.classList.remove('hidden');
       return;
     }
@@ -4313,8 +4313,8 @@
     const marketingOptIn = document.getElementById('page-su-marketing').checked;
     const errEl = document.getElementById('page-auth-error');
 
-    if (!email || !pw || !pwConfirm || !name || !region){
-      errEl.textContent = '모든 항목을 입력하고 우리 동네를 검색해주세요.';
+    if (!email || !pw || !pwConfirm || !name){
+      errEl.textContent = '필수 항목을 모두 입력해주세요.';
       errEl.classList.remove('hidden');
       return;
     }
