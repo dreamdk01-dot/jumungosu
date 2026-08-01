@@ -620,7 +620,10 @@
     <div class="grid lg:grid-cols-5 gap-5">
       <!-- 등록된 브랜드 목록 -->
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <p class="font-mono text-xs" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
+          <button type="button" id="admin-discount-sort-btn" onclick="toggleAdminDiscountSortByExpiry()" class="font-mono text-[11px] px-2.5 py-1.5 rounded-full" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⏳ 할인기간 남은순</button>
+        </div>
         <input id="admin-discount-search" type="text" oninput="renderAdminDiscountList()" placeholder="🔍 브랜드명으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
         <div id="admin-discount-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
       </div>
@@ -648,6 +651,17 @@
               <input id="admin-amount-yogiyo" type="text" inputmode="numeric" placeholder="요기요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
               <input id="admin-amount-coupang" type="text" inputmode="numeric" placeholder="쿠팡이츠" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
               <input id="admin-amount-ddangyo" type="text" inputmode="numeric" placeholder="땡겨요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">최소주문금액 (원 · 선택, 위에서 체크된 모든 플랫폼에 공통 적용)</label>
+            <input id="admin-minorder" type="text" inputmode="numeric" placeholder="예) 18000" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          </div>
+          <div>
+            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">할인기간 (선택 · 비워두면 상시 할인으로 등록되고, 나중에 언제든 다시 수정할 수 있어요)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="admin-start-date" type="date" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+              <input id="admin-end-date" type="date" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             </div>
           </div>
           <div class="flex gap-2">
@@ -1438,27 +1452,36 @@
   // 실데이터 원본 (등록일: 2026.7.9 기준). prefix: ''(정액 할인) | '최대' | '메뉴'(메뉴별 할인)
   const rawDiscounts = [
     // ---- 배달의민족 (오늘 기준 최신 목록) ----
-    { name:'처갓집양념치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'기영이숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'빽보이피자', app:'baemin', category:['피자'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'백억커피', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'진교동찜닭', app:'baemin', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'하남돼지집', app:'baemin', category:['고기/구이'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'치킨매니아', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'육회야문연어', app:'baemin', category:['회/해물'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'처갓집양념치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:16000, endDate:'2026-08-02' },
+    { name:'기영이숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:22000, endDate:'2026-08-02' },
+    { name:'빽보이피자', app:'baemin', category:['피자'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18900, endDate:'2026-08-02' },
+    { name:'백억커피', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18000, endDate:'2026-08-02' },
+    { name:'진교동찜닭', app:'baemin', category:['찜/탕'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:28000, endDate:'2026-08-02' },
+    { name:'하남돼지집', app:'baemin', category:['고기/구이'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:30000, endDate:'2026-08-02' },
+    { name:'치킨매니아', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:20000, endDate:'2026-08-02' },
+    { name:'육회야문연어', app:'baemin', category:['회/해물'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18000, endDate:'2026-08-02' },
     { name:'냠냠숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'프레드피자', app:'baemin', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'꾸브라꼬숯불치킨', app:'baemin', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'네네치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'요아정', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'명랑핫도그', app:'baemin', category:['분식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'스텔라떡볶이', app:'baemin', category:['분식'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'파스타헛', app:'baemin', category:['양식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'호식이두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'도미노피자', app:'baemin', category:['피자'], prefix:'', amount:9000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'청년피자', app:'baemin', category:['피자'], prefix:'', amount:7500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'던킨', app:'baemin', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'배스킨라빈스', app:'baemin', category:['카페/디저트'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'프레드피자', app:'baemin', category:['피자'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:16900, endDate:'2026-08-02' },
+    { name:'꾸브라꼬숯불치킨', app:'baemin', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:30000, endDate:'2026-08-02' },
+    { name:'네네치킨', app:'baemin', category:['치킨'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:15000, endDate:'2026-08-02' },
+    { name:'요아정', app:'baemin', category:['카페/디저트'], prefix:'', amount:2000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18500, endDate:'2026-08-02' },
+    { name:'명랑핫도그', app:'baemin', category:['분식'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:21000, endDate:'2026-08-31' },
+    { name:'스텔라떡볶이', app:'baemin', category:['분식'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:19000, endDate:'2026-08-31' },
+    { name:'파스타헛', app:'baemin', category:['양식'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:15000, endDate:'2026-08-31' },
+    { name:'호식이두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:21000, endDate:'2026-08-31' },
+    { name:'도미노피자', app:'baemin', category:['피자'], prefix:'', amount:9000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:25900, endDate:'2026-08-31' },
+    { name:'청년피자', app:'baemin', category:['피자'], prefix:'', amount:7500, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18900, endDate:'2026-08-31' },
+    { name:'던킨', app:'baemin', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18000, endDate:'2026-08-31' },
+    { name:'배스킨라빈스', app:'baemin', category:['카페/디저트'], prefix:'', amount:3500, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18500, endDate:'2026-08-31' },
+    { name:'피자헛', app:'baemin', category:['피자'], prefix:'', amount:9000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:22000, endDate:'2026-08-31' },
+    { name:'자담치킨', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:22000, endDate:'2026-08-31' },
+    { name:'훌랄라참숯치킨', app:'baemin', category:['치킨'], prefix:'', amount:12100, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:25000, endDate:'2026-08-31' },
+    { name:'아구듬뿍', app:'baemin', category:['찜/탕'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:20000, endDate:'2026-08-31' },
+    { name:'남남숯불두마리치킨', app:'baemin', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:16000, endDate:'2026-08-02' },
+    { name:'또래오래', app:'baemin', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:19000, endDate:'2026-08-02' },
+    { name:'파리바게뜨', app:'baemin', category:['카페/디저트'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:17000, endDate:'2026-08-31' },
+    { name:'육회야문연어 (선착순)', app:'baemin', category:['회/해물'], prefix:'', amount:5500, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:18000, endDate:'2026-08-02' },
+    { name:'열정국밥', app:'baemin', category:['한식'], prefix:'', amount:14000, periodType:'주간', expiry:'7.19', type:['배달','포장'], minOrder:21000, endDate:'2026-08-31' },
 
     // ---- 땡겨요 (오늘 기준 최신 목록) ----
     { name:'치킨플러스', app:'ddangyo', category:['치킨'], prefix:'', amount:3000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
@@ -1499,6 +1522,20 @@
     { name:'오븐마루치킨', app:'ddangyo', category:['치킨'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'아웃백', app:'ddangyo', category:['양식'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'던킨', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['포장'] },
+
+    // ---- 땡겨요 8월 브랜드데이 (하루짜리 특가 이벤트, 상시 할인과 별개 항목으로 등록) ----
+    { name:'두찜 (8/2 브랜드데이)', app:'ddangyo', category:['한식'], prefix:'', amount:7000, periodType:'이벤트', expiry:'8.2', type:['배달','포장'], startDate:'2026-08-02', endDate:'2026-08-02' },
+    { name:'청년피자 (8/5 브랜드데이)', app:'ddangyo', category:['피자'], prefix:'', amount:9000, periodType:'이벤트', expiry:'8.5', type:['배달','포장'], startDate:'2026-08-05', endDate:'2026-08-05' },
+    { name:'bhc치킨 (8/8 브랜드데이)', app:'ddangyo', category:['치킨'], prefix:'', amount:6000, periodType:'이벤트', expiry:'8.8', type:['배달','포장'], startDate:'2026-08-08', endDate:'2026-08-08' },
+    { name:'본죽 (8/10 브랜드데이)', app:'ddangyo', category:['한식'], prefix:'', amount:6000, periodType:'이벤트', expiry:'8.10', type:['배달','포장'], startDate:'2026-08-10', endDate:'2026-08-10' },
+    { name:'7번가피자+자담치킨 (8/11 더블땡데이)', app:'ddangyo', category:['피자'], prefix:'', amount:17000, periodType:'이벤트', expiry:'8.11', type:['배달','포장'], startDate:'2026-08-11', endDate:'2026-08-11' },
+    { name:'파리바게뜨 (8/13 브랜드데이)', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:6000, periodType:'이벤트', expiry:'8.13', type:['배달','포장'], startDate:'2026-08-13', endDate:'2026-08-13' },
+    { name:'푸라닭 (8/15 브랜드데이)', app:'ddangyo', category:['치킨'], prefix:'', amount:6000, periodType:'이벤트', expiry:'8.15', type:['배달','포장'], startDate:'2026-08-15', endDate:'2026-08-15' },
+    { name:'파파존스 (8/20 브랜드데이)', app:'ddangyo', category:['피자'], prefix:'', amount:9000, periodType:'이벤트', expiry:'8.20', type:['배달','포장'], startDate:'2026-08-20', endDate:'2026-08-20' },
+    { name:'호식이두마리치킨 (8/22 브랜드데이)', app:'ddangyo', category:['치킨'], prefix:'', amount:7000, periodType:'이벤트', expiry:'8.22', type:['배달','포장'], startDate:'2026-08-22', endDate:'2026-08-22' },
+    { name:'뚜레쥬르 (8/24 브랜드데이)', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:6000, periodType:'이벤트', expiry:'8.24', type:['배달','포장'], startDate:'2026-08-24', endDate:'2026-08-24' },
+    { name:'청년피자 (8/25 브랜드데이)', app:'ddangyo', category:['피자'], prefix:'', amount:9000, periodType:'이벤트', expiry:'8.25', type:['배달','포장'], startDate:'2026-08-25', endDate:'2026-08-25' },
+    { name:'던킨 (8/30 브랜드데이)', app:'ddangyo', category:['카페/디저트'], prefix:'', amount:7000, periodType:'이벤트', expiry:'8.30', type:['배달','포장'], startDate:'2026-08-30', endDate:'2026-08-30' },
 
     // ---- 요기요 (오늘 기준 최신 목록, 편의점 픽업·% 적립 항목 제외) ----
     { name:'굽네치킨', app:'yogiyo', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
@@ -1569,7 +1606,32 @@
     isRandom: r.isRandom || false,
     randomAmounts: r.randomAmounts || null,
     minAmount: typeof r.minAmount === 'number' ? r.minAmount : null,
+    minOrder: typeof r.minOrder === 'number' ? r.minOrder : null,   // 최소주문금액 (원)
+    startDate: r.startDate || null,                                 // 할인 시작일 'YYYY-MM-DD' (선택)
+    endDate: r.endDate || null,                                     // 할인 종료일/사용기한 'YYYY-MM-DD' (선택)
   }));
+
+  // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
+  function getDiscountDaysLeft(d){
+    if (!d.endDate) return null;
+    const today = new Date(getTodayKST());
+    const end = new Date(d.endDate);
+    if (isNaN(end.getTime())) return null;
+    return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  // 할인기간을 'M/D까지' 또는 'M/D ~ M/D' 형태로 표시
+  function formatDiscountPeriod(d){
+    if (!d.startDate && !d.endDate) return '';
+    const fmt = iso => {
+      const dt = new Date(iso);
+      if (isNaN(dt.getTime())) return '';
+      return `${dt.getMonth() + 1}/${dt.getDate()}`;
+    };
+    if (d.startDate && d.endDate) return `${fmt(d.startDate)} ~ ${fmt(d.endDate)}`;
+    if (d.endDate) return `~${fmt(d.endDate)}까지`;
+    return `${fmt(d.startDate)}부터`;
+  }
 
   // "8,000" 형태로 천단위 콤마. 관리자 페이지에서 수동 등록한 항목은 customDiscountText를 그대로 사용.
   function formatDiscount(d){
@@ -2049,7 +2111,10 @@
       }
       const group = map.get(key);
       d.app.forEach(a => {
-        group.badges.push({ app: a, id: d.id, type: d.type || [], sortValue: getSortValue(d), discountText: formatDiscount(d), isRandom: !!d.isRandom });
+        group.badges.push({
+          app: a, id: d.id, type: d.type || [], sortValue: getSortValue(d), discountText: formatDiscount(d), isRandom: !!d.isRandom,
+          minOrder: d.minOrder, startDate: d.startDate, endDate: d.endDate, daysLeft: getDiscountDaysLeft(d), periodText: formatDiscountPeriod(d),
+        });
       });
     });
     return Array.from(map.values());
@@ -2057,6 +2122,12 @@
 
   function groupMaxValue(group){
     return Math.max(...group.badges.map(b => b.sortValue));
+  }
+
+  // 그룹(브랜드) 안에서 가장 임박한(가장 적게 남은) 종료일 기준 잔여일. 기한이 하나도 없으면 null(맨 뒤로 정렬됨)
+  function groupMinDaysLeft(group){
+    const values = group.badges.map(b => b.daysLeft).filter(v => v !== null && v !== undefined);
+    return values.length ? Math.min(...values) : null;
   }
 
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
@@ -2074,10 +2145,17 @@
 
     const badgeRows = sortedBadges.map((b, i) => {
       const isMax = i === 0;
+      const metaParts = [];
+      if (typeof b.minOrder === 'number') metaParts.push(`최소주문 ${b.minOrder.toLocaleString('ko-KR')}원`);
+      if (b.periodText) metaParts.push(b.periodText);
+      const metaHtml = metaParts.length
+        ? `<span class="font-mono text-[10px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
+        : '';
       return `
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-2 text-sm flex-wrap">
           <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:11px;">${APP_LABEL[b.app]}</span>
           <span class="font-mono ${isMax ? 'font-bold' : ''}" style="color:${isMax ? 'var(--primary)' : 'var(--text)'};">${b.discountText}</span>
+          ${metaHtml}
         </div>`;
     }).join('');
 
@@ -4863,9 +4941,31 @@
   // 관리자 목록에 표시 중인 브랜드 그룹을 인덱스로 캐싱 (수정/삭제 버튼에서 안전하게 참조)
   let adminGroupsCache = [];
 
+  let adminSortByExpiry = false;
+
+  function toggleAdminDiscountSortByExpiry(){
+    adminSortByExpiry = !adminSortByExpiry;
+    const btn = document.getElementById('admin-discount-sort-btn');
+    if (btn){
+      btn.style.background = adminSortByExpiry ? 'var(--primary)' : 'var(--surface)';
+      btn.style.color = adminSortByExpiry ? '#1C1A17' : 'var(--text)';
+    }
+    renderAdminDiscountList();
+  }
+
   function renderAdminDiscountList(){
     const el = document.getElementById('admin-discount-list');
     adminGroupsCache = groupDiscountsByBrand(discounts);
+    if (adminSortByExpiry){
+      // 남은 일수 오름차순(임박한 순), 기한이 아예 없는 항목(null)은 맨 뒤로
+      adminGroupsCache.sort((a, b) => {
+        const da = groupMinDaysLeft(a), db = groupMinDaysLeft(b);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
+    }
     document.getElementById('admin-discount-count').textContent = adminGroupsCache.length;
 
     const searchInput = document.getElementById('admin-discount-search');
@@ -4884,21 +4984,33 @@
 
     el.innerHTML = groupsWithIndex.map(({ g, i }) => {
           const sorted = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
-          const platformRows = sorted.map(b => `
-        <div class="flex items-center justify-between gap-2 py-1 flex-wrap">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[b.app]}</span>
-            <span class="font-mono text-xs truncate" style="color:var(--text);">${b.discountText}</span>
+          const platformRows = sorted.map(b => {
+            const metaParts = [];
+            if (typeof b.minOrder === 'number') metaParts.push(`최소주문 ${b.minOrder.toLocaleString('ko-KR')}원`);
+            if (b.periodText) metaParts.push(b.periodText);
+            const isSoon = typeof b.daysLeft === 'number' && b.daysLeft <= 3;
+            const metaHtml = metaParts.length
+              ? `<p class="font-mono text-[10px] mt-0.5" style="color:${isSoon ? 'var(--accent)' : 'var(--muted)'};">${metaParts.join(' · ')}${isSoon ? ` (D-${b.daysLeft < 0 ? '만료' : b.daysLeft})` : ''}</p>`
+              : '';
+            return `
+        <div class="py-1">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[b.app]}</span>
+              <span class="font-mono text-xs truncate" style="color:var(--text);">${b.discountText}</span>
+            </div>
+            <div class="flex items-center gap-3 shrink-0 text-[11px]" style="color:var(--muted);">
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('배달') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '배달')"> 배달
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('포장') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '포장')"> 포장
+              </label>
+            </div>
           </div>
-          <div class="flex items-center gap-3 shrink-0 text-[11px]" style="color:var(--muted);">
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('배달') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '배달')"> 배달
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input type="checkbox" class="w-3.5 h-3.5" ${b.type.includes('포장') ? 'checked' : ''} onchange="toggleAdminDiscountType(${b.id}, '포장')"> 포장
-            </label>
-          </div>
-        </div>`).join('');
+          ${metaHtml}
+        </div>`;
+          }).join('');
 
           return `
       <div class="rounded-md px-3 py-2" style="background:var(--surface);">
@@ -4951,6 +5063,10 @@
       document.getElementById(`admin-amount-${app}`).value = entry ? entry.amount : '';
     });
 
+    document.getElementById('admin-minorder').value = (firstEntry && typeof firstEntry.minOrder === 'number') ? firstEntry.minOrder : '';
+    document.getElementById('admin-start-date').value = (firstEntry && firstEntry.startDate) ? firstEntry.startDate : '';
+    document.getElementById('admin-end-date').value = (firstEntry && firstEntry.endDate) ? firstEntry.endDate : '';
+
     document.getElementById('admin-discount-submit-btn').textContent = '수정 완료';
     showToast(`'${group.displayName}' 브랜드 정보를 수정 중입니다.`);
   }
@@ -4981,6 +5097,9 @@
     ADMIN_PLATFORM_KEYS.forEach(app => {
       document.getElementById(`admin-amount-${app}`).value = '';
     });
+    document.getElementById('admin-minorder').value = '';
+    document.getElementById('admin-start-date').value = '';
+    document.getElementById('admin-end-date').value = '';
     document.getElementById('admin-discount-error').classList.add('hidden');
     document.getElementById('admin-discount-submit-btn').textContent = '등록하기';
     editingBrandKey = null;
@@ -5016,6 +5135,11 @@
     }
     errEl.classList.add('hidden');
 
+    const minOrderRaw = document.getElementById('admin-minorder').value.trim();
+    const minOrder = minOrderRaw ? parseInt(minOrderRaw.replace(/[^0-9]/g, ''), 10) : null;
+    const startDate = document.getElementById('admin-start-date').value || null;
+    const endDate = document.getElementById('admin-end-date').value || null;
+
     // 수정 모드라면 기존 브랜드의 모든 플랫폼 항목을 먼저 제거한 뒤 새로 등록
     if (editingBrandKey){
       for (let i = discounts.length - 1; i >= 0; i--){
@@ -5035,6 +5159,9 @@
         type: ['배달', '포장'],
         customPeriodText: '방금 등록',
         badge,
+        minOrder: (typeof minOrder === 'number' && !isNaN(minOrder)) ? minOrder : null,
+        startDate,
+        endDate,
       });
     });
 
