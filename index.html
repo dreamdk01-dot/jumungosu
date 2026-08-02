@@ -623,50 +623,7 @@
         <button type="button" id="admin-discount-updated-save-btn" onclick="saveDiscountUpdatedAt()" class="text-xs font-medium px-3 py-1.5 rounded-md" style="background:var(--primary); color:#1C1A17;">저장</button>
       </div>
     </div>
-
-    <div class="grid lg:grid-cols-5 gap-5">
-      <!-- 등록된 브랜드 목록 -->
-      <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <p class="font-mono text-xs" style="color:var(--muted);">등록된 브랜드 (<span id="admin-discount-count">0</span>개)</p>
-          <button type="button" id="admin-discount-sort-btn" onclick="toggleAdminDiscountSortByExpiry()" class="font-mono text-[11px] px-2.5 py-1.5 rounded-full" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⏳ 할인기간 남은순</button>
-        </div>
-        <input id="admin-discount-search" type="text" oninput="renderAdminDiscountList()" placeholder="🔍 브랜드명으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-        <div id="admin-discount-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
-      </div>
-
-      <!-- 등록/수정 폼 -->
-      <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">브랜드 할인 등록 / 수정</p>
-        <div class="space-y-3">
-          <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">카테고리</label>
-            <select id="admin-category" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
-          </div>
-          <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">브랜드명</label>
-            <input id="admin-name" type="text" placeholder="예) 맘스터치" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          </div>
-          <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">대표 이미지·아이콘 (2글자)</label>
-            <input id="admin-badge" type="text" maxlength="2" placeholder="미입력 시 브랜드명 앞 2글자" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          </div>
-          <div>
-            <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">플랫폼별 할인 설정 (금액을 입력한 플랫폼만 등록되며, 할인기간을 플랫폼마다 따로 지정할 수 있어요)</label>
-            <div id="admin-platform-form-rows" class="space-y-2"></div>
-          </div>
-          <div>
-            <label class="text-xs font-medium block mb-1" style="color:var(--muted);">최소주문금액 (원 · 선택, 위에서 금액을 입력한 모든 플랫폼에 공통 적용)</label>
-            <input id="admin-minorder" type="text" inputmode="numeric" placeholder="예) 18000" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          </div>
-          <div class="flex gap-2">
-            <button id="admin-discount-submit-btn" onclick="submitAdminDiscount()" class="flex-1 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">등록하기</button>
-            <button onclick="resetAdminDiscountForm()" class="px-4 py-3 rounded-md text-sm font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
-          </div>
-          <p id="admin-discount-error" class="text-xs hidden" style="color:var(--accent);"></p>
-        </div>
-      </div>
-    </div>
+    <p class="text-xs" style="color:var(--muted);">할인 브랜드 데이터는 이제 Airtable에서 관리합니다. Airtable에서 값을 수정하면 사이트에 자동으로 반영돼요 (최대 5분 이내).</p>
   </section>
 
   <!-- 이벤트 관리 -->
@@ -1833,11 +1790,10 @@
         console.warn('[주문의 고수] 모든 레코드가 필수값(브랜드명/플랫폼/할인금액) 누락으로 제외됐습니다. 아래 실제 Airtable 필드명을 확인하고 코드의 AIRTABLE_FIELD_ALIASES 목록에 그 이름을 추가하거나, Airtable 필드명을 브랜드명/플랫폼/할인금액으로 맞춰주세요:', airtableSkippedSamples);
       }
 
-      // 데이터가 바뀌었으니 화면을 다시 그림 (공개 화면 + 관리자 화면 모두)
+      // 데이터가 바뀌었으니 화면을 다시 그림 (공개 화면 모두)
       if (typeof renderCategoryChips === 'function') renderCategoryChips();
       if (typeof renderDiscountList === 'function') renderDiscountList();
       if (typeof renderBest3 === 'function') renderBest3();
-      if (typeof renderAdminDiscountList === 'function') renderAdminDiscountList();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
     }
@@ -4724,7 +4680,7 @@
 
     // 마스터 전용 저장/추첨 버튼은 매니저 계정에게 시각적으로도 비활성화 처리
     // (실제 차단은 각 함수 내부의 isAdminUser() 게이트가 이미 담당하며, 이건 UX 보조 장치일 뿐)
-    const masterOnlyIds = ['admin-discount-submit-btn', 'admin-vote-save-btn', 'admin-banner-save-btn', 'admin-draw-winner-btn', 'admin-discount-updated-save-btn'];
+    const masterOnlyIds = ['admin-vote-save-btn', 'admin-banner-save-btn', 'admin-draw-winner-btn', 'admin-discount-updated-save-btn'];
     const isMaster = isAdminUser();
     masterOnlyIds.forEach(id => {
       const btn = document.getElementById(id);
@@ -5209,237 +5165,6 @@
     ).join('');
   }
 
-  function renderAdminCategorySelect(){
-    const el = document.getElementById('admin-category');
-    el.innerHTML = '<option value="">카테고리 선택</option>' + CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
-
-  // 관리자 목록에 표시 중인 브랜드 그룹을 인덱스로 캐싱 (수정/삭제 버튼에서 안전하게 참조)
-  let adminGroupsCache = [];
-
-  let adminSortByExpiry = false;
-
-  function toggleAdminDiscountSortByExpiry(){
-    adminSortByExpiry = !adminSortByExpiry;
-    const btn = document.getElementById('admin-discount-sort-btn');
-    if (btn){
-      btn.style.background = adminSortByExpiry ? 'var(--primary)' : 'var(--surface)';
-      btn.style.color = adminSortByExpiry ? '#1C1A17' : 'var(--text)';
-    }
-    renderAdminDiscountList();
-  }
-
-  function renderAdminDiscountList(){
-    const el = document.getElementById('admin-discount-list');
-    adminGroupsCache = groupDiscountsByBrand(discounts);
-    if (adminSortByExpiry){
-      // 남은 일수 오름차순(임박한 순), 기한이 아예 없는 항목(null)은 맨 뒤로
-      adminGroupsCache.sort((a, b) => {
-        const da = groupMinDaysLeft(a), db = groupMinDaysLeft(b);
-        if (da === null && db === null) return 0;
-        if (da === null) return 1;
-        if (db === null) return -1;
-        return da - db;
-      });
-    }
-    document.getElementById('admin-discount-count').textContent = adminGroupsCache.length;
-
-    const searchInput = document.getElementById('admin-discount-search');
-    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-
-    // 검색은 화면 표시만 걸러내고, editAdminBrand(i)/deleteAdminBrand(i)의 i는 항상
-    // adminGroupsCache의 실제 인덱스를 그대로 사용한다. (필터링 중에도 수정/삭제가 정확히 동작하도록)
-    const groupsWithIndex = adminGroupsCache
-      .map((g, i) => ({ g, i }))
-      .filter(({ g }) => !query || g.displayName.toLowerCase().includes(query));
-
-    if (!groupsWithIndex.length){
-      el.innerHTML = `<p class="text-xs" style="color:var(--muted);">${query ? '검색 결과가 없어요.' : '등록된 브랜드가 없습니다.'}</p>`;
-      return;
-    }
-
-    el.innerHTML = groupsWithIndex.map(({ g, i }) => {
-          const sorted = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
-          const platformRows = sorted.map(b => {
-            const metaParts = [];
-            if (typeof b.minOrder === 'number') metaParts.push(`최소주문 ${b.minOrder.toLocaleString('ko-KR')}원`);
-            if (b.periodText) metaParts.push(b.periodText);
-            const isSoon = typeof b.daysLeft === 'number' && b.daysLeft <= 3;
-            const metaHtml = metaParts.length
-              ? `<p class="font-mono text-[10px] mt-0.5" style="color:${isSoon ? 'var(--accent)' : 'var(--muted)'};">${metaParts.join(' · ')}${isSoon ? ` (D-${b.daysLeft < 0 ? '만료' : b.daysLeft})` : ''}</p>`
-              : '';
-            return `
-        <div class="py-1">
-          <div class="flex items-center justify-between gap-2 flex-wrap">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[b.app]}</span>
-              <span class="font-mono text-xs truncate" style="color:var(--text);">${b.discountText}</span>
-            </div>
-          </div>
-          ${metaHtml}
-        </div>`;
-          }).join('');
-
-          return `
-      <div class="rounded-md px-3 py-2" style="background:var(--surface);">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 shrink-0 rounded font-mono text-[10px] flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${g.badge.slice(0,2)}</div>
-          <p class="flex-1 min-w-0 text-sm font-semibold truncate">${escapeHtml(g.displayName)}</p>
-          <div class="flex gap-2 shrink-0">
-            <button onclick="editAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--muted);">수정</button>
-            <button onclick="deleteAdminBrand(${i})" class="text-xs font-semibold" style="color:var(--accent);">삭제</button>
-          </div>
-        </div>
-        <div class="mt-1.5 pl-11 space-y-0.5 dashed-divider pt-2">${platformRows}</div>
-      </div>`;
-        }).join('');
-  }
-
-  // 수정 모드일 때 채워진 브랜드 그룹 key (신규 등록 시에는 null)
-  let editingBrandKey = null;
-  const ADMIN_PLATFORM_KEYS = ['baemin', 'yogiyo', 'coupang', 'ddangyo'];
-  const ADMIN_PLATFORM_LABEL = { baemin:'배달의민족', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
-
-  // 브랜드 할인 등록 폼의 '플랫폼별 할인 설정' 영역을 4개 플랫폼(배민/요기요/쿠팡이츠/땡겨요) 행으로 렌더링.
-  // 각 행은 할인 금액, 배달/포장 여부, 할인기간(시작일·종료일)을 플랫폼별로 독립적으로 입력받는다.
-  function renderAdminPlatformFormRows(){
-    const el = document.getElementById('admin-platform-form-rows');
-    if (!el) return;
-    el.innerHTML = ADMIN_PLATFORM_KEYS.map(app => `
-      <div class="p-2.5 rounded-md" style="background:var(--surface); border:1px solid var(--line);">
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[app]}; color:#1C1A17;">${APP_LABEL[app]}</span>
-          <input id="admin-amount-${app}" type="text" inputmode="numeric" placeholder="${ADMIN_PLATFORM_LABEL[app]} 할인 금액(원)" class="flex-1 min-w-0 px-2 py-1.5 rounded-md text-sm outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
-        </div>
-        <div class="grid grid-cols-2 gap-1.5">
-          <input id="admin-start-date-${app}" type="date" class="w-full px-2 py-1.5 rounded-md text-xs outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
-          <input id="admin-end-date-${app}" type="date" class="w-full px-2 py-1.5 rounded-md text-xs outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
-        </div>
-      </div>`).join('');
-  }
-
-  function editAdminBrand(index){
-    const group = adminGroupsCache[index];
-    if (!group) return;
-    editingBrandKey = group.key;
-
-    const firstEntry = discounts.find(d => brandGroupKey(d.name) === group.key);
-    document.getElementById('admin-name').value = group.displayName;
-    document.getElementById('admin-badge').value = group.badge;
-    document.getElementById('admin-category').value = firstEntry ? firstEntry.category[0] : '';
-
-    ADMIN_PLATFORM_KEYS.forEach(app => {
-      const entry = discounts.find(d => brandGroupKey(d.name) === group.key && d.app.includes(app));
-      document.getElementById(`admin-amount-${app}`).value = entry ? entry.amount : '';
-      document.getElementById(`admin-start-date-${app}`).value = (entry && entry.startDate) ? entry.startDate : '';
-      document.getElementById(`admin-end-date-${app}`).value = (entry && entry.endDate) ? entry.endDate : '';
-    });
-
-    document.getElementById('admin-minorder').value = (firstEntry && typeof firstEntry.minOrder === 'number') ? firstEntry.minOrder : '';
-
-    document.getElementById('admin-discount-submit-btn').textContent = '수정 완료';
-    showToast(`'${group.displayName}' 브랜드 정보를 수정 중입니다.`);
-  }
-
-  function deleteAdminBrand(index){
-    if (!isAdminUser()){
-      showToast('마스터 권한이 필요합니다.');
-      return;
-    }
-    const group = adminGroupsCache[index];
-    if (!group) return;
-    if (!confirm(`'${group.displayName}' 브랜드의 모든 플랫폼 할인 정보를 삭제하시겠습니까?`)) return;
-
-    for (let i = discounts.length - 1; i >= 0; i--){
-      if (brandGroupKey(discounts[i].name) === group.key) discounts.splice(i, 1);
-    }
-    if (editingBrandKey === group.key) resetAdminDiscountForm();
-    renderAdminDiscountList();
-    renderDiscountList();
-    showToast('브랜드가 삭제되었습니다.');
-  }
-
-  function resetAdminDiscountForm(){
-    document.getElementById('admin-name').value = '';
-    document.getElementById('admin-badge').value = '';
-    document.getElementById('admin-category').value = '';
-    ADMIN_PLATFORM_KEYS.forEach(app => {
-      document.getElementById(`admin-amount-${app}`).value = '';
-      document.getElementById(`admin-start-date-${app}`).value = '';
-      document.getElementById(`admin-end-date-${app}`).value = '';
-    });
-    document.getElementById('admin-minorder').value = '';
-    document.getElementById('admin-discount-error').classList.add('hidden');
-    document.getElementById('admin-discount-submit-btn').textContent = '등록하기';
-    editingBrandKey = null;
-  }
-
-  function submitAdminDiscount(){
-    if (!isAdminUser()){
-      showToast('마스터 권한이 필요합니다.');
-      return;
-    }
-    const name = document.getElementById('admin-name').value.trim();
-    const badge = document.getElementById('admin-badge').value.trim() || name.slice(0, 2);
-    const category = document.getElementById('admin-category').value;
-    const errEl = document.getElementById('admin-discount-error');
-
-    const platformValues = {};
-    ADMIN_PLATFORM_KEYS.forEach(app => {
-      platformValues[app] = document.getElementById(`admin-amount-${app}`).value.trim();
-    });
-    const filledPlatforms = ADMIN_PLATFORM_KEYS.filter(app => platformValues[app] !== '');
-
-    if (!name || !category || filledPlatforms.length === 0){
-      errEl.textContent = '브랜드명, 카테고리와 최소 1개 이상의 플랫폼 할인 금액을 입력해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    for (const app of filledPlatforms){
-      if (isNaN(parseInt(platformValues[app].replace(/[^0-9]/g, ''), 10))){
-        errEl.textContent = '할인 금액은 숫자로 입력해주세요.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-    }
-    errEl.classList.add('hidden');
-
-    const minOrderRaw = document.getElementById('admin-minorder').value.trim();
-    const minOrder = minOrderRaw ? parseInt(minOrderRaw.replace(/[^0-9]/g, ''), 10) : null;
-
-    // 수정 모드라면 기존 브랜드의 모든 플랫폼 항목을 먼저 제거한 뒤 새로 등록
-    if (editingBrandKey){
-      for (let i = discounts.length - 1; i >= 0; i--){
-        if (brandGroupKey(discounts[i].name) === editingBrandKey) discounts.splice(i, 1);
-      }
-    }
-
-    filledPlatforms.forEach(app => {
-      const amount = parseInt(platformValues[app].replace(/[^0-9]/g, ''), 10);
-      const startDate = document.getElementById(`admin-start-date-${app}`).value || null;
-      const endDate = document.getElementById(`admin-end-date-${app}`).value || null;
-      discounts.push({
-        id: nextDiscountId++,
-        name,
-        app: [app],
-        category: [category],
-        amount,
-        prefix: '',
-        customPeriodText: '방금 등록',
-        badge,
-        minOrder: (typeof minOrder === 'number' && !isNaN(minOrder)) ? minOrder : null,
-        startDate,
-        endDate,
-        source: 'admin', // 관리자가 직접 등록한 항목 표시 — Airtable 동기화 때 지워지지 않고 항상 유지됨
-      });
-    });
-
-    const wasEditing = !!editingBrandKey;
-    resetAdminDiscountForm();
-    renderAdminDiscountList();
-    renderDiscountList();
-    showToast(wasEditing ? '브랜드 정보가 수정되었습니다.' : '브랜드가 등록되었습니다 ✅');
-  }
 
   function renderAdminVoteStats(){
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
@@ -5759,14 +5484,12 @@
   renderBoardComposeAppSelect();
   renderBoardComposeCategorySelect();
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
-  renderAdminCategorySelect();
-  renderAdminPlatformFormRows();
   renderAdminVoteStats();
   renderAdminParticipants();
   loadWinnersList();
   renderDashboardStats();
 
-  // 할인 목록(BEST3 + 전체 리스트 + 관리자 목록)은 Airtable에서 최신 데이터를 먼저 받아온 뒤에 그립니다.
+  // 할인 목록(BEST3 + 전체 리스트)은 Airtable에서 최신 데이터를 먼저 받아온 뒤에 그립니다.
   // 예전처럼 코드에 내장된 기본 데이터를 먼저 그렸다가 Airtable 데이터로 다시 덮어쓰면,
   // Airtable에서 이미 삭제한 브랜드가 접속 첫 화면에 잠깐 나타났다 사라지는 깜빡임이 생기기 때문입니다.
   const best3ListEl = document.getElementById('best3-list');
@@ -5776,7 +5499,7 @@
   if (discountListEl) discountListEl.innerHTML = loadingHtml;
 
   (async () => {
-    await loadDiscountsFromAirtable(); // 성공 시 내부에서 renderCategoryChips/renderDiscountList/renderBest3/renderAdminDiscountList까지 이미 호출됨
+    await loadDiscountsFromAirtable(); // 성공 시 내부에서 renderCategoryChips/renderDiscountList/renderBest3까지 이미 호출됨
     // 접속 시 최초 1회만 BEST3 기본 카테고리를 무작위로 선정 (할인 3개 이상 있는 카테고리 중에서)
     if (!best3CategoryPicked){
       best3Category = pickRandomBest3Category();
@@ -5788,7 +5511,6 @@
     renderCategoryChips();
     renderDiscountList();
     renderBest3();
-    renderAdminDiscountList();
     startAirtablePolling();
   })();
   // 최근 7일 방문자·가입자 추이 그래프: 데모 수치와 실연동 통계 불일치로 화면에서 숨김 처리됨.
