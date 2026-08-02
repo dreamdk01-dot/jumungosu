@@ -315,7 +315,7 @@
       <p class="flex-1 min-w-0 text-xs sm:text-sm leading-relaxed break-keep" style="color:var(--text);">
         📌 주문의 고수 활용 팁: <span style="color:var(--primary); font-weight:700;">[Ctrl + D]</span>를 눌러 북마크에 등록하면 매일 업데이트되는 브랜드별 최저가 할인을 1초 만에 비교할 수 있습니다!
       </p>
-      <a href="http://pf.kakao.com/_DeqxnX/chat" target="_blank" rel="noopener" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:#FEE500; color:#1C1A17;">할인 제보하기 💬</a>
+      <button type="button" onclick="triggerBookmarkPrompt()" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:#FEE500; color:#1C1A17;">⭐ 지금 북마크 하기</button>
     </div>
   </section>
 </main>
@@ -5654,6 +5654,26 @@
 
   // ---------- TOAST ----------
   let toastTimer;
+  // 홈화면 "북마크 활용 팁" 배너의 버튼. 최신 브라우저(크롬/사파리/엣지/파이어폭스)는 스팸성 자동
+  // 북마크 등록을 막기 위해 자바스크립트로 북마크를 추가하는 기능을 전부 차단해놨기 때문에,
+  // 실제로는 사용자의 OS를 감지해 알맞은 단축키를 즉시 안내하는 것이 최선입니다.
+  // (아주 오래된 브라우저에 한해 남아있는 레거시 API를 먼저 시도는 해보되, 대부분 무반응일 것으로 예상.)
+  function triggerBookmarkPrompt(){
+    const isMac = /Mac|iPhone|iPod|iPad/.test(navigator.userAgent);
+    const shortcut = isMac ? 'Cmd + D' : 'Ctrl + D';
+    try {
+      if (window.sidebar && typeof window.sidebar.addPanel === 'function'){
+        window.sidebar.addPanel(document.title, location.href, '');
+        return;
+      }
+      if (window.external && typeof window.external.AddFavorite === 'function'){
+        window.external.AddFavorite(location.href, document.title);
+        return;
+      }
+    } catch (e){ /* 레거시 API 실패 시 아래 안내로 대체 */ }
+    showToast(`⭐ 지금 [${shortcut}]를 눌러 북마크에 등록해보세요!`);
+  }
+
   function showToast(msg){
     const el = document.getElementById('toast');
     el.textContent = msg;
