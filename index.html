@@ -1938,6 +1938,20 @@
   const BEST3_CATEGORY_OPTIONS = CATEGORIES;
 
   let best3Category = '치킨';
+  let best3CategoryPicked = false; // 접속 시 랜덤 카테고리 선정은 딱 한 번만 (5분 폴링 때마다 바뀌면 안 되므로)
+
+  // 현재 노출 가능한(isDiscountLive) 할인이 3개 이상 있는 카테고리 중에서 무작위로 하나를 고른다.
+  // 해당하는 카테고리가 하나도 없으면(데이터가 아주 적을 때) 기존 기본값(치킨)을 그대로 유지한다.
+  function pickRandomBest3Category(){
+    const counts = {};
+    discounts.forEach(d => {
+      if (!isDiscountLive(d)) return;
+      d.category.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+    });
+    const eligible = CATEGORIES.filter(c => (counts[c] || 0) >= 3);
+    if (eligible.length === 0) return best3Category;
+    return eligible[Math.floor(Math.random() * eligible.length)];
+  }
 
   // 커스텀 드롭다운: 네이티브 <select>는 모바일에서 OS 피커가 뜨고 '완료'를 눌러야
   // 값이 확정되는 방식이라, PC처럼 한 번 탭하면 바로 선택되도록 직접 만든 드롭다운입니다.
@@ -5710,7 +5724,6 @@
   applySavedLoginEmail();
   renderSidoOptions('su');
   renderSidoOptions('page-su');
-  renderBest3CategorySelect();
   renderBarcode();
   loadDiscountUpdatedAt(); // Supabase app_config에서 최신 할인 업데이트 날짜를 불러와 배지 렌더링
   loadHomeBannerConfig(); // 관리자가 설정한 홈 배너 문구/연결 게시글을 불러와 반영
@@ -5737,6 +5750,12 @@
 
   (async () => {
     await loadDiscountsFromAirtable(); // 성공 시 내부에서 renderCategoryChips/renderDiscountList/renderBest3/renderAdminDiscountList까지 이미 호출됨
+    // 접속 시 최초 1회만 BEST3 기본 카테고리를 무작위로 선정 (할인 3개 이상 있는 카테고리 중에서)
+    if (!best3CategoryPicked){
+      best3Category = pickRandomBest3Category();
+      best3CategoryPicked = true;
+    }
+    renderBest3CategorySelect();
     // Airtable 연동이 아직 설정 전이거나 이번 요청이 실패한 경우를 위한 안전장치 —
     // 이 경우 discounts 배열은 코드 내장 기본값 그대로이므로, 그 값으로라도 화면을 채운다.
     renderCategoryChips();
