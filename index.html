@@ -1853,10 +1853,15 @@
   // refreshDiscountsFromAirtable() 을 직접 실행하면 5분 폴링을 기다리지 않고 즉시 재동기화됩니다.
   window.refreshDiscountsFromAirtable = loadDiscountsFromAirtable;
 
-  // 할인 시작일(startDate)이 지정돼 있고 아직 그 날짜(KST 자정 기준)가 되지 않았다면 노출 대상에서 제외.
-  // startDate가 없으면 항상 노출 가능(상시 또는 종료일만 있는 할인)한 것으로 간주.
+  // 이 할인이 "지금 노출해도 되는 할인"인지 판단.
+  // - startDate가 지정돼 있고 아직 그 날짜(KST 자정 기준)가 안 됐으면 제외 (예: 8/11부터 시작하는데 8/2에 미리 보이는 문제 방지)
+  // - endDate가 지정돼 있고 이미 그 날짜가 지났으면 제외 (기한이 지난 할인이 계속 남아있는 문제 방지)
+  // - startDate/endDate 둘 다 없으면 상시 할인으로 간주해 항상 노출
   function isDiscountLive(d){
-    return !d.startDate || d.startDate <= getTodayKST();
+    const today = getTodayKST();
+    if (d.startDate && d.startDate > today) return false;
+    if (d.endDate && d.endDate < today) return false;
+    return true;
   }
 
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
