@@ -304,9 +304,9 @@
     <div class="mt-4 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="background:var(--card); border:1px solid var(--line);">
       <div class="flex-1 min-w-0">
         <p class="font-display text-base sm:text-lg mb-1 break-keep" style="color:var(--primary);">💡 숨은 할인 정보를 알고 계신가요?</p>
-        <p class="text-xs sm:text-sm break-keep" style="color:var(--muted);">카카오톡 채널 '주문고수'로 제보해 주시면 즉시 반영해 드립니다!</p>
+        <p class="text-xs sm:text-sm break-keep" style="color:var(--muted);">게시판 '실시간 할인 제보'에 글을 남겨주시면 확인 후 바로 반영해 드립니다!</p>
       </div>
-      <a href="http://pf.kakao.com/_DeqxnX/chat" target="_blank" rel="noopener" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:#FEE500; color:#1C1A17;">카톡으로 제보하기 💬</a>
+      <button type="button" onclick="goToRealtimeReportBoard()" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:#FEE500; color:#1C1A17;">실시간 할인 제보하기 🚨</button>
     </div>
 
     <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4"></div>
@@ -2891,6 +2891,13 @@
   function goToSignupFromBoard(){
     closeBoardLoginPrompt();
     switchTab('auth');
+  }
+
+  // 홈화면 "숨은 할인 정보를 알고 계신가요?" 배너 클릭 시, 게시판 탭으로 이동한 뒤
+  // 바로 '실시간 할인 제보' 카테고리를 선택된 상태로 보여준다.
+  function goToRealtimeReportBoard(){
+    switchTab('board');
+    switchBoardTab('realtime');
   }
 
   function switchBoardTab(tab){
