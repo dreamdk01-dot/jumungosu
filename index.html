@@ -372,6 +372,12 @@
       <p class="mt-1">🎁 당첨자에게는 개별 안내드리며, 카카오톡 채널 <span style="color:var(--primary); font-weight:600;">'주문고수'</span>로 문의해주시면 경품을 받으실 수 있어요.</p>
     </div>
 
+    <button type="button" onclick="togglePastWinnerBanner()" class="w-full text-left rounded-lg p-3 mb-6 flex items-center justify-between" style="background:var(--card-alt); border:1px solid var(--line);">
+      <span class="text-xs font-semibold" style="color:var(--text);">🏆 지난 이벤트 당첨자 확인하기</span>
+      <span id="past-winner-chevron" class="text-xs" style="color:var(--muted); transition:transform 0.2s ease;">▾</span>
+    </button>
+    <div id="past-winner-result" class="hidden -mt-3 mb-6 rounded-lg p-3 text-xs" style="background:var(--card-alt); color:var(--muted); border:1px solid var(--line);"></div>
+
     <div class="rounded-lg p-5 mb-6" style="background:var(--card);">
       <div id="vote-options" class="space-y-3"></div>
       <button id="vote-submit-btn" onclick="handleVoteSubmit()" class="w-full mt-5 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">
@@ -2617,6 +2623,48 @@
 
   // ---------- EVENT / VOTE ----------
   const RANK_BADGES = ['🥇', '🥈', '🥉'];
+
+  // 지난 이벤트(이번 달 이전) 당첨자를 조회해서 배너 아래에 펼쳐 보여준다.
+  // 아직 한 번도 추첨한 적이 없으면 "첫 이벤트입니다" 안내 문구를 대신 보여준다.
+  let pastWinnerLoaded = false;
+  async function togglePastWinnerBanner(){
+    const resultEl = document.getElementById('past-winner-result');
+    const chevronEl = document.getElementById('past-winner-chevron');
+    if (!resultEl) return;
+
+    const willShow = resultEl.classList.contains('hidden');
+    resultEl.classList.toggle('hidden');
+    if (chevronEl) chevronEl.style.transform = willShow ? 'rotate(180deg)' : 'rotate(0deg)';
+    if (!willShow || pastWinnerLoaded) return;
+
+    resultEl.textContent = '불러오는 중...';
+    pastWinnerLoaded = true;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('winners')
+        .select('name, vote_label, event_id, drawn_at')
+        .neq('event_id', EVENT_VOTE_ID)
+        .order('drawn_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+
+      if (!data || !data.length){
+        resultEl.textContent = '첫 이벤트입니다. 당첨 기원합니다^^';
+        return;
+      }
+
+      // 가장 최근 이벤트(event_id)의 당첨자들만 모아서 보여준다.
+      const latestEventId = data[0].event_id;
+      const latestWinners = data.filter(w => w.event_id === latestEventId);
+      const label = weekLabelFromEventId(latestEventId);
+      const names = latestWinners.map(w => `${w.name}님`).join(', ');
+      resultEl.innerHTML = `<span style="color:var(--text); font-weight:600;">${label}</span> 당첨자: ${names} 🎉 축하드려요!`;
+    } catch (e){
+      console.warn('[주문의 고수] 지난 당첨자 조회 실패 (winners 테이블 확인 필요)', e);
+      resultEl.textContent = '첫 이벤트입니다. 당첨 기원합니다^^';
+    }
+  }
 
   function renderVoteOptions(){
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
