@@ -1419,15 +1419,29 @@
       if (error) throw error;
 
       const exists = !!data;
-      emailCheckState[prefix] = { checkedEmail: email, isAvailable: !exists };
 
       if (exists){
+        emailCheckState[prefix] = { checkedEmail: email, isAvailable: false };
         msgEl.textContent = '이미 가입된 이메일입니다.';
         msgEl.style.color = 'var(--accent)';
-      } else {
-        msgEl.textContent = '사용 가능한 이메일입니다.';
-        msgEl.style.color = 'var(--type-delivery)';
+        return;
       }
+
+      // 탈퇴 후 7일 이내 같은 이메일로 재가입을 시도하는 경우를 확인합니다.
+      const { data: cooldown, error: cooldownError } = await supabaseClient.rpc('check_email_signup_allowed', { p_email: email });
+      if (cooldownError) throw cooldownError;
+      const cooldownRow = Array.isArray(cooldown) ? cooldown[0] : cooldown;
+
+      if (cooldownRow && cooldownRow.allowed === false){
+        emailCheckState[prefix] = { checkedEmail: email, isAvailable: false };
+        msgEl.textContent = `탈퇴 후 7일간 재가입할 수 없습니다. (재가입 가능일: ${cooldownRow.retry_after})`;
+        msgEl.style.color = 'var(--accent)';
+        return;
+      }
+
+      emailCheckState[prefix] = { checkedEmail: email, isAvailable: true };
+      msgEl.textContent = '사용 가능한 이메일입니다.';
+      msgEl.style.color = 'var(--type-delivery)';
     } catch (e){
       console.warn('[주문의 고수] 이메일 중복 확인 실패 (check_email_exists RPC 확인 필요)', e);
       msgEl.textContent = '중복 확인에 실패했어요. 잠시 후 다시 시도해주세요.';
