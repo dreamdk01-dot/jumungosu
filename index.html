@@ -485,11 +485,17 @@
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호</label>
-          <input id="page-su-password" name="signup_new_password" type="password" placeholder="8자 이상" autocomplete="new-password" oninput="checkPasswordMatch('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <div class="relative">
+            <input id="page-su-password" name="signup_new_password" type="password" placeholder="8자 이상" autocomplete="new-password" oninput="checkPasswordMatch('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            <button type="button" onclick="togglePwVisibility('page-su-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+          </div>
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호 확인</label>
-          <input id="page-su-password-confirm" name="signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <div class="relative">
+            <input id="page-su-password-confirm" name="signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            <button type="button" onclick="togglePwVisibility('page-su-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+          </div>
           <p id="page-su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
         </div>
         <div>
@@ -537,7 +543,10 @@
         </div>
         <div>
           <label class="text-xs font-medium block mb-1" style="color:var(--muted);">비밀번호</label>
-          <input id="page-login-password" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageLogin(); }" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <div class="relative">
+            <input id="page-login-password" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageLogin(); }" class="w-full px-3 py-2 pr-14 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+            <button type="button" onclick="togglePwVisibility('page-login-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+          </div>
         </div>
         <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
           <input id="page-login-remember-email" type="checkbox" class="w-4 h-4">
@@ -995,9 +1004,18 @@
         <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
           <p class="text-xs font-semibold mb-3" style="color:var(--primary);">🔒 비밀번호 변경</p>
           <div class="space-y-2">
-            <input id="user-info-current-password" type="password" autocomplete="current-password" placeholder="현재 비밀번호" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
-            <input id="user-info-new-password" type="password" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
-            <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+            <div class="relative">
+              <input id="user-info-current-password" type="password" autocomplete="current-password" placeholder="현재 비밀번호" class="w-full px-3 py-2 pr-14 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+              <button type="button" onclick="togglePwVisibility('user-info-current-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+            </div>
+            <div class="relative">
+              <input id="user-info-new-password" type="password" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" class="w-full px-3 py-2 pr-14 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+              <button type="button" onclick="togglePwVisibility('user-info-new-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+            </div>
+            <div class="relative">
+              <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 pr-14 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
+              <button type="button" onclick="togglePwVisibility('user-info-new-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+            </div>
             <p id="user-info-password-msg" class="text-[11px] hidden"></p>
             <button type="button" onclick="submitPasswordChange()" class="w-full py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">비밀번호 변경하기</button>
           </div>
@@ -1053,11 +1071,17 @@
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호</label>
-        <input id="su-password" name="vote_signup_new_password" type="password" placeholder="8자 이상" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <div class="relative">
+          <input id="su-password" name="vote_signup_new_password" type="password" placeholder="8자 이상" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <button type="button" onclick="togglePwVisibility('su-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+        </div>
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호 확인</label>
-        <input id="su-password-confirm" name="vote_signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <div class="relative">
+          <input id="su-password-confirm" name="vote_signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <button type="button" onclick="togglePwVisibility('su-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
+        </div>
         <p id="su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
       </div>
       <div>
@@ -1119,7 +1143,7 @@
   // ---------- DATA ----------
   const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
   const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)' };
-  const CATEGORIES = ['치킨','피자','버거','한식','중식','일식/돈까스','회/해물','족발/보쌈','찜/탕','고기/구이','분식','카페/디저트','샐러드','샌드위치','아시안','양식','야식','도시락/죽'];
+  const CATEGORIES = ['치킨','피자','카페/디저트','찜/탕','고기/구이','일식/회/해물','분식','양식','한식','버거','족발/보쌈','샐러드/샌드위치','도시락/죽','중식/아시안'];
 
   // 할인 데이터가 마지막으로 등록/수정/삭제된 날짜(KST, YYYY-MM-DD). Supabase의 app_config
   // 테이블에 저장되어 모든 방문자 기기에서 동일하게 보이며, 아래 값은 DB 조회 전(또는 실패 시)
@@ -1286,6 +1310,15 @@
   // 공백 차이 등으로 인한 매칭 실패를 방지하기 위한 지역 문자열 정규화
   function normalizeRegion(str){
     return String(str || '').replace(/\s+/g, '');
+  }
+
+  // 비밀번호 입력창의 표시/숨김을 토글 (버튼 클릭 시 type="password" ↔ "text")
+  function togglePwVisibility(inputId, btnEl){
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const willShow = el.type === 'password';
+    el.type = willShow ? 'text' : 'password';
+    btnEl.textContent = willShow ? '숨기기' : '보기';
   }
 
   // 회원가입 폼의 비밀번호/비밀번호 확인 실시간 일치 여부 안내
@@ -1632,9 +1665,9 @@
   //   - 종료일         (Date, 선택)        비워두면 상시 할인으로 표시
   //   - 대표이미지     (Single line text, 선택, 2글자) 비워두면 브랜드명 앞 2글자 사용
   //
-  // 카테고리는 사이트에 등록된 18개 고정 카테고리 중 하나와 정확히 일치해야 필터에 노출됩니다:
-  // 치킨, 피자, 버거, 한식, 중식, 일식/돈까스, 회/해물, 족발/보쌈, 찜/탕, 고기/구이,
-  // 분식, 카페/디저트, 샐러드, 샌드위치, 아시안, 양식, 야식, 도시락/죽
+  // 카테고리는 사이트에 등록된 14개 고정 카테고리 중 하나와 정확히 일치해야 필터에 노출됩니다:
+  // 치킨, 피자, 카페/디저트, 찜/탕, 고기/구이, 일식/회/해물, 분식, 양식, 한식, 버거,
+  // 족발/보쌈, 샐러드/샌드위치, 도시락/죽, 중식/아시안
   // =====================================================================
 
   // ▼▼▼ 여기 3개 값을 본인 Airtable 정보로 반드시 교체하세요 ▼▼▼
@@ -1926,7 +1959,7 @@
   }
 
   // ---------- 오늘의 할인 BEST 3: 카테고리 드롭다운 연동 ----------
-  // STEP 2 · 메뉴 카테고리 선택과 완전히 동일한 18개 카테고리 목록을 그대로 사용합니다.
+  // STEP 2 · 메뉴 카테고리 선택과 완전히 동일한 14개 카테고리 목록을 그대로 사용합니다.
   const BEST3_CATEGORY_OPTIONS = CATEGORIES;
 
   let best3Category = '치킨';
