@@ -4736,6 +4736,10 @@
   }
 
   // 로그인/회원가입 성공 시 백엔드가 내려준 토큰·회원 정보를 세션 상태로 반영
+  // 페이지가 켜져 있는 동안 딱 한 번만 당첨 여부를 확인하기 위한 플래그.
+  // (onAuthStateChange는 토큰 자동 갱신 시에도 계속 호출되므로, 매번 조회하지 않도록 막아준다)
+  let winCheckStarted = false;
+
   function applyAuthSession(token, user){
     authToken = token;
     isLoggedIn = true;
@@ -4759,6 +4763,48 @@
     // 로그인한 계정 기준으로 이벤트 투표 여부도 다시 확인 (다른 기기에서 이미 투표했을 수 있음)
     loadEventVoteState();
     loadEventParticipants(); // 관리자 계정으로 로그인했다면 실제 참여자 목록도 함께 갱신
+
+    // '로그인'이라는 행위가 아니라 '로그인된 상태로 접속(세션 자동 복원 포함)'되는 순간마다 확인해야
+    // 의미가 있다 — 대부분의 재방문자는 로그인 절차 없이 저장된 세션으로 바로 들어오기 때문.
+    if (!winCheckStarted){
+      winCheckStarted = true;
+      checkMyUnclaimedWin();
+    }
+  }
+
+  // 로그인된 내 이메일로 당첨된 적이 있는지 확인하고, 아직 확인 안 한 당첨이 있으면 팝업으로 안내한다.
+  // '확인함' 여부는 브라우저 localStorage에 마지막으로 본 당첨 id를 저장해서 판단한다
+  // (같은 당첨을 접속할 때마다 반복해서 띄우지 않기 위함).
+  async function checkMyUnclaimedWin(){
+    if (!currentUser || !currentUser.email) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('winners')
+        .select('id, vote_label, event_id, drawn_at')
+        .eq('email', currentUser.email)
+        .order('drawn_at', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+
+      const win = data && data[0];
+      if (!win) return;
+
+      const SEEN_KEY = 'jumungosu_seen_winner_id';
+      const lastSeenId = localStorage.getItem(SEEN_KEY);
+      if (String(win.id) === String(lastSeenId)) return; // 이미 확인한 당첨이면 다시 띄우지 않음
+
+      localStorage.setItem(SEEN_KEY, String(win.id));
+
+      const bodyEl = document.getElementById('winner-modal-body');
+      if (bodyEl){
+        bodyEl.innerHTML = `<b>${escapeHtml(win.vote_label || '이벤트')}</b> 투표 이벤트에 당첨되셨어요!<br>카카오톡 채널 <span style="color:var(--primary); font-weight:600;">'주문고수'</span>로 문의해주시면 경품을 안내드릴게요 🎁`;
+      }
+      document.getElementById('winner-modal').classList.remove('hidden');
+      document.getElementById('winner-modal').classList.add('flex');
+      lockBodyScroll();
+    } catch (e){
+      console.warn('[주문의 고수] 내 당첨 여부 확인 실패 (winners 테이블 확인 필요)', e);
+    }
   }
 
   // 로그인 시(또는 세션 복원 시) Supabase profiles 테이블에서 본인의 출석/가입일 정보를 불러온다.
