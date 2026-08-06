@@ -1321,6 +1321,46 @@
     btnEl.textContent = willShow ? '숨기기' : '보기';
   }
 
+  // 회원가입 성공 후 폼에 남아있는 입력값/체크 상태를 모두 초기화 (다른 사람이 볼 수 있는 화면에
+  // 이전 가입자의 이메일·닉네임 등이 남아있지 않도록 안전하게 비워준다)
+  function resetSignupForm(prefix){
+    const ids = {
+      email: `${prefix}-email`,
+      password: `${prefix}-password`,
+      passwordConfirm: `${prefix}-password-confirm`,
+      nickname: prefix === 'page-su' ? 'signup_nickname' : 'signup_nickname_vote',
+      sido: `${prefix}-sido`,
+      sigungu: `${prefix}-sigungu`,
+      regionPreview: `${prefix}-region-preview`,
+      agreeAge: `${prefix}-agree-age`,
+      agreeTerms: `${prefix}-agree-terms`,
+      marketing: `${prefix}-marketing`,
+      emailMsg: `${prefix}-email-check-msg`,
+      nicknameMsg: `${prefix}-nickname-check-msg`,
+      passwordMatchMsg: `${prefix}-password-match-msg`,
+    };
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setChecked = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+    const hide = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
+
+    setVal(ids.email, '');
+    setVal(ids.password, '');
+    setVal(ids.passwordConfirm, '');
+    setVal(ids.nickname, '');
+    setVal(ids.sido, '');
+    setVal(ids.sigungu, '');
+    setChecked(ids.agreeAge, false);
+    setChecked(ids.agreeTerms, false);
+    setChecked(ids.marketing, false);
+    hide(ids.emailMsg);
+    hide(ids.nicknameMsg);
+    hide(ids.passwordMatchMsg);
+    const regionPreviewEl = document.getElementById(ids.regionPreview);
+    if (regionPreviewEl) regionPreviewEl.textContent = '-';
+    delete emailCheckState[prefix];
+    delete nicknameCheckState[prefix];
+  }
+
   // 회원가입 폼의 비밀번호/비밀번호 확인 실시간 일치 여부 안내
   function checkPasswordMatch(prefix){
     const pw = document.getElementById(`${prefix}-password`).value;
@@ -4273,15 +4313,26 @@
     // Supabase Auth 표준 회원가입 (닉네임/관심지역은 user_metadata로 저장)
     // ---------------------------------------------------------------
     try {
-      const { error } = await supabaseClient.auth.signUp({
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password: pw,
         options: { data: { nickname: name, region, marketing_opt_in: marketingOptIn } },
       });
       if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
 
-      applyAuthSession(null, { nickname: name, email, region, level: 0, role: 'USER' });
+      // Supabase가 이메일 인증을 요구하는 설정이면 signUp()은 에러 없이 성공하지만
+      // session은 null로 돌아온다. 이 경우 로그인 상태를 임의로 만들지 않고
+      // 이메일 인증부터 완료하도록 안내한다.
+      if (!data.session){
+        closeModal();
+        resetSignupForm('su');
+        alert('회원가입이 완료되었습니다!\n입력하신 이메일로 인증 링크를 보내드렸어요. 메일함에서 인증을 완료한 뒤 로그인 후 투표해주세요.');
+        return;
+      }
+
+      applyAuthSession(data.session.access_token, { id: data.user?.id, nickname: name, email, region, level: 0, role: 'USER' });
       closeModal();
+      resetSignupForm('su');
       castVote({ name, email });
     } catch (err){
       errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
@@ -4719,14 +4770,19 @@
     // 해싱해 저장하며, 닉네임/관심지역은 user_metadata로 함께 저장합니다.
     // ---------------------------------------------------------------
     try {
-      const { error } = await supabaseClient.auth.signUp({
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password: pw,
         options: { data: { nickname: name, region, marketing_opt_in: marketingOptIn } },
       });
       if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
 
-      alert('회원가입이 완료되었습니다!');
+      if (data.session){
+        alert('회원가입이 완료되었습니다!');
+      } else {
+        alert('회원가입이 완료되었습니다!\n입력하신 이메일로 인증 링크를 보내드렸어요. 메일함에서 인증을 완료한 뒤 로그인해주세요.');
+      }
+      resetSignupForm('page-su');
       setAuthMode('login');
     } catch (err){
       errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
