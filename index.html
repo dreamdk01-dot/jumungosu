@@ -2128,8 +2128,12 @@
   let EVENT_VOTE_ID = 'chicken_vote_' + currentMonthInfo.monthId;
   const voteOptions = [
     { id:'bbq', label:'BBQ 황금올리브', votes:0 },
-    { id:'bhc', label:'BHC 뿌링클', votes:0 },
-    { id:'hoo', label:'후참잘 후라이드', votes:0 },
+    { id:'momstouch', label:'맘스터치 후라이드', votes:0 },
+    { id:'bhc', label:'BHC 핫 후라이드', votes:0 },
+    { id:'pooradak', label:'푸라닭 씬 후라이드', votes:0 },
+    { id:'norangtongdak', label:'노랑통닭 후라이드', votes:0 },
+    { id:'jadam', label:'자담치킨 후라이드', votes:0 },
+    { id:'mexicana', label:'멕시카나 후라이드', votes:0 },
   ];
 
   // 참여자 목록은 더 이상 더미 데이터가 아니라, loadEventParticipants()가 Supabase
@@ -2612,18 +2616,33 @@
   }
 
   // ---------- EVENT / VOTE ----------
+  const RANK_BADGES = ['🥇', '🥈', '🥉'];
+
   function renderVoteOptions(){
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
     const el = document.getElementById('vote-options');
-    el.innerHTML = voteOptions.map(o => {
+
+    // 득표수 내림차순으로 정렬해 순위를 매긴다 (동률이면 후보 등록 순서를 그대로 유지).
+    const ranked = voteOptions
+      .map((o, originalIndex) => ({ ...o, originalIndex }))
+      .sort((a, b) => b.votes - a.votes || a.originalIndex - b.originalIndex);
+
+    el.innerHTML = ranked.map((o, rank) => {
       const pct = total > 0 ? Math.round((o.votes/total)*100) : 0;
       const selected = selectedVoteId === o.id;
+      const isLeader = rank === 0 && total > 0;
+      const badge = RANK_BADGES[rank] || `${rank + 1}위`;
       return `
-      <button onclick="selectVote('${o.id}')" ${hasVoted ? 'disabled' : ''} class="w-full text-left rounded-md p-3 relative overflow-hidden" style="background:var(--surface); border:2px solid ${selected ? 'var(--primary)' : 'var(--line)'}; ${hasVoted ? 'cursor:not-allowed; opacity:0.85;' : ''}">
-        <div class="absolute inset-y-0 left-0" style="width:${pct}%; background:rgba(255,184,0,0.12);"></div>
-        <div class="relative flex items-center justify-between">
-          <span class="font-semibold text-sm">${o.label}${selected && hasVoted ? ' <span style="color:var(--primary);">✓ 내 선택</span>' : ''}</span>
+      <button onclick="selectVote('${o.id}')" ${hasVoted ? 'disabled' : ''} class="w-full text-left rounded-md p-3" style="background:var(--surface); border:2px solid ${selected ? 'var(--primary)' : 'var(--line)'}; ${hasVoted ? 'cursor:not-allowed; opacity:0.85;' : ''}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-sm">
+            <span class="font-mono" style="color:${isLeader ? 'var(--primary)' : 'var(--muted)'};">${badge}</span>
+            ${o.label}${selected && hasVoted ? ' <span style="color:var(--primary);">✓ 내 선택</span>' : ''}
+          </span>
           <span class="font-mono text-sm" style="color:var(--muted);">${pct}%</span>
+        </div>
+        <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--line);">
+          <div class="h-full rounded-full" style="width:${pct}%; background:${isLeader ? 'var(--primary)' : 'var(--muted)'}; transition:width 0.5s ease;"></div>
         </div>
       </button>`;
     }).join('');
