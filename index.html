@@ -609,6 +609,10 @@
         <p class="font-mono text-xs mb-2" style="color:var(--muted);">꿀팁 배너가 연결될 게시글</p>
         <select id="admin-banner-promo-post" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
       </div>
+      <div class="rounded-lg p-4 md:col-span-2" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🗳️ 이벤트 투표 페이지 제목</p>
+        <input id="admin-event-page-title-input" type="text" maxlength="60" placeholder="비워두면 자동으로 'N월 최애 후라이드 치킨 투표 (~N/N까지)' 형식으로 표시돼요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      </div>
     </div>
     <button type="button" id="admin-banner-save-btn" onclick="saveHomeBannerConfig()" class="mt-4 px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">배너 저장하기</button>
   </section>
@@ -2720,9 +2724,11 @@
   }
 
   // 이벤트 페이지 상단 타이틀에 "M월 최애 후라이드 치킨 투표 (~M/D까지)"를 표시한다.
+  // 관리자가 app_config에 별도 문구(homeBannerConfig.eventPageTitle)를 저장해두면 그 값을 우선 사용한다.
   function renderEventPageHeader(){
     const el = document.getElementById('event-page-title');
-    if (el) el.textContent = `${currentMonthInfo.month}월 최애 후라이드 치킨 투표 (~${currentMonthInfo.lastDayLabel}까지)`;
+    if (!el) return;
+    el.textContent = homeBannerConfig.eventPageTitle || `${currentMonthInfo.month}월 최애 후라이드 치킨 투표 (~${currentMonthInfo.lastDayLabel}까지)`;
   }
 
   // 이번 달 이벤트의 투표 후보 목록을 Supabase(vote_events)에서 불러온다.
@@ -4152,6 +4158,7 @@
     promoBadge: '🔥 실시간 할인 1위 노하우 대공개',
     promoTitle: 'BBQ 12,000원 할인! 도대체 어떻게 받았을까?',
     promoPostId: null,
+    eventPageTitle: null, // null이면 렌더 시 "N월 최애 후라이드 치킨 투표 (~N/N까지)" 자동 생성 문구 사용
   };
 
   function renderHomeBanners(){
@@ -4173,12 +4180,14 @@
         if (row.key === 'home_promo_badge' && row.value) homeBannerConfig.promoBadge = row.value;
         if (row.key === 'home_promo_title' && row.value) homeBannerConfig.promoTitle = row.value;
         if (row.key === 'home_promo_post_id') homeBannerConfig.promoPostId = row.value || null;
+        if (row.key === 'event_vote_page_title') homeBannerConfig.eventPageTitle = row.value || null;
       });
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_home_banner_config 확인 필요)', e);
     }
     renderHomeBanners();
     renderAdminBannerPostSelect();
+    renderEventPageHeader(); // initEventVoting()이 먼저 실행돼 기본값으로 그려놨을 수 있으니, 설정값 도착 후 다시 그린다.
   }
 
   // 관리자 대시보드의 '꿀팁 배너가 연결될 게시글' 드롭다운을 식품 게시판 글 목록으로 채운다.
@@ -4192,6 +4201,7 @@
     document.getElementById('admin-banner-event-text').value = homeBannerConfig.eventText;
     document.getElementById('admin-banner-promo-badge').value = homeBannerConfig.promoBadge;
     document.getElementById('admin-banner-promo-title').value = homeBannerConfig.promoTitle;
+    document.getElementById('admin-event-page-title-input').value = homeBannerConfig.eventPageTitle || '';
     select.value = homeBannerConfig.promoPostId || '';
   }
 
@@ -4206,6 +4216,7 @@
     const promoBadge = document.getElementById('admin-banner-promo-badge').value.trim();
     const promoTitle = document.getElementById('admin-banner-promo-title').value.trim();
     const promoPostId = document.getElementById('admin-banner-promo-post').value;
+    const eventPageTitle = document.getElementById('admin-event-page-title-input').value.trim();
 
     if (!eventText || !promoBadge || !promoTitle){
       showToast('배너 문구를 모두 입력해주세요.');
@@ -4218,13 +4229,16 @@
         supabaseClient.rpc('set_home_banner_config', { p_key: 'home_promo_badge', p_value: promoBadge }),
         supabaseClient.rpc('set_home_banner_config', { p_key: 'home_promo_title', p_value: promoTitle }),
         supabaseClient.rpc('set_home_banner_config', { p_key: 'home_promo_post_id', p_value: promoPostId || '' }),
+        supabaseClient.rpc('set_home_banner_config', { p_key: 'event_vote_page_title', p_value: eventPageTitle || '' }),
       ]);
 
       homeBannerConfig.eventText = eventText;
       homeBannerConfig.promoBadge = promoBadge;
       homeBannerConfig.promoTitle = promoTitle;
       homeBannerConfig.promoPostId = promoPostId || null;
+      homeBannerConfig.eventPageTitle = eventPageTitle || null;
       renderHomeBanners();
+      renderEventPageHeader();
       showToast('홈 배너가 저장되었습니다 ✅');
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 저장 실패 (set_home_banner_config RPC 확인 필요)', e);
