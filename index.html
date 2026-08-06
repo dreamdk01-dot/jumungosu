@@ -359,8 +359,18 @@
 <!-- ===== EVENT PAGE ===== -->
 <main id="page-event" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
-    <h2 id="event-page-title" class="font-display text-2xl mb-1" style="color:var(--primary);">최애 후라이드 치킨 투표 (테스트 중)</h2>
-    <p class="text-sm mb-6" style="color:var(--muted);"> 투표에 참여하면 추첨을 통해 5분께 선택하시는 배달 플랫폼 2만원권을 드려요.</p>
+    <h2 id="event-page-title" class="font-display text-2xl mb-1" style="color:var(--primary);">최애 후라이드 치킨 투표</h2>
+    <p class="text-sm mb-4" style="color:var(--muted);">투표에 참여하면 추첨을 통해 5분께 2만원권을 드려요.</p>
+
+    <div class="flex gap-3 mb-4">
+      <img src="/prize-baemin-20000.jpg" alt="배달의민족 상품권 2만원" class="w-1/2 rounded-lg" style="border:1px solid var(--line);">
+      <img src="/prize-coupang-20000.jpg" alt="쿠팡 기프트카드 2만원" class="w-1/2 rounded-lg" style="border:1px solid var(--line);">
+    </div>
+
+    <div class="rounded-lg p-3 mb-6 text-xs leading-relaxed" style="background:var(--card-alt); color:var(--muted);">
+      <p>🗓️ 추첨일: <span style="color:var(--text); font-weight:600;">9/1</span></p>
+      <p class="mt-1">🎁 당첨자에게는 개별 안내드리며, 카카오톡 채널 <span style="color:var(--primary); font-weight:600;">'주문고수'</span>로 문의해주시면 경품을 받으실 수 있어요.</p>
+    </div>
 
     <div class="rounded-lg p-5 mb-6" style="background:var(--card);">
       <div id="vote-options" class="space-y-3"></div>
@@ -679,11 +689,11 @@
     <div class="grid lg:grid-cols-5 gap-5">
       <!-- 투표 후보 관리 -->
       <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">이번 주 투표 후보 관리</p>
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">이번 달 투표 후보 관리</p>
         <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
         <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
         <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">후보 저장하기</button>
-        <p class="text-[11px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 주 득표수는 0표로 초기화돼요.</p>
+        <p class="text-[11px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 달 득표수는 0표로 초기화돼요.</p>
       </div>
 
       <!-- 실시간 득표율 -->
@@ -717,14 +727,14 @@
         </div>
       </div>
 
-      <!-- 지난 주차 이벤트 보기 -->
+      <!-- 지난 이벤트 보기 -->
       <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">지난 주차 이벤트 보기</p>
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">지난 이벤트 보기</p>
         <select id="admin-vote-history-select" onchange="loadVoteEventHistory(this.value)" class="w-full px-3 py-2 rounded-md text-sm outline-none mb-3" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <option value="">주차를 선택하세요</option>
+          <option value="">회차를 선택하세요</option>
         </select>
         <div id="admin-vote-history-results" class="space-y-3">
-          <p class="text-xs" style="color:var(--muted);">주차를 선택하면 그 주의 득표 결과와 당첨자를 볼 수 있어요.</p>
+          <p class="text-xs" style="color:var(--muted);">회차를 선택하면 그 달의 득표 결과와 당첨자를 볼 수 있어요.</p>
         </div>
       </div>
 
@@ -738,7 +748,7 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="text-left" style="color:var(--muted);">
-                <th class="font-mono text-xs font-normal pb-2">주차</th>
+                <th class="font-mono text-xs font-normal pb-2">회차</th>
                 <th class="font-mono text-xs font-normal pb-2">당첨 일시</th>
                 <th class="font-mono text-xs font-normal pb-2">이름</th>
                 <th class="font-mono text-xs font-normal pb-2">이메일</th>
@@ -2087,42 +2097,35 @@
   let selectedVoteId = null;
   let authMode = 'signup';
 
-  // ---------- 주간 이벤트: 1년 52주, 일요일~토요일 기준 주차 계산 ----------
-  function getWeekInfo(baseDate){
+  // ---------- 월간 이벤트: 매달 1일~말일 기준으로 진행 ----------
+  function getMonthInfo(baseDate){
     const d = baseDate ? new Date(baseDate) : new Date();
     const year = d.getFullYear();
+    const month = d.getMonth() + 1; // 1~12
 
-    const sunday = new Date(d);
-    sunday.setHours(0, 0, 0, 0);
-    sunday.setDate(d.getDate() - d.getDay()); // 이번 주 일요일
-    const saturday = new Date(sunday);
-    saturday.setDate(sunday.getDate() + 6);   // 이번 주 토요일
-
-    // 그 해 1/1이 속한 주의 일요일을 1주차 시작으로 삼아 몇 번째 주인지 계산
-    const jan1 = new Date(year, 0, 1);
-    const firstSunday = new Date(jan1);
-    firstSunday.setDate(jan1.getDate() - jan1.getDay());
-    const weekNumber = Math.floor((sunday - firstSunday) / (7 * 86400000)) + 1;
+    const firstDay = new Date(year, d.getMonth(), 1);
+    const lastDay = new Date(year, d.getMonth() + 1, 0); // 다음 달 0일 = 이번 달 마지막 날
 
     const pad = n => String(n).padStart(2, '0');
     const fmt = dt => `${dt.getMonth() + 1}/${dt.getDate()}`;
 
     return {
       year,
-      weekNumber,
-      weekId: `${year}-W${pad(weekNumber)}`,
-      dateRange: `${fmt(sunday)} ~ ${fmt(saturday)}`,
-      sunday,
-      saturday,
+      month,
+      monthId: `${year}-${pad(month)}`,
+      dateRange: `${fmt(firstDay)} ~ ${fmt(lastDay)}`,
+      lastDayLabel: fmt(lastDay),
+      firstDay,
+      lastDay,
     };
   }
 
-  let currentWeekInfo = getWeekInfo();
+  let currentMonthInfo = getMonthInfo();
 
   // 초기값은 0표이자 기본 후보 3종. 실제 후보 목록은 loadCurrentVoteEvent()가, 실제 득표수는
-  // loadEventVoteState()가 Supabase에서 불러와 채운다. (관리자가 아직 이번 주 후보를 설정하지
+  // loadEventVoteState()가 Supabase에서 불러와 채운다. (관리자가 아직 이번 달 후보를 설정하지
   // 않았다면 이 기본값이 그대로 사용됨)
-  let EVENT_VOTE_ID = 'chicken_vote_' + currentWeekInfo.weekId;
+  let EVENT_VOTE_ID = 'chicken_vote_' + currentMonthInfo.monthId;
   const voteOptions = [
     { id:'bbq', label:'BBQ 황금올리브', votes:0 },
     { id:'bhc', label:'BHC 뿌링클', votes:0 },
@@ -2649,14 +2652,14 @@
     renderVoteOptions();
   }
 
-  // 이벤트 페이지 상단 타이틀에 "N주차 최애 후라이드 치킨 투표 (테스트 중) M/D ~ M/D"를 표시한다.
+  // 이벤트 페이지 상단 타이틀에 "M월 최애 후라이드 치킨 투표 (~M/D까지)"를 표시한다.
   function renderEventPageHeader(){
     const el = document.getElementById('event-page-title');
-    if (el) el.textContent = `${currentWeekInfo.weekNumber}주차 최애 후라이드 치킨 투표 (테스트 중) ${currentWeekInfo.dateRange}`;
+    if (el) el.textContent = `${currentMonthInfo.month}월 최애 후라이드 치킨 투표 (~${currentMonthInfo.lastDayLabel}까지)`;
   }
 
-  // 이번 주 이벤트의 투표 후보 목록을 Supabase(vote_events)에서 불러온다.
-  // 관리자가 아직 이번 주 후보를 설정하지 않았다면, 위에 선언된 기본 3종을 그대로 사용한다.
+  // 이번 달 이벤트의 투표 후보 목록을 Supabase(vote_events)에서 불러온다.
+  // 관리자가 아직 이번 달 후보를 설정하지 않았다면, 위에 선언된 기본 3종을 그대로 사용한다.
   async function loadCurrentVoteEvent(){
     try {
       const { data, error } = await supabaseClient.rpc('get_vote_event', { p_event_id: EVENT_VOTE_ID });
@@ -2666,11 +2669,11 @@
         data.forEach(o => voteOptions.push({ id: o.id, label: o.label, votes: 0 }));
       }
     } catch (e){
-      console.warn('[주문의 고수] 이번 주 투표 후보 조회 실패 (vote_events/get_vote_event RPC 확인 필요)', e);
+      console.warn('[주문의 고수] 이번 달 투표 후보 조회 실패 (vote_events/get_vote_event RPC 확인 필요)', e);
     }
   }
 
-  // 투표 관련 초기화를 순서대로 진행: 이번 주 후보 → 득표 집계/내 투표 여부 → 관리자용 참여자 목록
+  // 투표 관련 초기화를 순서대로 진행: 이번 달 후보 → 득표 집계/내 투표 여부 → 관리자용 참여자 목록
   async function initEventVoting(){
     renderEventPageHeader();
     await loadCurrentVoteEvent();
@@ -2680,13 +2683,13 @@
     renderVoteHistorySelect();
   }
 
-  // ---------- 관리자: 이번 주 투표 후보 관리 ----------
+  // ---------- 관리자: 이번 달 투표 후보 관리 ----------
   let adminVoteOptionsDraft = [];
 
   function renderVoteOptionEditor(){
     const weekLabelEl = document.getElementById('admin-event-week-label');
     if (weekLabelEl){
-      weekLabelEl.textContent = `현재 진행 중: ${currentWeekInfo.weekNumber}주차 (${currentWeekInfo.dateRange})`;
+      weekLabelEl.textContent = `현재 진행 중: ${currentMonthInfo.month}월 (${currentMonthInfo.dateRange})`;
     }
     adminVoteOptionsDraft = voteOptions.map(o => ({ id: o.id, label: o.label }));
     renderVoteOptionEditorFields();
@@ -2721,7 +2724,7 @@
     renderVoteOptionEditorFields();
   }
 
-  // 이번 주 후보 목록을 Supabase(vote_events)에 저장한다. (관리자 전용, 저장 시 이번 주 득표는 0표로 시작)
+  // 이번 달 후보 목록을 Supabase(vote_events)에 저장한다. (관리자 전용, 저장 시 이번 달 득표는 0표로 시작)
   async function saveVoteEventOptions(){
     if (!isAdminUser()){
       showToast('마스터 권한이 필요합니다.');
@@ -2736,13 +2739,13 @@
       showToast('후보를 2개 이상 입력해주세요.');
       return;
     }
-    if (!confirm('후보를 저장하면 이번 주 득표수가 0표로 초기화돼요. 계속할까요?')) return;
+    if (!confirm('후보를 저장하면 이번 달 득표수가 0표로 초기화돼요. 계속할까요?')) return;
 
     try {
       const { error } = await supabaseClient.rpc('upsert_vote_event', {
         p_event_id: EVENT_VOTE_ID,
-        p_week_label: `${currentWeekInfo.weekNumber}주차`,
-        p_date_range: currentWeekInfo.dateRange,
+        p_week_label: `${currentMonthInfo.month}월`,
+        p_date_range: currentMonthInfo.dateRange,
         p_options: cleaned,
       });
       if (error) throw error;
@@ -2755,14 +2758,14 @@
       renderAdminVoteStats();
       renderVoteOptionEditor();
       renderVoteHistorySelect();
-      showToast('이번 주 투표 후보가 저장됐어요 ✅');
+      showToast('이번 달 투표 후보가 저장됐어요 ✅');
     } catch (e){
       console.warn('[주문의 고수] 투표 후보 저장 실패 (upsert_vote_event RPC 확인 필요)', e);
       showToast('후보 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
   }
 
-  // ---------- 관리자: 지난 주차 이벤트 보기 ----------
+  // ---------- 관리자: 지난 이벤트 보기 ----------
   async function renderVoteHistorySelect(){
     const select = document.getElementById('admin-vote-history-select');
     if (!select) return;
@@ -2771,7 +2774,7 @@
       const { data, error } = await supabaseClient.rpc('list_vote_events');
       if (error) throw error;
       const events = (data || []).filter(e => e.event_id !== EVENT_VOTE_ID);
-      select.innerHTML = '<option value="">주차를 선택하세요</option>' +
+      select.innerHTML = '<option value="">회차를 선택하세요</option>' +
         events.map(e => `<option value="${e.event_id}">${escapeHtml(e.week_label)} (${escapeHtml(e.date_range)})</option>`).join('');
     } catch (e){
       console.warn('[주문의 고수] 지난 이벤트 목록 조회 실패 (list_vote_events RPC 확인 필요)', e);
@@ -2783,7 +2786,7 @@
     if (!resultsEl) return;
 
     if (!eventId){
-      resultsEl.innerHTML = '<p class="text-xs" style="color:var(--muted);">주차를 선택하면 그 주의 득표 결과와 당첨자를 볼 수 있어요.</p>';
+      resultsEl.innerHTML = '<p class="text-xs" style="color:var(--muted);">회차를 선택하면 그 달의 득표 결과와 당첨자를 볼 수 있어요.</p>';
       return;
     }
     resultsEl.innerHTML = '<p class="text-xs" style="color:var(--muted);">불러오는 중...</p>';
@@ -5543,11 +5546,14 @@
     }
   }
 
-  // 'chicken_vote_2026-W31' 같은 이벤트ID에서 "31주차" 라벨을 뽑아낸다.
+  // 'chicken_vote_2026-08' 같은 이벤트ID에서 "8월" 라벨을 뽑아낸다.
+  // (과거 주 단위로 운영하던 시절의 'chicken_vote_2026-W31' 형식 데이터도 계속 표시되도록 함께 처리)
   function weekLabelFromEventId(eventId){
     if (!eventId) return '-';
-    const m = eventId.match(/W(\d+)/);
-    return m ? `${parseInt(m[1], 10)}주차` : eventId;
+    const weekMatch = eventId.match(/W(\d+)/);
+    if (weekMatch) return `${parseInt(weekMatch[1], 10)}주차`; // 과거 데이터 호환
+    const monthMatch = eventId.match(/(\d{4})-(\d{2})$/);
+    return monthMatch ? `${parseInt(monthMatch[2], 10)}월` : eventId;
   }
 
   function formatWinnerDate(iso){
@@ -5691,7 +5697,7 @@
   loadDiscountUpdatedAt(); // Supabase app_config에서 최신 할인 업데이트 날짜를 불러와 배지 렌더링
   loadHomeBannerConfig(); // 관리자가 설정한 홈 배너 문구/연결 게시글을 불러와 반영
   setupImageRedactCanvasEvents(); // 이미지 가리기 에디터의 드래그/터치 이벤트를 한 번만 등록
-  initEventVoting(); // 이번 주 후보 로드 → 득표 집계/내 투표 여부 → 관리자 참여자 목록 순서로 진행
+  initEventVoting(); // 이번 달 후보 로드 → 득표 집계/내 투표 여부 → 관리자 참여자 목록 순서로 진행
   renderBoardComposeAppSelect();
   renderBoardComposeCategorySelect();
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
