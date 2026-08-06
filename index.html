@@ -5186,9 +5186,24 @@
     unlockBodyScroll();
   }
 
-  function handleWithdraw(){
+  async function handleWithdraw(){
     const confirmed = confirm('정말 탈퇴하시겠습니까? 탈퇴 시 기존 이벤트 참여 내역 및 기프티콘 추첨 대상에서 제외됩니다.');
     if (!confirmed) return;
+
+    // ---------------------------------------------------------------
+    // 실제 계정 삭제. Supabase에 미리 만들어둔 delete_own_account() RPC를
+    // 호출해 auth.users에서 본인 계정을 지운다. (클라이언트는 보안상
+    // 다른 계정을 지울 수 없고, auth.uid() 기준으로 본인만 삭제된다.)
+    // ---------------------------------------------------------------
+    try {
+      const { error } = await supabaseClient.rpc('delete_own_account');
+      if (error) throw error;
+    } catch (err){
+      showToast('탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    await supabaseClient.auth.signOut();
 
     isLoggedIn = false;
     currentUser = null;
