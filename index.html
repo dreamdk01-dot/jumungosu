@@ -2442,6 +2442,23 @@
     el.innerHTML = ids.map(id => {
       const d = discounts.find(x => x.id === id);
       if (!d) return '';
+
+      const timeChipHtml = d.limitedTime
+        ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,90,54,0.12); color:var(--accent);">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>`
+        : '';
+
+      // 뽑기(랜덤) 항목이면 "최대 N원" 배지를 눌러 전체 금액 목록을 펼쳐볼 수 있게 한다 (할인 리스트와 동일한 동작)
+      const gachaMax = Array.isArray(d.randomAmounts) && d.randomAmounts.length > 1
+        ? d.randomAmounts[d.randomAmounts.length - 1]
+        : null;
+      const gachaId = `best3-gacha-${d.id}`;
+      const gachaChipHtml = gachaMax
+        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
+        : '';
+      const gachaDetailHtml = gachaMax
+        ? `<div id="${gachaId}" class="hidden text-[11px] mt-2" style="color:var(--muted);">뽑을 수 있는 금액: ${d.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
+        : '';
+
       return `
       <div class="rounded-md p-4" style="background:var(--surface);">
         <div class="flex items-center gap-2 mb-3">
@@ -2449,9 +2466,12 @@
           <p class="font-bold text-base leading-tight">${d.name}</p>
         </div>
         <p class="font-mono text-2xl font-bold mb-2" style="color:var(--primary);">${formatDiscount(d)}</p>
-        <div class="flex gap-1 flex-wrap">
+        <div class="flex gap-1 flex-wrap items-center">
           ${d.app.map(a => appTagHtml(a)).join('')}
+          ${timeChipHtml}
+          ${gachaChipHtml}
         </div>
+        ${gachaDetailHtml}
       </div>`;
     }).join('');
   }
