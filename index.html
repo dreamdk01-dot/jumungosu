@@ -326,8 +326,11 @@
     <div class="flex items-center justify-between mb-1 gap-3">
       <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트</h3>
       <div class="flex items-center gap-2 shrink-0">
+        <button id="limited-time-filter-btn" onclick="toggleLimitedTimeFilter()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted); background:transparent;">
+          ⏰ 선착순
+        </button>
         <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
-          <span id="sort-toggle-label">할인가 높은순</span> <span>↕</span>
+          <span id="sort-toggle-label">할인 최대</span> <span>↕</span>
         </button>
         <span class="font-mono text-xs whitespace-nowrap" style="color:var(--muted);"><span id="result-count">0</span>건</span>
       </div>
@@ -2671,6 +2674,8 @@
       </div>`;
   }
 
+  let onlyLimitedTimeFilter = false; // '선착순' 버튼: true면 선착순 시간이 등록된 항목만 노출
+
   function renderDiscountList(){
     let filtered = discounts.filter(d => {
       const appOk = activeAppFilters.length === 0 || d.app.some(a => activeAppFilters.includes(a));
@@ -2679,7 +2684,8 @@
       const regionOk = !d.region || (isLoggedIn && currentUser && normalizeRegion(currentUser.region) === normalizeRegion(d.region));
       // 할인 시작일이 아직 안 됐으면(예: 8/11부터 시작하는 이벤트가 8/2에 미리 보이는 문제) 목록에서 제외
       const liveOk = isDiscountLive(d);
-      return appOk && catOk && regionOk && liveOk;
+      const limitedTimeOk = !onlyLimitedTimeFilter || !!d.limitedTime;
+      return appOk && catOk && regionOk && liveOk && limitedTimeOk;
     });
 
     // 동일 브랜드는 카드 1개로 통합
@@ -2722,16 +2728,30 @@
     const label = document.getElementById('sort-toggle-label');
 
     if (sortDirection === 'desc'){
-      label.textContent = '할인가 높은순';
+      label.textContent = '할인 최대';
       btn.style.background = 'var(--primary)'; btn.style.color = '#1C1A17'; btn.style.borderColor = 'var(--primary)';
     } else if (sortDirection === 'asc'){
-      label.textContent = '할인가 낮은순';
+      label.textContent = '할인 최소';
       btn.style.background = 'var(--primary)'; btn.style.color = '#1C1A17'; btn.style.borderColor = 'var(--primary)';
     } else {
-      label.textContent = '할인가 높은순';
+      label.textContent = '할인 최대';
       btn.style.background = 'transparent'; btn.style.color = 'var(--muted)'; btn.style.borderColor = 'var(--line)';
     }
 
+    renderDiscountList();
+  }
+
+  // '선착순' 버튼: 선착순 시간이 등록된(limitedTime 있는) 항목만 걸러서 보여준다
+  function toggleLimitedTimeFilter(){
+    onlyLimitedTimeFilter = !onlyLimitedTimeFilter;
+    const btn = document.getElementById('limited-time-filter-btn');
+    if (btn){
+      if (onlyLimitedTimeFilter){
+        btn.style.background = 'var(--accent)'; btn.style.color = '#1C1A17'; btn.style.borderColor = 'var(--accent)';
+      } else {
+        btn.style.background = 'transparent'; btn.style.color = 'var(--muted)'; btn.style.borderColor = 'var(--line)';
+      }
+    }
     renderDiscountList();
   }
 
