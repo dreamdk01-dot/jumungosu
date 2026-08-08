@@ -1693,7 +1693,7 @@
     { name:'bhc', app:'coupang', category:['치킨'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'BBQ', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'던킨', app:'coupang', category:['카페/디저트'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
-    { name:'배스킨라빈스', app:'coupang', category:['카페/디저트'], prefix:'', amount:20000, randomAmounts:[3500,12000,20000], isRandom:true, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
+    { name:'배스킨라빈스', app:'coupang', category:['카페/디저트'], prefix:'', amount:3500, randomAmounts:[3500,12000,20000], isRandom:true, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'버거킹', app:'coupang', category:['버거'], prefix:'', amount:4000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'푸라닭', app:'coupang', category:['치킨'], prefix:'', amount:5000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
     { name:'자담치킨', app:'coupang', category:['치킨'], prefix:'', amount:6000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
@@ -1750,7 +1750,8 @@
   // Airtable 연동: 할인 목록을 Airtable에서 실시간으로 불러오기
   // -----------------------------------------------------------------
   // Airtable 테이블에 아래 컬럼(필드)을 정확히 이 이름으로 만들어두면 자동으로 매핑됩니다.
-  //   - 브랜드명       (Single line text)  ex) 배스킨라빈스
+  //   - 브랜드명       (Single line text)  ex) 배스킨라빈스  ← "(17시 선착순)" 같은 접미사는 이제 붙이지 마세요!
+  //                                           같은 브랜드는 아래 "선착순 시간"/"뽑기" 필드로 구분합니다.
   //   - 플랫폼         (Single select)     "배달의민족" / "요기요" / "쿠팡이츠" / "땡겨요" 중 하나
   //   - 카테고리       (Single line text)  ex) 치킨   (여러 개면 쉼표로 구분: "치킨,피자")
   //   - 할인금액       (Number)            ex) 4000
@@ -1758,6 +1759,12 @@
   //   - 시작일         (Date, 선택)        비워두면 즉시 노출
   //   - 종료일         (Date, 선택)        비워두면 상시 할인으로 표시
   //   - 대표이미지     (Single line text, 선택, 2글자) 비워두면 브랜드명 앞 2글자 사용
+  //   - 선착순 시간    (Single line text, 선택) ex) "17시" / "매일 09시"  ← 비워두면 상시 할인으로 표시
+  //   - 뽑기           (Checkbox, 선택)    체크하면 "뽑기(랜덤 당첨)" 항목으로 처리됩니다.
+  //                                           같은 브랜드+플랫폼+카테고리로 여러 금액을 각각 행으로 나눠 등록하면
+  //                                           (예: BHC치킨 3500원 한 행 + BHC치킨 7000원 한 행) 사이트에서 자동으로
+  //                                           하나의 카드로 묶고, 그중 가장 낮은(확정 보장) 금액을 대표 숫자로,
+  //                                           나머지는 "🎰 뽑기 시 최대 N원" 배지로 보여줍니다.
   //
   // 카테고리는 사이트에 등록된 14개 고정 카테고리 중 하나와 정확히 일치해야 필터에 노출됩니다:
   // 치킨, 피자, 카페/디저트, 찜/탕, 고기/구이, 일식/회/해물, 분식, 양식, 한식, 버거,
@@ -1801,6 +1808,8 @@
     startDate: ['시작일', '할인시작일', '시작 일', 'StartDate', 'Start'],
     endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
     badge: ['대표이미지', '뱃지', '아이콘', '대표 이미지', 'Badge'],
+    limitedTime: ['선착순 시간', '선착순시간', '선착순', 'LimitedTime'],
+    isGacha: ['뽑기', '뽑기 여부', '뽑기여부', 'Gacha', 'Random'],
   };
 
   // 필드명에 눈에 안 보이는 문자(제로폭 공백 등)가 섞여있거나, 한글이 다른 유니코드 방식으로
@@ -1876,6 +1885,8 @@
     const badgeRaw = (pickAirtableField(f, 'badge') || '').toString().trim();
     const startDateRaw = pickAirtableField(f, 'startDate');
     const endDateRaw = pickAirtableField(f, 'endDate');
+    const limitedTimeRaw = (pickAirtableField(f, 'limitedTime') || '').toString().trim();
+    const isGacha = pickAirtableField(f, 'isGacha') === true; // Airtable 체크박스는 체크 시 true, 미체크 시 필드 자체가 내려오지 않음
 
     return {
       id,
@@ -1889,15 +1900,53 @@
       periodType: '',
       expiry: '',
       badge: (badgeRaw || name).slice(0, 2),
-      isRandom: false,
+      isRandom: false,           // 뽑기 그룹핑은 아래 groupGachaDiscounts()에서 후처리로 채워짐
       randomAmounts: null,
       minAmount: null,
+      limitedTime: limitedTimeRaw || null, // 있으면 "⏰17시" 배지로 표시, 없으면 상시 할인
+      isGacha,                   // groupGachaDiscounts()가 이 값을 보고 같은 브랜드끼리 묶음
       minOrder: (typeof minOrderNum === 'number' && minOrderNum > 0) ? minOrderNum : null,
       // Airtable Date 필드는 보통 'YYYY-MM-DD' 문자열로 내려옵니다. 값이 없으면 상시/즉시 노출로 처리.
       startDate: startDateRaw ? startDateRaw.toString().slice(0, 10) : null,
       endDate: endDateRaw ? endDateRaw.toString().slice(0, 10) : null,
       source: 'airtable',       // Airtable에서 불러온 항목 표시 (다음 동기화 때 이 표시가 있는 항목만 교체됨)
     };
+  }
+
+  // 뽑기(랜덤 당첨) 행 묶기: 같은 브랜드명+플랫폼+카테고리이면서 isGacha가 체크된 행이 여러 개 있으면
+  // 하나의 카드로 합친다. 대표 금액(amount)은 그중 가장 낮은(=항상 보장되는) 금액으로 하고,
+  // 나머지 금액들은 randomAmounts에 담아 "🎰 뽑기 시 최대 N원" 배지 등으로 사용한다.
+  // (행이 1개뿐이면 랜덤성이 없으므로 그냥 일반 할인으로 둔다)
+  function groupGachaDiscounts(list){
+    const gachaKey = d => [brandGroupKey(d.name), d.app[0], d.category.slice().sort().join(',')].join('||');
+
+    const gachaGroups = new Map();
+    const result = [];
+
+    list.forEach(d => {
+      if (!d.isGacha){ result.push(d); return; }
+      const key = gachaKey(d);
+      if (!gachaGroups.has(key)) gachaGroups.set(key, []);
+      gachaGroups.get(key).push(d);
+    });
+
+    gachaGroups.forEach(rows => {
+      if (rows.length < 2){
+        // 뽑기 체크는 됐지만 금액이 하나뿐이면 랜덤으로 보여줄 이유가 없어 일반 할인으로 처리
+        result.push(rows[0]);
+        return;
+      }
+      const sortedAmounts = rows.map(r => r.amount).sort((a, b) => a - b);
+      const base = rows.slice().sort((a, b) => a.amount - b.amount)[0]; // 가장 낮은(확정) 금액 행을 대표로 사용
+      result.push({
+        ...base,
+        amount: sortedAmounts[0],
+        isRandom: true,
+        randomAmounts: sortedAmounts,
+      });
+    });
+
+    return result;
   }
 
   // Airtable은 한 번에 최대 100건만 내려주므로, offset이 있는 동안 페이지를 넘겨가며 전체를 수집합니다.
@@ -1938,9 +1987,11 @@
       airtableSkippedSamples = [];
       const records = await fetchAllAirtableRecords();
       let idCursor = nextDiscountId;
-      const mapped = records
-        .map(r => mapAirtableRecordToDiscount(r, idCursor++))
-        .filter(Boolean);
+      const mapped = groupGachaDiscounts(
+        records
+          .map(r => mapAirtableRecordToDiscount(r, idCursor++))
+          .filter(Boolean)
+      );
       nextDiscountId = idCursor;
 
       for (let i = discounts.length - 1; i >= 0; i--){
@@ -2009,16 +2060,10 @@
   function formatDiscount(d){
     if (d.customDiscountText) return d.customDiscountText;
     const amt = d.amount.toLocaleString('ko-KR');
-    // 랜덤 쿠폰(추첨형) 할인: 실제로 받을 수 있는 금액이 여러 단계 중 무작위로 정해지는 경우,
-    // 최대 금액만 보여주면 착시를 줄 수 있어 가능한 금액 전체를 나열해 보여줌
-    if (d.isRandom){
-      if (Array.isArray(d.randomAmounts) && d.randomAmounts.length){
-        const list = d.randomAmounts.map(n => `${n.toLocaleString('ko-KR')}원`).join(' / ');
-        return `${list} 중 랜덤 당첨`;
-      }
-      const minAmt = (typeof d.minAmount === 'number' ? d.minAmount : 0).toLocaleString('ko-KR');
-      return `${minAmt}원 ~ 최대 ${amt}원 (랜덤)`;
-    }
+    // 뽑기(랜덤 당첨) 할인: amount에는 이미 groupGachaDiscounts()가 골라둔 "가장 낮은(확정 보장) 금액"이
+    // 들어있으므로, 헤드라인 착시를 피하기 위해 여러 금액을 나열하지 않고 이 확정 금액만 담백하게 보여준다.
+    // (더 큰 금액이 나올 수도 있다는 건 카드 쪽에서 별도 "🎰 뽑기 시 최대 N원" 배지로 안내함)
+    if (d.isRandom) return `${amt}원 할인`;
     if (d.prefix === '최대') return `최대 ${amt}원 할인`;
     if (d.prefix === '메뉴') return `메뉴별 ${amt}원 할인`;
     return `${amt}원 할인`;
@@ -2512,6 +2557,7 @@
       d.app.forEach(a => {
         group.badges.push({
           app: a, id: d.id, type: d.type || [], sortValue: getSortValue(d), discountText: formatDiscount(d), isRandom: !!d.isRandom,
+          randomAmounts: d.randomAmounts || null, limitedTime: d.limitedTime || null,
           minOrder: d.minOrder, startDate: d.startDate, endDate: d.endDate, daysLeft: getDiscountDaysLeft(d), periodText: formatDiscountPeriod(d),
         });
       });
@@ -2535,12 +2581,20 @@
   function brandGroupCardHtml(group){
     const sortedBadges = group.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
     const maxBadge = sortedBadges[0];
-    // discountText가 이미 '최대'를 포함하고 있으면(최대-prefix 항목 등) 그대로 쓰고,
-    // 랜덤 추첨형 할인은 헤드라인에서만 간결하게 "최대 X원 (랜덤 당첨)"로 요약해서 보여줌
-    // (배지 줄에는 formatDiscount()가 만든 전체 추첨 금액 목록이 그대로 노출됨)
+    // 뽑기(랜덤) 항목은 이미 확정 보장 금액(가장 낮은 값)만 담백하게 표시하도록 formatDiscount에서
+    // 처리되므로, 헤드라인에서도 "최대"를 붙이지 않고 그대로 사용한다. (실제 "최대" 가능성은
+    // 아래 gachaMaxHtml의 별도 배지로만 안내 — 확정 숫자와 가능성 있는 숫자를 섞어 보여주지 않기 위함)
     const headlineText = maxBadge.isRandom
-      ? `최대 ${maxBadge.sortValue.toLocaleString('ko-KR')}원 (랜덤 당첨)`
+      ? maxBadge.discountText
       : (/최대/.test(maxBadge.discountText) ? maxBadge.discountText : `최대 ${maxBadge.discountText}`);
+
+    // 뽑기 항목 중 여러 금액이 있는 경우, 가장 큰 금액을 "가능성" 배지로 별도 안내
+    const gachaMax = Array.isArray(maxBadge.randomAmounts) && maxBadge.randomAmounts.length > 1
+      ? maxBadge.randomAmounts[maxBadge.randomAmounts.length - 1]
+      : null;
+    const gachaMaxHtml = gachaMax
+      ? `<span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-1" style="background:rgba(255,184,0,0.14); color:var(--primary);">🎰 뽑기 시 최대 ${gachaMax.toLocaleString('ko-KR')}원</span>`
+      : '';
 
     const badgeRows = sortedBadges.map((b, i) => {
       const isMax = i === 0;
@@ -2550,10 +2604,14 @@
       const metaHtml = metaParts.length
         ? `<span class="font-mono text-[10px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
         : '';
+      const timeChipHtml = b.limitedTime
+        ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,90,54,0.12); color:var(--accent);">⏰ ${escapeHtml(b.limitedTime)} 선착순</span>`
+        : '';
       return `
         <div class="flex items-center gap-2 text-sm flex-wrap">
           <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:11px;">${APP_LABEL[b.app]}</span>
           <span class="font-mono ${isMax ? 'font-bold' : ''}" style="color:${isMax ? 'var(--primary)' : 'var(--text)'};">${b.discountText}</span>
+          ${timeChipHtml}
           ${metaHtml}
         </div>`;
     }).join('');
@@ -2565,6 +2623,7 @@
           <div class="flex-1 min-w-0">
             <p class="font-bold text-base sm:text-lg truncate">${escapeHtml(group.displayName)}</p>
             <p class="font-mono text-lg sm:text-xl font-extrabold" style="color:var(--accent);">${headlineText}</p>
+            ${gachaMaxHtml}
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
