@@ -5876,6 +5876,15 @@
       showToast('관리자 권한이 없습니다.');
       return;
     }
+
+    // 게시판이 아닌 다른 탭으로 이동하면, 펼쳐놨던 글과 페이지 번호를 초기화한다.
+    // (다시 게시판에 들어왔을 때 예전에 열어봤던 글이 계속 펼쳐진 채로 남아있으면 헷갈리기 쉬움)
+    if (tab !== 'board' && (expandedPostIds.size || boardPage !== 1)){
+      expandedPostIds.clear();
+      boardPage = 1;
+      renderBoardList();
+    }
+
     PAGES.forEach(p => {
       document.getElementById('page-' + p).classList.toggle('hidden', p !== tab);
       const navBtn = document.getElementById('tab-' + p);
