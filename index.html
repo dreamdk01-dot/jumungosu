@@ -2578,23 +2578,26 @@
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
   // 할인 정보를 배지 형태로 한눈에 비교할 수 있게 나열한다.
 
+  // "🎰 뽑기 시 최대 N원" 배지를 누르면 등록된 전체 금액 목록을 펼쳐 보여준다 (다시 누르면 접힘)
+  function toggleGachaDetail(id){
+    const el = document.getElementById(id);
+    const chevron = document.getElementById(`${id}-chevron`);
+    if (!el) return;
+    const willShow = el.classList.contains('hidden');
+    el.classList.toggle('hidden');
+    if (chevron) chevron.textContent = willShow ? '▴' : '▾';
+  }
+
   function brandGroupCardHtml(group){
     const sortedBadges = group.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
     const maxBadge = sortedBadges[0];
     // 뽑기(랜덤) 항목은 이미 확정 보장 금액(가장 낮은 값)만 담백하게 표시하도록 formatDiscount에서
     // 처리되므로, 헤드라인에서도 "최대"를 붙이지 않고 그대로 사용한다. (실제 "최대" 가능성은
-    // 아래 gachaMaxHtml의 별도 배지로만 안내 — 확정 숫자와 가능성 있는 숫자를 섞어 보여주지 않기 위함)
+    // 아래 badgeRows에서 각 플랫폼 줄마다 개별적으로 "🎰 최대 N원" 배지로 안내 — 확정 숫자와
+    // 가능성 있는 숫자를 섞어 보여주지 않기 위함)
     const headlineText = maxBadge.isRandom
       ? maxBadge.discountText
       : (/최대/.test(maxBadge.discountText) ? maxBadge.discountText : `최대 ${maxBadge.discountText}`);
-
-    // 뽑기 항목 중 여러 금액이 있는 경우, 가장 큰 금액을 "가능성" 배지로 별도 안내
-    const gachaMax = Array.isArray(maxBadge.randomAmounts) && maxBadge.randomAmounts.length > 1
-      ? maxBadge.randomAmounts[maxBadge.randomAmounts.length - 1]
-      : null;
-    const gachaMaxHtml = gachaMax
-      ? `<span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-1" style="background:rgba(255,184,0,0.14); color:var(--primary);">🎰 뽑기 시 최대 ${gachaMax.toLocaleString('ko-KR')}원</span>`
-      : '';
 
     const badgeRows = sortedBadges.map((b, i) => {
       const isMax = i === 0;
@@ -2607,12 +2610,29 @@
       const timeChipHtml = b.limitedTime
         ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,90,54,0.12); color:var(--accent);">⏰ ${escapeHtml(b.limitedTime)} 선착순</span>`
         : '';
+
+      // 뽑기 항목 중 여러 금액이 있으면, 그 플랫폼 줄에 직접 "최대 N원" 배지를 붙인다.
+      // (전체 배지 중 헤드라인이 이 줄이 아니어도, 이 줄 자체가 뽑기이면 항상 보이도록
+      // 헤드라인이 아니라 각 줄에서 개별적으로 판단한다 — 필터에 따라 배지가 사라지는 문제 방지)
+      const gachaMax = Array.isArray(b.randomAmounts) && b.randomAmounts.length > 1
+        ? b.randomAmounts[b.randomAmounts.length - 1]
+        : null;
+      const gachaId = `gacha-detail-${group.key.replace(/[^a-zA-Z0-9가-힣]/g, '')}-${b.app}-${i}`;
+      const gachaChipHtml = gachaMax
+        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
+        : '';
+      const gachaDetailHtml = gachaMax
+        ? `<div id="${gachaId}" class="hidden basis-full text-[11px] mt-0.5" style="color:var(--muted);">뽑을 수 있는 금액: ${b.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
+        : '';
+
       return `
         <div class="flex items-center gap-2 text-sm flex-wrap">
           <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[b.app]}; color:#1C1A17; font-size:11px;">${APP_LABEL[b.app]}</span>
           <span class="font-mono ${isMax ? 'font-bold' : ''}" style="color:${isMax ? 'var(--primary)' : 'var(--text)'};">${b.discountText}</span>
           ${timeChipHtml}
+          ${gachaChipHtml}
           ${metaHtml}
+          ${gachaDetailHtml}
         </div>`;
     }).join('');
 
@@ -2623,7 +2643,6 @@
           <div class="flex-1 min-w-0">
             <p class="font-bold text-base sm:text-lg truncate">${escapeHtml(group.displayName)}</p>
             <p class="font-mono text-lg sm:text-xl font-extrabold" style="color:var(--accent);">${headlineText}</p>
-            ${gachaMaxHtml}
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
