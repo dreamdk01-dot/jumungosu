@@ -1157,11 +1157,18 @@
 <!-- ===== TOAST ===== -->
 <div id="toast" class="hidden fixed bottom-6 left-1/2 z-50 toast px-5 py-3 rounded-md font-medium text-sm" style="background:var(--primary); color:#1C1A17;"></div>
 
-<!-- ===== 카카오톡 채널 플로팅 버튼 (1:1 채팅) ===== -->
+<!-- ===== 플로팅 글쓰기 버튼 (게시판으로 이동 후 글쓰기 폼 오픈) ===== -->
+<button type="button" onclick="handleFloatingComposeClick()" aria-label="글쓰기"
+  class="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg transition-transform duration-200 hover:scale-110"
+  style="background:var(--primary); color:#1C1A17;">
+  ✏️
+</button>
+
+<!-- ===== 카카오톡 채널 플로팅 버튼 (1:1 채팅) — 말풍선 모양 + '문의' 텍스트 ===== -->
 <a href="http://pf.kakao.com/_DeqxnX/chat" target="_blank" rel="noopener" aria-label="카카오톡 문의"
-  class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg transition-transform duration-200 hover:scale-110"
-  style="background:#FEE500; color:#191919;">
-  💬
+  class="fixed bottom-5 right-5 z-40 w-14 h-14 flex items-center justify-center text-xs font-bold shadow-lg transition-transform duration-200 hover:scale-110"
+  style="background:#FEE500; color:#191919; border-radius:18px 18px 4px 18px;">
+  문의
 </a>
 
 </div><!-- /#app-content -->
@@ -3099,6 +3106,12 @@
     const isDiscount = isDiscountFormCategory(category);
     document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
     document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
+  }
+
+  // 화면 우하단 플로팅 ✏️ 버튼: 어느 페이지에 있든 게시판으로 이동한 뒤 바로 글쓰기 폼을 연다.
+  function handleFloatingComposeClick(){
+    switchTab('board');
+    openBoardCompose();
   }
 
   function openBoardCompose(){
