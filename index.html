@@ -460,7 +460,7 @@
             </label>
             <input id="board-compose-image" type="file" accept="image/*" class="hidden" onchange="handleBoardImageChange(event)">
             <div class="relative mt-2">
-              <img id="board-compose-image-preview" class="hidden w-full rounded-md max-h-48 object-contain" style="background:var(--card-alt);" alt="첨부 이미지 미리보기">
+              <img id="board-compose-image-preview" class="hidden w-full rounded-md max-h-48 object-contain" style="background:var(--card-alt); -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-user-drag:none;" alt="첨부 이미지 미리보기" oncontextmenu="return false;">
               <button type="button" id="board-compose-redact-btn" onclick="openImageRedactEditor()" class="hidden absolute top-2 right-2 text-xs font-semibold px-2.5 py-1.5 rounded-full" style="background:rgba(0,0,0,0.7); color:#fff;">🖼️ 사진 편집</button>
             </div>
           </div>
@@ -958,7 +958,7 @@
     </div>
 
     <div class="flex-1 overflow-auto rounded-md flex items-center justify-center" style="background:#000; min-height:200px;">
-      <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none;"></canvas>
+      <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;" oncontextmenu="return false;"></canvas>
     </div>
 
     <!-- 자르기 모드 전용: 모서리 핸들로 영역을 잡은 뒤 눌러서 확정 -->
@@ -2345,30 +2345,14 @@
   // ---------- 모달 열림 중 배경(뒤) 스크롤 방지 ----------
   // 모달이 여러 개 겹쳐 열릴 수도 있으니(예: 내 정보 모달 위에 이용약관 모달) 카운터로 관리해서,
   // 마지막 모달까지 전부 닫혀야 배경 스크롤이 다시 풀리도록 한다.
-  // overflow:hidden만 걸면 모바일에서는 주소창이 접혔다 펴지면서 배경이 살짝 움직이거나
-  // 깜빡여 보이는 경우가 있어, body를 position:fixed로 그 자리에 통째로 고정하는 더 확실한
-  // 방식을 사용한다 (닫을 때 원래 스크롤 위치로 정확히 복원).
   let openModalCount = 0;
-  let scrollYBeforeModal = 0;
   function lockBodyScroll(){
     openModalCount++;
-    if (openModalCount > 1) return; // 이미 다른 모달로 잠겨있으면 다시 잠글 필요 없음
-    scrollYBeforeModal = window.scrollY || window.pageYOffset || 0;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollYBeforeModal}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
     document.body.style.overflow = 'hidden';
   }
   function unlockBodyScroll(){
     openModalCount = Math.max(0, openModalCount - 1);
-    if (openModalCount !== 0) return;
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.overflow = '';
-    window.scrollTo(0, scrollYBeforeModal);
+    if (openModalCount === 0) document.body.style.overflow = '';
   }
 
   function escapeHtml(str){
