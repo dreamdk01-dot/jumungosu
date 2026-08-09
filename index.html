@@ -960,12 +960,9 @@
       <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair;"></canvas>
     </div>
 
-    <!-- 스티커 선택 시 크기 조절 / 삭제 -->
-    <div id="redact-stamp-controls" class="hidden items-center justify-center gap-2 mt-2 shrink-0">
-      <button type="button" onclick="resizeSelectedStamp(-8)" class="text-sm font-bold w-9 h-9 rounded-md" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">➖</button>
-      <span class="text-xs" style="color:var(--muted);">선택된 스티커 크기</span>
-      <button type="button" onclick="resizeSelectedStamp(8)" class="text-sm font-bold w-9 h-9 rounded-md" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">➕</button>
-      <button type="button" onclick="deleteSelectedStamp()" class="text-sm font-bold w-9 h-9 rounded-md ml-2" style="background:rgba(255,90,54,0.15); border:1px solid var(--accent); color:var(--accent);">🗑</button>
+    <!-- 자르기 모드 전용: 모서리 핸들로 영역을 잡은 뒤 눌러서 확정 -->
+    <div id="redact-crop-actions" class="hidden justify-center mt-2 shrink-0">
+      <button type="button" onclick="applyCrop(cropRect)" class="text-xs font-semibold px-4 py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">✂️ 이 영역으로 자르기</button>
     </div>
 
     <p class="text-[11px] mt-2 shrink-0" style="color:var(--accent);">⚠️ 이름·전화번호·주소·카드번호 등 개인정보가 사진에 남아있지 않은지 꼼꼼히 확인 후 등록해주세요. 가려지지 않은 정보로 인한 문제는 작성자 본인에게 책임이 있어요.</p>
@@ -3434,21 +3431,33 @@
   // 사진 편집 에디터 — 순수 HTML5 Canvas로만 구현, 외부 라이브러리 없음.
   // 세 가지 모드를 지원한다:
   //   1) 가리기: 드래그한 영역을 검은 블록으로 채움 (개인정보 보호용, 기존 기능)
-  //   2) 자르기: 드래그한 영역만 남기고 나머지는 잘라냄
-  //   3) 스티커: 원/화살표/이모지를 탭으로 찍고, 드래그로 이동, +/- 버튼으로 크기 조절
+  //   2) 자르기: 4개 모서리 핸들을 드래그해 남길 영역을 잡고, 버튼을 눌러 확정
+  //   3) 스티커: 원/화살표/이모지를 드래그로 미리 보며 배치하고, 모서리 핸들로 크기,
+  //             위쪽 핸들로 회전, 우상단 ×핸들로 삭제 (모든 조작이 캔버스 위에서 바로 이루어짐)
   // 편집 완료 시 캔버스를 새 File로 변환해 boardComposeImageFile을 교체한다.
   // (실제 업로드는 기존 submitBoardPost → uploadBoardImageIfNeeded() 흐름 그대로 사용하며,
   //  그 함수 안에서 워터마크가 추가로 자동 합성된다)
   // ---------------------------------------------------------------
   let redactSourceImage = null; // 편집 대상 원본 Image 객체
   let redactRects = [];         // 확정된 가리기 사각형 목록 (캔버스 내부 좌표 기준)
-  let redactDragStart = null;   // 가리기/자르기 드래그 시작점
+  let redactDragStart = null;   // 가리기 드래그 시작점
 
   let redactMode = 'blur';      // 'blur' | 'crop' | 'stamp'
-  let stamps = [];              // {type:'circle'|'arrow'|이모지문자, x, y, size} 목록
-  let selectedStampIndex = -1;  // 스티커 모드에서 현재 선택된 스티커 (크기조절/삭제 대상)
-  let pendingStampType = null;  // 스티커 종류 버튼을 눌러 "다음 탭에 배치 대기 중"인 상태
-  let stampDrag = null;         // {index, offsetX, offsetY} 스티커를 드래그로 옮기는 중일 때
+
+  // 자르기 모드 상태
+  let cropRect = null;          // {x,y,w,h} 현재 자르기 영역 (모서리 핸들로 조절)
+  let cropDragMode = null;      // null | 'move' | 'tl' | 'tr' | 'bl' | 'br'
+  let cropMoveOffset = null;
+
+  // 스티커 모드 상태
+  let stamps = [];              // {type:'circle'|'arrow'|이모지문자, x, y, size, rotation(rad)} 목록
+  let selectedStampIndex = -1;  // 현재 선택된 스티커 (핸들 조작 대상)
+  let pendingStampType = null;  // 스티커 종류 버튼을 눌러 "드래그해서 배치 대기 중"인 상태
+  let stampGhost = null;        // {x,y} 배치 전 미리보기 위치 (드래그 중에만 존재)
+  let stampInteraction = null;  // null | 'move' | 'resize' | 'rotate' (선택된 스티커 조작 중)
+  let stampMoveOffset = null;
+
+  const STAMP_HANDLE_R = 14;    // 핸들 히트테스트 반경(px, 캔버스 내부 좌표 기준)
 
   function openImageRedactEditor(){
     const previewImg = document.getElementById('board-compose-image-preview');
@@ -3463,10 +3472,13 @@
       redactSourceImage = img;
       redactRects = [];
       redactDragStart = null;
+      cropRect = null;
+      cropDragMode = null;
       stamps = [];
       selectedStampIndex = -1;
       pendingStampType = null;
-      stampDrag = null;
+      stampGhost = null;
+      stampInteraction = null;
 
       const canvas = document.getElementById('image-redact-canvas');
       // 원본이 너무 크면 성능/메모리를 위해 긴 변 기준 최대 1600px로 축소해서 편집
@@ -3503,17 +3515,21 @@
     redactSourceImage = null;
     redactRects = [];
     redactDragStart = null;
+    cropRect = null;
+    cropDragMode = null;
     stamps = [];
     selectedStampIndex = -1;
     pendingStampType = null;
-    stampDrag = null;
+    stampGhost = null;
+    stampInteraction = null;
   }
 
-  // 모드 탭(가리기/자르기/스티커) 전환: 안내 문구와 스티커 선택 UI 표시 여부만 갱신
+  // 모드 탭(가리기/자르기/스티커) 전환: 안내 문구, 스티커 선택 UI, 자르기 확정 버튼 표시 여부를 갱신
   function setRedactMode(mode){
     redactMode = mode;
     selectedStampIndex = -1;
     pendingStampType = null;
+    stampGhost = null;
 
     ['blur', 'crop', 'stamp'].forEach(m => {
       const tab = document.getElementById(`redact-mode-${m}`);
@@ -3527,46 +3543,41 @@
     const descEl = document.getElementById('redact-mode-desc');
     if (descEl){
       if (mode === 'blur') descEl.textContent = '주소·전화번호·결제정보 등 가리고 싶은 부분을 드래그(또는 손가락으로 밀기)해서 선택하세요.';
-      else if (mode === 'crop') descEl.textContent = '남기고 싶은 영역을 드래그로 지정하면, 그 부분만 남기고 나머지는 잘려요.';
-      else descEl.textContent = '아래에서 스티커를 고른 뒤 사진 위를 탭해서 찍으세요. 찍힌 스티커는 드래그로 옮기고, +/- 로 크기를 바꿀 수 있어요.';
+      else if (mode === 'crop') descEl.textContent = '모서리 동그라미를 드래그해서 남길 영역을 맞추고, 안쪽을 드래그하면 통째로 옮길 수 있어요. 다 됐으면 아래 "이 영역으로 자르기"를 눌러주세요.';
+      else descEl.textContent = '스티커를 고른 뒤 사진 위를 눌러서 드래그하면 미리 보면서 위치를 잡을 수 있어요. 손을 떼면 그 자리에 찍혀요. 찍힌 스티커는 안쪽을 드래그해 이동, 모서리로 크기, 위쪽 동그라미로 회전, 빨간 ×로 삭제할 수 있어요.';
     }
 
     const stampPicker = document.getElementById('redact-stamp-picker');
     if (stampPicker) stampPicker.classList.toggle('hidden', mode !== 'stamp');
-    updateStampControlsVisibility();
+
+    const cropActions = document.getElementById('redact-crop-actions');
+    if (cropActions) cropActions.classList.toggle('hidden', mode !== 'crop');
+    if (cropActions) cropActions.classList.toggle('flex', mode === 'crop');
+
+    if (mode === 'crop' && !cropRect){
+      const canvas = document.getElementById('image-redact-canvas');
+      if (canvas && canvas.width && canvas.height){
+        const marginX = canvas.width * 0.1, marginY = canvas.height * 0.1;
+        cropRect = { x: marginX, y: marginY, w: canvas.width - marginX * 2, h: canvas.height - marginY * 2 };
+      }
+    }
+
     drawRedactCanvas();
   }
 
   function setPendingStampType(type){
     pendingStampType = type;
     selectedStampIndex = -1;
-    updateStampControlsVisibility();
     document.querySelectorAll('.stamp-pick-btn').forEach(btn => {
       const isActive = btn.textContent.trim() === (type === 'circle' ? '⭕' : type === 'arrow' ? '➡️' : type);
       btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
     });
-  }
-
-  function updateStampControlsVisibility(){
-    const controls = document.getElementById('redact-stamp-controls');
-    if (!controls) return;
-    const show = redactMode === 'stamp' && selectedStampIndex >= 0;
-    controls.classList.toggle('hidden', !show);
-    controls.classList.toggle('flex', show);
-  }
-
-  function resizeSelectedStamp(delta){
-    if (selectedStampIndex < 0 || !stamps[selectedStampIndex]) return;
-    const st = stamps[selectedStampIndex];
-    st.size = Math.max(16, Math.min(400, st.size + delta));
     drawRedactCanvas();
   }
 
-  function deleteSelectedStamp(){
-    if (selectedStampIndex < 0) return;
-    stamps.splice(selectedStampIndex, 1);
+  function deleteStampAt(index){
+    stamps.splice(index, 1);
     selectedStampIndex = -1;
-    updateStampControlsVisibility();
     drawRedactCanvas();
   }
 
@@ -3598,7 +3609,18 @@
     };
   }
 
-  // 캔버스 내부 좌표(p)가 어떤 스티커 위에 있는지 찾는다 (나중에 찍은 스티커가 위에 있으므로 역순 검사)
+  // 캔버스 좌표(p)를 스티커의 "회전을 고려하지 않은" 로컬 좌표계로 변환한다 (핸들 히트테스트용)
+  function toStampLocal(st, p){
+    const dx = p.x - st.x, dy = p.y - st.y;
+    const rot = st.rotation || 0;
+    return {
+      x: dx * Math.cos(rot) + dy * Math.sin(rot),
+      y: -dx * Math.sin(rot) + dy * Math.cos(rot),
+    };
+  }
+
+  // 캔버스 내부 좌표(p)가 어떤 스티커의 몸통 위에 있는지 찾는다 (회전은 근사적으로 무시하고 정사각 판정,
+  // 나중에 찍은 스티커가 위에 있으므로 역순 검사)
   function hitTestStamp(p){
     for (let i = stamps.length - 1; i >= 0; i--){
       const st = stamps[i];
@@ -3610,46 +3632,71 @@
 
   function drawStamp(ctx, st, isSelected){
     ctx.save();
+    ctx.translate(st.x, st.y);
+    ctx.rotate(st.rotation || 0);
+    const half = st.size / 2;
+
     if (st.type === 'circle'){
       ctx.strokeStyle = '#FF3B30';
       ctx.lineWidth = Math.max(3, st.size * 0.07);
       ctx.beginPath();
-      ctx.arc(st.x, st.y, st.size / 2, 0, Math.PI * 2);
+      ctx.arc(0, 0, half, 0, Math.PI * 2);
       ctx.stroke();
     } else if (st.type === 'arrow'){
-      const half = st.size / 2;
       ctx.strokeStyle = '#FF3B30';
       ctx.fillStyle = '#FF3B30';
       ctx.lineWidth = Math.max(3, st.size * 0.1);
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(st.x - half, st.y);
-      ctx.lineTo(st.x + half * 0.4, st.y);
+      ctx.moveTo(-half, 0);
+      ctx.lineTo(half * 0.4, 0);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(st.x + half, st.y);
-      ctx.lineTo(st.x + half * 0.25, st.y - half * 0.4);
-      ctx.lineTo(st.x + half * 0.25, st.y + half * 0.4);
+      ctx.moveTo(half, 0);
+      ctx.lineTo(half * 0.25, -half * 0.4);
+      ctx.lineTo(half * 0.25, half * 0.4);
       ctx.closePath();
       ctx.fill();
     } else {
-      // 이모지 스티커
       ctx.font = `${st.size}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(st.type, st.x, st.y);
+      ctx.fillText(st.type, 0, 0);
     }
+
     if (isSelected){
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = '#FFB800';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(st.x - st.size / 2 - 4, st.y - st.size / 2 - 4, st.size + 8, st.size + 8);
+      ctx.strokeRect(-half - 6, -half - 6, st.size + 12, st.size + 12);
       ctx.setLineDash([]);
+
+      // 모서리 리사이즈 핸들 4개
+      ctx.fillStyle = '#FFB800';
+      [[-half - 6, -half - 6], [half + 6, -half - 6], [half + 6, half + 6], [-half - 6, half + 6]].forEach(([hx, hy]) => {
+        ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // 회전 핸들 (위쪽, 선으로 연결)
+      ctx.strokeStyle = '#FFB800';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, -half - 6); ctx.lineTo(0, -half - 30); ctx.stroke();
+      ctx.fillStyle = '#4ADE80';
+      ctx.beginPath(); ctx.arc(0, -half - 30, 9, 0, Math.PI * 2); ctx.fill();
+
+      // 삭제 핸들 (우상단, × 표시)
+      ctx.fillStyle = '#FF3B30';
+      ctx.beginPath(); ctx.arc(half + 6, -half - 6, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(half + 6 - 4, -half - 6 - 4); ctx.lineTo(half + 6 + 4, -half - 6 + 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(half + 6 + 4, -half - 6 - 4); ctx.lineTo(half + 6 - 4, -half - 6 + 4); ctx.stroke();
     }
     ctx.restore();
   }
 
-  // 원본 이미지 + 확정된 가리기 사각형 + 스티커들(+ 진행 중인 드래그 미리보기)을 캔버스에 다시 그린다
+  // 원본 이미지 + 확정된 가리기 사각형 + 스티커들을 그리고, 모드에 따라
+  // 가리기 드래그 미리보기 / 자르기 핸들 / 스티커 배치 미리보기(고스트)를 덧그린다
   function drawRedactCanvas(previewRect){
     const canvas = document.getElementById('image-redact-canvas');
     if (!canvas || !redactSourceImage) return;
@@ -3663,42 +3710,66 @@
     stamps.forEach((st, i) => drawStamp(ctx, st, i === selectedStampIndex));
 
     if (previewRect){
-      if (redactMode === 'crop'){
-        // 자르기 미리보기: 바깥쪽을 반투명하게 덮어 "이 안쪽만 남는다"를 보여줌
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, canvas.width, previewRect.y);
-        ctx.fillRect(0, previewRect.y + previewRect.h, canvas.width, canvas.height - previewRect.y - previewRect.h);
-        ctx.fillRect(0, previewRect.y, previewRect.x, previewRect.h);
-        ctx.fillRect(previewRect.x + previewRect.w, previewRect.y, canvas.width - previewRect.x - previewRect.w, previewRect.h);
-        ctx.strokeStyle = '#FFB800';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
-      } else {
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
-      }
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
     }
+
+    if (redactMode === 'crop' && cropRect){
+      const { x, y, w, h } = cropRect;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, canvas.width, y);
+      ctx.fillRect(0, y + h, canvas.width, canvas.height - y - h);
+      ctx.fillRect(0, y, x, h);
+      ctx.fillRect(x + w, y, canvas.width - x - w, h);
+      ctx.strokeStyle = '#FFB800';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillStyle = '#FFB800';
+      [[x, y], [x + w, y], [x, y + h], [x + w, y + h]].forEach(([hx, hy]) => {
+        ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+
+    if (redactMode === 'stamp' && stampGhost && pendingStampType){
+      ctx.globalAlpha = 0.55;
+      drawStamp(ctx, { type: pendingStampType, x: stampGhost.x, y: stampGhost.y, size: defaultStampSize(canvas), rotation: 0 }, false);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function defaultStampSize(canvas){
+    return Math.round(Math.min(canvas.width, canvas.height) * 0.18);
+  }
+
+  function undoLastRedaction(){
+    if (redactMode === 'stamp'){
+      stamps.pop();
+      selectedStampIndex = -1;
+    } else if (redactMode === 'blur'){
+      redactRects.pop();
+    }
+    drawRedactCanvas();
   }
 
   // 자르기 적용: 지금까지 그려진 내용(가리기/스티커 포함)을 그대로 유지한 채, 지정한 영역만 남긴다.
   // 크롭 이후 좌표계가 바뀌므로, 기존 가리기 사각형/스티커 목록은 비우고 "새 원본 이미지"로 취급한다.
   function applyCrop(rect){
-    if (rect.w < 10 || rect.h < 10) return;
+    if (!rect || rect.w < 10 || rect.h < 10) return;
     const canvas = document.getElementById('image-redact-canvas');
     const ctx = canvas.getContext('2d');
     drawRedactCanvas(); // 지금까지의 편집 상태를 캔버스 픽셀에 확정 반영
 
     let cropped;
     try {
-      cropped = ctx.getImageData(rect.x, rect.y, rect.w, rect.h);
+      cropped = ctx.getImageData(Math.round(rect.x), Math.round(rect.y), Math.round(rect.w), Math.round(rect.h));
     } catch (e){
       console.warn('[주문의 고수] 자르기 실패 (canvas가 오염됨, CORS 확인 필요)', e);
       showToast('이미지를 자르지 못했어요. 사진을 다시 첨부한 뒤 시도해주세요.');
       return;
     }
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = rect.w;
-    tempCanvas.height = rect.h;
+    tempCanvas.width = cropped.width;
+    tempCanvas.height = cropped.height;
     tempCanvas.getContext('2d').putImageData(cropped, 0, 0);
 
     const newImg = new Image();
@@ -3707,29 +3778,23 @@
       redactRects = [];
       stamps = [];
       selectedStampIndex = -1;
-      canvas.width = rect.w;
-      canvas.height = rect.h;
-      drawRedactCanvas();
+      canvas.width = tempCanvas.width;
+      canvas.height = tempCanvas.height;
+      cropRect = null;
+      showToast('잘랐어요 ✅ 필요하면 가리기/스티커를 이어서 추가하세요.');
+      setRedactMode('crop'); // cropRect를 새 캔버스 크기 기준으로 다시 초기화
     };
     newImg.src = tempCanvas.toDataURL('image/png');
   }
 
-  // 모드에 맞게 마지막 작업을 하나 되돌린다 (가리기: 마지막 사각형 / 스티커: 마지막 스티커)
-  function undoLastRedaction(){
-    if (redactMode === 'stamp'){
-      stamps.pop();
-      selectedStampIndex = -1;
-      updateStampControlsVisibility();
-    } else if (redactMode === 'blur'){
-      redactRects.pop();
-    }
-    drawRedactCanvas();
-  }
-
   // 편집 완료: 캔버스를 JPEG File로 변환해 boardComposeImageFile을 교체 (실제 업로드는 기존 로직 재사용)
   function applyImageRedaction(){
-    selectedStampIndex = -1; // 선택 표시(점선 테두리)가 최종 이미지에 남지 않도록 해제 후 다시 그림
+    selectedStampIndex = -1; // 선택 표시(점선 테두리/핸들)가 최종 이미지에 남지 않도록 해제
+    stampGhost = null;
+    const wasMode = redactMode;
+    redactMode = 'blur'; // 자르기 오버레이가 최종 이미지에 그려지지 않도록 임시 전환 후 그리기
     drawRedactCanvas();
+    redactMode = wasMode;
 
     const canvas = document.getElementById('image-redact-canvas');
     let dataUrl;
@@ -3764,7 +3829,7 @@
   }
 
   // 캔버스 드래그/터치 이벤트는 페이지 로드 시 한 번만 등록 (모달을 열 때마다 다시 붙이지 않음)
-  // 현재 모드(redactMode)에 따라 동작이 달라진다: 가리기/자르기는 드래그로 영역 지정, 스티커는 탭으로 배치 + 드래그로 이동
+  // 현재 모드(redactMode)에 따라 동작이 달라진다.
   function setupImageRedactCanvasEvents(){
     const canvas = document.getElementById('image-redact-canvas');
     if (!canvas) return;
@@ -3774,66 +3839,149 @@
       evt.preventDefault();
       const p = getRedactCanvasPoint(evt, canvas);
 
+      // ---------- 스티커 모드 ----------
       if (redactMode === 'stamp'){
         if (pendingStampType){
-          // 대기 중인 스티커 종류가 있으면 지금 탭한 자리에 바로 찍는다
-          const type = pendingStampType;
-          stamps.push({ type, x: p.x, y: p.y, size: Math.round(Math.min(canvas.width, canvas.height) * 0.18) });
-          selectedStampIndex = stamps.length - 1;
-          pendingStampType = null;
-          document.querySelectorAll('.stamp-pick-btn').forEach(btn => { btn.style.background = 'var(--surface)'; });
-          updateStampControlsVisibility();
+          stampGhost = p;
           drawRedactCanvas();
           return;
         }
-        const hitIndex = hitTestStamp(p);
-        if (hitIndex >= 0){
-          selectedStampIndex = hitIndex;
-          stampDrag = { index: hitIndex, offsetX: p.x - stamps[hitIndex].x, offsetY: p.y - stamps[hitIndex].y };
-        } else {
-          selectedStampIndex = -1;
+        if (selectedStampIndex >= 0){
+          const st = stamps[selectedStampIndex];
+          const local = toStampLocal(st, p);
+          const half = st.size / 2;
+          const near = (lx, ly) => Math.hypot(local.x - lx, local.y - ly) <= STAMP_HANDLE_R;
+
+          if (near(half + 6, -half - 6)){ deleteStampAt(selectedStampIndex); return; }
+          if (near(0, -half - 30)){ stampInteraction = 'rotate'; return; }
+          if (near(-half - 6, -half - 6) || near(half + 6, -half - 6) || near(half + 6, half + 6) || near(-half - 6, half + 6)){
+            stampInteraction = 'resize';
+            return;
+          }
+          if (Math.abs(local.x) <= half + 6 && Math.abs(local.y) <= half + 6){
+            stampInteraction = 'move';
+            stampMoveOffset = { dx: p.x - st.x, dy: p.y - st.y };
+            return;
+          }
         }
-        updateStampControlsVisibility();
+        const idx = hitTestStamp(p);
+        selectedStampIndex = idx;
         drawRedactCanvas();
         return;
       }
 
-      // 가리기 / 자르기 모드: 드래그 시작점만 기록
+      // ---------- 자르기 모드 ----------
+      if (redactMode === 'crop'){
+        if (!cropRect) return;
+        const HR = 16;
+        const corners = {
+          tl: { x: cropRect.x, y: cropRect.y },
+          tr: { x: cropRect.x + cropRect.w, y: cropRect.y },
+          bl: { x: cropRect.x, y: cropRect.y + cropRect.h },
+          br: { x: cropRect.x + cropRect.w, y: cropRect.y + cropRect.h },
+        };
+        for (const key in corners){
+          if (Math.hypot(p.x - corners[key].x, p.y - corners[key].y) <= HR){
+            cropDragMode = key;
+            return;
+          }
+        }
+        if (p.x >= cropRect.x && p.x <= cropRect.x + cropRect.w && p.y >= cropRect.y && p.y <= cropRect.y + cropRect.h){
+          cropDragMode = 'move';
+          cropMoveOffset = { dx: p.x - cropRect.x, dy: p.y - cropRect.y };
+        }
+        return;
+      }
+
+      // ---------- 가리기 모드: 드래그 시작점만 기록 ----------
       redactDragStart = p;
     };
 
     const move = (evt) => {
+      const canvas2 = document.getElementById('image-redact-canvas');
+
       if (redactMode === 'stamp'){
-        if (!stampDrag) return;
-        evt.preventDefault();
-        const p = getRedactCanvasPoint(evt, canvas);
-        const st = stamps[stampDrag.index];
-        if (st){
-          st.x = p.x - stampDrag.offsetX;
-          st.y = p.y - stampDrag.offsetY;
+        if (stampGhost && pendingStampType){
+          evt.preventDefault();
+          stampGhost = getRedactCanvasPoint(evt, canvas2);
+          drawRedactCanvas();
+          return;
+        }
+        if (stampInteraction && selectedStampIndex >= 0){
+          evt.preventDefault();
+          const p = getRedactCanvasPoint(evt, canvas2);
+          const st = stamps[selectedStampIndex];
+          if (stampInteraction === 'move'){
+            st.x = p.x - stampMoveOffset.dx;
+            st.y = p.y - stampMoveOffset.dy;
+          } else if (stampInteraction === 'resize'){
+            const dist = Math.hypot(p.x - st.x, p.y - st.y);
+            st.size = Math.max(16, Math.min(400, Math.round((2 * dist) / Math.SQRT2)));
+          } else if (stampInteraction === 'rotate'){
+            st.rotation = Math.atan2(p.y - st.y, p.x - st.x) + Math.PI / 2;
+          }
           drawRedactCanvas();
         }
         return;
       }
+
+      if (redactMode === 'crop'){
+        if (!cropDragMode || !cropRect) return;
+        evt.preventDefault();
+        const p = getRedactCanvasPoint(evt, canvas2);
+        const minSize = 24;
+        if (cropDragMode === 'move'){
+          let nx = p.x - cropMoveOffset.dx, ny = p.y - cropMoveOffset.dy;
+          nx = Math.max(0, Math.min(canvas2.width - cropRect.w, nx));
+          ny = Math.max(0, Math.min(canvas2.height - cropRect.h, ny));
+          cropRect = { ...cropRect, x: nx, y: ny };
+        } else {
+          let left = cropRect.x, top = cropRect.y, right = cropRect.x + cropRect.w, bottom = cropRect.y + cropRect.h;
+          if (cropDragMode === 'tl' || cropDragMode === 'bl') left = Math.min(p.x, right - minSize);
+          if (cropDragMode === 'tr' || cropDragMode === 'br') right = Math.max(p.x, left + minSize);
+          if (cropDragMode === 'tl' || cropDragMode === 'tr') top = Math.min(p.y, bottom - minSize);
+          if (cropDragMode === 'bl' || cropDragMode === 'br') bottom = Math.max(p.y, top + minSize);
+          left = Math.max(0, left); top = Math.max(0, top);
+          right = Math.min(canvas2.width, right); bottom = Math.min(canvas2.height, bottom);
+          cropRect = { x: left, y: top, w: right - left, h: bottom - top };
+        }
+        drawRedactCanvas();
+        return;
+      }
+
       if (!redactDragStart) return;
       evt.preventDefault();
-      const p = getRedactCanvasPoint(evt, canvas);
+      const p = getRedactCanvasPoint(evt, canvas2);
       drawRedactCanvas(normalizeRedactRect(redactDragStart, p));
     };
 
     const end = (evt) => {
       if (redactMode === 'stamp'){
-        stampDrag = null;
+        if (stampGhost && pendingStampType){
+          const canvas3 = document.getElementById('image-redact-canvas');
+          stamps.push({ type: pendingStampType, x: stampGhost.x, y: stampGhost.y, size: defaultStampSize(canvas3), rotation: 0 });
+          selectedStampIndex = stamps.length - 1;
+          pendingStampType = null;
+          stampGhost = null;
+          document.querySelectorAll('.stamp-pick-btn').forEach(btn => { btn.style.background = 'var(--surface)'; });
+          drawRedactCanvas();
+        }
+        stampInteraction = null;
         return;
       }
+
+      if (redactMode === 'crop'){
+        cropDragMode = null;
+        return;
+      }
+
       if (!redactDragStart) return;
       const p = getRedactCanvasPoint(evt, canvas);
       const rect = normalizeRedactRect(redactDragStart, p);
       redactDragStart = null;
       if (rect.w <= 4 || rect.h <= 4){ drawRedactCanvas(); return; }
-
-      if (redactMode === 'crop') applyCrop(rect);
-      else { redactRects.push(rect); drawRedactCanvas(); }
+      redactRects.push(rect);
+      drawRedactCanvas();
     };
 
     canvas.addEventListener('mousedown', start);
