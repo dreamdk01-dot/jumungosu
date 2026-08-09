@@ -2345,14 +2345,30 @@
   // ---------- 모달 열림 중 배경(뒤) 스크롤 방지 ----------
   // 모달이 여러 개 겹쳐 열릴 수도 있으니(예: 내 정보 모달 위에 이용약관 모달) 카운터로 관리해서,
   // 마지막 모달까지 전부 닫혀야 배경 스크롤이 다시 풀리도록 한다.
+  // overflow:hidden만 걸면 모바일에서는 주소창이 접혔다 펴지면서 배경이 살짝 움직이거나
+  // 깜빡여 보이는 경우가 있어, body를 position:fixed로 그 자리에 통째로 고정하는 더 확실한
+  // 방식을 사용한다 (닫을 때 원래 스크롤 위치로 정확히 복원).
   let openModalCount = 0;
+  let scrollYBeforeModal = 0;
   function lockBodyScroll(){
     openModalCount++;
+    if (openModalCount > 1) return; // 이미 다른 모달로 잠겨있으면 다시 잠글 필요 없음
+    scrollYBeforeModal = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollYBeforeModal}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
     document.body.style.overflow = 'hidden';
   }
   function unlockBodyScroll(){
     openModalCount = Math.max(0, openModalCount - 1);
-    if (openModalCount === 0) document.body.style.overflow = '';
+    if (openModalCount !== 0) return;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.overflow = '';
+    window.scrollTo(0, scrollYBeforeModal);
   }
 
   function escapeHtml(str){
