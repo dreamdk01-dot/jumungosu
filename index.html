@@ -958,7 +958,7 @@
     </div>
 
     <div class="flex-1 overflow-auto rounded-md flex items-center justify-center" style="background:#000; min-height:200px;">
-      <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair;"></canvas>
+      <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none;"></canvas>
     </div>
 
     <!-- 자르기 모드 전용: 모서리 핸들로 영역을 잡은 뒤 눌러서 확정 -->
@@ -3458,7 +3458,7 @@
   let stampInteraction = null;  // null | 'move' | 'resize' | 'rotate' (선택된 스티커 조작 중)
   let stampMoveOffset = null;
 
-  const STAMP_HANDLE_R = 14;    // 핸들 히트테스트 반경(px, 캔버스 내부 좌표 기준)
+  const STAMP_HANDLE_R = 20;    // 핸들 히트테스트 반경 기준값(CSS px). 실제 판정 시 화면 배율에 맞춰 환산됨
 
   function openImageRedactEditor(){
     const previewImg = document.getElementById('board-compose-image-preview');
@@ -3619,6 +3619,16 @@
       x: Math.max(0, Math.min(canvas.width, (clientX - rect.left) * scaleX)),
       y: Math.max(0, Math.min(canvas.height, (clientY - rect.top) * scaleY)),
     };
+  }
+
+  // 모서리 손잡이 히트테스트 반경을 "화면에 실제로 보이는 크기" 기준(CSS px)으로 계산해 캔버스 내부
+  // 좌표 단위로 환산한다. 모바일에서는 캔버스가 화면에 맞게 많이 축소 표시되기 때문에, 고정된 픽셀값을
+  // 그대로 쓰면 화면상 손잡이가 손가락으로 누르기엔 너무 작아져 반응하지 않는 문제가 있었음.
+  function getHandleHitRadius(canvas, cssRadius){
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width) return cssRadius;
+    const scale = canvas.width / rect.width;
+    return cssRadius * scale;
   }
 
   function normalizeRedactRect(a, b){
@@ -3896,7 +3906,8 @@
           const st = stamps[selectedStampIndex];
           const local = toStampLocal(st, p);
           const half = st.size / 2;
-          const near = (lx, ly) => Math.hypot(local.x - lx, local.y - ly) <= STAMP_HANDLE_R;
+          const handleR = getHandleHitRadius(canvas, STAMP_HANDLE_R);
+          const near = (lx, ly) => Math.hypot(local.x - lx, local.y - ly) <= handleR;
 
           if (near(half + 6, -half - 6)){ deleteStampAt(selectedStampIndex); return; }
           if (near(0, -half - 30)){ stampInteraction = 'rotate'; return; }
@@ -3919,7 +3930,7 @@
       // ---------- 자르기 모드 ----------
       if (redactMode === 'crop'){
         if (!cropRect) return;
-        const HR = 22;
+        const HR = getHandleHitRadius(canvas, 26);
         const corners = {
           tl: { x: cropRect.x, y: cropRect.y },
           tr: { x: cropRect.x + cropRect.w, y: cropRect.y },
