@@ -949,11 +949,12 @@
     <div id="redact-stamp-picker" class="hidden flex-wrap gap-1.5 mb-2 shrink-0">
       <button type="button" onclick="setPendingStampType('circle')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">⭕</button>
       <button type="button" onclick="setPendingStampType('arrow')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">➡️</button>
-      <button type="button" onclick="setPendingStampType('👍')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">👍</button>
       <button type="button" onclick="setPendingStampType('🔥')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">🔥</button>
-      <button type="button" onclick="setPendingStampType('⭐')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">⭐</button>
-      <button type="button" onclick="setPendingStampType('✅')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">✅</button>
-      <button type="button" onclick="setPendingStampType('❗')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">❗</button>
+      <button type="button" onclick="setPendingStampType('💯')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">💯</button>
+      <button type="button" onclick="setPendingStampType('😍')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">😍</button>
+      <button type="button" onclick="setPendingStampType('🤤')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">🤤</button>
+      <button type="button" onclick="setPendingStampType('💸')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">💸</button>
+      <button type="button" onclick="setPendingStampType('✨')" class="stamp-pick-btn text-lg px-2.5 py-1 rounded-md" style="background:var(--surface); border:1px solid var(--line);">✨</button>
     </div>
 
     <div class="flex-1 overflow-auto rounded-md flex items-center justify-center" style="background:#000; min-height:200px;">
@@ -3531,6 +3532,9 @@
     pendingStampType = null;
     stampGhost = null;
 
+    const canvasEl = document.getElementById('image-redact-canvas');
+    if (canvasEl) canvasEl.style.cursor = mode === 'stamp' ? 'default' : 'crosshair';
+
     ['blur', 'crop', 'stamp'].forEach(m => {
       const tab = document.getElementById(`redact-mode-${m}`);
       if (!tab) return;
@@ -3543,8 +3547,8 @@
     const descEl = document.getElementById('redact-mode-desc');
     if (descEl){
       if (mode === 'blur') descEl.textContent = '주소·전화번호·결제정보 등 가리고 싶은 부분을 드래그(또는 손가락으로 밀기)해서 선택하세요.';
-      else if (mode === 'crop') descEl.textContent = '모서리 동그라미를 드래그해서 남길 영역을 맞추고, 안쪽을 드래그하면 통째로 옮길 수 있어요. 다 됐으면 아래 "이 영역으로 자르기"를 눌러주세요.';
-      else descEl.textContent = '스티커를 고른 뒤 사진 위를 눌러서 드래그하면 미리 보면서 위치를 잡을 수 있어요. 손을 떼면 그 자리에 찍혀요. 찍힌 스티커는 안쪽을 드래그해 이동, 모서리로 크기, 위쪽 동그라미로 회전, 빨간 ×로 삭제할 수 있어요.';
+      else if (mode === 'crop') descEl.textContent = '모서리 손잡이를 드래그해서 남길 영역을 맞추고, 안쪽을 드래그하면 통째로 옮길 수 있어요. 다 됐으면 아래 "이 영역으로 자르기"를 눌러주세요.';
+      else descEl.textContent = '스티커를 고르면 커서가 그 모양으로 바뀌어요. 사진 위를 누른 채로 끌면 미리 보면서 위치를 잡을 수 있고, 손을 떼면 그 자리에 찍혀요. 찍힌 스티커는 안쪽을 드래그해 이동, 모서리로 크기, 위쪽 동그라미로 회전, 빨간 ×로 삭제할 수 있어요.';
     }
 
     const stampPicker = document.getElementById('redact-stamp-picker');
@@ -3565,6 +3569,21 @@
     drawRedactCanvas();
   }
 
+  // 스티커 종류에 맞는 커서 이미지를 SVG로 즉석에서 만들어 반환 (데스크톱 마우스 전용 — 터치 기기는
+  // 커서 개념이 없어서 대신 '누른 채로 끌면 미리보기가 따라오는' 방식으로 동일한 역할을 함)
+  function buildStampCursor(type){
+    let inner;
+    if (type === 'circle'){
+      inner = `<circle cx="16" cy="16" r="12" fill="none" stroke="#FF3B30" stroke-width="3"/>`;
+    } else if (type === 'arrow'){
+      inner = `<line x1="4" y1="16" x2="21" y2="16" stroke="#FF3B30" stroke-width="3" stroke-linecap="round"/><polygon points="26,16 16,9 16,23" fill="#FF3B30"/>`;
+    } else {
+      inner = `<text x="16" y="25" font-size="26" text-anchor="middle">${type}</text>`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">${inner}</svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 16 16, crosshair`;
+  }
+
   function setPendingStampType(type){
     pendingStampType = type;
     selectedStampIndex = -1;
@@ -3572,6 +3591,8 @@
       const isActive = btn.textContent.trim() === (type === 'circle' ? '⭕' : type === 'arrow' ? '➡️' : type);
       btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
     });
+    const canvas = document.getElementById('image-redact-canvas');
+    if (canvas) canvas.style.cursor = buildStampCursor(type);
     drawRedactCanvas();
   }
 
@@ -3988,6 +4009,7 @@
           selectedStampIndex = stamps.length - 1;
           pendingStampType = null;
           stampGhost = null;
+          canvas3.style.cursor = 'default';
           document.querySelectorAll('.stamp-pick-btn').forEach(btn => { btn.style.background = 'var(--surface)'; });
           drawRedactCanvas();
         }
