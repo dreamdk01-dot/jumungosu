@@ -50,6 +50,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cellipse cx='11' cy='8' rx='5' ry='6.2' fill='none' stroke='%23FFB800' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M11 14 L11 29' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M18 29 L26 4' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M23 29 L31 4' stroke='%23FFB800' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
+  /* 전체적으로 글자가 작다는 피드백에 따라, 루트 폰트 크기를 살짝 키운다.
+     Tailwind의 text-xs/sm/base 등은 전부 rem 단위라 이 값 하나로 사이트 전체
+     글자 크기가 비례해서 커지고, 여백(px-3, py-2 등)도 같은 rem 단위라 함께
+     비례해서 커지므로 글자만 커지고 박스는 그대로라 줄바뀜이 생기는 상황을 최소화한다.
+     (모바일 레이아웃 구조/브레이크포인트는 그대로 유지됨 — 뷰포트 px 기준이라 영향 없음) */
+  html{ font-size: 108%; }
   :root{
     --bg:#1C1A17;
     --surface:#232019;
@@ -296,10 +302,10 @@
   <button onclick="goToTopDiscountPost()" class="w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
     style="background:linear-gradient(90deg, rgba(255,90,54,0.16), rgba(255,184,0,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,90,54,0.28);">
     <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;">🔥 실시간 할인 1위 노하우 대공개</span>
+      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;">🔥 실시간 할인 1위 노하우 대공개</span>
       <p id="home-promo-banner-title" class="font-display text-base sm:text-lg leading-snug break-keep" style="color:var(--text);">BBQ 12,000원 할인! 도대체 어떻게 받았을까?</p>
     </div>
-    <span class="font-display text-sm sm:text-base shrink-0" style="color:var(--accent);">꿀팁 보러가기 ➔</span>
+    <span class="font-display text-sm sm:text-base shrink-0 inline-flex items-center px-3 py-1.5 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
   </button>
 
   <!-- FILTERS -->
@@ -340,8 +346,8 @@
         <span class="font-mono text-xs whitespace-nowrap" style="color:var(--muted);"><span id="result-count">0</span>건</span>
       </div>
     </div>
-    <p id="discount-list-updated" class="font-mono text-[11px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>
-    <p class="text-[11px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
+    <p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>
+    <p class="text-[12px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
 
@@ -421,7 +427,7 @@
 
         <!-- 글쓰기 폼 -->
         <div id="board-compose" class="hidden rounded-lg p-4 mb-5 space-y-3" style="background:var(--card);">
-          <p class="text-xs font-bold rounded-md px-3 py-2" style="background:rgba(255,90,54,0.14); color:var(--accent); border:1px solid var(--accent);">⚠️ 욕설, 비속어, 음란성 사진 및 부적절한 광고 내용을 작성할 경우 서비스 이용이 제한될 수 있습니다. 부적절한 콘텐츠는 유저 신고에 의해 즉시 블라인드 처리됩니다.</p>
+          <p class="text-sm font-bold rounded-md px-3 py-2" style="background:rgba(255,90,54,0.12); color:var(--text); border:1px solid var(--accent);">⚠️ 욕설, 비속어, 음란성 사진 및 부적절한 광고 내용을 작성할 경우 서비스 이용이 제한될 수 있습니다. 부적절한 콘텐츠는 유저 신고에 의해 즉시 블라인드 처리됩니다.</p>
 
           <div>
             <label class="text-xs font-medium block mb-1" style="color:var(--muted);">카테고리 선택</label>
@@ -461,7 +467,7 @@
           <div>
             <label for="board-compose-image" class="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm cursor-pointer" style="background:var(--surface); border:1px dashed var(--line); color:var(--muted);">
               <span id="board-compose-image-label" class="truncate">사진 첨부 (선택)</span>
-              <span class="font-mono text-[11px] px-2 py-1 rounded-full shrink-0" style="background:var(--card-alt); color:var(--primary);">찾아보기</span>
+              <span class="font-mono text-[12px] px-2 py-1 rounded-full shrink-0" style="background:var(--card-alt); color:var(--primary);">찾아보기</span>
             </label>
             <input id="board-compose-image" type="file" accept="image/*" class="hidden" onchange="handleBoardImageChange(event)">
             <div class="relative mt-2">
@@ -512,7 +518,7 @@
             <input id="page-su-email" name="signup_email" type="email" placeholder="you@example.com" autocomplete="new-email" oninput="resetEmailCheck('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             <button type="button" onclick="checkEmailDuplicate('page-su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
           </div>
-          <p id="page-su-email-check-msg" class="text-[11px] mt-1.5 hidden"></p>
+          <p id="page-su-email-check-msg" class="text-[12px] mt-1.5 hidden"></p>
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호</label>
@@ -527,7 +533,7 @@
             <input id="page-su-password-confirm" name="signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             <button type="button" onclick="togglePwVisibility('page-su-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
           </div>
-          <p id="page-su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
+          <p id="page-su-password-match-msg" class="text-[12px] mt-1.5 hidden"></p>
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임</label>
@@ -535,7 +541,7 @@
             <input id="signup_nickname" name="signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore oninput="resetNicknameCheck('page-su')" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitPageSignup(); }" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             <button type="button" onclick="checkNicknameDuplicate('page-su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
           </div>
-          <p id="page-su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
+          <p id="page-su-nickname-check-msg" class="text-[12px] mt-1.5 hidden"></p>
         </div>
         <div>
           <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">[선택] 관심 지역 설정 (할인받을 동네)</label>
@@ -543,7 +549,7 @@
             <select id="page-su-sido" onchange="updateSigunguOptions('page-su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
             <select id="page-su-sigungu" onchange="updateRegionPreview('page-su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
           </div>
-          <p class="text-[11px] mt-1.5" style="color:var(--muted);">선택한 동네: <span id="page-su-region-preview" style="color:var(--primary);">-</span></p>
+          <p class="text-[12px] mt-1.5" style="color:var(--muted);">선택한 동네: <span id="page-su-region-preview" style="color:var(--primary);">-</span></p>
         </div>
         <div class="space-y-2 pt-1">
           <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
@@ -597,8 +603,8 @@
     <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
       <div class="flex items-center gap-2">
         <h2 class="font-display text-2xl" style="color:var(--primary);">사장님 대시보드</h2>
-        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
-        <span id="admin-dashboard-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
+        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
+        <span id="admin-dashboard-role-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full"></span>
       </div>
     </div>
     <p id="admin-dashboard-role-desc" class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
@@ -718,7 +724,7 @@
         <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
         <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
         <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">후보 저장하기</button>
-        <p class="text-[11px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 달 득표수는 0표로 초기화돼요.</p>
+        <p class="text-[12px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 달 득표수는 0표로 초기화돼요.</p>
       </div>
 
       <!-- 실시간 득표율 -->
@@ -821,7 +827,7 @@
       <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">
         <span class="block sm:inline">이메일: jumungosu@gmail.com</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><span class="block sm:inline">고객문의: <a href="http://pf.kakao.com/_DeqxnX" target="_blank" rel="noopener" class="underline underline-offset-2" style="color:var(--primary);">카카오톡 채널 '주문고수'</a></span>
       </p>
-      <p class="text-[11px] leading-relaxed break-keep mt-3" style="color:var(--muted); opacity:0.75;">
+      <p class="text-[12px] leading-relaxed break-keep mt-3" style="color:var(--muted); opacity:0.75;">
         주문의 고수는 각 배달 플랫폼 및 브랜드의 할인 정보를 수집·제공하는 정보 중개 서비스이며, 직접적인 상품 판매 및 결제의 주체가 아닙니다. 일부 링크는 쿠팡 파트너스 등 제휴 마케팅 활동의 일환으로 일정액의 수수료를 제공받을 수 있습니다.
       </p>
       <p class="font-mono text-xs mt-3" style="color:var(--muted);">© 2026 문라잇 (주문의 고수). All rights reserved.</p>
@@ -886,7 +892,7 @@
         <label class="text-xs font-medium block mb-1" style="color:var(--muted);">첨부파일 (제안서)</label>
         <label for="b2b-file" class="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm cursor-pointer" style="background:var(--surface); border:1px dashed var(--line); color:var(--muted);">
           <span id="b2b-file-label" class="truncate">파일 선택 (PDF, PPT, DOCX 등)</span>
-          <span class="font-mono text-[11px] px-2 py-1 rounded-full shrink-0" style="background:var(--card); color:var(--primary);">찾아보기</span>
+          <span class="font-mono text-[12px] px-2 py-1 rounded-full shrink-0" style="background:var(--card); color:var(--primary);">찾아보기</span>
         </label>
         <input id="b2b-file" type="file" class="hidden" onchange="updateB2BFileLabel()">
       </div>
@@ -899,7 +905,7 @@
 
     <button onclick="submitB2BProposal()" class="w-full mt-5 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">제안서 제출하기</button>
     <p id="b2b-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
-    <p class="text-[11px] mt-3 text-center" style="color:var(--muted);">제출 내용은 <span style="color:var(--primary);">jumungosu@gmail.com</span>으로 전달됩니다.</p>
+    <p class="text-[12px] mt-3 text-center" style="color:var(--muted);">제출 내용은 <span style="color:var(--primary);">jumungosu@gmail.com</span>으로 전달됩니다.</p>
   </div>
 </div>
 
@@ -944,7 +950,7 @@
     <div class="flex-1 overflow-auto rounded-md flex items-center justify-center" style="background:#000; min-height:200px;">
       <canvas id="image-redact-canvas" style="touch-action:none; display:block; max-width:100%; max-height:100%; cursor:crosshair; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;" oncontextmenu="return false;"></canvas>
     </div>
-    <p class="text-[11px] mt-2 shrink-0" style="color:var(--accent);">⚠️ 이름·전화번호·주소·카드번호 등 개인정보가 사진에 남아있지 않은지 꼼꼼히 확인 후 등록해주세요. 가려지지 않은 정보로 인한 문제는 작성자 본인에게 책임이 있어요.</p>
+    <p class="text-[12px] mt-2 shrink-0" style="color:var(--accent);">⚠️ 이름·전화번호·주소·카드번호 등 개인정보가 사진에 남아있지 않은지 꼼꼼히 확인 후 등록해주세요. 가려지지 않은 정보로 인한 문제는 작성자 본인에게 책임이 있어요.</p>
     <div class="flex items-center justify-between gap-2 mt-3 shrink-0">
       <button type="button" onclick="undoLastRedaction()" class="text-xs font-semibold px-3 py-2 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↩ 실행 취소</button>
       <div class="flex gap-2">
@@ -987,14 +993,14 @@
           <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--card-alt);">
             <div id="user-info-exp-bar" class="h-full" style="width:0%; background:var(--primary);"></div>
           </div>
-          <p id="user-info-exp-remain-label" class="text-[10px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
+          <p id="user-info-exp-remain-label" class="text-[11px] mt-1.5" style="color:var(--muted);">다음 레벨까지 <span id="user-info-exp-remain">0</span> XP</p>
         </div>
 
         <!-- 출석체크 -->
         <div class="rounded-lg p-4 mb-5 text-center" style="background:var(--surface);">
           <p class="text-xs mb-2" style="color:var(--muted);">출석체크</p>
           <button id="user-info-attendance-btn" type="button" onclick="checkInAttendance()" class="w-full py-2.5 rounded-md font-semibold text-sm transition" style="background:var(--primary); color:#1C1A17;">오늘 출석체크 하기 (+100 EXP)</button>
-          <p class="text-[11px] mt-2" style="color:var(--muted);">총 누적 출석: <span id="user-info-attendance-count">0</span>일</p>
+          <p class="text-[12px] mt-2" style="color:var(--muted);">총 누적 출석: <span id="user-info-attendance-count">0</span>일</p>
         </div>
       </div>
 
@@ -1004,17 +1010,17 @@
             <p class="text-xs mb-1" style="color:var(--muted);">닉네임</p>
             <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
               <span id="user-info-name">-</span>
-              <span id="user-info-role-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
-              <button type="button" id="user-info-nickname-edit-toggle" onclick="toggleNicknameEditForm()" class="text-[11px] font-semibold" style="color:var(--muted); text-decoration:underline;">수정</button>
+              <span id="user-info-role-badge" class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;"></span>
+              <button type="button" id="user-info-nickname-edit-toggle" onclick="toggleNicknameEditForm()" class="text-[12px] font-semibold" style="color:var(--muted); text-decoration:underline;">수정</button>
             </p>
-            <p id="user-info-nickname-cooldown-msg" class="text-[11px] mt-1 hidden" style="color:var(--accent);"></p>
+            <p id="user-info-nickname-cooldown-msg" class="text-[12px] mt-1 hidden" style="color:var(--accent);"></p>
 
             <div id="user-info-nickname-edit-form" class="hidden mt-2 space-y-2">
               <div class="flex gap-2">
                 <input id="user-info-nickname-input" type="text" autocomplete="off" spellcheck="false" oninput="resetNicknameCheck('myinfo')" placeholder="새 닉네임" class="flex-1 min-w-0 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
                 <button type="button" onclick="checkNicknameDuplicate('myinfo')" class="shrink-0 px-3 py-2 rounded-md text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">중복 확인</button>
               </div>
-              <p id="myinfo-nickname-check-msg" class="text-[11px] hidden"></p>
+              <p id="myinfo-nickname-check-msg" class="text-[12px] hidden"></p>
               <div class="flex gap-2">
                 <button type="button" onclick="submitNicknameChange()" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">닉네임 저장</button>
                 <button type="button" onclick="toggleNicknameEditForm(false)" class="flex-1 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
@@ -1051,7 +1057,7 @@
               <input id="user-info-new-password-confirm" type="password" autocomplete="new-password" placeholder="새 비밀번호 확인" class="w-full px-3 py-2 pr-14 rounded-md text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">
               <button type="button" onclick="togglePwVisibility('user-info-new-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
             </div>
-            <p id="user-info-password-msg" class="text-[11px] hidden"></p>
+            <p id="user-info-password-msg" class="text-[12px] hidden"></p>
             <button type="button" onclick="submitPasswordChange()" class="w-full py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">비밀번호 변경하기</button>
           </div>
         </div>
@@ -1061,7 +1067,7 @@
     <!-- 경험치(EXP) 획득 방법 안내 -->
     <div class="rounded-lg p-4 mb-5" style="background:var(--surface);">
       <p class="text-xs font-semibold mb-2" style="color:var(--primary);">💡 경험치(EXP) 획득 방법</p>
-      <ul class="text-[11px] leading-relaxed list-disc list-inside space-y-0.5" style="color:var(--muted);">
+      <ul class="text-[12px] leading-relaxed list-disc list-inside space-y-0.5" style="color:var(--muted);">
         <li>게시글/댓글 추천 1개당 <span style="color:var(--text); font-weight:600;">+100 EXP</span></li>
         <li>매일 출석체크 <span style="color:var(--text); font-weight:600;">+100 EXP</span> (하루 1회)</li>
         <li>가입 기간 1달마다 <span style="color:var(--text); font-weight:600;">+1,000 EXP</span> 자동 적립</li>
@@ -1102,7 +1108,7 @@
           <input id="su-email" name="vote_signup_email" type="email" placeholder="you@example.com" autocomplete="new-email" oninput="resetEmailCheck('su')" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
           <button type="button" onclick="checkEmailDuplicate('su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">중복 확인</button>
         </div>
-        <p id="su-email-check-msg" class="text-[11px] mt-1.5 hidden"></p>
+        <p id="su-email-check-msg" class="text-[12px] mt-1.5 hidden"></p>
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호</label>
@@ -1117,7 +1123,7 @@
           <input id="su-password-confirm" name="vote_signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
           <button type="button" onclick="togglePwVisibility('su-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
         </div>
-        <p id="su-password-match-msg" class="text-[11px] mt-1.5 hidden"></p>
+        <p id="su-password-match-msg" class="text-[12px] mt-1.5 hidden"></p>
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임</label>
@@ -1125,7 +1131,7 @@
           <input id="signup_nickname_vote" name="vote_signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore oninput="resetNicknameCheck('su')" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
           <button type="button" onclick="checkNicknameDuplicate('su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">중복 확인</button>
         </div>
-        <p id="su-nickname-check-msg" class="text-[11px] mt-1.5 hidden"></p>
+        <p id="su-nickname-check-msg" class="text-[12px] mt-1.5 hidden"></p>
       </div>
       <div>
         <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">[선택] 관심 지역 설정 (할인받을 동네)</label>
@@ -1133,7 +1139,7 @@
           <select id="su-sido" onchange="updateSigunguOptions('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
           <select id="su-sigungu" onchange="updateRegionPreview('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
         </div>
-        <p class="text-[11px] mt-1.5" style="color:var(--muted);">선택한 동네: <span id="su-region-preview" style="color:var(--primary);">-</span></p>
+        <p class="text-[12px] mt-1.5" style="color:var(--muted);">선택한 동네: <span id="su-region-preview" style="color:var(--primary);">-</span></p>
       </div>
       <div class="space-y-2 pt-1">
         <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
@@ -2064,9 +2070,9 @@
   // 배달앱 태그 뱃지 — 땡겨요는 공식 브랜드 컬러(#FF5216) 톤의 배경 틴트를 적용해 시각적 통일감을 줌
   function appTagHtml(a){
     if (a === 'ddangyo'){
-      return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:rgba(255,82,22,0.1); border:1px solid rgba(255,82,22,0.3); color:#FF5216;">${APP_LABEL[a]}</span>`;
+      return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:rgba(255,82,22,0.1); border:1px solid rgba(255,82,22,0.3); color:#FF5216;">${APP_LABEL[a]}</span>`;
     }
-    return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid ${APP_COLOR[a]}; color:${APP_COLOR[a]};">${APP_LABEL[a]}</span>`;
+    return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid ${APP_COLOR[a]}; color:${APP_COLOR[a]};">${APP_LABEL[a]}</span>`;
   }
 
   // 서비스 유형(배달/포장) 태그 — 둘 다 가능하면 포인트 컬러로 강조
@@ -2074,13 +2080,13 @@
     const types = d.type || [];
     const both = types.includes('배달') && types.includes('포장');
     if (both){
-      return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--primary); color:var(--primary);">배달·포장</span>`;
+      return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--primary); color:var(--primary);">배달·포장</span>`;
     }
     if (types.includes('배달')){
-      return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--type-delivery); color:var(--type-delivery);">배달</span>`;
+      return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--type-delivery); color:var(--type-delivery);">배달</span>`;
     }
     if (types.includes('포장')){
-      return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--type-pickup); color:var(--type-pickup);">포장</span>`;
+      return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="border:1px solid var(--type-pickup); color:var(--type-pickup);">포장</span>`;
     }
     return '';
   }
@@ -2439,7 +2445,7 @@
   // 작성자 닉네임 왼쪽에 붙는 [Lv.n] 배지 — 헤더와 동일하게 총 EXP(추천+출석+가입기간) 기준으로 계산
   function authorLevelBadge(authorName, authorId){
     const { level } = computeTotalStatsForAuthor(authorName, authorId);
-    return `<span class="font-mono text-[10px] font-semibold mr-1" style="color:var(--primary);">[Lv.${level}]</span>`;
+    return `<span class="font-mono text-[11px] font-semibold mr-1" style="color:var(--primary);">[Lv.${level}]</span>`;
   }
 
   // ---------- RENDER: BEST 3 ----------
@@ -2455,7 +2461,7 @@
       if (!d) return '';
 
       const timeChipHtml = d.limitedTime
-        ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,90,54,0.12); color:var(--accent);">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>`
+        ? `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:var(--accent); color:#ffffff;">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>`
         : '';
 
       // 뽑기(랜덤) 항목이면 "최대 N원" 배지를 눌러 전체 금액 목록을 펼쳐볼 수 있게 한다 (할인 리스트와 동일한 동작)
@@ -2464,10 +2470,10 @@
         : null;
       const gachaId = `best3-gacha-${d.id}`;
       const gachaChipHtml = gachaMax
-        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
+        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
         : '';
       const gachaDetailHtml = gachaMax
-        ? `<div id="${gachaId}" class="hidden text-[11px] mt-2" style="color:var(--muted);">뽑을 수 있는 금액: ${d.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
+        ? `<div id="${gachaId}" class="hidden text-[12px] mt-2" style="color:var(--muted);">뽑을 수 있는 금액: ${d.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
         : '';
 
       return `
@@ -2639,10 +2645,10 @@
       if (typeof b.minOrder === 'number') metaParts.push(`최소주문 ${b.minOrder.toLocaleString('ko-KR')}원`);
       if (b.periodText) metaParts.push(b.periodText);
       const metaHtml = metaParts.length
-        ? `<span class="font-mono text-[10px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
+        ? `<span class="font-mono text-[11px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
         : '';
       const timeChipHtml = b.limitedTime
-        ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,90,54,0.12); color:var(--accent);">⏰ ${escapeHtml(b.limitedTime)} 선착순</span>`
+        ? `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:var(--accent); color:#ffffff;">⏰ ${escapeHtml(b.limitedTime)} 선착순</span>`
         : '';
 
       // 뽑기 항목 중 여러 금액이 있으면, 그 플랫폼 줄에 직접 "최대 N원" 배지를 붙인다.
@@ -2653,10 +2659,10 @@
         : null;
       const gachaId = `gacha-detail-${group.key.replace(/[^a-zA-Z0-9가-힣]/g, '')}-${b.app}-${i}`;
       const gachaChipHtml = gachaMax
-        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
+        ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:rgba(255,184,0,0.14); color:var(--primary); border:none; cursor:pointer;">🎰 최대 ${gachaMax.toLocaleString('ko-KR')}원 <span id="${gachaId}-chevron">▾</span></button>`
         : '';
       const gachaDetailHtml = gachaMax
-        ? `<div id="${gachaId}" class="hidden basis-full text-[11px] mt-0.5" style="color:var(--muted);">뽑을 수 있는 금액: ${b.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
+        ? `<div id="${gachaId}" class="hidden basis-full text-[12px] mt-0.5" style="color:var(--muted);">뽑을 수 있는 금액: ${b.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
         : '';
 
       return `
@@ -2694,13 +2700,13 @@
         <div class="w-11 h-11 shrink-0 rounded flex items-center justify-center text-lg" style="background:linear-gradient(135deg, rgba(255,184,0,0.25), rgba(255,90,54,0.25));">🌙</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:rgba(255,184,0,0.15); color:var(--primary);">🔥 추천 특가</span>
-            <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded" style="background:var(--card-alt); color:var(--muted);">AD</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="background:rgba(255,184,0,0.15); color:var(--primary);">🔥 추천 특가</span>
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background:var(--card-alt); color:var(--muted);">AD</span>
           </div>
           <p class="font-bold text-sm mb-1">배달비 아까울 땐?</p>
           <p class="text-xs mb-2" style="color:var(--text);">로켓프레시 야식·밀키트 인기 기획전 바로가기</p>
-          <a href="https://link.coupang.com/a/fLfG8u51c4" target="_blank" rel="noopener sponsored" class="inline-block text-[11px] font-semibold" style="color:var(--primary);">지금 확인하기 →</a>
-          <p class="text-[9px] mt-2 leading-relaxed" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
+          <a href="https://link.coupang.com/a/fLfG8u51c4" target="_blank" rel="noopener sponsored" class="inline-block text-[12px] font-semibold" style="color:var(--primary);">지금 확인하기 →</a>
+          <p class="text-[10px] mt-2 leading-relaxed" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
         </div>
       </div>`;
   }
@@ -3052,7 +3058,7 @@
 
       const winners = winnersRes.error ? [] : (winnersRes.data || []);
       const winnersHtml = winners.length
-        ? `<p class="font-mono text-[11px] mt-2 mb-1" style="color:var(--primary);">🏆 당첨자</p>` +
+        ? `<p class="font-mono text-[12px] mt-2 mb-1" style="color:var(--primary);">🏆 당첨자</p>` +
           winners.map(w => `<p class="text-xs" style="color:var(--text);">${escapeHtml(w.name || '-')} (${escapeHtml(w.email || '-')}) · ${escapeHtml(w.vote_label || '-')} 당첨</p>`).join('')
         : `<p class="text-xs mt-2" style="color:var(--muted);">추첨된 당첨자가 없어요.</p>`;
 
@@ -4325,7 +4331,7 @@
     return `
       <div class="dashed-divider pt-3 mt-3 space-y-3">
         ${commentsHtml}
-        <p class="text-[10px] font-semibold mt-2" style="color:var(--accent);">${BOARD_WARNING_TEXT}</p>
+        <p class="text-[11px] font-semibold mt-2" style="color:var(--accent);">${BOARD_WARNING_TEXT}</p>
         <div class="flex gap-2 pt-1">
           <input id="comment-input-${p.id}" type="text" placeholder="댓글을 남겨보세요" class="flex-1 px-3 py-1.5 rounded-md text-xs outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
           <button onclick="submitComment(${p.id})" class="px-3 py-1.5 rounded-md text-xs font-semibold shrink-0" style="background:var(--primary); color:#1C1A17;">등록</button>
@@ -4347,7 +4353,7 @@
         <button type="button" onclick="openImageLightbox('${safeUrl}')" class="block w-full rounded-md mb-1 overflow-hidden" style="background:var(--card-alt); border:none; padding:0; cursor:zoom-in;">
           <img src="${image}" class="w-full max-h-80 object-contain" alt="첨부 이미지" loading="lazy">
         </button>
-        <p class="text-[11px] mb-3" style="color:var(--muted);">🔍 이미지를 누르면 원본 크기로 볼 수 있어요</p>`;
+        <p class="text-[12px] mb-3" style="color:var(--muted);">🔍 이미지를 누르면 원본 크기로 볼 수 있어요</p>`;
   }
 
   function openImageLightbox(url){
@@ -4460,13 +4466,13 @@
       const commentCount = p.comments.length;
       return `
       <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-center gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line);">
-        <span class="text-[10px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
+        <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5">
             <span class="text-sm truncate" style="color:var(--text);">${escapeHtml(title)}</span>
             ${commentCount > 0 ? `<span class="text-xs font-bold shrink-0" style="color:var(--primary);">[${commentCount}]</span>` : ''}
           </div>
-          <div class="flex items-center gap-1.5 text-[11px] mt-1 flex-wrap" style="color:var(--muted);">
+          <div class="flex items-center gap-1.5 text-[12px] mt-1 flex-wrap" style="color:var(--muted);">
             <span>${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
             <span>·</span>
             <span>${relativeTimeLabel(p.createdAt)}</span>
@@ -4484,7 +4490,7 @@
     return `
       <div id="board-post-${p.id}" class="rounded-lg p-4 my-2" style="background:var(--card);">
         <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <span class="text-[10px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
+          <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
           <span class="font-semibold text-sm">${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
           ${canModify ? `
             <div class="flex gap-2 shrink-0 ml-auto">
@@ -4492,7 +4498,7 @@
               <button onclick="event.stopPropagation(); deletePost(${p.id})" class="text-xs font-semibold" style="color:var(--accent);">삭제</button>
             </div>` : ''}
         </div>
-        <p class="font-mono text-[11px] mb-2" style="color:var(--muted);">${formatPostTimestamp(p)}</p>
+        <p class="font-mono text-[12px] mb-2" style="color:var(--muted);">${formatPostTimestamp(p)}</p>
         ${bodyHtml}
         <div class="flex items-center gap-3 dashed-divider pt-3 flex-wrap">
           <button onclick="event.stopPropagation(); likePost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">👍 <span>${p.likes}</span></button>
@@ -4718,7 +4724,7 @@
         <div class="flex items-center gap-3 rounded-md px-3 py-2" style="background:var(--surface);">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold truncate">${escapeHtml(p.title)}</p>
-            <p class="text-[10px]" style="color:var(--muted);">작성자: ${escapeHtml(p.author)} · 신고 ${p.reportCount}회</p>
+            <p class="text-[11px]" style="color:var(--muted);">작성자: ${escapeHtml(p.author)} · 신고 ${p.reportCount}회</p>
           </div>
           <button onclick="permanentlyDeletePost(${p.id})" class="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style="background:var(--accent); color:#1C1A17;">영구 삭제</button>
         </div>
@@ -5899,7 +5905,7 @@
     const daysEl = document.getElementById(`chart-${prefix}-days`);
 
     valuesEl.innerHTML = weeklyTrend.map(d =>
-      `<span class="font-mono text-[10px]" style="color:var(--text);">${d[key].toLocaleString('ko-KR')}</span>`
+      `<span class="font-mono text-[11px]" style="color:var(--text);">${d[key].toLocaleString('ko-KR')}</span>`
     ).join('');
 
     barsEl.innerHTML = weeklyTrend.map(d => {
@@ -5908,7 +5914,7 @@
     }).join('');
 
     daysEl.innerHTML = weeklyTrend.map(d =>
-      `<span class="font-mono text-[10px]" style="color:var(--muted);">${d.day}</span>`
+      `<span class="font-mono text-[11px]" style="color:var(--muted);">${d.day}</span>`
     ).join('');
   }
 
