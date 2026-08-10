@@ -73,6 +73,11 @@
     color:var(--text);
     font-family:'Noto Sans KR',sans-serif;
   }
+  /* 모바일 브라우저 기본 탭 하이라이트(누르면 반짝하는 회색/파란 음영) 전체 비활성화.
+     버튼/링크를 누를 때 화면이 깜빡이는 느낌의 흔한 원인이라 사이트 전역에서 꺼둔다. */
+  button, a, [onclick]{
+    -webkit-tap-highlight-color: transparent;
+  }
   .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.5px; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
 
@@ -1774,30 +1779,25 @@
   // 족발/보쌈, 샐러드/샌드위치, 도시락/죽, 중식/아시안
   // =====================================================================
 
-  // ▼▼▼ 여기 3개 값을 본인 Airtable 정보로 반드시 교체하세요 ▼▼▼
-  // 1) AIRTABLE_PAT : Airtable "Personal Access Token" (읽기 전용!)
-  //    발급 경로: airtable.com 로그인 → 우측 상단 계정 아이콘 → "Developer hub"
-  //    → "Personal access tokens" → "Create new token"
-  //    - Scopes: data.records:read 만 체크 (data.records:write는 절대 체크하지 마세요)
-  //    - Access: 이 할인 데이터를 관리할 Base 하나만 선택해서 연결
-  //    - 생성된 토큰(pat로 시작)을 아래 따옴표 안에 붙여넣기
-  // 2) AIRTABLE_BASE_ID : Airtable Base ID (app로 시작하는 값)
-  //    Base를 연 상태에서 Help(물음표 아이콘) → "API documentation" 클릭하면
-  //    문서 맨 위에 "The ID of this base is appXXXXXXXXXXXXXX" 로 표시됨
-  // 3) AIRTABLE_TABLE_NAME : 위 필드들을 만들어둔 테이블 이름 (탭 이름과 정확히 일치해야 함)
-  const AIRTABLE_PAT = "patLQX6fi6mZuDyJh.ce3a7469d5f5048916708ef9c874ce187c7809fdac244cf690a6631454a3e8c5";
-  const AIRTABLE_BASE_ID = "appl0GzxmRCEna4zV";
-  const AIRTABLE_TABLE_NAME = "tblEEKZ8utiqvjxaa"; // 테이블 이름 대신 테이블 ID 사용 (나중에 테이블 이름을 바꿔도 안전하게 계속 작동함)
-  // ▲▲▲ 여기까지 교체 ▲▲▲
+  // ▼▼▼ Airtable 직접 연동 방식은 더 이상 사용하지 않습니다 ▼▼▼
+  // (이전에는 방문자 브라우저가 직접 Airtable API를 호출했는데, 방문자가 많아질수록
+  //  Airtable의 월별 API 호출 한도를 그대로 다 써버리는 문제가 있었습니다.)
+  //
+  // 지금 구조: Vercel 서버 함수(/api/sync-airtable)가 5분마다 한 번씩만 Airtable을 조회해서
+  // Supabase(cached_airtable_records 테이블)에 저장해두고, 방문자는 그 캐시만 읽습니다.
+  // → 방문자가 몇 명이든 Airtable API 호출 횟수는 하루 288회(5분 간격)로 고정됩니다.
+  //
+  // Airtable PAT/Base ID/테이블 이름은 이제 클라이언트 코드가 아니라
+  // Vercel 프로젝트의 환경변수(Environment Variables)에만 저장되어 있습니다.
+  // ▲▲▲
 
-  // 새로고침 없이도 최신 데이터를 반영하기 위해 이 주기(ms)마다 자동으로 Airtable을 다시 조회합니다.
+  // 새로고침 없이도 최신 데이터를 반영하기 위해 이 주기(ms)마다 Supabase 캐시를 다시 조회합니다.
+  // (이건 Airtable API 호출이 아니라 Supabase 조회라서, 방문자가 많아져도 문제가 되지 않습니다)
   const AIRTABLE_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5분
 
-  // 위 3개 값이 실제로 채워졌는지(placeholder 상태가 아닌지) 확인
+  // Supabase 캐시 테이블에 데이터가 한 번이라도 채워졌는지 확인
   function isAirtableConfigured(){
-    return !!AIRTABLE_PAT && !!AIRTABLE_BASE_ID && !!AIRTABLE_TABLE_NAME
-      && !AIRTABLE_PAT.includes('여기에')
-      && !AIRTABLE_BASE_ID.includes('여기에');
+    return true; // 캐시 테이블 자체는 항상 존재하므로 true 고정. 실패 시엔 fetchAllAirtableRecords()의 try/catch가 처리.
   }
 
   // Airtable 필드명이 정확히 일치하지 않아도(띄어쓰기, 흔히 쓰는 다른 이름 등) 인식할 수 있도록
@@ -1952,28 +1952,17 @@
     return result;
   }
 
-  // Airtable은 한 번에 최대 100건만 내려주므로, offset이 있는 동안 페이지를 넘겨가며 전체를 수집합니다.
+  // 예전엔 여기서 Airtable API를 직접 호출했지만, 이제는 서버(Vercel 함수)가 미리 캐싱해둔
+  // Supabase 테이블만 조회합니다. 함수 이름과 반환값 형태(Airtable record 배열)는 그대로 유지해서
+  // 아래 mapAirtableRecordToDiscount() 등 나머지 로직은 전혀 손대지 않아도 되게 했습니다.
   async function fetchAllAirtableRecords(){
-    const records = [];
-    let offset = null;
-    do {
-      const url = new URL(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`);
-      url.searchParams.set('pageSize', '100');
-      if (offset) url.searchParams.set('offset', offset);
-
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${AIRTABLE_PAT}` },
-        cache: 'no-store', // 브라우저가 이전 응답을 캐시해서 방금 Airtable에서 수정한 값이 늦게 반영되는 것을 방지
-      });
-      if (!res.ok){
-        const bodyText = await res.text().catch(() => '');
-        throw new Error(`Airtable API 오류 (HTTP ${res.status}): ${bodyText.slice(0, 200)}`);
-      }
-      const data = await res.json();
-      records.push(...(data.records || []));
-      offset = data.offset || null;
-    } while (offset);
-    return records;
+    const { data, error } = await supabaseClient
+      .from('cached_airtable_records')
+      .select('records, updated_at')
+      .eq('id', 1)
+      .single();
+    if (error) throw new Error(`캐시 조회 실패: ${error.message}`);
+    return (data && data.records) || [];
   }
 
   // Airtable에서 최신 할인 데이터를 불러와 discounts 배열을 갱신합니다.
@@ -1982,10 +1971,6 @@
   //   지우고 최신 Airtable 데이터로 새로 채웁니다.
   // - 네트워크 오류 등으로 실패하면 기존 데이터(마지막으로 성공한 데이터 또는 코드 기본값)를 그대로 유지합니다.
   async function loadDiscountsFromAirtable(){
-    if (!isAirtableConfigured()){
-      console.warn('[주문의 고수] Airtable 연동 설정이 비어있어 코드에 내장된 기본 할인 데이터만 표시합니다. AIRTABLE_PAT / AIRTABLE_BASE_ID / AIRTABLE_TABLE_NAME 값을 채워주세요.');
-      return;
-    }
     try {
       airtableSkippedSamples = [];
       const records = await fetchAllAirtableRecords();
@@ -3440,10 +3425,17 @@
       canvas.height = h;
       drawRedactCanvas();
 
-      const modal = document.getElementById('image-redact-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      lockBodyScroll();
+      // 캔버스 크기 변경 직후 곧바로 모달을 보여주면, 삼성 인터넷 등 일부 모바일 브라우저에서
+      // 새로 리사이즈된 캔버스가 아주 잠깐 빈 화면으로 먼저 그려졌다가 사진이 나타나는 "깜빡임"이
+      // 생기는 경우가 있다. 그림이 실제로 화면에 반영될 시간을 한 프레임 확보한 뒤 모달을 표시한다.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const modal = document.getElementById('image-redact-modal');
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          lockBodyScroll();
+        });
+      });
     };
     img.onerror = () => {
       showToast('이미지를 불러오지 못했어요. 다시 시도해주세요.');
