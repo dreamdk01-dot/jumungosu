@@ -4738,11 +4738,11 @@
     if (!expanded){
       const commentCount = p.comments.length;
       return `
-      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-center gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line);">
-        <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
+      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-start gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line);">
+        <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="text-sm truncate" style="color:var(--text);">${escapeHtml(title)}</span>
+          <div class="flex items-start gap-1.5">
+            <span class="text-sm break-keep" style="color:var(--text);">${escapeHtml(title)}</span>
             ${commentCount > 0 ? `<span class="text-xs font-bold shrink-0" style="color:var(--primary);">[${commentCount}]</span>` : ''}
           </div>
           <div class="flex items-center gap-1.5 text-[12px] mt-1 flex-wrap" style="color:var(--muted);">
@@ -4756,7 +4756,7 @@
           const imgs = getPostImages(p);
           if (!imgs.length) return '';
           return `
-            <div class="relative shrink-0">
+            <div class="relative shrink-0 mt-0.5">
               <img src="${imgs[0]}" class="w-12 h-12 rounded-md object-cover" style="background:var(--card-alt);" alt="" loading="lazy">
               ${imgs.length > 1 ? `<span class="absolute -top-1 -right-1 text-[9px] font-bold px-1 rounded-full leading-tight" style="background:var(--accent); color:#fff;">+${imgs.length - 1}</span>` : ''}
             </div>`;
@@ -4771,12 +4771,10 @@
     return `
       <div id="board-post-${p.id}" class="rounded-lg p-4 my-2" style="background:var(--card);">
         <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <div class="flex-1 basis-0 min-w-0 flex items-center gap-2">
-            <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
-            <span class="font-semibold text-sm truncate">${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
-          </div>
-          <button onclick="togglePostExpand(${p.id})" class="shrink-0 text-xs font-semibold flex items-center gap-1 px-2 py-1 rounded-md" style="color:var(--primary);">▲ 접기</button>
-          <div class="flex-1 basis-0 min-w-0 flex items-center justify-end gap-2">
+          <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
+          <span class="font-semibold text-sm truncate min-w-0 flex-1">${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
+          <div class="flex items-center gap-2 shrink-0 ml-auto">
+            <button onclick="togglePostExpand(${p.id})" class="text-xs font-semibold flex items-center gap-1 px-2 py-1 rounded-md" style="color:var(--primary);">▲ 접기</button>
             ${canModify ? `
               <button onclick="event.stopPropagation(); editPost(${p.id})" class="text-xs font-semibold shrink-0" style="color:var(--muted);">수정</button>
               <button onclick="event.stopPropagation(); deletePost(${p.id})" class="text-xs font-semibold shrink-0" style="color:var(--accent);">삭제</button>
