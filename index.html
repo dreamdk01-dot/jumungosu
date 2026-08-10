@@ -1360,7 +1360,7 @@
     if (!sidoSelect || !sigunguSelect) return;
 
     sidoSelect.innerHTML = '<option value="">시/도 선택</option>' +
-      Object.keys(SIDO_DATA).map(sido => `<option value="${sido}">${sido}</option>`).join('');
+      Object.keys(SIDO_DATA).sort((a, b) => a.localeCompare(b, 'ko')).map(sido => `<option value="${sido}">${sido}</option>`).join('');
     sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option>';
   }
 
@@ -1368,7 +1368,7 @@
   function updateSigunguOptions(prefix){
     const sido = document.getElementById(`${prefix}-sido`).value;
     const sigunguSelect = document.getElementById(`${prefix}-sigungu`);
-    const list = SIDO_DATA[sido] || [];
+    const list = (SIDO_DATA[sido] || []).slice().sort((a, b) => a.localeCompare(b, 'ko'));
 
     sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option>' +
       list.map(g => `<option value="${g}">${g}</option>`).join('');
