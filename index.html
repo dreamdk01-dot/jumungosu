@@ -37,6 +37,25 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // 폰트 크기는 키우되(위 html font-size 108%), 기본 text-* 유틸리티에 딸려오는
+  // 줄간격(line-height)은 Tailwind 기본값이 다소 넉넉해서(예: text-sm 기본 1.43배) 답답하지
+  // 않으면서도 조금 더 촘촘하게 보이도록 살짝 줄인다. 개별 요소에 leading-snug/leading-relaxed
+  // 등을 이미 명시한 곳은 그 값이 우선 적용되므로 영향 없음.
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontSize: {
+          xs:   ['0.75rem',  { lineHeight: '1.3' }],
+          sm:   ['0.875rem', { lineHeight: '1.3' }],
+          base: ['1rem',     { lineHeight: '1.35' }],
+          lg:   ['1.125rem', { lineHeight: '1.35' }],
+          xl:   ['1.25rem',  { lineHeight: '1.3' }],
+        },
+      },
+    },
+  };
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
@@ -305,7 +324,7 @@
       <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;">🔥 실시간 할인 1위 노하우 대공개</span>
       <p id="home-promo-banner-title" class="font-display text-base sm:text-lg leading-snug break-keep" style="color:var(--text);">BBQ 12,000원 할인! 도대체 어떻게 받았을까?</p>
     </div>
-    <span class="font-display text-sm sm:text-base shrink-0 self-start sm:self-auto inline-flex items-center px-3 py-1.5 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
+    <span class="font-display text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
   </button>
 
   <!-- FILTERS -->
@@ -2645,7 +2664,7 @@
       if (typeof b.minOrder === 'number') metaParts.push(`최소주문 ${b.minOrder.toLocaleString('ko-KR')}원`);
       if (b.periodText) metaParts.push(b.periodText);
       const metaHtml = metaParts.length
-        ? `<span class="font-mono text-[11px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
+        ? `<span class="font-mono text-[13px]" style="color:var(--muted);">(${metaParts.join(' · ')})</span>`
         : '';
       const timeChipHtml = b.limitedTime
         ? `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style="background:var(--accent); color:#ffffff;">⏰ ${escapeHtml(b.limitedTime)} 선착순</span>`
