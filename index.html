@@ -3368,7 +3368,36 @@
           const boxX = w - padding - logoSize - gap - textWidth;
           const boxY = h - padding - logoSize;
 
+          // 워터마크 뒤에 반투명 검은색 캡슐(pill) 배경을 먼저 깔아준다.
+          // (흰색 글씨만 쓰면 밝은/흰색 이미지 위에서 거의 안 보이는 문제가 있어,
+          //  배경 이미지 색과 무관하게 항상 또렷하게 보이도록 고정 배경을 둔다)
+          const pillPadX = Math.round(logoSize * 0.45);
+          const pillPadY = Math.round(logoSize * 0.28);
+          const pillX = boxX - pillPadX;
+          const pillY = boxY - pillPadY;
+          const pillW = (logoSize + gap + textWidth) + pillPadX * 2;
+          const pillH = logoSize + pillPadY * 2;
+          const pillRadius = pillH / 2;
+
+          ctx.save();
           ctx.globalAlpha = 0.55;
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          if (ctx.roundRect){
+            ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
+          } else {
+            // 구형 브라우저 폴백: roundRect 미지원 시 사각형 path를 직접 그림
+            const r = pillRadius;
+            ctx.moveTo(pillX + r, pillY);
+            ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + pillH, r);
+            ctx.arcTo(pillX + pillW, pillY + pillH, pillX, pillY + pillH, r);
+            ctx.arcTo(pillX, pillY + pillH, pillX, pillY, r);
+            ctx.arcTo(pillX, pillY, pillX + pillW, pillY, r);
+          }
+          ctx.fill();
+          ctx.restore();
+
+          ctx.globalAlpha = 0.95;
           drawJumungosuLogoMark(ctx, boxX, boxY, logoSize, '#FFFFFF');
           ctx.fillStyle = '#FFFFFF';
           ctx.textBaseline = 'middle';
