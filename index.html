@@ -479,6 +479,16 @@
 
           <!-- 배달 꿀조합 & 레시피 / 오늘 뭐 먹지? 공용 입력 필드 (제목 + 자유 내용) -->
           <div id="board-compose-recipe-fields" class="space-y-3 hidden">
+            <!-- 📍 우리동네 점바점 자랑(우점자) 전용: 제목 대신 지역 선택 + 매장명 수기 입력으로 구성.
+                 실제 제목은 "경기도 화성시 교촌치킨 봉담점 추천합니다 👍" 형태로 자동 조합된다. -->
+            <div id="board-compose-store-fields" class="space-y-2 hidden">
+              <div class="flex gap-2">
+                <select id="board-store-sido" onchange="updateSigunguOptions('board-store'); updateStoreTitlePreview();" class="flex-1 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
+                <select id="board-store-sigungu" onchange="updateRegionPreview('board-store'); updateStoreTitlePreview();" class="flex-1 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
+              </div>
+              <input id="board-compose-store-name" type="text" oninput="updateStoreTitlePreview()" placeholder="예) 교촌치킨 봉담점" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+              <p class="text-[12px]" style="color:var(--muted);">등록될 제목: <span id="board-store-title-preview" style="color:var(--primary);">지역과 매장명을 입력해주세요</span></p>
+            </div>
             <input id="board-compose-title" type="text" placeholder="제목을 입력하세요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             <textarea id="board-compose-content" rows="4" placeholder="내용을 입력하세요" class="w-full px-3 py-2 rounded-md text-sm outline-none resize-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></textarea>
           </div>
@@ -3263,25 +3273,46 @@
   // 선택된 카테고리의 formType에 따라 할인 입력폼/자유 글쓰기폼 중 하나만 보여준다
   // '제목+내용' 자유 글쓰기폼(formType: 'simple')을 쓰는 카테고리별 안내용 플레이스홀더.
   // 우점자(store) 카테고리는 "지역+매장명 소개 → 실제 이용 후기" 형식을 자연스럽게 유도한다.
+  // (제목은 더 이상 자유 입력이 아니라 지역 선택 + 매장명으로 자동 조합되므로 title 플레이스홀더는 불필요)
   const SIMPLE_FORM_PLACEHOLDERS = {
     store: {
-      title: '예) 화성시 교촌치킨 봉담점을 추천합니다',
       content: '예) 교촌치킨 봉담점은 다른 지점보다 양념을 아끼지 않고 사용하여 자극적이면서도 간이 딱 맞습니다. 방문 포장 시 응대도 친절해요!',
     },
   };
   const DEFAULT_SIMPLE_PLACEHOLDER = { title: '제목을 입력하세요', content: '내용을 입력하세요' };
 
+  // 우점자(store) 글쓰기 폼: 시/도 + 시/군/구 + 매장명을 조합해 "경기도 화성시 교촌치킨 봉담점 추천합니다 👍"
+  // 형태의 완성된 제목 문자열을 만든다. 지역이나 매장명 중 하나라도 비어있으면 빈 문자열 반환.
+  function buildStorePostTitle(){
+    const region = getRegionValue('board-store'); // "경기도 화성시" (미완성이면 '')
+    const storeName = (document.getElementById('board-compose-store-name')?.value || '').trim();
+    if (!region || !storeName) return '';
+    return `${region} ${storeName} 추천합니다 👍`;
+  }
+
+  // 지역/매장명 입력이 바뀔 때마다 "등록될 제목" 미리보기를 즉시 갱신
+  function updateStoreTitlePreview(){
+    const previewEl = document.getElementById('board-store-title-preview');
+    if (!previewEl) return;
+    const title = buildStorePostTitle();
+    previewEl.textContent = title || '지역과 매장명을 입력해주세요';
+  }
+
   function handleComposeCategoryChange(){
     const category = document.getElementById('board-compose-category').value;
     const isDiscount = isDiscountFormCategory(category);
+    const isStore = category === 'store';
     document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
     document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
+    document.getElementById('board-compose-store-fields').classList.toggle('hidden', !isStore);
+    document.getElementById('board-compose-title').classList.toggle('hidden', isStore);
+    if (isStore) updateStoreTitlePreview();
 
     const titleInput = document.getElementById('board-compose-title');
     const contentInput = document.getElementById('board-compose-content');
     if (titleInput && contentInput){
       const ph = SIMPLE_FORM_PLACEHOLDERS[category] || DEFAULT_SIMPLE_PLACEHOLDER;
-      titleInput.placeholder = ph.title;
+      titleInput.placeholder = ph.title || DEFAULT_SIMPLE_PLACEHOLDER.title;
       contentInput.placeholder = ph.content;
     }
   }
@@ -3306,6 +3337,12 @@
 
       const categorySelect = document.getElementById('board-compose-category');
       categorySelect.value = BOARD_CATEGORIES.some(c => c.key === activeBoardTab) ? activeBoardTab : BOARD_CATEGORIES[0].key;
+
+      // 우점자(store) 지역 선택 폼 초기화 (이전에 열었을 때 골랐던 지역/매장명이 남아있지 않도록)
+      document.getElementById('board-store-sido').value = '';
+      updateSigunguOptions('board-store');
+      document.getElementById('board-compose-store-name').value = '';
+
       handleComposeCategoryChange();
 
       document.getElementById('board-compose').classList.remove('hidden');
@@ -3321,6 +3358,9 @@
     document.getElementById('board-compose-brand').value = '';
     document.getElementById('board-compose-combo').value = '';
     document.getElementById('board-compose-detail').value = '';
+    document.getElementById('board-store-sido').value = '';
+    updateSigunguOptions('board-store');
+    document.getElementById('board-compose-store-name').value = '';
     document.getElementById('board-compose-image').value = '';
     document.getElementById('board-compose-image-preview').classList.add('hidden');
     document.getElementById('board-compose-redact-btn').classList.add('hidden');
@@ -3827,11 +3867,14 @@
           content: detail,
         };
       } else {
-        const title = document.getElementById('board-compose-title').value.trim();
+        const isStore = category === 'store';
+        const title = isStore ? buildStorePostTitle() : document.getElementById('board-compose-title').value.trim();
         const content = document.getElementById('board-compose-content').value.trim();
 
         if (!title || !content){
-          errEl.textContent = '제목과 내용을 입력해주세요.';
+          errEl.textContent = isStore
+            ? '지역(시/도, 시/군/구), 매장명, 후기 내용을 모두 입력해주세요.'
+            : '제목과 내용을 입력해주세요.';
           errEl.classList.remove('hidden');
           return;
         }
@@ -3928,6 +3971,27 @@
     return (isLoggedIn && currentUser && p.author === currentUser.name) || isAdminUser();
   }
 
+  // editPost에서 사용: 예전에 buildStorePostTitle()로 만들어진 "경기도 화성시 교촌치킨 봉담점 추천합니다 👍"
+  // 문자열을 다시 { sido, sigungu, storeName }로 되돌린다. 형식이 다르면(예: 이 기능 도입 전 글) null 반환.
+  function parseStorePostTitle(title){
+    if (!title) return null;
+    const withoutSuffix = title.replace(/\s*추천합니다\s*👍\s*$/, '');
+    if (withoutSuffix === title) return null; // 접미사가 없으면 이 폼으로 만든 글이 아님
+
+    for (const sido of Object.keys(SIDO_DATA)){
+      if (!withoutSuffix.startsWith(sido + ' ')) continue;
+      const rest = withoutSuffix.slice(sido.length + 1);
+      for (const sigungu of SIDO_DATA[sido]){
+        const prefix = sigungu + ' ';
+        if (rest.startsWith(prefix)){
+          const storeName = rest.slice(prefix.length).trim();
+          if (storeName) return { sido, sigungu, storeName };
+        }
+      }
+    }
+    return null;
+  }
+
   function editPost(id){
     const p = boardPosts.find(x => x.id === id);
     if (!p || !canModifyPost(p)) return;
@@ -3953,6 +4017,14 @@
       document.getElementById('board-compose-brand').value = p.brandMenu;
       document.getElementById('board-compose-combo').value = p.comboDetail;
       document.getElementById('board-compose-detail').value = p.content || '';
+    } else if (p.board === 'store'){
+      const parsed = parseStorePostTitle(p.title);
+      document.getElementById('board-store-sido').value = parsed ? parsed.sido : '';
+      updateSigunguOptions('board-store');
+      document.getElementById('board-store-sigungu').value = parsed ? parsed.sigungu : '';
+      document.getElementById('board-compose-store-name').value = parsed ? parsed.storeName : '';
+      updateStoreTitlePreview();
+      document.getElementById('board-compose-content').value = p.content;
     } else {
       document.getElementById('board-compose-title').value = p.title;
       document.getElementById('board-compose-content').value = p.content;
@@ -6260,6 +6332,7 @@
   applySavedLoginEmail();
   renderSidoOptions('su');
   renderSidoOptions('page-su');
+  renderSidoOptions('board-store');
   renderBarcode();
   loadDiscountUpdatedAt(); // Supabase app_config에서 최신 할인 업데이트 날짜를 불러와 배지 렌더링
   loadHomeBannerConfig(); // 관리자가 설정한 홈 배너 문구/연결 게시글을 불러와 반영
