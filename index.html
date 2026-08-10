@@ -400,7 +400,7 @@
 <main id="page-board" class="max-w-5xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
     <h2 class="font-display text-2xl mb-1" style="color:var(--primary);">자유게시판</h2>
-    <p class="text-sm mb-6" style="color:var(--muted);">유저들이 직접 전하는 실시간 중복 할인 꿀팁과 레시피를 확인하세요!</p>
+    <p class="text-sm mb-6" style="color:var(--muted);">유저들이 직접 전하는 실시간 중복 할인 꿀팁과 우리 동네 맛집 정보를 확인하세요!</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
       <!-- 좌측 사이드바: 카테고리 메뉴 -->
@@ -409,8 +409,8 @@
           <button id="board-tab-all" onclick="switchBoardTab('all')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🗂 전체</button>
           <button id="board-tab-food" onclick="switchBoardTab('food')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🔥 할인의 고수</button>
           <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
-          <button id="board-tab-recipe" onclick="switchBoardTab('recipe')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🍕 배달 꿀조합 & 레시피</button>
           <button id="board-tab-free" onclick="switchBoardTab('free')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
+          <button id="board-tab-store" onclick="switchBoardTab('store')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📍 우리동네 점바점 자랑</button>
         </nav>
       </aside>
 
@@ -2204,12 +2204,17 @@
   const participants = [];
 
   // ---------- 자유게시판 (Supabase posts/comments/post_likes/comment_likes/*_reports 테이블과 연동) ----------
-  // 카테고리 4종. formType이 'discount'면 할인 정보 입력폼(총액/앱/브랜드/조합), 'simple'이면 제목+내용 자유 글쓰기폼을 사용.
+  // 카테고리 5종(+삭제된 레거시 1종). formType이 'discount'면 할인 정보 입력폼(총액/앱/브랜드/조합),
+  // 'simple'이면 제목+내용 자유 글쓰기폼을 사용.
+  // - recipe(배달 꿀조합 & 레시피)는 삭제 요청으로 hidden 처리. DB에 이미 남아있는 과거 글이
+  //   깨지지 않도록(태그색/할인폼 여부 판정 등) 메타 정보는 배열에 그대로 두되, 사이드바 탭과
+  //   글쓰기 카테고리 선택지에서는 제외한다 (hidden: true인 항목은 아래 렌더링 단계에서 필터링됨).
   const BOARD_CATEGORIES = [
     { key: 'food',     label: '🔥 할인의 고수',        formType: 'discount' },
     { key: 'realtime', label: '🚨 실시간 할인 제보',    formType: 'discount' },
-    { key: 'recipe',   label: '🍕 배달 꿀조합 & 레시피', formType: 'simple' },
     { key: 'free',     label: '💬 오늘 뭐 먹지?',       formType: 'simple' },
+    { key: 'store',    label: '📍 우리동네 점바점 자랑 (우점자)', formType: 'simple' },
+    { key: 'recipe',   label: '🍕 배달 꿀조합 & 레시피', formType: 'simple', hidden: true },
   ];
   function getBoardCategoryMeta(key){
     return BOARD_CATEGORIES.find(c => c.key === key) || BOARD_CATEGORIES[0];
@@ -2226,11 +2231,13 @@
   ];
 
   // 목록 화면에서 각 게시글 옆에 붙는 카테고리 색상 태그 (전체 탭에서 한눈에 구분되도록)
+  // recipe는 카테고리 자체는 삭제됐지만, 과거에 이미 작성된 글의 태그 색이 깨지지 않도록 유지.
   const BOARD_CATEGORY_TAG = {
     food:     { label: '할인의 고수', color: '#FFB800' },
     realtime: { label: '실시간 제보', color: '#FF5A36' },
-    recipe:   { label: '꿀조합/레시피', color: '#4ADE80' },
     free:     { label: '자유',        color: '#60A5FA' },
+    store:    { label: '우점자',      color: '#A78BFA' },
+    recipe:   { label: '꿀조합/레시피', color: '#4ADE80' },
   };
 
   let activeBoardTab = 'all'; // BOARD_TABS의 key 중 하나 ('all' 포함)
@@ -3225,15 +3232,33 @@
   function renderBoardComposeCategorySelect(){
     const el = document.getElementById('board-compose-category');
     if (!el) return;
-    el.innerHTML = BOARD_CATEGORIES.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+    el.innerHTML = BOARD_CATEGORIES.filter(c => !c.hidden).map(c => `<option value="${c.key}">${c.label}</option>`).join('');
   }
 
   // 선택된 카테고리의 formType에 따라 할인 입력폼/자유 글쓰기폼 중 하나만 보여준다
+  // '제목+내용' 자유 글쓰기폼(formType: 'simple')을 쓰는 카테고리별 안내용 플레이스홀더.
+  // 우점자(store) 카테고리는 "지역+매장명 소개 → 실제 이용 후기" 형식을 자연스럽게 유도한다.
+  const SIMPLE_FORM_PLACEHOLDERS = {
+    store: {
+      title: '예) 화성시 교촌치킨 봉담점을 추천합니다',
+      content: '예) 교촌치킨 봉담점은 다른 지점보다 양념을 아끼지 않고 사용하여 자극적이면서도 간이 딱 맞습니다. 방문 포장 시 응대도 친절해요!',
+    },
+  };
+  const DEFAULT_SIMPLE_PLACEHOLDER = { title: '제목을 입력하세요', content: '내용을 입력하세요' };
+
   function handleComposeCategoryChange(){
     const category = document.getElementById('board-compose-category').value;
     const isDiscount = isDiscountFormCategory(category);
     document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
     document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
+
+    const titleInput = document.getElementById('board-compose-title');
+    const contentInput = document.getElementById('board-compose-content');
+    if (titleInput && contentInput){
+      const ph = SIMPLE_FORM_PLACEHOLDERS[category] || DEFAULT_SIMPLE_PLACEHOLDER;
+      titleInput.placeholder = ph.title;
+      contentInput.placeholder = ph.content;
+    }
   }
 
   // 화면 우하단 플로팅 ✏️ 버튼: 어느 페이지에 있든 게시판으로 이동한 뒤 바로 글쓰기 폼을 연다.
@@ -3884,9 +3909,18 @@
 
     editingPostId = id;
     const isDiscount = isDiscountFormCategory(p.board);
-    document.getElementById('board-compose-category').value = p.board;
-    document.getElementById('board-compose-food-fields').classList.toggle('hidden', !isDiscount);
-    document.getElementById('board-compose-recipe-fields').classList.toggle('hidden', isDiscount);
+    const categorySelect = document.getElementById('board-compose-category');
+    // 카테고리 삭제(예: 레시피) 이후에도 과거 글은 정상적으로 수정할 수 있도록,
+    // 드롭다운에 없는 값이면 임시 옵션을 하나 만들어 끼워 넣는다.
+    if (![...categorySelect.options].some(o => o.value === p.board)){
+      const meta = getBoardCategoryMeta(p.board);
+      const tempOption = document.createElement('option');
+      tempOption.value = p.board;
+      tempOption.textContent = meta.label;
+      categorySelect.appendChild(tempOption);
+    }
+    categorySelect.value = p.board;
+    handleComposeCategoryChange();
 
     if (isDiscount){
       document.getElementById('board-compose-amount').value = p.totalDiscount;
