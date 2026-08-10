@@ -331,10 +331,10 @@
   <section class="mb-8">
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
     <div class="flex gap-2 flex-wrap mb-5" id="app-filters">
-      <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
-      <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
-      <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
-      <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
+      <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
+      <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
+      <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
+      <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
     </div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
@@ -2527,7 +2527,7 @@
   function renderCategoryChips(){
     const el = document.getElementById('category-filters');
     el.innerHTML = CATEGORIES.map(c => `
-      <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="chip px-4 py-2 rounded-full text-sm font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
+      <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
     `).join('');
   }
 
