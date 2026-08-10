@@ -962,7 +962,10 @@
 <!-- ===== 게시글 첨부 이미지 확대보기(라이트박스) ===== -->
 <div id="image-lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.9);" onclick="closeImageLightbox()">
   <button type="button" onclick="closeImageLightbox()" class="absolute top-4 right-4 text-3xl leading-none" style="color:#fff; background:none; border:none;" aria-label="닫기">×</button>
-  <img id="image-lightbox-img" src="" onclick="event.stopPropagation()" class="max-w-full max-h-full rounded-md" style="object-fit:contain;" alt="첨부 이미지 원본">
+  <button type="button" id="image-lightbox-prev" onclick="event.stopPropagation(); changeLightboxImage(-1)" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center text-xl font-bold" style="background:rgba(255,255,255,0.15); color:#fff;" aria-label="이전 사진">‹</button>
+  <button type="button" id="image-lightbox-next" onclick="event.stopPropagation(); changeLightboxImage(1)" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center text-xl font-bold" style="background:rgba(255,255,255,0.15); color:#fff;" aria-label="다음 사진">›</button>
+  <img id="image-lightbox-img" src="" onclick="event.stopPropagation()" ontouchstart="handleLightboxTouchStart(event)" ontouchend="handleLightboxTouchEnd(event)" class="max-w-full max-h-full rounded-md" style="object-fit:contain;" alt="첨부 이미지 원본">
+  <div id="image-lightbox-counter" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:rgba(255,255,255,0.15); color:#fff;" onclick="event.stopPropagation()"></div>
 </div>
 
 <!-- ===== 게시글 첨부 이미지 가리기(개인정보 보호) 에디터 ===== -->
@@ -4537,7 +4540,7 @@
     if (!p) return;
     const imgs = getPostImages(p);
     const idx = boardImageCarouselIndex[postId] || 0;
-    if (imgs[idx]) openImageLightbox(imgs[idx]);
+    if (imgs[idx]) openImageLightbox(imgs[idx], postId);
   }
 
   // 캐러셀 좌우 스와이프 제스처 (모바일)
@@ -4557,19 +4560,88 @@
     else if (deltaX < -SWIPE_THRESHOLD) changePostCarouselImage(postId, 1);
   }
 
-  function openImageLightbox(url){
+  // 라이트박스(확대보기)가 지금 몇 번 게시글의 사진을 보여주고 있는지. 여러 장짜리 게시글에서
+  // 열렸을 때만 값이 채워지며, 이 값이 있어야 확대된 상태에서도 화살표/스와이프로 다음·이전
+  // 사진으로 넘길 수 있다. (단일 이미지 게시글에서 열었을 때는 null 유지 — 화살표 숨김)
+  let lightboxPostId = null;
+
+  function openImageLightbox(url, postId){
+    lightboxPostId = postId || null;
     document.getElementById('image-lightbox-img').src = url;
+    updateLightboxNavUI();
     const modal = document.getElementById('image-lightbox-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     lockBodyScroll();
   }
 
+  // 라이트박스의 화살표/카운터를 현재 게시글의 사진 장수·인덱스에 맞춰 보이거나 숨긴다
+  function updateLightboxNavUI(){
+    const prevBtn = document.getElementById('image-lightbox-prev');
+    const nextBtn = document.getElementById('image-lightbox-next');
+    const counterEl = document.getElementById('image-lightbox-counter');
+    const p = lightboxPostId ? boardPosts.find(x => x.id === lightboxPostId) : null;
+    const imgs = p ? getPostImages(p) : [];
+
+    const showNav = imgs.length > 1;
+    [prevBtn, nextBtn].forEach(btn => {
+      if (!btn) return;
+      btn.classList.toggle('hidden', !showNav);
+      btn.classList.toggle('flex', showNav);
+    });
+    if (counterEl){
+      counterEl.classList.toggle('hidden', !showNav);
+      if (showNav){
+        const idx = boardImageCarouselIndex[lightboxPostId] || 0;
+        counterEl.textContent = `${idx + 1}/${imgs.length}`;
+      }
+    }
+  }
+
+  // 라이트박스가 열린 채로 화살표/스와이프/키보드로 이전(-1)·다음(+1) 사진 이동.
+  // 뒤에 있는 게시글 카드의 캐러셀 인덱스도 함께 갱신해, 라이트박스를 닫았을 때 같은 사진이 보이도록 한다.
+  function changeLightboxImage(direction){
+    if (!lightboxPostId) return;
+    changePostCarouselImage(lightboxPostId, direction);
+    const p = boardPosts.find(x => x.id === lightboxPostId);
+    if (!p) return;
+    const imgs = getPostImages(p);
+    const idx = boardImageCarouselIndex[lightboxPostId] || 0;
+    document.getElementById('image-lightbox-img').src = imgs[idx];
+    updateLightboxNavUI();
+  }
+
+  let lightboxTouchStartX = null;
+  function handleLightboxTouchStart(evt){
+    lightboxTouchStartX = (evt.touches && evt.touches.length) ? evt.touches[0].clientX : null;
+  }
+  function handleLightboxTouchEnd(evt){
+    if (lightboxTouchStartX === null) return;
+    const startX = lightboxTouchStartX;
+    lightboxTouchStartX = null;
+    const endX = (evt.changedTouches && evt.changedTouches.length) ? evt.changedTouches[0].clientX : null;
+    if (endX === null) return;
+    const deltaX = endX - startX;
+    const SWIPE_THRESHOLD = 40;
+    if (deltaX > SWIPE_THRESHOLD) changeLightboxImage(-1);
+    else if (deltaX < -SWIPE_THRESHOLD) changeLightboxImage(1);
+  }
+
+  // 데스크탑에서 라이트박스가 열려있을 때 좌우 방향키로도 넘길 수 있도록
+  document.addEventListener('keydown', (evt) => {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    if (evt.key === 'ArrowLeft') changeLightboxImage(-1);
+    else if (evt.key === 'ArrowRight') changeLightboxImage(1);
+    else if (evt.key === 'Escape') closeImageLightbox();
+  });
+
   function closeImageLightbox(){
     const modal = document.getElementById('image-lightbox-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.getElementById('image-lightbox-img').src = '';
+    lightboxPostId = null;
     unlockBodyScroll();
   }
 
