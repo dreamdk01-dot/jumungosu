@@ -256,11 +256,25 @@
     </nav>
 
     <!-- mobile hamburger -->
-    <button onclick="toggleMobileMenu()" class="sm:hidden w-9 h-9 flex flex-col items-center justify-center gap-1" aria-label="메뉴 열기">
-      <span class="block w-5 h-0.5" style="background:var(--text);"></span>
-      <span class="block w-5 h-0.5" style="background:var(--text);"></span>
-      <span class="block w-5 h-0.5" style="background:var(--text);"></span>
+    <button onclick="toggleMobileMenu()" class="sm:hidden flex items-center gap-1.5" aria-label="메뉴 열기">
+      <span class="flex flex-col items-center justify-center gap-1 w-5 h-5 shrink-0">
+        <span class="block w-5 h-0.5" style="background:var(--text);"></span>
+        <span class="block w-5 h-0.5" style="background:var(--text);"></span>
+        <span class="block w-5 h-0.5" style="background:var(--text);"></span>
+      </span>
+      <span class="text-xs font-semibold" style="color:var(--text);">메뉴</span>
     </button>
+  </div>
+
+  <!-- 상시 노출 퀵 내비게이션 (모바일 전용) — 햄버거 메뉴를 열지 않아도 핵심 4개 탭에 바로 접근 가능하도록.
+       로그인 여부에 따라 마지막 항목이 '로그인' ↔ '내정보'로 바뀐다 (updateAuthNavUI에서 처리). -->
+  <div class="sm:hidden border-t" style="border-color:var(--line);">
+    <div class="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between text-sm font-medium">
+      <button onclick="switchTab('home')" class="nav-link" style="color:var(--text);">홈</button>
+      <button onclick="switchTab('event')" class="nav-link" style="color:var(--text);">이벤트</button>
+      <button onclick="switchTab('board')" class="nav-link" style="color:var(--text);">게시판</button>
+      <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold" style="color:var(--primary);">로그인</button>
+    </div>
   </div>
 
   <!-- mobile menu panel -->
@@ -5720,6 +5734,7 @@
     const mobileLogoutBtn = document.getElementById('tab-logout-mobile');
     const desktopAdminBtn = document.getElementById('tab-admin');
     const mobileAdminBtn = document.getElementById('tab-admin-mobile');
+    const quicknavAuthBtn = document.getElementById('quicknav-auth-btn');
 
     if (isLoggedIn && currentUser){
       const stats = computeMyTotalStats();
@@ -5735,6 +5750,10 @@
       mobileBtn.onclick = openUserInfoModal;
       desktopLogoutBtn.classList.remove('hidden');
       mobileLogoutBtn.classList.remove('hidden');
+      if (quicknavAuthBtn){
+        quicknavAuthBtn.textContent = '내정보';
+        quicknavAuthBtn.onclick = openUserInfoModal;
+      }
     } else {
       desktopBtn.textContent = '로그인/회원가입';
       desktopBtn.onclick = () => switchTab('auth');
@@ -5742,6 +5761,10 @@
       mobileBtn.onclick = () => switchTab('auth');
       desktopLogoutBtn.classList.add('hidden');
       mobileLogoutBtn.classList.add('hidden');
+      if (quicknavAuthBtn){
+        quicknavAuthBtn.textContent = '로그인';
+        quicknavAuthBtn.onclick = () => switchTab('auth');
+      }
     }
 
     // 일반 방문자/회원에게는 완전히 숨기고, 매니저(마스터 포함) 이메일로 로그인했을 때만 노출
