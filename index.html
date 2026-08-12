@@ -5668,7 +5668,16 @@
     // ---------------------------------------------------------------
     try {
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
-      if (error) throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+      if (error){
+        // Supabase는 '이메일 인증 미완료'와 '이메일/비밀번호 불일치'를 서로 다른 에러로 내려준다.
+        // 인증 미완료인 경우에는 재시도해도 절대 로그인이 안 되므로(비밀번호를 다시 확인하라는
+        // 안내가 아니라) 정확히 "인증 메일을 확인하라"는 메시지를 따로 보여준다.
+        const isUnconfirmed = error.code === 'email_not_confirmed'
+          || /email not confirmed/i.test(error.message || '');
+        throw new Error(isUnconfirmed
+          ? '이메일 인증이 아직 완료되지 않았어요. 가입하실 때 받으신 인증 메일함(스팸함도 확인)에서 인증을 완료한 뒤 다시 로그인해주세요.'
+          : '이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
 
       // '아이디 저장' 체크 여부에 따라 이메일을 LocalStorage에 저장하거나 삭제합니다.
       const rememberEmail = document.getElementById('page-login-remember-email').checked;
