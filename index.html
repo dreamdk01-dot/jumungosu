@@ -4916,13 +4916,20 @@
     renderEventPageHeader(); // initEventVoting()이 먼저 실행돼 기본값으로 그려놨을 수 있으니, 설정값 도착 후 다시 그린다.
   }
 
-  // 관리자 대시보드의 '꿀팁 배너가 연결될 게시글' 드롭다운을 식품 게시판 글 목록으로 채운다.
+  // 관리자 대시보드의 '꿀팁 배너가 연결될 게시글' 드롭다운을 게시판 전체 글 목록으로 채운다.
+  // (예전엔 할인 형식 게시글만 골랐는데, 자유/우점자 등 어떤 카테고리든 지정할 수 있도록 확장)
   function renderAdminBannerPostSelect(){
     const select = document.getElementById('admin-banner-promo-post');
     if (!select) return;
-    const foodPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
+    const allPosts = boardPosts.slice().sort((a, b) => b.id - a.id);
     select.innerHTML = '<option value="">(자동: 할인액 1위 게시글)</option>' +
-      foodPosts.map(p => `<option value="${p.id}">[${APP_LABEL[p.app] || p.app}] ${escapeHtml(p.brandMenu || '')} · 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원 (${escapeHtml(p.author)})</option>`).join('');
+      allPosts.map(p => {
+        const tag = getBoardCategoryMeta(p.board).label || p.board;
+        const label = isDiscountFormCategory(p.board)
+          ? `[${APP_LABEL[p.app] || p.app}] ${escapeHtml(p.brandMenu || '')} · 총 ${(p.totalDiscount || 0).toLocaleString('ko-KR')}원`
+          : escapeHtml(postTitle(p));
+        return `<option value="${p.id}">[${escapeHtml(tag)}] ${label} (${escapeHtml(p.author)})</option>`;
+      }).join('');
 
     document.getElementById('admin-banner-event-text').value = homeBannerConfig.eventText;
     document.getElementById('admin-banner-promo-badge').value = homeBannerConfig.promoBadge;
@@ -4973,15 +4980,17 @@
   }
 
   function goToTopDiscountPost(){
-    const discountPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
-
-    // 관리자가 지정한 글이 있고 실제로 존재하면 그 글로, 아니면 할인액이 가장 큰 글로 자동 이동
+    // 관리자가 지정한 글이 있으면 카테고리 상관없이 전체 게시글에서 찾고,
+    // 지정된 게 없거나 그 글이 삭제됐으면 할인액이 가장 큰 할인 게시글로 자동 이동
     let target = null;
     if (homeBannerConfig.promoPostId){
-      target = discountPosts.find(p => String(p.id) === String(homeBannerConfig.promoPostId)) || null;
+      target = boardPosts.find(p => String(p.id) === String(homeBannerConfig.promoPostId)) || null;
     }
-    if (!target && discountPosts.length){
-      target = discountPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0];
+    if (!target){
+      const discountPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
+      if (discountPosts.length){
+        target = discountPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0];
+      }
     }
 
     switchTab('board');
