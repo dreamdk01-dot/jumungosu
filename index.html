@@ -844,6 +844,50 @@
   </section>
 </main>
 
+<!-- ===== ABOUT PAGE (소개) — 애드센스 등 광고 심사를 위한 독립 페이지. 모달이 아닌 실제 탭/URL로 구성 ===== -->
+<main id="page-about" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+  <div class="pt-8 pb-4">
+    <h1 class="font-display text-3xl mb-2" style="color:var(--primary);">주문의 고수 소개</h1>
+    <p class="text-sm" style="color:var(--muted);">배달앱 할인 정보를 한눈에, 주문의 고수가 만들어진 이유입니다.</p>
+  </div>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">어떤 서비스인가요?</h2>
+    <p class="text-sm leading-relaxed break-keep mb-3" style="color:var(--text);">
+      주문의 고수(jumungosu.com)는 배달의민족·요기요·쿠팡이츠·땡겨요 4개 배달앱에서 진행 중인 실시간 정액(원 단위) 할인 정보를 한 화면에서 비교할 수 있도록 모아 보여드리는 서비스입니다.
+    </p>
+    <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">
+      배달음식을 자주 시켜드시는 분들이 매번 여러 앱을 옮겨 다니며 할인을 확인하는 번거로움을 줄이고, "최대 몇 % 적립" 같은 애매한 표현 대신 실제로 받는 금액 기준의 정보만 제공하는 것을 원칙으로 하고 있습니다.
+    </p>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">이런 정보를 제공해요</h2>
+    <ul class="text-sm leading-relaxed break-keep space-y-2" style="color:var(--text);">
+      <li>✔ 배민·요기요·쿠팡이츠·땡겨요의 실시간 정액 할인 쿠폰 정보</li>
+      <li>✔ 선착순으로 마감될 수 있는 할인 이벤트 표시</li>
+      <li>✔ 브랜드별·카테고리별로 정리된 할인 비교</li>
+      <li>✔ 자취생·1인가구를 포함한 배달음식 이용자들을 위한 커뮤니티 게시판</li>
+    </ul>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">운영 정보</h2>
+    <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">
+      주문의 고수는 사업자명 문라잇(경기도 화성시 소재)이 운영하는 개인 서비스입니다. 할인 정보는 자체적으로 실시간 수집·정리되며, 서비스 운영 및 이용에 대해 궁금한 점이 있으시면 문의 페이지를 통해 언제든 연락 주세요.
+    </p>
+  </section>
+
+  <section>
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">더 알아보기</h2>
+    <div class="flex flex-wrap gap-3 text-sm">
+      <button type="button" onclick="openTermsModal('terms')" class="underline" style="color:var(--primary);">이용약관</button>
+      <button type="button" onclick="openTermsModal('privacy')" class="underline" style="color:var(--primary);">개인정보 처리방침</button>
+      <button type="button" onclick="switchTab('board')" class="underline" style="color:var(--primary);">커뮤니티 게시판 둘러보기</button>
+    </div>
+  </section>
+</main>
+
 <!-- ===== FOOTER (always visible across all pages) ===== -->
 <footer class="border-t" style="background:#141210; border-color:var(--line);">
   <div class="max-w-5xl mx-auto px-4 py-10">
@@ -859,6 +903,7 @@
       </button>
 
       <div class="flex flex-col gap-3 text-sm sm:items-end">
+        <button onclick="switchTab('about')" class="footer-link text-left sm:text-right" style="color:var(--muted);">서비스 소개</button>
         <button onclick="openTermsModal('terms')" class="footer-link text-left sm:text-right" style="color:var(--muted);">이용약관</button>
         <button onclick="openTermsModal('privacy')" class="footer-link text-left sm:text-right" style="color:var(--muted);">개인정보처리방침</button>
         <button onclick="openB2BModal()" class="footer-link text-left sm:text-right" style="color:var(--muted);">B2B 제휴 제안</button>
@@ -6538,11 +6583,11 @@
   }
 
   // ---------- TABS ----------
-  const PAGES = ['home', 'event', 'board', 'auth', 'admin'];
+  const PAGES = ['home', 'event', 'board', 'auth', 'admin', 'about'];
 
   // 탭 ↔ URL 경로 매핑. 뒤로가기(popstate) 시에도 같은 매핑으로 어느 탭인지 복원한다.
-  const TAB_TO_PATH = { home: '/home', event: '/event', board: '/board', auth: '/auth', admin: '/admin' };
-  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/event': 'event', '/board': 'board', '/auth': 'auth', '/admin': 'admin' };
+  const TAB_TO_PATH = { home: '/home', event: '/event', board: '/board', auth: '/auth', admin: '/admin', about: '/about' };
+  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/event': 'event', '/board': 'board', '/auth': 'auth', '/admin': 'admin', '/about': 'about' };
 
   // pushHistory=false로 호출하면(popstate 등) 주소는 이미 바뀌어 있는 상태이므로 새로 pushState하지 않는다.
   function switchTab(tab, pushHistory){
