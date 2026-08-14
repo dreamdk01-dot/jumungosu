@@ -267,10 +267,10 @@
        로그인 여부에 따라 마지막 항목이 '로그인' ↔ '내정보'로 바뀐다 (updateAuthNavUI에서 처리). -->
   <div class="sm:hidden border-t" style="border-color:var(--line);">
     <div class="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between text-sm font-medium">
-      <button onclick="switchTab('home')" class="nav-link" style="color:var(--text);">홈</button>
-      <button onclick="switchTab('event')" class="nav-link" style="color:var(--text);">이벤트</button>
-      <button onclick="switchTab('board')" class="nav-link" style="color:var(--text);">게시판</button>
-      <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold" style="color:var(--primary);">로그인</button>
+      <button id="quicknav-tab-home" onclick="switchTab('home')" class="nav-link" style="color:var(--text);">홈</button>
+      <button id="quicknav-tab-event" onclick="switchTab('event')" class="nav-link" style="color:var(--text);">이벤트</button>
+      <button id="quicknav-tab-board" onclick="switchTab('board')" class="nav-link" style="color:var(--text);">게시판</button>
+      <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold" style="color:var(--text);">로그인</button>
     </div>
   </div>
 
@@ -329,23 +329,25 @@
   </section>
 
   <!-- EVENT BANNER -->
-  <button onclick="switchTab('event')" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+  <button id="home-event-banner" onclick="switchTab('event')" class="hidden w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
     style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
-    <span id="home-event-banner-text" class="font-bold text-sm sm:text-base" style="color:var(--text);">
-      🎁 지금 가장 좋아하는 후라이드 치킨 투표하고 기프티콘 받기!
-    </span>
+    <span id="home-event-banner-text" class="font-bold text-sm sm:text-base" style="color:var(--text);"></span>
     <span class="font-display text-sm shrink-0 ml-3" style="color:var(--primary);">참여하기 →</span>
   </button>
+  <!-- 배너 데이터가 도착하기 전(또는 네트워크 문제로 실패했을 때) 예전 테스트 문구가 그대로 노출되지 않도록,
+       실제 콘텐츠가 준비되기 전까지는 이 스켈레톤만 보여준다. -->
+  <div id="home-event-banner-skeleton" class="w-full mb-4 rounded-lg animate-pulse" style="background:var(--card-alt); height:60px;"></div>
 
   <!-- 실시간 1위 할인 자랑글 유입 배너 -->
-  <button onclick="goToTopDiscountPost()" class="w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
+  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
     style="background:linear-gradient(90deg, rgba(255,90,54,0.16), rgba(255,184,0,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,90,54,0.28);">
     <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;">🔥 실시간 할인 1위 노하우 대공개</span>
-      <p id="home-promo-banner-title" class="font-display text-base sm:text-lg leading-snug break-keep" style="color:var(--text);">BBQ 12,000원 할인! 도대체 어떻게 받았을까?</p>
+      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
+      <p id="home-promo-banner-title" class="font-display text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
     </div>
     <span class="font-display text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
   </button>
+  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
 
   <!-- FILTERS -->
   <section class="mb-8">
@@ -4887,17 +4889,36 @@
     eventPageTitle: null, // null이면 렌더 시 "N월 최애 후라이드 치킨 투표 (~N/N까지)" 자동 생성 문구 사용
   };
 
-  function renderHomeBanners(){
+  function renderHomeBanners(loadedSuccessfully){
+    const eventBanner = document.getElementById('home-event-banner');
+    const eventSkeleton = document.getElementById('home-event-banner-skeleton');
+    const promoBanner = document.getElementById('home-promo-banner');
+    const promoSkeleton = document.getElementById('home-promo-banner-skeleton');
     const eventEl = document.getElementById('home-event-banner-text');
     const badgeEl = document.getElementById('home-promo-banner-badge');
     const titleEl = document.getElementById('home-promo-banner-title');
+
+    if (!loadedSuccessfully){
+      // 네트워크/서버 문제로 실제 배너 문구를 못 가져온 경우: 예전 테스트 문구가 그대로
+      // 남아있는 것보다는, 스켈레톤을 걷어내고 배너 자체를 아예 안 보여주는 쪽이 안전하다.
+      if (eventSkeleton) eventSkeleton.classList.add('hidden');
+      if (promoSkeleton) promoSkeleton.classList.add('hidden');
+      return;
+    }
+
     if (eventEl) eventEl.textContent = homeBannerConfig.eventText;
     if (badgeEl) badgeEl.textContent = homeBannerConfig.promoBadge;
     if (titleEl) titleEl.textContent = homeBannerConfig.promoTitle;
+
+    if (eventSkeleton) eventSkeleton.classList.add('hidden');
+    if (promoSkeleton) promoSkeleton.classList.add('hidden');
+    if (eventBanner) eventBanner.classList.remove('hidden');
+    if (promoBanner) promoBanner.classList.remove('hidden');
   }
 
   // 페이지 로드 시 Supabase에서 홈 배너 설정값을 불러온다. (누구나 조회 가능, 값이 없으면 위 기본값 유지)
   async function loadHomeBannerConfig(){
+    let loadedSuccessfully = false;
     try {
       const { data, error } = await supabaseClient.rpc('get_home_banner_config');
       if (error) throw error;
@@ -4908,10 +4929,11 @@
         if (row.key === 'home_promo_post_id') homeBannerConfig.promoPostId = row.value || null;
         if (row.key === 'event_vote_page_title') homeBannerConfig.eventPageTitle = row.value || null;
       });
+      loadedSuccessfully = true;
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_home_banner_config 확인 필요)', e);
     }
-    renderHomeBanners();
+    renderHomeBanners(loadedSuccessfully);
     renderAdminBannerPostSelect();
     renderEventPageHeader(); // initEventVoting()이 먼저 실행돼 기본값으로 그려놨을 수 있으니, 설정값 도착 후 다시 그린다.
   }
@@ -4970,7 +4992,7 @@
       homeBannerConfig.promoTitle = promoTitle;
       homeBannerConfig.promoPostId = promoPostId || null;
       homeBannerConfig.eventPageTitle = eventPageTitle || null;
-      renderHomeBanners();
+      renderHomeBanners(true);
       renderEventPageHeader();
       showToast('홈 배너가 저장되었습니다 ✅');
     } catch (e){
@@ -5562,6 +5584,9 @@
     updateAuthNavUI();
     const modal = document.getElementById('user-info-modal');
     if (modal && modal.classList.contains('flex')) renderUserInfoModalContent();
+    // 출석/가입일 데이터가 도착하기 전에 이미 게시글 배지가 그려졌을 수 있으니(예: 로그인 직후
+    // 바로 글쓰기), 실제 데이터가 도착한 지금 게시판을 다시 그려서 잘못된 레벨 표시를 바로잡는다.
+    if (boardPosts.length) renderBoardList();
   }
 
   // Supabase Auth의 user 객체(회원가입 시 넣어둔 user_metadata 포함)를
@@ -6528,6 +6553,11 @@
       if (navBtn && p !== 'admin'){
         navBtn.classList.toggle('active', p === tab);
         navBtn.style.color = p === tab ? 'var(--text)' : 'var(--muted)';
+      }
+      // 상시 노출 퀵 내비게이션(모바일 홈/이벤트/게시판/로그인·내정보)도 지금 머무르는 탭만 강조색으로
+      if (p !== 'admin'){
+        const quickBtn = p === 'auth' ? document.getElementById('quicknav-auth-btn') : document.getElementById('quicknav-tab-' + p);
+        if (quickBtn) quickBtn.style.color = p === tab ? 'var(--primary)' : 'var(--text)';
       }
     });
     document.getElementById('mobile-menu').classList.add('hidden');
