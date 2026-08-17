@@ -22,6 +22,39 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.jumungosu.com/">
 
+<!-- 구조화 데이터 (Schema.org) — 검색엔진이 이 사이트의 정체성을 명확히 인식하도록 명시.
+     "주문의 고수"라는 동일한 이름을 쓰는 다른 서비스가 존재하기 때문에, 배달앱 할인 비교
+     서비스라는 점과 대상 플랫폼(배민/요기요/쿠팡이츠/땡겨요)을 구체적으로 명시해 혼동을 줄인다. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "주문의 고수",
+      "alternateName": "jumungosu",
+      "url": "https://www.jumungosu.com/",
+      "description": "배달의민족·요기요·쿠팡이츠·땡겨요 4개 배달앱의 실시간 정액 할인 정보를 한 화면에서 비교하는 서비스",
+      "inLanguage": "ko-KR",
+      "publisher": { "@id": "https://www.jumungosu.com/#organization" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.jumungosu.com/#organization",
+      "name": "주문의 고수",
+      "alternateName": "문라잇",
+      "url": "https://www.jumungosu.com/",
+      "logo": "https://www.jumungosu.com/favicon.png",
+      "description": "배달의민족, 요기요, 쿠팡이츠, 땡겨요 등 배달 플랫폼의 할인 쿠폰 정보를 수집·비교하여 제공하는 정보 중개 서비스",
+      "areaServed": "KR",
+      "sameAs": [
+        "https://www.instagram.com/jumungosu"
+      ]
+    }
+  ]
+}
+</script>
+
 <!-- Open Graph (카카오톡/페이스북 등 링크 공유 시 미리보기) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="주문의 고수">
