@@ -2776,6 +2776,14 @@
     '오븐마루': '오븐마루', '오븐마루치킨': '오븐마루',
   };
 
+  // 화면 표시명(영문 등)은 그대로 두되, 한글 발음으로 검색해도 찾을 수 있게 하는 검색 전용 별칭.
+  // 예: "BBQ"는 화면엔 계속 "BBQ"로 나오지만, "비비큐"로 검색해도 매칭됩니다.
+  const BRAND_SEARCH_ALIASES = {
+    'BBQ': ['비비큐'],
+    'BHC': ['비에이치씨', '비에치씨', '비에취씨'],
+    'KFC': ['케이에프씨', '케이에프시'],
+  };
+
   function brandGroupKey(name){
     const cleaned = String(name).trim().toLowerCase().replace(/\s+/g, '');
     return BRAND_ALIASES[cleaned] || cleaned;
@@ -2930,10 +2938,15 @@
     // 동일 브랜드는 카드 1개로 통합
     let groups = groupDiscountsByBrand(filtered);
 
-    // 브랜드명 검색어 필터링 (통합 후 브랜드 표시명 기준으로 매칭)
+    // 브랜드명 검색어 필터링 (통합 후 브랜드 표시명 + 한글 발음 별칭 기준으로 매칭)
     if (brandSearchQuery){
       const q = brandSearchQuery.toLowerCase();
-      groups = groups.filter(g => (g.displayName || '').toLowerCase().includes(q));
+      groups = groups.filter(g => {
+        const nameMatch = (g.displayName || '').toLowerCase().includes(q);
+        if (nameMatch) return true;
+        const aliases = BRAND_SEARCH_ALIASES[g.displayName] || [];
+        return aliases.some(alias => alias.toLowerCase().includes(q));
+      });
     }
 
     if (sortDirection === 'desc'){
