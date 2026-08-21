@@ -477,7 +477,7 @@
 
     <div class="rounded-lg p-3 mb-6 text-xs leading-relaxed" style="background:var(--card-alt); color:var(--muted);">
       <p>🗓️ 추첨일: <span style="color:var(--text); font-weight:600;">9/1</span></p>
-      <p class="mt-1">🎁 당첨자에게는 개별 안내드리며, 카카오톡 채널 <span style="color:var(--primary); font-weight:600;">'주문고수'</span>로 문의해주시면 경품을 받으실 수 있어요.</p>
+      <p class="mt-1">🎁 당첨자에게는 개별 안내드리며, 카카오톡 채널 <span class="whitespace-nowrap" style="color:var(--primary); font-weight:600;">'주문고수'로</span> 문의해주시면 경품을 받으실 수 있어요.</p>
     </div>
 
     <button type="button" onclick="togglePastWinnerBanner()" class="w-full text-left rounded-lg p-3 mb-6 flex items-center justify-between" style="background:var(--card-alt); border:1px solid var(--line);">
@@ -5727,7 +5727,7 @@
 
       const bodyEl = document.getElementById('winner-modal-body');
       if (bodyEl){
-        bodyEl.innerHTML = `<b>${escapeHtml(win.vote_label || '이벤트')}</b> 투표 이벤트에 당첨되셨어요!<br>카카오톡 채널 <span style="color:var(--primary); font-weight:600;">'주문고수'</span>로 문의해주시면 경품을 안내드릴게요 🎁`;
+        bodyEl.innerHTML = `<b>${escapeHtml(win.vote_label || '이벤트')}</b> 투표 이벤트에 당첨되셨어요!<br>카카오톡 채널 <span class="whitespace-nowrap" style="color:var(--primary); font-weight:600;">'주문고수'로</span> 문의해주시면 경품을 안내드릴게요 🎁`;
       }
       document.getElementById('winner-modal').classList.remove('hidden');
       document.getElementById('winner-modal').classList.add('flex');
