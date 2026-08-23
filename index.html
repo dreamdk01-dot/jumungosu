@@ -1724,7 +1724,11 @@
     if (!nickname) return '닉네임을 입력해주세요.';
     if (/\s/.test(nickname)) return '닉네임에는 띄어쓰기를 사용할 수 없습니다.';
     if (!/^[가-힣a-zA-Z0-9]+$/.test(nickname)) return '닉네임에는 한글/영문/숫자만 사용할 수 있습니다. (특수문자 불가)';
-    if (nickname.length < 2 || nickname.length > 12) return '닉네임은 2~12자로 입력해주세요.';
+    if (nickname.length < 2) return '닉네임은 최소 2자 이상 입력해주세요.';
+    // 한글 1자는 영문/숫자 2자만큼의 '무게'로 계산해서, 한글 최대 6자 / 영문·숫자 최대 12자 /
+    // 혼합 시에도 그 사이 어딘가로 자연스럽게 제한되게 함 (예: 한글3+영문6 = 무게 12로 허용).
+    const weightedLength = [...nickname].reduce((sum, ch) => sum + (/[가-힣]/.test(ch) ? 2 : 1), 0);
+    if (weightedLength > 12) return '닉네임은 한글 기준 최대 6자(영문·숫자는 최대 12자)까지 입력할 수 있습니다.';
     if (containsBannedWord(nickname)) return '닉네임에 부적절한 표현이 포함되어 있습니다.';
     const lower = nickname.toLowerCase();
     if (NICKNAME_FORBIDDEN_WORDS.some(w => lower.includes(w.toLowerCase()))) return '사용할 수 없는 닉네임입니다.';
