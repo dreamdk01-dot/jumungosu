@@ -885,6 +885,7 @@
                 <th class="font-mono text-xs font-normal pb-2">이름</th>
                 <th class="font-mono text-xs font-normal pb-2">이메일</th>
                 <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
+                <th class="font-mono text-xs font-normal pb-2">메일</th>
                 <th class="font-mono text-xs font-normal pb-2 text-right">삭제</th>
               </tr>
             </thead>
@@ -2408,6 +2409,7 @@
   // 참여자 목록은 더 이상 더미 데이터가 아니라, loadEventParticipants()가 Supabase
   // event_votes 테이블에서 실제 투표자(이름/이메일/선택 항목)를 불러와 채웁니다.
   const participants = [];
+  let winnersCache = []; // 당첨자 리스트 원본 캐시 — '메일 발송' 버튼 클릭 시 winner 정보를 다시 조회하지 않고 여기서 찾는다
 
   // ---------- 자유게시판 (Supabase posts/comments/post_likes/comment_likes/*_reports 테이블과 연동) ----------
   // 카테고리 5종(+삭제된 레거시 1종). formType이 'discount'면 할인 정보 입력폼(총액/앱/브랜드/조합),
@@ -5371,6 +5373,7 @@
   const EMAILJS_SERVICE_ID = 'service_hjt5tqo';
   const EMAILJS_TEMPLATE_ID = 'template_16j1gyl';          // 관리자(jumungosu@gmail.com)에게 가는 알림 메일
   const EMAILJS_AUTOREPLY_TEMPLATE_ID = 'template_yr85ef7'; // 제안서 작성자에게 가는 자동응답 메일
+  const EMAILJS_WINNER_TEMPLATE_ID = 'template_winner_notice'; // ⚠️ EmailJS에서 새로 만드신 뒤, 실제 템플릿 ID로 교체해주세요
   if (window.emailjs) emailjs.init(EMAILJS_PUBLIC_KEY);
 
   function openB2BModal(){
@@ -6566,6 +6569,8 @@
 
     // 당첨 기록을 Supabase winners 테이블에 저장해서, 추첨 후에도
     // 당첨자 리스트를 별도로 모아볼 수 있게 합니다. (테이블/RLS는 SQL로 별도 생성 필요)
+    // 메일은 여기서 자동으로 보내지 않는다 — 실수로 잘못 추첨했을 때 되돌릴 수 없는 메일이
+    // 나가는 걸 막기 위해, 당첨자 리스트에서 마스터가 확인 후 직접 '메일 발송' 버튼을 눌러야 나간다.
     try {
       const { error } = await supabaseClient.from('winners').insert({
         name: winner.name,
@@ -6597,12 +6602,13 @@
     try {
       const { data, error } = await supabaseClient
         .from('winners')
-        .select('id, name, email, vote_label, drawn_at, event_id')
+        .select('id, name, email, vote_label, drawn_at, event_id, email_sent_at')
         .order('drawn_at', { ascending: false });
 
       if (error) throw error;
 
       const winners = data || [];
+      winnersCache = winners;
       countEl.textContent = winners.length;
       emptyEl.classList.toggle('hidden', winners.length > 0);
       listEl.innerHTML = winners.map(w => `
@@ -6612,6 +6618,13 @@
           <td class="py-2 text-sm">${w.name || '-'}</td>
           <td class="py-2 font-mono text-xs" style="color:var(--muted);">${w.email || '-'}</td>
           <td class="py-2 text-xs" style="color:var(--primary);">${w.vote_label || '-'}</td>
+          <td class="py-2 text-xs">${
+            w.email_sent_at
+              ? `<span style="color:#4ADE80;">발송✓ ${formatWinnerDate(w.email_sent_at)}</span>`
+              : (w.email && w.email !== '-'
+                ? `<button type="button" onclick="sendWinnerEmail('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">메일 발송</button>`
+                : `<span style="color:var(--muted);">이메일 없음</span>`)
+          }</td>
           <td class="py-2 text-right">
             <button type="button" onclick="deleteWinner('${w.id}')" class="text-xs font-semibold" style="color:var(--accent);" aria-label="당첨 내역 삭제">삭제 ✕</button>
           </td>
@@ -6624,6 +6637,48 @@
       listEl.innerHTML = '';
       emptyEl.textContent = '당첨자 리스트를 불러오지 못했어요. (winners 테이블 준비중)';
       emptyEl.classList.remove('hidden');
+    }
+  }
+
+  // 마스터가 당첨자 리스트를 직접 확인한 뒤, 건별로 눌러서 안내 메일을 보내는 함수.
+  // 추첨 시 자동으로 보내지 않는 이유: 되돌릴 수 없는 메일 발송을 실수로 여러 번 누른
+  // 추첨 버튼 클릭과 묶어두면, 테스트/재추첨 중 엉뚱한 사람에게 메일이 나갈 위험이 있기 때문.
+  async function sendWinnerEmail(winnerId){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
+    const winner = winnersCache.find(w => String(w.id) === String(winnerId));
+    if (!winner){
+      showToast('당첨자 정보를 찾을 수 없어요. 새로고침 후 다시 시도해주세요.');
+      return;
+    }
+    if (!winner.email || winner.email === '-'){
+      showToast('이 당첨자는 이메일이 없어 발송할 수 없어요. 직접 연락해주세요.');
+      return;
+    }
+    if (winner.email_sent_at){
+      if (!confirm(`이미 ${formatWinnerDate(winner.email_sent_at)}에 메일을 보낸 기록이 있어요. 다시 보낼까요?`)) return;
+    } else {
+      if (!confirm(`${winner.name}님(${winner.email})에게 당첨 안내 메일을 보낼까요?\n한 번 보내면 취소할 수 없습니다.`)) return;
+    }
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_WINNER_TEMPLATE_ID, {
+        to_email: winner.email,
+        winner_name: winner.name,
+        vote_label: winner.vote_label,
+      });
+      const { error } = await supabaseClient
+        .from('winners')
+        .update({ email_sent_at: new Date().toISOString() })
+        .eq('id', winnerId);
+      if (error) throw error;
+      showToast('당첨 안내 메일을 보냈어요 ✅');
+      loadWinnersList();
+    } catch (e){
+      console.warn('[주문의 고수] 당첨 안내 메일 발송 실패 (EmailJS 템플릿 ID 확인 필요)', e);
+      showToast('메일 발송에 실패했어요. EmailJS 템플릿 ID를 확인해주세요.');
     }
   }
 
