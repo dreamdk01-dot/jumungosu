@@ -1369,23 +1369,22 @@
 <div id="toast" class="hidden fixed bottom-6 left-1/2 z-50 toast px-5 py-3 rounded-md font-medium text-sm" style="background:var(--primary); color:#1C1A17;"></div>
 
 <!-- ===== 플로팅 글쓰기 버튼 (게시판으로 이동 후 글쓰기 폼 오픈) ===== -->
-<button type="button" onclick="handleFloatingComposeClick()" aria-label="글쓰기"
-  class="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
-  style="background:var(--primary); color:#1C1A17;">
+<button type="button" onclick="handleFloatingComposeClick()" aria-label="글쓰기" title="글쓰기"
+  class="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-110"
+  style="background:var(--primary); color:#1C1A17; box-shadow:0 4px 14px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);">
   <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"></path>
   </svg>
 </button>
 
-<!-- ===== 카카오톡 채널 플로팅 버튼 (1:1 채팅) — 차분한 필 + 카카오 말풍선 아이콘 ===== -->
-<a href="http://pf.kakao.com/_DeqxnX/chat" target="_blank" rel="noopener" aria-label="카카오톡 문의"
-  class="fixed bottom-5 right-5 z-40 h-12 pl-3 pr-4 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-md transition-transform duration-200 hover:scale-105"
-  style="background:var(--card); color:var(--text); border:1px solid var(--line);">
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-    <path d="M12 3C6.48 3 2 6.58 2 11c0 2.75 1.77 5.18 4.46 6.62-.15.53-.96 3.33-1 3.53 0 0-.02.16.08.22.1.06.22.02.22.02.29-.04 3.36-2.2 3.9-2.57.75.11 1.53.17 2.34.17 5.52 0 10-3.58 10-8S17.52 3 12 3Z" fill="#FEE500"></path>
+<!-- ===== 카카오톡 채널 플로팅 버튼 (1:1 채팅) — 글쓰기 버튼과 동일한 원형 체계로 통일 ===== -->
+<a href="http://pf.kakao.com/_DeqxnX/chat" target="_blank" rel="noopener" aria-label="카카오톡 문의" title="카카오톡 문의"
+  class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-110"
+  style="background:#FEE500; box-shadow:0 4px 14px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);">
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+    <path d="M12 3C6.48 3 2 6.58 2 11c0 2.82 1.82 5.3 4.58 6.74-.2.75-.73 2.7-.84 3.12-.13.51.19.5.4.36.16-.11 2.58-1.75 3.63-2.46.74.11 1.5.17 2.23.17 5.52 0 10-3.58 10-8S17.52 3 12 3Z" fill="#391B1B"></path>
   </svg>
-  문의
 </a>
 
 </div><!-- /#app-content -->
