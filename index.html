@@ -3337,7 +3337,7 @@
       // 참여자 목록은 Supabase event_votes 테이블이 원본이므로, 로컬에서 임의로 추가하지 않고
       // 방금 기록된 내용을 포함해 다시 조회해온다. (관리자가 아니면 빈 배열이 반환되며, 무해함)
       loadEventParticipants();
-      showToast('투표 완료! 추첨 결과는 이메일로 안내드려요 🎉');
+      showToast('투표 완료! 당첨되시면 다음 로그인 시 사이트에서 바로 안내해드려요 🎉');
     } catch (e){
       console.warn('[주문의 고수] 투표 실패 (event_votes 테이블/cast_event_vote RPC 확인 필요)', e);
       showToast('투표 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
@@ -6511,6 +6511,35 @@
       return;
     }
 
+    // 중복 당첨 방지: 이번 이벤트(event_id)에서 이미 당첨된 이메일은 추첨 대상에서 제외한다.
+    // 매번 버튼을 누를 때마다 최신 당첨자 목록을 다시 조회해서, 방금 뽑힌 사람도 바로 다음 추첨부터 제외되게 한다.
+    let alreadyWonEmails = new Set();
+    try {
+      const { data, error } = await supabaseClient
+        .from('winners')
+        .select('email')
+        .eq('event_id', EVENT_VOTE_ID);
+      if (error) throw error;
+      alreadyWonEmails = new Set((data || []).filter(w => w.email && w.email !== '-').map(w => w.email));
+    } catch (e){
+      console.warn('[주문의 고수] 기존 당첨자 조회 실패, 중복 방지 없이 추첨을 진행합니다', e);
+    }
+
+    // 이메일이 없는(익명) 참여자는 서로 구분할 방법이 없어 중복 판정에서 제외(그대로 추첨 대상 유지)하고,
+    // 이메일이 있는 참여자만 이미 당첨된 이메일과 비교해서 걸러낸다.
+    const eligibleIndexes = participants
+      .map((p, idx) => idx)
+      .filter(idx => {
+        const email = participants[idx].email;
+        if (!email || email === '-') return true;
+        return !alreadyWonEmails.has(email);
+      });
+
+    if (!eligibleIndexes.length){
+      showToast('아직 당첨되지 않은 참여자가 더 이상 없어요. (전원 당첨 완료)');
+      return;
+    }
+
     // 검색어가 남아있으면 당첨자 행이 필터링돼서 안 보일 수 있으니 초기화하고 다시 그린다.
     const searchInput = document.getElementById('admin-participant-search');
     if (searchInput && searchInput.value){
@@ -6518,7 +6547,7 @@
     }
     renderAdminParticipants();
 
-    const winnerIndex = Math.floor(Math.random() * participants.length);
+    const winnerIndex = eligibleIndexes[Math.floor(Math.random() * eligibleIndexes.length)];
     const winner = participants[winnerIndex];
 
     // 당첨자 행 하이라이트 + 스크롤 이동
