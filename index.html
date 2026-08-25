@@ -4067,8 +4067,13 @@
     }
   }
 
+  let isSubmittingBoardPost = false; // 등록/수정 처리 중 '등록하기' 연타로 같은 글이 여러 번 저장되는 것을 막는 플래그
+
   async function submitBoardPost(){
+    if (isSubmittingBoardPost) return; // 이미 처리 중이면 추가 클릭은 무시
+
     requireLogin(async () => {
+      const submitBtn = document.getElementById('board-compose-submit-btn');
       const errEl = document.getElementById('board-compose-error');
       const category = document.getElementById('board-compose-category').value;
       const isDiscount = isDiscountFormCategory(category);
@@ -4130,6 +4135,17 @@
           combo_detail: null,
           content,
         };
+      }
+
+      // 여기부터는 실제 서버 저장이 시작되는 지점 — 이 시점부터 버튼을 잠가서, 사진 업로드/저장이
+      // 진행되는 몇 초 사이에 또 눌러도 중복 게시글이 생기지 않게 한다.
+      isSubmittingBoardPost = true;
+      if (submitBtn){
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = editingPostId ? '수정 중...' : '등록 중...';
       }
 
       try {
@@ -4203,6 +4219,17 @@
         console.warn('[주문의 고수] 게시글 저장 실패 (posts 테이블/RLS 확인 필요)', e);
         errEl.textContent = '게시글 저장에 실패했어요. 잠시 후 다시 시도해주세요.';
         errEl.classList.remove('hidden');
+      } finally {
+        // 성공하든 실패하든 반드시 잠금을 풀어야, 실패 후 재시도할 때 버튼이 계속 잠겨있는
+        // 상황이 생기지 않는다. (성공 시엔 closeBoardCompose()로 폼 자체가 닫히므로 큰 의미 없지만,
+        // 실패 시엔 이 처리가 없으면 사용자가 다시 시도할 방법이 없어진다)
+        isSubmittingBoardPost = false;
+        if (submitBtn){
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '';
+          submitBtn.style.cursor = '';
+          if (submitBtn.dataset.originalText) submitBtn.textContent = submitBtn.dataset.originalText;
+        }
       }
     });
   }
