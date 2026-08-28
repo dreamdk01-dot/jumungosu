@@ -480,6 +480,12 @@
       <p class="mt-1">🎁 당첨자에게는 개별 안내드리며, 카카오톡 채널 <span class="whitespace-nowrap"><span style="color:var(--primary); font-weight:600;">'주문고수'</span>로</span> 문의해주시면 경품을 받으실 수 있어요.</p>
     </div>
 
+    <!-- 실시간 예상 당첨률: 참여자 수가 바뀔 때마다 renderWinRate()가 이 영역을 갱신함 -->
+    <div id="win-rate-banner" class="rounded-lg p-3 mb-6 text-xs leading-relaxed hidden" style="background:var(--card-alt); border:1px dashed var(--primary); color:var(--text);">
+      <p>🎯 현재 참여자 <span id="win-rate-total" style="color:var(--primary); font-weight:700;">0</span>명 기준, 1인당 예상 당첨률 <span id="win-rate-pct" style="color:var(--primary); font-weight:700;">0%</span></p>
+      <p class="mt-1" style="color:var(--muted);">* 참여자 수에 따라 실시간으로 바뀌는 예상치이며, 참여 인원이 늘어날수록 낮아져요.</p>
+    </div>
+
     <button type="button" onclick="togglePastWinnerBanner()" class="w-full text-left rounded-lg p-3 mb-6 flex items-center justify-between" style="background:var(--card-alt); border:1px solid var(--line);">
       <span class="text-xs font-semibold" style="color:var(--text);">🏆 지난 이벤트 당첨자 확인하기</span>
       <span id="past-winner-chevron" class="text-xs" style="color:var(--muted); transition:transform 0.2s ease;">▾</span>
@@ -2396,6 +2402,7 @@
   // loadEventVoteState()가 Supabase에서 불러와 채운다. (관리자가 아직 이번 달 후보를 설정하지
   // 않았다면 이 기본값이 그대로 사용됨)
   let EVENT_VOTE_ID = 'chicken_vote_' + currentMonthInfo.monthId;
+  const EVENT_WINNER_COUNT = 5; // 추첨 인원. 상단 안내 문구("추첨을 통해 5분께...")와 반드시 같은 숫자로 유지할 것.
   const voteOptions = [
     { id:'bbq', label:'BBQ 황금올리브', votes:0 },
     { id:'momstouch', label:'맘스터치 후라이드', votes:0 },
@@ -3061,8 +3068,25 @@
     }
   }
 
+  // 현재까지의 총 투표수(=참여자 수, 1인 1회 제약이라 투표수와 참여자 수가 같음) 대비
+  // 추첨 인원(EVENT_WINNER_COUNT) 비율을 "1인당 예상 당첨률"로 계산해 안내 박스에 표시한다.
+  // - 아직 아무도 투표하지 않았으면(total === 0) 배너를 숨긴다 (0/0 같은 계산 오류 방지).
+  // - 소수점 첫째 자리까지 보여주되, 참여자가 아주 적을 때 100%를 넘는 계산 오류가 없도록 상한을 100으로 고정.
+  function renderWinRate(){
+    const banner = document.getElementById('win-rate-banner');
+    if (!banner) return;
+    const total = voteOptions.reduce((s,o)=>s+o.votes,0);
+    if (total <= 0){ banner.classList.add('hidden'); return; }
+    const pct = Math.min(100, (EVENT_WINNER_COUNT / total) * 100);
+    const pctLabel = pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10; // 10% 미만이면 소수점 첫째자리까지
+    document.getElementById('win-rate-total').textContent = total.toLocaleString('ko-KR');
+    document.getElementById('win-rate-pct').textContent = `${pctLabel}%`;
+    banner.classList.remove('hidden');
+  }
+
   function renderVoteOptions(){
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
+    renderWinRate();
     const el = document.getElementById('vote-options');
 
     // 득표수 내림차순으로 정렬해 순위를 매긴다 (동률이면 후보 등록 순서를 그대로 유지).
