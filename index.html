@@ -341,9 +341,9 @@
   </p>
 
   <!-- BEST 3 TICKET -->
-  <section class="mt-8 mb-10">
-    <div class="mb-4 flex items-center gap-2 flex-wrap">
-      <h2 class="font-display text-2xl" style="color:var(--primary);">오늘의 할인</h2>
+  <section class="mt-4 mb-6 sm:mt-8 sm:mb-10">
+    <div class="mb-2 sm:mb-4 flex items-center gap-2 flex-wrap">
+      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">오늘의 할인</h2>
       <div class="relative inline-block">
         <button id="best3-category-btn" onclick="toggleBest3CategoryDropdown()" type="button" class="px-2.5 py-1 rounded-md text-sm font-semibold outline-none flex items-center gap-1" style="background:var(--card); border:1px solid var(--line); color:var(--primary);">
           <span id="best3-category-btn-label">치킨</span>
@@ -351,14 +351,14 @@
         </button>
         <div id="best3-category-dropdown" class="hidden absolute left-0 top-full mt-1 rounded-md py-1 z-30 max-h-72 overflow-y-auto" style="background:var(--card); border:1px solid var(--line); min-width:140px; box-shadow:0 8px 20px rgba(0,0,0,0.35);"></div>
       </div>
-      <h2 class="font-display text-2xl" style="color:var(--primary);">BEST 3</h2>
+      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">BEST 3</h2>
     </div>
 
-    <div class="ticket px-5 pt-6 pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35);">
-      <div class="grid sm:grid-cols-3 gap-4">
+    <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+      <div class="grid sm:grid-cols-3 gap-2 sm:gap-4">
         <div id="best3-list" class="contents"></div>
       </div>
-      <div class="dashed-divider mt-5 pt-4 flex items-center justify-between">
+      <div class="dashed-divider mt-3 pt-3 sm:mt-5 sm:pt-4 flex items-center justify-between">
         <div class="barcode" id="barcode"></div>
         <span class="font-mono text-xs" id="best3-updated-badge" style="color:var(--muted);"></span>
       </div>
@@ -2691,12 +2691,12 @@
         : '';
 
       return `
-      <div class="rounded-md p-4" style="background:var(--surface);">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-9 h-9 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${d.badge.slice(0,2)}</div>
-          <p class="font-bold text-base leading-tight">${d.name}</p>
+      <div class="rounded-md p-3 sm:p-4" style="background:var(--surface);">
+        <div class="flex items-center gap-2 mb-1.5 sm:mb-3">
+          <div class="w-7 h-7 sm:w-9 sm:h-9 rounded font-mono text-[11px] sm:text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${d.badge.slice(0,2)}</div>
+          <p class="font-bold text-sm sm:text-base leading-tight">${d.name}</p>
         </div>
-        <p class="font-mono text-2xl font-bold mb-2" style="color:var(--primary);">${formatDiscount(d)}</p>
+        <p class="font-mono text-lg sm:text-2xl font-bold mb-1 sm:mb-2" style="color:var(--primary);">${formatDiscount(d)}</p>
         <div class="flex gap-1 flex-wrap items-center">
           ${d.app.map(a => appTagHtml(a)).join('')}
           ${timeChipHtml}
