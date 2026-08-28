@@ -2159,16 +2159,16 @@
     return result;
   }
 
-  // 예전엔 여기서 Airtable API를 직접 호출했지만, 이제는 서버(Vercel 함수)가 미리 캐싱해둔
-  // Supabase 테이블만 조회합니다. 함수 이름과 반환값 형태(Airtable record 배열)는 그대로 유지해서
+  // 예전엔 여기서 Supabase(cached_airtable_records)를 anon key로 "직접" 조회했지만,
+  // 그 방식은 누구든 이 anon key와 테이블 이름만 알면(브라우저 개발자도구로 쉽게 확인 가능)
+  // 할인 데이터 전체를 통째로 긁어갈 수 있는 문제가 있었습니다.
+  // 이제는 /api/discounts 서버 함수(service_role 키 사용, RLS로 잠긴 테이블에 접근 가능)를
+  // 거쳐서만 데이터를 받아옵니다. 함수 이름과 반환값 형태(Airtable record 배열)는 그대로 유지해서
   // 아래 mapAirtableRecordToDiscount() 등 나머지 로직은 전혀 손대지 않아도 되게 했습니다.
   async function fetchAllAirtableRecords(){
-    const { data, error } = await supabaseClient
-      .from('cached_airtable_records')
-      .select('records, updated_at')
-      .eq('id', 1)
-      .single();
-    if (error) throw new Error(`캐시 조회 실패: ${error.message}`);
+    const res = await fetch('/api/discounts');
+    if (!res.ok) throw new Error(`캐시 조회 실패: HTTP ${res.status}`);
+    const data = await res.json();
     return (data && data.records) || [];
   }
 
