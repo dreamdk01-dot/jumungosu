@@ -2686,13 +2686,13 @@
         const badgeIconHtml = d.limitedTime
           ? `<span class="text-[11px] shrink-0" title="${escapeHtml(d.limitedTime)} 선착순">⏰</span>`
           : gachaMax
-            ? `<button type="button" onclick="toggleGachaDetail('${gachaId}')" class="text-[11px] shrink-0" style="background:none; border:none; padding:0;" title="뽑기 최대 ${gachaMax.toLocaleString('ko-KR')}원">🎰</button>`
+            ? `<button type="button" onclick="event.stopPropagation(); toggleGachaDetail('${gachaId}')" class="text-[11px] shrink-0" style="background:none; border:none; padding:0;" title="뽑기 최대 ${gachaMax.toLocaleString('ko-KR')}원">🎰</button>`
             : '';
         const gachaDetailHtml = gachaMax
           ? `<div id="${gachaId}" class="hidden text-[11px] mt-1 pl-7" style="color:var(--muted);">뽑을 수 있는 금액: ${d.randomAmounts.map(n => n.toLocaleString('ko-KR') + '원').join(' · ')}</div>`
           : '';
         return `
-        <div class="rounded-md px-3 py-2.5" style="background:var(--surface);">
+        <div class="rounded-md px-3 py-2.5 cursor-pointer transition active:brightness-90" style="background:var(--surface);" onclick="goToBrandInDiscountList('${d.name.replace(/'/g, "\\'")}')">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 min-w-0">
               <span class="font-mono text-xs font-bold shrink-0" style="color:var(--primary); width:14px;">${rank+1}</span>
@@ -2936,7 +2936,7 @@
     }).join('');
 
     return `
-      <div class="rounded-md p-4" style="background:var(--card);">
+      <div class="rounded-md p-4" data-brand-key="${escapeHtml(group.key)}" style="background:var(--card);">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-11 h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
           <div class="flex-1 min-w-0">
@@ -2946,6 +2946,46 @@
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
       </div>`;
+  }
+
+  // BEST3에서 브랜드를 탭하면: 어떤 필터가 걸려있어도 항상 카드가 보이도록
+  // 필터를 전부 기본값(정렬만 "할인 최대")으로 리셋한 뒤, 할인 리스트에서
+  // 해당 브랜드 카드로 스크롤 이동 + 노란 테두리 깜빡임(post-highlight-flash 재사용)으로 안내한다.
+  function goToBrandInDiscountList(brandName){
+    if (typeof switchTab === 'function') switchTab('home');
+
+    activeAppFilters = [];
+    activeCategoryFilters = [];
+    brandSearchQuery = '';
+    onlyLimitedTimeFilter = false;
+    sortDirection = 'desc';
+
+    const searchInput = document.getElementById('search_brand');
+    if (searchInput) searchInput.value = '';
+    const searchClearBtn = document.getElementById('brand-search-clear');
+    if (searchClearBtn) searchClearBtn.classList.add('hidden');
+
+    updateChipStyles('[data-filter-app]', 'filter-app', activeAppFilters, APP_COLOR);
+    updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
+
+    const limitedBtn = document.getElementById('limited-time-filter-btn');
+    if (limitedBtn){ limitedBtn.style.background = 'transparent'; limitedBtn.style.color = 'var(--muted)'; limitedBtn.style.borderColor = 'var(--line)'; }
+
+    const sortBtn = document.getElementById('sort-toggle-btn');
+    const sortLabel = document.getElementById('sort-toggle-label');
+    if (sortLabel) sortLabel.textContent = '할인 최대';
+    if (sortBtn){ sortBtn.style.background = 'var(--primary)'; sortBtn.style.color = '#1C1A17'; sortBtn.style.borderColor = 'var(--primary)'; }
+
+    renderDiscountList();
+
+    const key = brandGroupKey(brandName);
+    setTimeout(() => {
+      const el = document.querySelector(`[data-brand-key="${CSS.escape(key)}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('post-highlight-flash');
+      setTimeout(() => el.classList.remove('post-highlight-flash'), 2200);
+    }, 150);
   }
 
   // ---------------------------------------------------------------
