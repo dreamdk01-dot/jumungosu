@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.jumungosu.com/</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -14,14 +14,62 @@
   </url>
   <url>
     <loc>https://www.jumungosu.com/board</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.jumungosu.com/event</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/today-delivery-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/today-chicken-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/delivery-app-compare</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/baemin-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/coupangeats-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/yogiyo-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/ddangyo-discount</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.jumungosu.com/chicken-app-compare</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
