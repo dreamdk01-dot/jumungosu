@@ -579,7 +579,7 @@
               <span class="font-mono text-[12px] px-2 py-1 rounded-full shrink-0" style="background:var(--card-alt); color:var(--primary);">찾아보기</span>
             </label>
             <input id="board-compose-image" type="file" accept="image/*" multiple class="hidden" onchange="handleBoardImageChange(event)">
-            <div id="board-compose-image-thumbs" class="flex gap-2 flex-wrap mt-2"></div>
+            <div id="board-compose-image-thumbs" class="space-y-2 mt-2"></div>
           </div>
           <div class="flex gap-2">
             <button id="board-compose-submit-btn" onclick="submitBoardPost()" class="flex-1 py-2.5 rounded-md font-display text-sm" style="background:var(--primary); color:#1C1A17;">등록하기</button>
@@ -3715,7 +3715,7 @@
     if (filesToAdd.length > 0 && !boardComposePrivacyTipShown){
       boardComposePrivacyTipShown = true;
       setTimeout(() => {
-        showToast('사진에 개인정보(이름·번호·주소 등)가 보이면, 썸네일의 🧽 버튼으로 가려주세요.');
+        showToast('사진에 개인정보(이름·번호·주소 등)가 보이면, 사진 옆 "🧽 개인정보 지우개" 버튼을 눌러 가려주세요.');
       }, wasTruncated ? 2800 : 400);
     }
   }
@@ -3728,25 +3728,49 @@
     label.textContent = n === 0 ? '사진 첨부 (선택, 최대 3장)' : `사진 ${n}/${MAX_BOARD_IMAGES}장 첨부됨`;
   }
 
-  // 썸네일 그리드를 boardComposeImageItems 기준으로 다시 그린다. 각 썸네일에는
-  // 삭제(✕) 버튼과 개인정보 지우개(🧽) 버튼이 붙고, 슬롯이 남아있으면 "+" 추가 타일도 보여준다.
+  // 썸네일 목록을 boardComposeImageItems 기준으로 다시 그린다.
+  // 예전엔 80x80 작은 썸네일 모서리에 아이콘 버튼(✕, 🧽)을 겹쳐놨는데, 너무 작고 눈에
+  // 안 띄어서 "개인정보 지우개 기능이 있는지 몰랐다"는 문제가 있었다. 이제는 사진마다
+  // 한 줄짜리 카드로 보여주고, 그 옆에 글자가 있는 버튼(◀ ▶ 순서 이동, 🧽 개인정보 지우개,
+  // ✕ 삭제)을 그대로 노출한다. 사진이 최대 3장뿐이라 드래그 앤 드롭 대신 화살표 버튼으로도
+  // 충분히 빠르게 순서를 바꿀 수 있고, 모바일에서 드래그보다 오작동이 훨씬 적다.
+  // 맨 앞(0번째) 사진이 게시글 대표 이미지로 쓰이므로 "대표" 뱃지를 붙여 안내한다.
   function renderBoardComposeImageThumbs(){
     updateBoardComposeImageLabel();
     const el = document.getElementById('board-compose-image-thumbs');
     if (!el) return;
 
-    const thumbs = boardComposeImageItems.map((item, i) => `
-      <div class="relative w-20 h-20 shrink-0 rounded-md overflow-hidden" style="background:var(--card-alt);">
-        <img src="${item.previewUrl}" class="w-full h-full object-cover" style="-webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-user-drag:none;" alt="첨부 이미지 ${i + 1}" oncontextmenu="return false;">
-        <button type="button" onclick="removeBoardComposeImage(${i})" class="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs leading-none" style="background:rgba(0,0,0,0.7); color:#fff;" aria-label="사진 삭제">✕</button>
-        <button type="button" onclick="openImageRedactEditor(${i})" class="absolute bottom-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs" style="background:var(--primary); color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,0.85);" title="개인정보 지우개" aria-label="개인정보 지우개">🧽</button>
+    const lastIndex = boardComposeImageItems.length - 1;
+
+    const rows = boardComposeImageItems.map((item, i) => `
+      <div class="flex items-center gap-2 p-2 rounded-md" style="background:var(--surface); border:1px solid var(--line);">
+        <div class="relative w-14 h-14 shrink-0 rounded-md overflow-hidden" style="background:var(--card-alt);">
+          <img src="${item.previewUrl}" class="w-full h-full object-cover" style="-webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-user-drag:none;" alt="첨부 이미지 ${i + 1}" oncontextmenu="return false;">
+          ${i === 0 ? `<span class="absolute top-0 left-0 text-[9px] font-bold px-1 py-0.5 rounded-br" style="background:var(--primary); color:#1C1A17;">대표</span>` : ''}
+        </div>
+        <div class="flex-1 flex items-center gap-1 flex-wrap min-w-0">
+          <button type="button" onclick="moveBoardComposeImage(${i}, -1)" ${i === 0 ? 'disabled' : ''} class="w-7 h-7 rounded-md text-sm font-bold flex items-center justify-center shrink-0" style="background:var(--card-alt); color:${i === 0 ? 'var(--line)' : 'var(--text)'}; border:1px solid var(--line); cursor:${i === 0 ? 'not-allowed' : 'pointer'};" aria-label="앞으로 이동">◀</button>
+          <button type="button" onclick="moveBoardComposeImage(${i}, 1)" ${i === lastIndex ? 'disabled' : ''} class="w-7 h-7 rounded-md text-sm font-bold flex items-center justify-center shrink-0" style="background:var(--card-alt); color:${i === lastIndex ? 'var(--line)' : 'var(--text)'}; border:1px solid var(--line); cursor:${i === lastIndex ? 'not-allowed' : 'pointer'};" aria-label="뒤로 이동">▶</button>
+          <button type="button" onclick="openImageRedactEditor(${i})" class="text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1 shrink-0" style="background:var(--primary); color:#1C1A17;">🧽 개인정보 지우개</button>
+          <button type="button" onclick="removeBoardComposeImage(${i})" class="text-xs font-semibold px-2.5 py-1.5 rounded-md shrink-0" style="background:transparent; color:var(--accent); border:1px solid var(--accent);">✕ 삭제</button>
+        </div>
       </div>`).join('');
 
-    const addTile = boardComposeImageItems.length < MAX_BOARD_IMAGES
-      ? `<label for="board-compose-image" class="w-20 h-20 shrink-0 rounded-md flex items-center justify-center text-2xl cursor-pointer" style="background:var(--surface); border:1px dashed var(--line); color:var(--muted);" aria-label="사진 추가">+</label>`
+    const addRow = boardComposeImageItems.length < MAX_BOARD_IMAGES
+      ? `<label for="board-compose-image" class="block text-center py-2 rounded-md text-sm cursor-pointer" style="background:var(--surface); border:1px dashed var(--line); color:var(--muted);">+ 사진 추가 (${boardComposeImageItems.length}/${MAX_BOARD_IMAGES})</label>`
       : '';
 
-    el.innerHTML = thumbs + addTile;
+    el.innerHTML = rows + addRow;
+  }
+
+  // 화살표 버튼으로 사진 순서를 한 칸 앞/뒤로 이동. 맨 앞(0번째) 사진이 게시글 대표
+  // 이미지로 쓰이므로, 순서를 바꾸면 곧 "어떤 사진을 대표로 할지"를 바꾸는 것과 같다.
+  function moveBoardComposeImage(index, direction){
+    const target = index + direction;
+    if (target < 0 || target >= boardComposeImageItems.length) return;
+    const [item] = boardComposeImageItems.splice(index, 1);
+    boardComposeImageItems.splice(target, 0, item);
+    renderBoardComposeImageThumbs();
   }
 
   function removeBoardComposeImage(index){
