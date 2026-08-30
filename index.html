@@ -492,6 +492,7 @@
     <div id="past-winner-result" class="hidden -mt-3 mb-6 rounded-lg p-3 text-xs" style="background:var(--card-alt); color:var(--muted); border:1px solid var(--line);"></div>
 
     <div class="rounded-lg p-5 mb-6" style="background:var(--card);">
+      <p id="vote-deadline-banner" class="text-xs font-semibold text-center mb-3 hidden" style="color:var(--accent);"></p>
       <div id="vote-options" class="space-y-3"></div>
       <button id="vote-submit-btn" onclick="handleVoteSubmit()" class="w-full mt-5 py-3 rounded-md font-display text-base" style="background:var(--primary); color:#1C1A17;">
         투표하기
@@ -824,14 +825,16 @@
     <p id="admin-event-week-label" class="text-xs mb-4" style="color:var(--muted);"></p>
 
     <div class="grid lg:grid-cols-5 gap-5">
-      <!-- 투표 후보 관리 -->
+      <!-- 투표 후보 관리 (다음 이벤트 초안 — 저장해도 지금 공개된 이벤트에는 영향 없음) -->
       <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">이번 달 투표 후보 관리</p>
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">다음 이벤트 후보 관리 (초안)</p>
         <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
         <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
-        <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">후보 저장하기</button>
-        <p class="text-[12px] mt-2" style="color:var(--muted);">⚠️ 후보를 저장하면 이번 달 득표수는 0표로 초기화돼요.</p>
+        <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">초안 저장하기</button>
+        <button type="button" id="admin-vote-publish-btn" onclick="publishDraftEvent()" class="w-full text-xs font-bold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">🚀 지금 공개하기</button>
+        <p class="text-[12px] mt-2" style="color:var(--muted);">※ 초안은 저장해도 방문자에게 안 보여요. '지금 공개하기'를 눌러야 실제로 전환됩니다.</p>
       </div>
+
 
       <!-- 실시간 득표율 -->
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
@@ -842,7 +845,10 @@
       <!-- 참여자 리스트 -->
       <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
+          <div class="flex items-center gap-2">
+            <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
+            <select id="admin-participant-event-select" onchange="handleParticipantEventChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);"></select>
+          </div>
           <div class="flex items-center gap-2">
             <button type="button" onclick="loadEventParticipants()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
             <button type="button" id="admin-draw-winner-btn" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
@@ -2413,10 +2419,72 @@
 
   let currentMonthInfo = getMonthInfo();
 
+  // eventId("chicken_vote_YYYY-MM")에서 연/월 정보를 역으로 파싱한다. 아래 마감시각 계산과
+  // "다음 달 이벤트 ID 계산"에 공용으로 쓰인다.
+  function parseEventMonthInfo(eventId){
+    const m = String(eventId || '').match(/(\d{4})-(\d{2})$/);
+    if (!m) return null;
+    const year = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10); // 1~12
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0); // 다음 달 0일 = 이번 달 마지막 날
+    const fmt = dt => `${dt.getMonth() + 1}/${dt.getDate()}`;
+    return { year, month, firstDay, lastDay, dateRange: `${fmt(firstDay)} ~ ${fmt(lastDay)}`, lastDayLabel: fmt(lastDay) };
+  }
+
+  // eventId로 지정된 달의 "마지막 날 22:00(한국시간)"을 절대 시각(유닉스 ms)으로 반환한다.
+  // 절대 시각으로 계산해두면, 미리 이벤트 페이지를 열어놓고 새로고침을 안 한 사람의 브라우저에서도
+  // (아래 setInterval로) 이 시각이 지나는 순간 투표가 실시간으로 잠긴다.
+  function getEventVoteDeadline(eventId){
+    const info = parseEventMonthInfo(eventId);
+    if (!info) return null;
+    const y = info.lastDay.getFullYear();
+    const mo = info.lastDay.getMonth();
+    const d = info.lastDay.getDate();
+    // 22:00 KST = 13:00 UTC (같은 날짜). Date.UTC는 사용자의 로컬 시간대와 무관하게 항상
+    // 같은 절대 시각을 가리키므로, 해외에서 접속해도 마감 기준은 동일하게 유지된다.
+    return Date.UTC(y, mo, d, 13, 0, 0);
+  }
+
+  // 지금 공개된 이벤트(EVENT_VOTE_ID)의 마감 시각이 아직 안 지났는지 여부
+  function isVotingOpenNow(){
+    const deadline = getEventVoteDeadline(EVENT_VOTE_ID);
+    if (deadline === null) return true; // 이벤트 ID 형식이 예상과 다르면 안전하게 '열림'으로 처리
+    return Date.now() < deadline;
+  }
+
+  // "지금 공개된 이벤트"의 다음 달 이벤트 ID를 계산한다. 실제 오늘 날짜가 아니라 항상
+  // EVENT_VOTE_ID를 기준으로 계산하기 때문에, 8월 이벤트가 9월 초까지 계속 공개돼 있어도
+  // 관리자가 준비 중인 초안은 자연스럽게 "다음 달"인 9월을 가리킨다.
+  function getNextEventId(activeEventId){
+    const info = parseEventMonthInfo(activeEventId);
+    if (!info) return null;
+    const nextMonth = info.month === 12 ? 1 : info.month + 1;
+    const nextYear = info.month === 12 ? info.year + 1 : info.year;
+    const pad = n => String(n).padStart(2, '0');
+    return `chicken_vote_${nextYear}-${pad(nextMonth)}`;
+  }
+
   // 초기값은 0표이자 기본 후보 3종. 실제 후보 목록은 loadCurrentVoteEvent()가, 실제 득표수는
   // loadEventVoteState()가 Supabase에서 불러와 채운다. (관리자가 아직 이번 달 후보를 설정하지
   // 않았다면 이 기본값이 그대로 사용됨)
+  //
+  // EVENT_VOTE_ID는 "지금 방문자에게 공개되어 투표 가능한 이벤트"를 가리킨다. 예전엔 이 값을
+  // 실제 오늘 날짜로 매번 새로 계산해서, 달력이 다음 달로 넘어가는 순간 관리자가 아무것도 안 해도
+  // 자동으로 다음 달 이벤트로 바뀌어버렸다(그리고 아직 후보를 안 정했으면 기본값으로 조용히 대체됨).
+  // 지금은 loadActiveVoteEventId()가 Supabase(app_config)에 저장된 값을 읽어와 이 변수를 덮어써서,
+  // 관리자가 명시적으로 publishDraftEvent()를 눌러야만 다음 달로 넘어가도록 바꿨다. 아래 값은
+  // 그 값이 아직 로드되기 전(또는 한 번도 저장된 적 없는 최초 상태)의 기본값일 뿐이다.
   let EVENT_VOTE_ID = 'chicken_vote_' + currentMonthInfo.monthId;
+  // 관리자가 지금 준비 중인 "다음 이벤트" 초안의 ID. 항상 EVENT_VOTE_ID의 다음 달을 가리키며,
+  // loadActiveVoteEventId()에서 EVENT_VOTE_ID가 확정된 직후 다시 계산된다.
+  let DRAFT_EVENT_ID = getNextEventId(EVENT_VOTE_ID);
+  // 관리자 페이지 "투표 참여자" 패널에서 지금 선택된 대상 월(이벤트 ID). 기본값은 공개된
+  // 이벤트(EVENT_VOTE_ID)지만, 드롭다운으로 지난 달을 선택하면 그 이벤트로 바뀐다.
+  let selectedParticipantEventId = null;
+  // 관리자가 "다음 이벤트 후보 관리" 패널에서 편집 중인 초안 후보 목록. 공개된 이벤트의
+  // voteOptions와는 완전히 분리되어 있어, 초안을 저장해도 지금 공개된 투표에는 영향이 없다.
+  let draftVoteOptions = [];
   const EVENT_WINNER_COUNT = 5; // 추첨 인원. 상단 안내 문구("추첨을 통해 5분께...")와 반드시 같은 숫자로 유지할 것.
   const voteOptions = [
     { id:'bbq', label:'BBQ 황금올리브', votes:0 },
@@ -3181,11 +3249,24 @@
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
     renderWinRate();
     const el = document.getElementById('vote-options');
+    const votingOpen = isVotingOpenNow();
+
+    const deadlineBannerEl = document.getElementById('vote-deadline-banner');
+    if (deadlineBannerEl){
+      if (!votingOpen){
+        deadlineBannerEl.textContent = '🔒 이번 투표는 마감되었습니다. 다음 이벤트를 준비 중이에요!';
+        deadlineBannerEl.classList.remove('hidden');
+      } else {
+        deadlineBannerEl.classList.add('hidden');
+      }
+    }
 
     // 득표수 내림차순으로 정렬해 순위를 매긴다 (동률이면 후보 등록 순서를 그대로 유지).
     const ranked = voteOptions
       .map((o, originalIndex) => ({ ...o, originalIndex }))
       .sort((a, b) => b.votes - a.votes || a.originalIndex - b.originalIndex);
+
+    const optionsDisabled = hasVoted || !votingOpen;
 
     el.innerHTML = ranked.map((o, rank) => {
       const pct = total > 0 ? Math.round((o.votes/total)*100) : 0;
@@ -3193,7 +3274,7 @@
       const isLeader = rank === 0 && total > 0;
       const badge = RANK_BADGES[rank] || `${rank + 1}위`;
       return `
-      <button onclick="selectVote('${o.id}')" ${hasVoted ? 'disabled' : ''} class="w-full text-left rounded-md p-3" style="background:var(--surface); border:2px solid ${selected ? 'var(--primary)' : 'var(--line)'}; ${hasVoted ? 'cursor:not-allowed; opacity:0.85;' : ''}">
+      <button onclick="selectVote('${o.id}')" ${optionsDisabled ? 'disabled' : ''} class="w-full text-left rounded-md p-3" style="background:var(--surface); border:2px solid ${selected ? 'var(--primary)' : 'var(--line)'}; ${optionsDisabled ? 'cursor:not-allowed; opacity:0.85;' : ''}">
         <div class="flex items-center justify-between mb-2">
           <span class="font-semibold text-sm">
             <span class="font-mono" style="color:${isLeader ? 'var(--primary)' : 'var(--muted)'};">${badge}</span>
@@ -3215,6 +3296,12 @@
         btn.style.background = 'var(--card-alt)';
         btn.style.color = 'var(--muted)';
         btn.style.cursor = 'not-allowed';
+      } else if (!votingOpen){
+        btn.textContent = '🔒 투표가 마감되었습니다';
+        btn.disabled = true;
+        btn.style.background = 'var(--card-alt)';
+        btn.style.color = 'var(--muted)';
+        btn.style.cursor = 'not-allowed';
       } else {
         btn.textContent = '투표하기';
         btn.disabled = false;
@@ -3227,16 +3314,64 @@
 
   function selectVote(id){
     if (hasVoted) return;
+    if (!isVotingOpenNow()){
+      showToast('투표가 마감되었습니다.');
+      return;
+    }
     selectedVoteId = id;
     renderVoteOptions();
   }
 
   // 이벤트 페이지 상단 타이틀에 "M월 최애 후라이드 치킨 투표 (~M/D까지)"를 표시한다.
   // 관리자가 app_config에 별도 문구(homeBannerConfig.eventPageTitle)를 저장해두면 그 값을 우선 사용한다.
+  // "실제 오늘 날짜"가 아니라 "지금 공개된 이벤트(EVENT_VOTE_ID)"의 달을 기준으로 계산해서,
+  // 8월 이벤트가 9월 초까지 계속 공개돼 있어도 제목은 계속 "8월 ... (~8/31까지)"로 유지된다.
   function renderEventPageHeader(){
     const el = document.getElementById('event-page-title');
     if (!el) return;
-    el.textContent = homeBannerConfig.eventPageTitle || `${currentMonthInfo.month}월 최애 후라이드 치킨 투표 (~${currentMonthInfo.lastDayLabel}까지)`;
+    const info = parseEventMonthInfo(EVENT_VOTE_ID) || currentMonthInfo;
+    el.textContent = homeBannerConfig.eventPageTitle || `${info.month}월 최애 후라이드 치킨 투표 (~${info.lastDayLabel}까지)`;
+  }
+
+  // Supabase(app_config)에 저장된 "지금 공개된 이벤트 ID"를 불러와 EVENT_VOTE_ID를 확정한다.
+  // 한 번도 저장된 적 없는 최초 상태라면(신규 배포 직후), 지금 이 순간의 기본값(실제 오늘 날짜
+  // 기준)을 그대로 고정 저장해서, 이후 달력이 다음 달로 넘어가도 관리자가 명시적으로
+  // publishDraftEvent()를 누르기 전까지는 계속 이번 이벤트가 유지되도록 만든다.
+  // (기존 홈배너 설정과 같은 범용 key-value RPC(get/set_home_banner_config)를 그대로 재사용함)
+  async function loadActiveVoteEventId(){
+    try {
+      const { data, error } = await supabaseClient.rpc('get_home_banner_config');
+      if (error) throw error;
+      const row = (data || []).find(r => r.key === 'active_vote_event_id');
+      if (row && row.value){
+        EVENT_VOTE_ID = row.value;
+      } else if (isAdminUser()){
+        try {
+          await supabaseClient.rpc('set_home_banner_config', { p_key: 'active_vote_event_id', p_value: EVENT_VOTE_ID });
+        } catch (bootstrapErr){
+          console.warn('[주문의 고수] 활성 이벤트 ID 최초 고정 저장 실패 (다음에 마스터로 접속 시 재시도됨)', bootstrapErr);
+        }
+      }
+    } catch (e){
+      console.warn('[주문의 고수] 활성 이벤트 ID 조회 실패 (app_config/get_home_banner_config 확인 필요)', e);
+    }
+    DRAFT_EVENT_ID = getNextEventId(EVENT_VOTE_ID);
+  }
+
+  // 관리자가 준비 중인 "다음 이벤트" 초안 후보를 불러온다. 아직 한 번도 저장한 적 없으면,
+  // 지금 공개된 이벤트의 후보를 그대로 복사해서 편집 시작점으로 삼는다(이름만 바꾸면 되게).
+  async function loadDraftVoteEvent(){
+    try {
+      const { data, error } = await supabaseClient.rpc('get_vote_event', { p_event_id: DRAFT_EVENT_ID });
+      if (error) throw error;
+      if (data && Array.isArray(data) && data.length){
+        draftVoteOptions = data.map(o => ({ id: o.id, label: o.label }));
+        return;
+      }
+    } catch (e){
+      console.warn('[주문의 고수] 다음 이벤트 초안 조회 실패 (vote_events/get_vote_event RPC 확인 필요)', e);
+    }
+    draftVoteOptions = voteOptions.map(o => ({ id: o.id, label: o.label }));
   }
 
   // 이번 달 이벤트의 투표 후보 목록을 Supabase(vote_events)에서 불러온다.
@@ -3254,25 +3389,35 @@
     }
   }
 
-  // 투표 관련 초기화를 순서대로 진행: 이번 달 후보 → 득표 집계/내 투표 여부 → 관리자용 참여자 목록
+  // 투표 관련 초기화를 순서대로 진행: 공개 이벤트 확정 → 후보 → 득표 집계/내 투표 여부 →
+  // 관리자용 참여자 목록/초안/이력 → 마감 시각 실시간 재확인 타이머 등록
   async function initEventVoting(){
+    await loadActiveVoteEventId();
     renderEventPageHeader();
     await loadCurrentVoteEvent();
     await loadEventVoteState();
-    loadEventParticipants();
+    selectedParticipantEventId = EVENT_VOTE_ID;
+    await loadEventParticipants(EVENT_VOTE_ID);
+    await loadDraftVoteEvent();
     renderVoteOptionEditor();
-    renderVoteHistorySelect();
+    await renderVoteHistorySelect();
+    await renderParticipantEventSelect();
+    // 마감 시각(매달 마지막날 22시)이 지나면, 페이지를 미리 열어둔 사람도 새로고침 없이
+    // 실시간으로 투표가 잠기도록 1분마다 다시 그린다.
+    setInterval(renderVoteOptions, 60000);
   }
 
-  // ---------- 관리자: 이번 달 투표 후보 관리 ----------
+  // ---------- 관리자: 다음 이벤트 후보 관리 (초안) ----------
   let adminVoteOptionsDraft = [];
 
   function renderVoteOptionEditor(){
     const weekLabelEl = document.getElementById('admin-event-week-label');
     if (weekLabelEl){
-      weekLabelEl.textContent = `현재 진행 중: ${currentMonthInfo.month}월 (${currentMonthInfo.dateRange})`;
+      const activeInfo = parseEventMonthInfo(EVENT_VOTE_ID);
+      const draftInfo = parseEventMonthInfo(DRAFT_EVENT_ID);
+      weekLabelEl.textContent = `현재 공개 중: ${activeInfo.month}월 (${activeInfo.dateRange}) · 다음 이벤트 준비: ${draftInfo.month}월`;
     }
-    adminVoteOptionsDraft = voteOptions.map(o => ({ id: o.id, label: o.label }));
+    adminVoteOptionsDraft = draftVoteOptions.map(o => ({ id: o.id, label: o.label }));
     renderVoteOptionEditorFields();
   }
 
@@ -3305,7 +3450,9 @@
     renderVoteOptionEditorFields();
   }
 
-  // 이번 달 후보 목록을 Supabase(vote_events)에 저장한다. (관리자 전용, 저장 시 이번 달 득표는 0표로 시작)
+  // 다음 이벤트 초안(DRAFT_EVENT_ID)에 후보 목록을 저장한다. 지금 공개된 이벤트(EVENT_VOTE_ID)의
+  // 득표수나 화면에는 전혀 영향을 주지 않는다 — 방문자에게 실제로 보이게 하려면 아래
+  // publishDraftEvent()로 명시적으로 "공개"해야 한다.
   async function saveVoteEventOptions(){
     if (!isAdminUser()){
       showToast('마스터 권한이 필요합니다.');
@@ -3320,29 +3467,64 @@
       showToast('후보를 2개 이상 입력해주세요.');
       return;
     }
-    if (!confirm('후보를 저장하면 이번 달 득표수가 0표로 초기화돼요. 계속할까요?')) return;
 
+    const draftInfo = parseEventMonthInfo(DRAFT_EVENT_ID);
     try {
       const { error } = await supabaseClient.rpc('upsert_vote_event', {
-        p_event_id: EVENT_VOTE_ID,
-        p_week_label: `${currentMonthInfo.month}월`,
-        p_date_range: currentMonthInfo.dateRange,
+        p_event_id: DRAFT_EVENT_ID,
+        p_week_label: `${draftInfo.month}월`,
+        p_date_range: draftInfo.dateRange,
         p_options: cleaned,
       });
       if (error) throw error;
 
-      voteOptions.length = 0;
-      cleaned.forEach(o => voteOptions.push({ id: o.id, label: o.label, votes: 0 }));
+      draftVoteOptions = cleaned.map(o => ({ id: o.id, label: o.label }));
+      renderVoteOptionEditor();
+      await renderVoteHistorySelect();
+      showToast(`${draftInfo.month}월 이벤트 초안이 저장됐어요. 아직 방문자에게는 안 보여요 — 준비되면 '지금 공개하기'를 눌러주세요.`);
+    } catch (e){
+      console.warn('[주문의 고수] 투표 초안 저장 실패 (upsert_vote_event RPC 확인 필요)', e);
+      showToast('초안 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  }
+
+  // 지금까지 준비해둔 초안(DRAFT_EVENT_ID)을 실제로 공개한다. 이 버튼을 누르는 순간부터
+  // 방문자에게 새 이벤트가 보이고 투표도 가능해진다. app_config에 'active_vote_event_id'로
+  // 영구 저장해서, 이후 다른 방문자가 접속해도(=페이지를 새로 열어도) 이 값이 유지된다.
+  async function publishDraftEvent(){
+    if (!isAdminUser()){
+      showToast('마스터 권한이 필요합니다.');
+      return;
+    }
+    if (!draftVoteOptions || draftVoteOptions.length < 2){
+      showToast('공개하기 전에 먼저 후보를 2개 이상 저장해주세요.');
+      return;
+    }
+    const draftInfo = parseEventMonthInfo(DRAFT_EVENT_ID);
+    if (!confirm(`${draftInfo.month}월 이벤트를 지금 공개할까요?\n공개하는 즉시 방문자에게 ${draftInfo.month}월 투표가 보이고, 참여도 가능해져요.`)) return;
+
+    try {
+      const { error } = await supabaseClient.rpc('set_home_banner_config', { p_key: 'active_vote_event_id', p_value: DRAFT_EVENT_ID });
+      if (error) throw error;
+
+      EVENT_VOTE_ID = DRAFT_EVENT_ID;
+      DRAFT_EVENT_ID = getNextEventId(EVENT_VOTE_ID);
       hasVoted = false;
       selectedVoteId = null;
-      renderVoteOptions();
-      renderAdminVoteStats();
+
+      renderEventPageHeader();
+      await loadCurrentVoteEvent();
+      await loadEventVoteState();
+      selectedParticipantEventId = EVENT_VOTE_ID;
+      await loadEventParticipants(EVENT_VOTE_ID);
+      await loadDraftVoteEvent();
       renderVoteOptionEditor();
-      renderVoteHistorySelect();
-      showToast('이번 달 투표 후보가 저장됐어요 ✅');
+      await renderVoteHistorySelect();
+      await renderParticipantEventSelect();
+      showToast(`${draftInfo.month}월 이벤트를 공개했어요 🎉`);
     } catch (e){
-      console.warn('[주문의 고수] 투표 후보 저장 실패 (upsert_vote_event RPC 확인 필요)', e);
-      showToast('후보 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
+      console.warn('[주문의 고수] 이벤트 공개 실패 (set_home_banner_config RPC 확인 필요)', e);
+      showToast('공개에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
   }
 
@@ -3354,7 +3536,7 @@
     try {
       const { data, error } = await supabaseClient.rpc('list_vote_events');
       if (error) throw error;
-      const events = (data || []).filter(e => e.event_id !== EVENT_VOTE_ID);
+      const events = (data || []).filter(e => e.event_id !== EVENT_VOTE_ID && e.event_id !== DRAFT_EVENT_ID);
       select.innerHTML = '<option value="">회차를 선택하세요</option>' +
         events.map(e => `<option value="${e.event_id}">${escapeHtml(e.week_label)} (${escapeHtml(e.date_range)})</option>`).join('');
     } catch (e){
@@ -3407,6 +3589,11 @@
   }
 
   function handleVoteSubmit(){
+    if (!isVotingOpenNow()){
+      showToast('투표가 마감되었습니다.');
+      renderVoteOptions();
+      return;
+    }
     if (!selectedVoteId){
       showToast('먼저 치킨을 선택해주세요!');
       return;
@@ -3496,24 +3683,64 @@
 
   // 관리자 대시보드의 '투표 참여자' 목록을 Supabase event_votes 테이블에서 실제로 불러온다.
   // (RPC 내부에서 관리자 이메일이 아니면 빈 결과만 돌려주므로 일반 유저가 호출해도 안전함)
-  async function loadEventParticipants(){
+  // eventId를 생략하면 현재 선택된 대상 월(selectedParticipantEventId, 기본값 EVENT_VOTE_ID)을 사용한다.
+  // 참여 항목 라벨은 전역 voteOptions(공개된 이벤트 기준)가 아니라, 조회 대상 이벤트 자신의
+  // 후보 목록을 별도로 가져와 매핑한다 — 그래야 지난 달처럼 후보 구성이 다른 이벤트를 봐도
+  // "투표 항목"이 정확히 표시된다.
+  async function loadEventParticipants(eventId){
+    const targetEventId = eventId || selectedParticipantEventId || EVENT_VOTE_ID;
+    selectedParticipantEventId = targetEventId;
+
     try {
-      const { data, error } = await supabaseClient.rpc('get_event_participants', { p_event_id: EVENT_VOTE_ID });
-      if (error) throw error;
+      const [participantsRes, optionsRes] = await Promise.all([
+        supabaseClient.rpc('get_event_participants', { p_event_id: targetEventId }),
+        supabaseClient.rpc('get_vote_event', { p_event_id: targetEventId }),
+      ]);
+      if (participantsRes.error) throw participantsRes.error;
+
+      const optionLabels = {};
+      (optionsRes.data || []).forEach(o => { optionLabels[o.id] = o.label; });
 
       participants.length = 0;
-      (data || []).forEach(row => {
-        const opt = voteOptions.find(o => o.id === row.option_id);
+      (participantsRes.data || []).forEach(row => {
         participants.push({
           name: row.voter_name || '익명',
           email: row.voter_email || '-',
-          vote: opt ? opt.label : row.option_id,
+          vote: optionLabels[row.option_id] || row.option_id,
         });
       });
     } catch (e){
       console.warn('[주문의 고수] 투표 참여자 목록 조회 실패 (get_event_participants RPC 확인 필요)', e);
     }
     renderAdminParticipants();
+  }
+
+  // 참여자 패널의 월 선택 드롭다운을 채운다. 지금 공개 중인 이벤트 + 지난 이벤트 이력을 모두 보여줘서,
+  // 관리자가 깜빡한 지난달 몫도 언제든 다시 선택해서 추첨할 수 있게 한다.
+  async function renderParticipantEventSelect(){
+    const select = document.getElementById('admin-participant-event-select');
+    if (!select) return;
+
+    try {
+      const { data, error } = await supabaseClient.rpc('list_vote_events');
+      if (error) throw error;
+      const events = (data || []).filter(e => e.event_id !== DRAFT_EVENT_ID); // 아직 공개 안 된 초안은 대상에서 제외
+
+      if (!events.some(e => e.event_id === EVENT_VOTE_ID)){
+        const info = parseEventMonthInfo(EVENT_VOTE_ID);
+        events.unshift({ event_id: EVENT_VOTE_ID, week_label: `${info.month}월`, date_range: info.dateRange });
+      }
+
+      select.innerHTML = events.map(e => `
+        <option value="${e.event_id}" ${e.event_id === selectedParticipantEventId ? 'selected' : ''}>${escapeHtml(e.week_label)}${e.event_id === EVENT_VOTE_ID ? ' (공개 중)' : ''}</option>
+      `).join('');
+    } catch (e){
+      console.warn('[주문의 고수] 참여자 대상 월 목록 조회 실패 (list_vote_events RPC 확인 필요)', e);
+    }
+  }
+
+  function handleParticipantEventChange(eventId){
+    loadEventParticipants(eventId);
   }
 
   // ---------- 자유게시판 ----------
@@ -5881,6 +6108,9 @@
     // 로그인한 계정 기준으로 이벤트 투표 여부도 다시 확인 (다른 기기에서 이미 투표했을 수 있음)
     loadEventVoteState();
     loadEventParticipants(); // 관리자 계정으로 로그인했다면 실제 참여자 목록도 함께 갱신
+    // 마스터 계정으로 로그인이 확인된 시점에, 아직 'active_vote_event_id'가 한 번도 저장된 적
+    // 없다면 여기서 다시 시도해 고정해둔다 (initEventVoting()이 로그인 확인 전에 먼저 실행됐을 수 있음).
+    loadActiveVoteEventId().then(() => { renderEventPageHeader(); renderVoteOptionEditor(); });
 
     // '로그인'이라는 행위가 아니라 '로그인된 상태로 접속(세션 자동 복원 포함)'되는 순간마다 확인해야
     // 의미가 있다 — 대부분의 재방문자는 로그인 절차 없이 저장된 세션으로 바로 들어오기 때문.
@@ -6126,7 +6356,7 @@
 
     // 마스터 전용 저장/추첨 버튼은 매니저 계정에게 시각적으로도 비활성화 처리
     // (실제 차단은 각 함수 내부의 isAdminUser() 게이트가 이미 담당하며, 이건 UX 보조 장치일 뿐)
-    const masterOnlyIds = ['admin-vote-save-btn', 'admin-banner-save-btn', 'admin-draw-winner-btn', 'admin-discount-updated-save-btn'];
+    const masterOnlyIds = ['admin-vote-save-btn', 'admin-vote-publish-btn', 'admin-banner-save-btn', 'admin-draw-winner-btn', 'admin-discount-updated-save-btn'];
     const isMaster = isAdminUser();
     masterOnlyIds.forEach(id => {
       const btn = document.getElementById(id);
@@ -6699,14 +6929,14 @@
       return;
     }
 
-    // 중복 당첨 방지: 이번 이벤트(event_id)에서 이미 당첨된 이메일은 추첨 대상에서 제외한다.
+    // 중복 당첨 방지: 지금 선택된 대상 월(event_id)에서 이미 당첨된 이메일은 추첨 대상에서 제외한다.
     // 매번 버튼을 누를 때마다 최신 당첨자 목록을 다시 조회해서, 방금 뽑힌 사람도 바로 다음 추첨부터 제외되게 한다.
     let alreadyWonEmails = new Set();
     try {
       const { data, error } = await supabaseClient
         .from('winners')
         .select('email')
-        .eq('event_id', EVENT_VOTE_ID);
+        .eq('event_id', selectedParticipantEventId);
       if (error) throw error;
       alreadyWonEmails = new Set((data || []).filter(w => w.email && w.email !== '-').map(w => w.email));
     } catch (e){
@@ -6762,7 +6992,7 @@
         name: winner.name,
         email: winner.email,
         vote_label: winner.vote,
-        event_id: EVENT_VOTE_ID,
+        event_id: selectedParticipantEventId,
       });
       if (error) throw error;
       loadWinnersList();
