@@ -9,5 +9,8 @@
     { "source": "/ddangyo-discount", "destination": "/api/seo?page=ddangyo-discount" },
     { "source": "/chicken-app-compare", "destination": "/api/seo?page=chicken-app-compare" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/check-event-deadline?secret=REPLACE_WITH_YOUR_CRON_SECRET", "schedule": "10 13 * * *" }
   ]
 }

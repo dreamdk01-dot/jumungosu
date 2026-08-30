@@ -884,7 +884,12 @@
       <!-- 당첨자 리스트 (Supabase winners 테이블과 연동, 랜덤 추첨 시마다 자동 갱신) -->
       <div class="lg:col-span-5 rounded-lg p-4" style="background:var(--card);">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <p class="font-mono text-xs" style="color:var(--muted);">🏆 당첨자 리스트 (<span id="admin-winner-count">0</span>명)</p>
+          <div class="flex items-center gap-2">
+            <p class="font-mono text-xs" style="color:var(--muted);">🏆 당첨자 리스트 (<span id="admin-winner-count">0</span>명)</p>
+            <select id="admin-winner-event-select" onchange="handleWinnerEventFilterChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);">
+              <option value="">전체 회차</option>
+            </select>
+          </div>
           <button type="button" onclick="loadWinnersList()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
         </div>
         <div class="overflow-x-auto">
@@ -7010,11 +7015,12 @@
     unlockBodyScroll();
   }
 
-  // Supabase winners 테이블에서 지금까지의 당첨자 목록을 불러와 렌더링
+  // 당첨자 리스트에서 지금 선택된 회차 필터 ('' = 전체 보기)
+  let selectedWinnerEventId = '';
+
+  // Supabase winners 테이블에서 지금까지의 당첨자 목록을 불러와 캐시에 저장하고 화면을 그린다.
   async function loadWinnersList(){
     const listEl = document.getElementById('admin-winner-list');
-    const emptyEl = document.getElementById('admin-winner-empty');
-    const countEl = document.getElementById('admin-winner-count');
     if (!listEl) return;
 
     try {
@@ -7024,46 +7030,80 @@
         .order('drawn_at', { ascending: false });
 
       if (error) throw error;
-
-      const winners = data || [];
-      winnersCache = winners;
-      countEl.textContent = winners.length;
-      emptyEl.classList.toggle('hidden', winners.length > 0);
-      listEl.innerHTML = winners.map(w => `
-        <tr class="dashed-divider">
-          <td class="py-2 font-mono text-xs" style="color:var(--primary);">${weekLabelFromEventId(w.event_id)}</td>
-          <td class="py-2 font-mono text-xs" style="color:var(--muted);">${formatWinnerDate(w.drawn_at)}</td>
-          <td class="py-2 text-sm">${w.name || '-'}</td>
-          <td class="py-2 font-mono text-xs" style="color:var(--muted);">${w.email || '-'}</td>
-          <td class="py-2 text-xs" style="color:var(--primary);">${w.vote_label || '-'}</td>
-          <td class="py-2 text-xs">${
-            w.email_sent_at
-              ? `<span style="color:#4ADE80;">발송✓ ${formatWinnerDate(w.email_sent_at)}</span>`
-              : (w.email && w.email !== '-'
-                ? `<div class="flex flex-col gap-1">
-                     <button type="button" onclick="openWinnerMailDraft('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">메일 초안 열기</button>
-                     <button type="button" onclick="markWinnerEmailSent('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">발송완료 표시</button>
-                   </div>`
-                : `<span style="color:var(--muted);">이메일 없음</span>`)
-          }</td>
-          <td class="py-2 text-xs">${
-            w.gift_sent_at
-              ? `<span style="color:#4ADE80;">지급✓ ${formatWinnerDate(w.gift_sent_at)}</span>`
-              : `<button type="button" onclick="markWinnerGiftSent('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md font-semibold" style="background:var(--accent); color:#fff;">🎁 지급 완료로 표시</button>`
-          }</td>
-          <td class="py-2 text-right">
-            <button type="button" onclick="deleteWinner('${w.id}')" class="text-xs font-semibold" style="color:var(--accent);" aria-label="당첨 내역 삭제">삭제 ✕</button>
-          </td>
-        </tr>
-      `).join('');
+      winnersCache = data || [];
     } catch (e){
       // winners 테이블이 아직 없거나(마이그레이션 전) 네트워크 오류가 나도 화면이 깨지지 않도록 처리
       console.warn('[주문의 고수] 당첨자 리스트 조회 실패 (winners 테이블 확인 필요)', e);
-      countEl.textContent = '0';
-      listEl.innerHTML = '';
-      emptyEl.textContent = '당첨자 리스트를 불러오지 못했어요. (winners 테이블 준비중)';
-      emptyEl.classList.remove('hidden');
+      winnersCache = [];
     }
+    renderWinnerEventSelect();
+    renderWinnersTable();
+  }
+
+  // 당첨자 리스트 위 "회차" 드롭다운을 winnersCache에 실제로 존재하는 회차들로 채운다.
+  // (참여자 패널의 월 선택과 달리, 여기는 "당첨자가 실제로 있는 회차"만 보여주면 충분하다)
+  function renderWinnerEventSelect(){
+    const select = document.getElementById('admin-winner-event-select');
+    if (!select) return;
+
+    const seen = new Map(); // event_id -> 가장 최근 drawn_at (정렬용)
+    winnersCache.forEach(w => {
+      if (!seen.has(w.event_id)) seen.set(w.event_id, w.drawn_at);
+    });
+    const eventIds = Array.from(seen.keys()); // winnersCache가 이미 drawn_at 내림차순이라 순서 그대로 사용
+
+    const options = ['<option value="">전체 회차</option>']
+      .concat(eventIds.map(id => `<option value="${id}" ${id === selectedWinnerEventId ? 'selected' : ''}>${weekLabelFromEventId(id)}</option>`));
+    select.innerHTML = options.join('');
+  }
+
+  function handleWinnerEventFilterChange(eventId){
+    selectedWinnerEventId = eventId;
+    renderWinnersTable();
+  }
+
+  // winnersCache를 selectedWinnerEventId 기준으로 필터링해서 실제 테이블 행을 그린다.
+  function renderWinnersTable(){
+    const listEl = document.getElementById('admin-winner-list');
+    const emptyEl = document.getElementById('admin-winner-empty');
+    const countEl = document.getElementById('admin-winner-count');
+    if (!listEl) return;
+
+    const winners = selectedWinnerEventId
+      ? winnersCache.filter(w => w.event_id === selectedWinnerEventId)
+      : winnersCache;
+
+    countEl.textContent = winners.length;
+    emptyEl.classList.toggle('hidden', winners.length > 0);
+    emptyEl.textContent = selectedWinnerEventId ? '이 회차에는 당첨자가 없어요.' : '아직 추첨된 당첨자가 없어요.';
+
+    listEl.innerHTML = winners.map(w => `
+      <tr class="dashed-divider">
+        <td class="py-2 font-mono text-xs" style="color:var(--primary);">${weekLabelFromEventId(w.event_id)}</td>
+        <td class="py-2 font-mono text-xs" style="color:var(--muted);">${formatWinnerDate(w.drawn_at)}</td>
+        <td class="py-2 text-sm">${w.name || '-'}</td>
+        <td class="py-2 font-mono text-xs" style="color:var(--muted);">${w.email || '-'}</td>
+        <td class="py-2 text-xs" style="color:var(--primary);">${w.vote_label || '-'}</td>
+        <td class="py-2 text-xs">${
+          w.email_sent_at
+            ? `<span style="color:#4ADE80;">발송✓ ${formatWinnerDate(w.email_sent_at)}</span>`
+            : (w.email && w.email !== '-'
+              ? `<div class="flex flex-col gap-1">
+                   <button type="button" onclick="openWinnerMailDraft('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">메일 초안 열기</button>
+                   <button type="button" onclick="markWinnerEmailSent('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">발송완료 표시</button>
+                 </div>`
+              : `<span style="color:var(--muted);">이메일 없음</span>`)
+        }</td>
+        <td class="py-2 text-xs">${
+          w.gift_sent_at
+            ? `<span style="color:#4ADE80;">지급✓ ${formatWinnerDate(w.gift_sent_at)}</span>`
+            : `<button type="button" onclick="markWinnerGiftSent('${w.id}')" class="font-mono text-xs px-2 py-1 rounded-md font-semibold" style="background:var(--accent); color:#fff;">🎁 지급 완료로 표시</button>`
+        }</td>
+        <td class="py-2 text-right">
+          <button type="button" onclick="deleteWinner('${w.id}')" class="text-xs font-semibold" style="color:var(--accent);" aria-label="당첨 내역 삭제">삭제 ✕</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // 마스터가 당첨자 리스트를 직접 확인한 뒤, 건별로 눌러서 Gmail 작성창을 새 탭으로
