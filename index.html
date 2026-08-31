@@ -6220,6 +6220,12 @@
       joinedAt: null,
       nicknameUpdatedAt: null,
     };
+    // 로그인(계정 전환 포함) 시점에 '지난 당첨자' 배너 캐시도 초기화해서, 다음에 배너를
+    // 열었을 때 이전 계정 세션에서 불러온 결과를 재사용하지 않고 항상 새로 조회하게 한다.
+    // (지금은 get_public_past_winners RPC가 계정과 무관하게 항상 같은 마스킹된 결과를
+    //  내려주므로 실질적 표시 차이는 없지만, "계정이 바뀌었는데 캐시가 남는" 패턴 자체를
+    //  일관되게 없애두는 것이 안전하다)
+    pastWinnerLoaded = false;
     updateAuthNavUI();
     loadMyProfileStats();
     // 로그인 상태가 바뀌었으니 '내가 이미 추천/신고한' 캐시도 다시 채우고 게시판을 다시 그린다.
@@ -6548,6 +6554,7 @@
     authToken = null;
     isLoggedIn = false;
     currentUser = null;
+    pastWinnerLoaded = false;
     updateAuthNavUI();
     loadMyBoardInteractions().then(renderBoardList); // 내 추천/신고 표시 초기화
     hasVoted = false;
