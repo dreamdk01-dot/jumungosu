@@ -534,6 +534,12 @@
             <select id="board-compose-category" onchange="handleComposeCategoryChange()" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
           </div>
 
+          <!-- 마스터 계정에게만 보이는 공지사항 고정 체크박스. 일반 회원 화면에는 아예 렌더링되지 않는다. -->
+          <label id="board-compose-notice-field" class="hidden items-center gap-2 text-sm font-semibold px-3 py-2 rounded-md" style="background:rgba(255,184,0,0.1); border:1px solid var(--primary); color:var(--primary);">
+            <input id="board-compose-is-notice" type="checkbox" class="w-4 h-4">
+            📌 공지사항으로 등록 (게시판 '전체' 탭 최상단에 고정, 최대 2개)
+          </label>
+
           <!-- 🔥 할인의 고수 / 🚨 실시간 할인 제보 공용 입력 필드 (할인 정보) -->
           <div id="board-compose-food-fields" class="space-y-3">
             <div>
@@ -3939,6 +3945,12 @@
       updateSigunguOptions('board-store');
       document.getElementById('board-compose-store-name').value = '';
 
+      // 공지사항 체크박스는 마스터 계정에게만 보여주고, 새 글쓰기 시작할 땐 항상 체크 해제 상태로
+      const noticeField = document.getElementById('board-compose-notice-field');
+      noticeField.classList.toggle('hidden', !isAdminUser());
+      noticeField.classList.toggle('flex', isAdminUser());
+      document.getElementById('board-compose-is-notice').checked = false;
+
       handleComposeCategoryChange();
 
       document.getElementById('board-compose').classList.remove('hidden');
@@ -3958,6 +3970,7 @@
     updateSigunguOptions('board-store');
     document.getElementById('board-compose-store-name').value = '';
     document.getElementById('board-compose-image').value = '';
+    document.getElementById('board-compose-is-notice').checked = false;
     boardComposeImageItems = [];
     boardComposePrivacyTipShown = false;
     renderBoardComposeImageThumbs();
@@ -4382,7 +4395,7 @@
     try {
       const { data: posts, error: postsErr } = await supabaseClient
         .from('posts')
-        .select('id, board, author, author_id, title, content, image, images, total_discount, app, brand_menu, combo_detail, likes, dislikes, report_count, created_at, updated_at')
+        .select('id, board, author, author_id, title, content, image, images, total_discount, app, brand_menu, combo_detail, likes, dislikes, report_count, is_notice, created_at, updated_at')
         .order('created_at', { ascending: false });
       if (postsErr) throw postsErr;
 
@@ -4422,6 +4435,7 @@
         likes: p.likes,
         dislikes: p.dislikes,
         reportCount: p.report_count,
+        isNotice: !!p.is_notice,
         createdAt: p.created_at,
         updatedAt: p.updated_at,
         comments: commentsByPost[p.id] || [],
@@ -4571,6 +4585,18 @@
         };
       }
 
+      // 공지사항 체크값 반영 (마스터 계정에게만 체크박스가 보이므로, 그 외에는 항상 false로 강제)
+      const wantsNotice = isAdminUser() && document.getElementById('board-compose-is-notice').checked;
+      if (wantsNotice){
+        const currentNoticeCount = boardPosts.filter(p => p.isNotice && p.id !== editingPostId).length;
+        if (currentNoticeCount >= 2){
+          errEl.textContent = '공지사항은 최대 2개까지만 등록할 수 있어요. 기존 공지를 먼저 해제해주세요.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+      }
+      payload.is_notice = wantsNotice;
+
       // 여기부터는 실제 서버 저장이 시작되는 지점 — 이 시점부터 버튼을 잠가서, 사진 업로드/저장이
       // 진행되는 몇 초 사이에 또 눌러도 중복 게시글이 생기지 않게 한다.
       isSubmittingBoardPost = true;
@@ -4614,6 +4640,7 @@
           p.content = payload.content;
           p.image = payload.image;
           p.images = payload.images;
+          p.isNotice = payload.is_notice;
           p.updatedAt = data ? data.updated_at : new Date().toISOString();
           showToast('게시글이 수정되었습니다.');
         } else {
@@ -4639,6 +4666,7 @@
             likes: data.likes,
             dislikes: data.dislikes,
             reportCount: data.report_count,
+            isNotice: !!data.is_notice,
             createdAt: data.created_at,
             updatedAt: data.updated_at,
             comments: [],
@@ -4712,6 +4740,13 @@
     }
     categorySelect.value = p.board;
     handleComposeCategoryChange();
+
+    // 공지사항 체크박스 — 마스터 계정에게만 보여주고, 이 글이 이미 공지로 등록돼 있으면 체크된 상태로 연다.
+    // (이걸로 "기존 마스터 글도 공지로 바꾸기"와 "공지 글을 다시 일반 글로 되돌리기" 둘 다 처리된다)
+    const noticeField = document.getElementById('board-compose-notice-field');
+    noticeField.classList.toggle('hidden', !isAdminUser());
+    noticeField.classList.toggle('flex', isAdminUser());
+    document.getElementById('board-compose-is-notice').checked = !!p.isNotice;
 
     if (isDiscount){
       document.getElementById('board-compose-amount').value = p.totalDiscount;
@@ -5402,8 +5437,12 @@
     // ---------- 접힌 상태: OP.GG 스타일 한 줄 리스트 행 ----------
     if (!expanded){
       const commentCount = p.comments.length;
+      const noticeBadge = p.isNotice
+        ? `<span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:var(--primary); color:#1C1A17;">📌 공지</span>`
+        : '';
       return `
-      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-start gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line);">
+      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-start gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line); ${p.isNotice ? 'background:rgba(255,184,0,0.06);' : ''}">
+        ${noticeBadge}
         <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
         <div class="flex-1 min-w-0">
           <p class="text-sm break-keep" style="color:var(--text);">${escapeHtml(title)}${commentCount > 0 ? ` <span class="text-xs font-bold whitespace-nowrap" style="color:var(--primary);">[${commentCount}]</span>` : ''}</p>
@@ -5431,8 +5470,9 @@
     const bodyHtml = isDiscountFormCategory(p.board) ? foodPostBodyHtml(p, expanded) : recipePostBodyHtml(p, expanded);
 
     return `
-      <div id="board-post-${p.id}" class="rounded-lg p-4 my-2" style="background:var(--card);">
+      <div id="board-post-${p.id}" class="rounded-lg p-4 my-2" style="background:var(--card); ${p.isNotice ? 'border:1px solid var(--primary);' : ''}">
         <div class="flex items-center gap-2 mb-1 flex-wrap">
+          ${p.isNotice ? `<span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:var(--primary); color:#1C1A17;">📌 공지</span>` : ''}
           <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
           <span class="font-semibold text-sm truncate min-w-0 flex-1">${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
           <div class="flex items-center gap-2 shrink-0 ml-auto">
@@ -5473,10 +5513,22 @@
 
   function renderBoardList(){
     const el = document.getElementById('board-list');
-    const allPosts = boardPosts
-      .filter(p => activeBoardTab === 'all' || p.board === activeBoardTab)
-      .slice()
-      .sort((a, b) => boardSortMode === 'popular' ? (b.likes - a.likes) || (b.id - a.id) : (b.id - a.id));
+    const isAllTab = activeBoardTab === 'all';
+    const categoryFiltered = boardPosts.filter(p => isAllTab || p.board === activeBoardTab);
+
+    // '전체' 탭에서만 공지사항을 정렬/페이지네이션과 무관하게 최상단에 고정한다 (최대 2개).
+    // 카테고리별 탭에서는 공지도 그냥 일반 글처럼 최신순/인기순 정렬에 섞여서 보인다.
+    let allPosts;
+    if (isAllTab){
+      const notices = categoryFiltered.filter(p => p.isNotice).sort((a, b) => b.id - a.id).slice(0, 2);
+      const regular = categoryFiltered.filter(p => !p.isNotice)
+        .sort((a, b) => boardSortMode === 'popular' ? (b.likes - a.likes) || (b.id - a.id) : (b.id - a.id));
+      allPosts = [...notices, ...regular];
+    } else {
+      allPosts = categoryFiltered.slice()
+        .sort((a, b) => boardSortMode === 'popular' ? (b.likes - a.likes) || (b.id - a.id) : (b.id - a.id));
+    }
+
     const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
     if (boardPage > totalPages) boardPage = totalPages;
     if (boardPage < 1) boardPage = 1;
