@@ -5622,21 +5622,31 @@
   }
 
   // 페이지 로드 시 Supabase에서 홈 배너 설정값을 불러온다. (누구나 조회 가능, 값이 없으면 위 기본값 유지)
+  //
+  // 예전엔 get_home_banner_config()(5개 설정값을 한 번에 묶어서 돌려주는 함수) 하나로 전부
+  // 불러왔는데, 이 함수가 특정 키를 누락하거나 제대로 못 돌려주는 문제가 반복적으로 확인됐다
+  // (active_vote_event_id, event_vote_page_title 둘 다 같은 증상). "여러 값을 한 번에 묶어서
+  // 돌려주는" 방식 자체를 신뢰할 수 없어서, 이제는 get_app_config_value(key) 하나로 5개 값을
+  // 각각 확실하게 병렬 조회한다.
   async function loadHomeBannerConfig(){
     let loadedSuccessfully = false;
     try {
-      const { data, error } = await supabaseClient.rpc('get_home_banner_config');
-      if (error) throw error;
-      (data || []).forEach(row => {
-        if (row.key === 'home_event_banner_text' && row.value) homeBannerConfig.eventText = row.value;
-        if (row.key === 'home_promo_badge' && row.value) homeBannerConfig.promoBadge = row.value;
-        if (row.key === 'home_promo_title' && row.value) homeBannerConfig.promoTitle = row.value;
-        if (row.key === 'home_promo_post_id') homeBannerConfig.promoPostId = row.value || null;
-        if (row.key === 'event_vote_page_title') homeBannerConfig.eventPageTitle = row.value || null;
+      const keys = ['home_event_banner_text', 'home_promo_badge', 'home_promo_title', 'home_promo_post_id', 'event_vote_page_title'];
+      const results = await Promise.all(keys.map(k => supabaseClient.rpc('get_app_config_value', { p_key: k })));
+
+      results.forEach((res, i) => {
+        if (res.error) throw res.error;
+        const key = keys[i];
+        const value = res.data;
+        if (key === 'home_event_banner_text' && value) homeBannerConfig.eventText = value;
+        if (key === 'home_promo_badge' && value) homeBannerConfig.promoBadge = value;
+        if (key === 'home_promo_title' && value) homeBannerConfig.promoTitle = value;
+        if (key === 'home_promo_post_id') homeBannerConfig.promoPostId = value || null;
+        if (key === 'event_vote_page_title') homeBannerConfig.eventPageTitle = value || null;
       });
       loadedSuccessfully = true;
     } catch (e){
-      console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_home_banner_config 확인 필요)', e);
+      console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_app_config_value 확인 필요)', e);
     }
     renderHomeBanners(loadedSuccessfully);
     renderAdminBannerPostSelect();
