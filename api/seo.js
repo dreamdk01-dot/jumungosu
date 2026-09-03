@@ -271,6 +271,7 @@ const FIELD_ALIASES = {
   platform: ['플랫폼', '앱', '배달앱', '플랫폼명', 'App', 'Platform'],
   category: ['카테고리', '분류', 'Category'],
   amount: ['할인금액', '금액', '할인가', '할인 금액', 'Amount', 'Price'],
+  startDate: ['시작일', '할인시작일', '시작 일', 'StartDate', 'Start'],
   endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
   limitedTime: ['선착순 시간', '선착순시간', '선착순', 'LimitedTime'],
 };
@@ -329,16 +330,22 @@ function mapRecord(record){
 
   const categoryRaw = (pickField(f, 'category') || '').toString().trim();
   const category = categoryRaw ? categoryRaw.split(',').map(c => c.trim()).filter(Boolean) : ['기타'];
+  const startDateRaw = pickField(f, 'startDate');
+  const startDate = startDateRaw ? startDateRaw.toString().slice(0, 10) : null;
   const endDateRaw = pickField(f, 'endDate');
   const endDate = endDateRaw ? endDateRaw.toString().slice(0, 10) : null;
   const limitedTime = (pickField(f, 'limitedTime') || '').toString().trim() || null;
 
-  return { name, app: [app], category, amount, endDate, limitedTime };
+  return { name, app: [app], category, amount, startDate, endDate, limitedTime };
 }
 
+// index.html의 판정과 동일하게, 시작일이 아직 안 됐으면(예: 브랜드데이를 며칠 전에 미리
+// 입력해둔 경우) "오늘 진행 중"에서 제외합니다. 시작일/종료일 둘 다 없으면 상시 할인으로 간주.
 function isLive(d){
   const today = getTodayKST();
-  return !d.endDate || d.endDate >= today;
+  if (d.startDate && d.startDate > today) return false;
+  if (d.endDate && d.endDate < today) return false;
+  return true;
 }
 
 function escapeHtml(str){
