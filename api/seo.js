@@ -246,6 +246,23 @@ const NAV_LINKS = [
   ['momstouch-discount', '맘스터치 할인'],
 ];
 
+const NAV_LABEL = Object.fromEntries(NAV_LINKS);
+
+// 브랜드 페이지(singleBrand) 10개를 카테고리별로 묶어서, 서로 크로스링크할 때 사용합니다.
+// (예: BBQ 페이지 하단에 "오늘의 치킨 할인" 섹션에서 BHC/교촌/굽네/처갓집을 보여줌)
+const BRAND_CATEGORY = {
+  'bbq-discount': '치킨',
+  'bhc-discount': '치킨',
+  'gyochon-discount': '치킨',
+  'gubne-discount': '치킨',
+  'chegatjip-discount': '치킨',
+  'dominopizza-discount': '피자',
+  'pizzahut-discount': '피자',
+  'lotteria-discount': '버거',
+  'mcdonald-discount': '버거',
+  'momstouch-discount': '버거',
+};
+
 // ---------------------------------------------------------------
 // Airtable 캐시 레코드 → 최소 형태로 파싱 (index.html의 로직을 서버에서 쓸 수 있게 축약)
 // ---------------------------------------------------------------
@@ -409,12 +426,13 @@ function renderSingleAppList(list){
   return `<div style="margin:16px 0;">${rows}</div>`;
 }
 
-function renderPage(pageKey, discounts){
+async function renderPage(pageKey, discounts){
   const def = PAGE_DEFS[pageKey];
   const canonical = `${SITE_URL}/${pageKey}`;
   const todayLabel = fmtTodayLabel();
 
   let bodyHtml;
+  let extraSectionsHtml = '';
   const live = discounts.filter(isLive).filter(def.filter);
 
   if (def.multiAppOnly){
@@ -427,9 +445,21 @@ function renderPage(pageKey, discounts){
   } else if (def.singleBrand){
     // 브랜드 하나만 필터링된 상태 — 앱이 1개뿐이어도(appCount>=2 조건 없이) 그대로 비교표로 보여준다.
     const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount).slice(0, def.limit);
-    bodyHtml = groups.length
-      ? renderCompareTable(groups)
-      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`;
+    const brandLabel = (NAV_LABEL[pageKey] || def.h1).replace(/\s*할인.*$/, '') || def.h1;
+
+    // 할인이 없는 날에도 페이지가 비어보이지 않도록: 오늘 할인 하이라이트(또는 없음 안내) +
+    // 최근 이력 + 앱별 빈도 + 이용 가이드 + 알림 CTA + 같은 카테고리 크로스링크 + 실시간 제보 CTA를 항상 채워 넣는다.
+    bodyHtml = renderTodayHighlight(groups, brandLabel) + (groups.length ? renderCompareTable(groups) : '');
+
+    const stats = await fetchBrandStats(pageKey.replace('-discount', ''));
+    extraSectionsHtml = [
+      renderHistorySection(stats, brandLabel),
+      renderPlatformFreqSection(stats, brandLabel),
+      renderHowToSection(brandLabel),
+      renderNotifyCta(brandLabel),
+      renderCrossLinkSection(pageKey),
+      renderReportCta(brandLabel),
+    ].join('');
   } else if (def.singleApp){
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
     bodyHtml = sorted.length
@@ -493,6 +523,7 @@ function renderPage(pageKey, discounts){
   <p style="font-size:12px; color:${MUTED}; opacity:0.85;">※ 할인 정보는 실시간으로 바뀔 수 있으며, 주문 전 앱에서 한 번 더 확인해주세요.</p>
 
   ${bodyHtml}
+  ${extraSectionsHtml}
 
   <a href="/" style="display:block; text-align:center; margin:28px 0 8px; padding:14px; background:${PRIMARY}; color:${BG}; font-weight:700; border-radius:8px; text-decoration:none;">전체 브랜드 실시간 비교 보러가기 →</a>
 
@@ -531,6 +562,158 @@ async function fetchCachedRecords(){
   return (row && row.records) || [];
 }
 
+// ---------------------------------------------------------------
+// 브랜드 할인 이력 통계 조회 (get_brand_discount_stats RPC, service_role로 호출)
+// 테이블/RPC가 아직 배포 전이거나 일시 오류가 나도 브랜드 페이지 자체는 깨지지 않도록
+// 실패 시 null을 반환하고, 호출부에서 "이력 데이터 준비중" 안내로 대체합니다.
+// ---------------------------------------------------------------
+async function fetchBrandStats(brandKey){
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_brand_discount_stats`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ p_brand_key: brandKey }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data || null;
+  } catch (e){
+    console.warn('[주문의 고수 SEO 페이지] 브랜드 이력 조회 실패 (get_brand_discount_stats RPC 확인 필요)', e);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------
+// 브랜드 페이지 전용 섹션 렌더링
+// ---------------------------------------------------------------
+const PLATFORM_ORDER = ['baemin', 'yogiyo', 'coupang', 'ddangyo'];
+
+function renderTodayHighlight(groups, brandLabel){
+  if (!groups.length){
+    return `<div style="margin:16px 0; padding:20px; text-align:center; background:${CARD}; border:1px dashed ${LINE}; border-radius:10px;">
+      <p style="font-size:14px; color:${MUTED}; margin:0 0 4px;">😴 오늘은 ${escapeHtml(brandLabel)} 정액 할인이 없어요.</p>
+      <p style="font-size:12px; color:${MUTED}; opacity:0.8; margin:0;">할인은 매일 바뀌니, 내일 다시 확인해보세요!</p>
+    </div>`;
+  }
+  const best = groups[0];
+  const bestApp = PLATFORM_ORDER.find(a => best.apps[a] === best.maxAmount);
+  return `<div style="margin:16px 0; padding:18px 20px; background:linear-gradient(135deg, ${CARD}, ${SURFACE}); border:1px solid ${PRIMARY}; border-radius:10px;">
+    <p style="font-size:12px; color:${MUTED}; margin:0 0 6px;">🔥 현재 가장 큰 할인</p>
+    <p style="font-size:20px; font-weight:800; color:${PRIMARY}; margin:0;">${APP_LABEL[bestApp]} ${fmtWon(best.maxAmount)} 할인</p>
+  </div>`;
+}
+
+function renderHistorySection(stats, brandLabel){
+  if (!stats){
+    return `<section style="margin:28px 0;">
+      <h2 style="font-size:16px; margin:0 0 10px;">📅 ${escapeHtml(brandLabel)} 최근 할인 이력</h2>
+      <p style="font-size:13px; color:${MUTED};">이력 데이터를 준비 중이에요. 조금만 기다려주세요!</p>
+    </section>`;
+  }
+  const { count_7 = 0, count_30 = 0, count_90 = 0, recent = [] } = stats;
+  const summary = `<div style="display:flex; gap:8px; margin:10px 0 16px;">
+    ${[['최근 7일', count_7], ['최근 30일', count_30], ['최근 90일', count_90]].map(([label, n]) => `
+      <div style="flex:1; text-align:center; padding:12px 8px; background:${CARD}; border-radius:8px;">
+        <p style="font-size:11px; color:${MUTED}; margin:0 0 4px;">${label}</p>
+        <p style="font-size:16px; font-weight:700; color:${TEXT}; margin:0;">${n}일</p>
+      </div>`).join('')}
+  </div>`;
+
+  const historyRows = recent.length
+    ? recent.map(r => `<tr>
+        <td style="padding:8px 10px; border-bottom:1px solid ${LINE}; color:${MUTED}; font-size:13px;">${escapeHtml(r.date_kst)}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid ${LINE}; font-size:13px;">${escapeHtml(APP_SHORT[r.platform] || r.platform)}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid ${LINE}; text-align:right; font-weight:700; color:${PRIMARY}; font-size:13px;">${fmtWon(r.amount)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="3" style="padding:12px; color:${MUTED}; font-size:13px;">아직 쌓인 이력이 없어요. 곧 하루하루 데이터가 모입니다.</td></tr>`;
+
+  return `<section style="margin:28px 0;">
+    <h2 style="font-size:16px; margin:0 0 4px;">📅 ${escapeHtml(brandLabel)} 최근 할인 이력</h2>
+    ${summary}
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead><tr>
+        <th style="text-align:left; padding:8px 10px; color:${MUTED}; font-size:11px; border-bottom:1px solid ${LINE};">날짜</th>
+        <th style="text-align:left; padding:8px 10px; color:${MUTED}; font-size:11px; border-bottom:1px solid ${LINE};">앱</th>
+        <th style="text-align:right; padding:8px 10px; color:${MUTED}; font-size:11px; border-bottom:1px solid ${LINE};">할인</th>
+      </tr></thead>
+      <tbody>${historyRows}</tbody>
+    </table>
+  </section>`;
+}
+
+function renderPlatformFreqSection(stats, brandLabel){
+  const counts = (stats && stats.platform_counts_30) || {};
+  const maxCount = Math.max(1, ...PLATFORM_ORDER.map(a => Number(counts[a]) || 0));
+  const bars = PLATFORM_ORDER.map(a => {
+    const n = Number(counts[a]) || 0;
+    const widthPct = Math.round((n / maxCount) * 100);
+    return `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+      <span style="width:64px; font-size:12px; color:${MUTED}; flex-shrink:0;">${APP_SHORT[a]}</span>
+      <div style="flex:1; height:14px; background:${SURFACE}; border-radius:999px; overflow:hidden;">
+        <div style="width:${widthPct}%; height:100%; background:${PRIMARY};"></div>
+      </div>
+      <span style="width:40px; text-align:right; font-size:12px; color:${TEXT}; flex-shrink:0;">${n}회</span>
+    </div>`;
+  }).join('');
+
+  return `<section style="margin:28px 0;">
+    <h2 style="font-size:16px; margin:0 0 10px;">📊 최근 30일 배달앱별 ${escapeHtml(brandLabel)} 할인 횟수</h2>
+    ${bars}
+  </section>`;
+}
+
+function renderHowToSection(brandLabel){
+  const steps = [
+    '배달앱(배민·요기요·쿠팡이츠·땡겨요)에서 브랜드명을 검색해요.',
+    '가게 화면의 쿠폰함 또는 할인 배너에서 진행 중인 정액 할인을 확인해요.',
+    '장바구니/주문서 작성 화면에서 쿠폰을 다운로드하거나 자동 적용해요.',
+    '결제 전 최종 할인 금액이 반영됐는지 한 번 더 확인 후 주문해요.',
+  ];
+  return `<section style="margin:28px 0;">
+    <h2 style="font-size:16px; margin:0 0 10px;">💡 ${escapeHtml(brandLabel)} 할인받는 방법</h2>
+    <ol style="margin:0; padding-left:20px; font-size:14px; line-height:1.9; color:${TEXT};">
+      ${steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+    </ol>
+  </section>`;
+}
+
+function renderNotifyCta(brandLabel){
+  return `<section style="margin:28px 0; text-align:center;">
+    <button type="button" onclick="alert('🔔 할인 알림 기능은 준비 중이에요. 곧 만나요!')" style="width:100%; padding:14px; background:${SURFACE}; color:${TEXT}; border:1px solid ${PRIMARY}; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer;">🔔 ${escapeHtml(brandLabel)} 할인 알림 받기</button>
+  </section>`;
+}
+
+function renderCrossLinkSection(currentKey){
+  const category = BRAND_CATEGORY[currentKey];
+  if (!category) return '';
+  const siblings = Object.keys(BRAND_CATEGORY).filter(k => BRAND_CATEGORY[k] === category && k !== currentKey);
+  if (!siblings.length) return '';
+  const chips = siblings.map(k => `<a href="/${k}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(NAV_LABEL[k] || k)}</a>`).join('');
+  return `<section style="margin:28px 0;">
+    <h2 style="font-size:16px; margin:0 0 10px;">오늘의 ${escapeHtml(category)} 할인</h2>
+    <div>${chips}</div>
+  </section>`;
+}
+
+function renderReportCta(brandLabel){
+  return `<section style="margin:28px 0; padding:16px; background:${CARD}; border-radius:10px; text-align:center;">
+    <p style="font-size:13px; color:${MUTED}; margin:0 0 10px;">놓친 ${escapeHtml(brandLabel)} 할인이 보이시나요? 실시간으로 제보해주세요.</p>
+    <a href="/board" style="display:inline-block; padding:10px 18px; background:#FEE500; color:#1C1A17; border-radius:8px; font-weight:700; font-size:13px; text-decoration:none;">🚨 실시간 할인 제보하기</a>
+  </section>`;
+}
+
+// sync-airtable.js가 "오늘 어떤 브랜드가 어떤 앱에서 얼마 할인 중인지" 판정할 때
+// 이 파일과 동일한 필드 파싱/브랜드 매칭 로직을 그대로 재사용하기 위한 named export.
+export { PAGE_DEFS, mapRecord, isLive, getTodayKST };
+
 export default async function handler(req, res){
   const pageKey = (req.query.page || '').toString();
   const def = PAGE_DEFS[pageKey];
@@ -543,7 +726,7 @@ export default async function handler(req, res){
   try {
     const rawRecords = await fetchCachedRecords();
     const discounts = rawRecords.map(mapRecord).filter(Boolean);
-    const html = renderPage(pageKey, discounts);
+    const html = await renderPage(pageKey, discounts);
 
     // 60초 동안은 Vercel 엣지 캐시로 응답 → Supabase 조회 없이 즉시 응답, 크롤러가 몰려도 안전
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
