@@ -106,17 +106,144 @@ const PAGE_DEFS = {
     limit: 15,
     multiAppOnly: true,
   },
+
+  // ---- 카테고리 2개 (오늘 피자/버거 할인) ----
+  'today-pizza-discount': {
+    title: '오늘 피자 할인 순위 TOP 15 | 배달앱별 비교 - 주문의 고수',
+    description: '오늘 배민·요기요·쿠팡이츠·땡겨요에서 피자 브랜드별로 받을 수 있는 정액 할인을 한눈에 비교하세요. 매일 업데이트됩니다.',
+    h1: '오늘 피자 할인 순위',
+    intro: '도미노피자, 피자헛 등 피자 브랜드가 배민·요기요·쿠팡이츠·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => (d.category || []).includes('피자'),
+    limit: 15,
+  },
+  'today-burger-discount': {
+    title: '오늘 햄버거 할인 순위 TOP 15 | 배달앱별 비교 - 주문의 고수',
+    description: '오늘 배민·요기요·쿠팡이츠·땡겨요에서 버거 브랜드별로 받을 수 있는 정액 할인을 한눈에 비교하세요. 매일 업데이트됩니다.',
+    h1: '오늘 햄버거 할인 순위',
+    intro: '맥도날드, 맘스터치, 롯데리아 등 버거 브랜드가 배민·요기요·쿠팡이츠·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => (d.category || []).includes('버거'),
+    limit: 15,
+  },
+
+  // ---- 브랜드별 10개 (브랜드 4개 앱 비교) ----
+  'bbq-discount': {
+    title: 'BBQ 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: 'BBQ 치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: 'BBQ 할인 비교',
+    intro: '오늘 BBQ가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('bbq'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'bhc-discount': {
+    title: 'BHC 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: 'BHC 치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: 'BHC 할인 비교',
+    intro: '오늘 BHC가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('bhc'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'gyochon-discount': {
+    title: '교촌치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '교촌치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '교촌치킨 할인 비교',
+    intro: '오늘 교촌치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('교촌'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'gubne-discount': {
+    title: '굽네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '굽네치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '굽네치킨 할인 비교',
+    intro: '오늘 굽네치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('굽네'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'chegatjip-discount': {
+    title: '처갓집 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '처갓집양념치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '처갓집 할인 비교',
+    intro: '오늘 처갓집양념치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('처갓집'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'dominopizza-discount': {
+    title: '도미노피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '도미노피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '도미노피자 할인 비교',
+    intro: '오늘 도미노피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('도미노'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'pizzahut-discount': {
+    title: '피자헛 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '피자헛을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '피자헛 할인 비교',
+    intro: '오늘 피자헛이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('피자헛'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'lotteria-discount': {
+    title: '롯데리아 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '롯데리아를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '롯데리아 할인 비교',
+    intro: '오늘 롯데리아가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('롯데리아'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'mcdonald-discount': {
+    title: '맥도날드 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '맥도날드를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '맥도날드 할인 비교',
+    intro: '오늘 맥도날드가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('맥도날드'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'momstouch-discount': {
+    title: '맘스터치 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '맘스터치를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '맘스터치 할인 비교',
+    intro: '오늘 맘스터치가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('맘스터치'),
+    limit: 10,
+    singleBrand: true,
+  },
 };
+
+// 브랜드명 매칭용 정규화 (공백 제거 + 소문자화). singleBrand 페이지들이 이걸로 브랜드를 골라낸다.
+function normBrand(name){
+  return String(name || '').replace(/\s+/g, '').toLowerCase();
+}
 
 const NAV_LINKS = [
   ['today-delivery-discount', '오늘 배달 할인'],
   ['today-chicken-discount', '오늘 치킨 할인'],
+  ['today-pizza-discount', '오늘 피자 할인'],
+  ['today-burger-discount', '오늘 햄버거 할인'],
   ['delivery-app-compare', '배달앱 할인 비교'],
   ['baemin-discount', '배민 할인'],
   ['coupangeats-discount', '쿠팡이츠 할인'],
   ['yogiyo-discount', '요기요 할인'],
   ['ddangyo-discount', '땡겨요 할인'],
   ['chicken-app-compare', '치킨 배달앱 할인 비교'],
+  ['bbq-discount', 'BBQ 할인'],
+  ['bhc-discount', 'BHC 할인'],
+  ['gyochon-discount', '교촌치킨 할인'],
+  ['gubne-discount', '굽네치킨 할인'],
+  ['chegatjip-discount', '처갓집 할인'],
+  ['dominopizza-discount', '도미노피자 할인'],
+  ['pizzahut-discount', '피자헛 할인'],
+  ['lotteria-discount', '롯데리아 할인'],
+  ['mcdonald-discount', '맥도날드 할인'],
+  ['momstouch-discount', '맘스터치 할인'],
 ];
 
 // ---------------------------------------------------------------
@@ -297,6 +424,12 @@ function renderPage(pageKey, discounts){
     bodyHtml = groups.length
       ? renderCompareTable(groups)
       : `<p style="color:${MUTED};">현재 2개 이상 앱에서 동시에 할인 중인 브랜드가 없어요. 잠시 후 다시 확인해주세요.</p>`;
+  } else if (def.singleBrand){
+    // 브랜드 하나만 필터링된 상태 — 앱이 1개뿐이어도(appCount>=2 조건 없이) 그대로 비교표로 보여준다.
+    const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount).slice(0, def.limit);
+    bodyHtml = groups.length
+      ? renderCompareTable(groups)
+      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`;
   } else if (def.singleApp){
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
     bodyHtml = sorted.length
