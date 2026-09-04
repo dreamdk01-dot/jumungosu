@@ -38,7 +38,7 @@ import {
   APP_LABEL,
 } from './seo.js';
 
-const INDEX_HTML_PATH = path.join(process.cwd(), 'index.html');
+const INDEX_HTML_PATH = path.join(process.cwd(), 'app.html');
 
 // 이번 요청에서 보여줄 "오늘 배달 할인" 개수 (BEST3와 별개로, 리스트 영역에 채울 개수)
 const TOP_LIST_COUNT = 12;
