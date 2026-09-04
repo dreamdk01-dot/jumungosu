@@ -1,5 +1,11 @@
 {
+  "functions": {
+    "api/home.js": {
+      "includeFiles": "index.html"
+    }
+  },
   "rewrites": [
+    { "source": "/", "destination": "/api/home" },
     { "source": "/today-delivery-discount", "destination": "/api/seo?page=today-delivery-discount" },
     { "source": "/today-chicken-discount", "destination": "/api/seo?page=today-chicken-discount" },
     { "source": "/today-pizza-discount", "destination": "/api/seo?page=today-pizza-discount" },
