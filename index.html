@@ -336,6 +336,21 @@
 <!-- ===== HOME PAGE ===== -->
 <main id="page-home" class="max-w-5xl mx-auto px-4 pb-20">
 
+  <!-- ===== HERO (H1) =====
+       이 사이트는 index.html 하나를 홈/이벤트/게시판/소개 탭이 공유하는 SPA인데,
+       지금까지 홈 탭에는 실제 <h1>이 하나도 없었습니다(About 페이지에만 있었음).
+       검색엔진과 첫 방문자 모두에게 "이 사이트가 뭘 해주는 곳인지"를 3초 안에
+       전달하기 위해 핵심 문장을 H1으로 명시적으로 올렸습니다.
+       바로 아래 있던 "오늘의 할인"(h2)은 그대로 두어 위계가 H1 → H2로 자연스럽게 이어집니다. -->
+  <section class="mt-4 mb-5 sm:mt-8 sm:mb-7">
+    <h1 class="font-display text-2xl sm:text-4xl leading-snug mb-2 break-keep" style="color:var(--text);">
+      오늘 배달 할인 비교
+    </h1>
+    <p class="text-sm sm:text-base leading-relaxed break-keep" style="color:var(--muted);">
+      <span style="color:var(--primary); font-weight:700;">배민 · 요기요 · 쿠팡이츠 · 땡겨요</span>, 오늘 어디가 가장 쌀까? 매일 업데이트되는 치킨·피자·버거 등 브랜드별 정액 할인을 한 화면에서 비교하세요.
+    </p>
+  </section>
+
   <!-- BEST 3 TICKET -->
   <section class="mt-4 mb-6 sm:mt-8 sm:mb-10">
     <div class="mb-2 sm:mb-4 flex items-center gap-2 flex-wrap">
