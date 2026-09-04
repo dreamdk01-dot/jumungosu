@@ -346,9 +346,17 @@
     <h1 class="font-display text-2xl sm:text-4xl leading-snug mb-2 break-keep" style="color:var(--text);">
       오늘 배달 할인 비교
     </h1>
-    <p class="text-sm sm:text-base leading-relaxed break-keep" style="color:var(--muted);">
+    <p class="text-sm sm:text-base leading-relaxed break-keep mb-3" style="color:var(--muted);">
       <span style="color:var(--primary); font-weight:700;">배민 · 요기요 · 쿠팡이츠 · 땡겨요</span>, 오늘 어디가 가장 쌀까? 매일 업데이트되는 치킨·피자·버거 등 브랜드별 정액 할인을 한 화면에서 비교하세요.
     </p>
+
+    <!-- 마지막 업데이트 시각: sync-airtable.js가 5분마다 갱신하는 실제 캐시 시각을 그대로 보여줍니다
+         (관리자가 수동으로 고르는 날짜 배지와 별개로, 이건 자동/분 단위입니다). -->
+    <p id="hero-updated-badge" class="font-mono text-xs sm:text-sm mb-4" style="color:var(--muted);"></p>
+
+    <!-- 오늘 배달 할인 TOP 3: 카드 UI와 별개로, 검색엔진과 방문자 모두에게 "무엇이 가장 큰 할인인지"를
+         평문 텍스트로 바로 전달합니다. 카테고리 필터와 무관하게 전체 라이브 할인 중 금액 최상위 3건. -->
+    <div id="hero-top3" class="text-sm sm:text-base leading-loose break-keep"></div>
   </section>
 
   <!-- BEST 3 TICKET -->
@@ -425,7 +433,7 @@
   </section>
 
   <!-- DISCOUNT LIST -->
-  <section>
+  <section id="discount-list-section">
     <div class="flex items-center justify-between mb-1 gap-3">
       <h3 class="font-display text-xl" style="color:var(--text);">할인 리스트</h3>
       <div class="flex items-center gap-2 shrink-0">
@@ -2070,6 +2078,11 @@
   // (이건 Airtable API 호출이 아니라 Supabase 조회라서, 방문자가 많아져도 문제가 되지 않습니다)
   const AIRTABLE_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5분
 
+  // /api/discounts가 함께 내려주는 "Supabase 캐시가 실제로 마지막 동기화된 시각"(sync-airtable.js가
+  // 5분마다 갱신)을 저장해둡니다. 관리자가 수동으로 고르는 DISCOUNT_DATA_UPDATED_AT(날짜 단위, 아래)과는
+  // 별개로, 히어로 영역의 "🟢 OO:OO 기준 업데이트" 배지는 이 값(분 단위, 자동)을 사용합니다.
+  let liveDataUpdatedAt = null;
+
   // Supabase 캐시 테이블에 데이터가 한 번이라도 채워졌는지 확인
   function isAirtableConfigured(){
     return true; // 캐시 테이블 자체는 항상 존재하므로 true 고정. 실패 시엔 fetchAllAirtableRecords()의 try/catch가 처리.
@@ -2237,6 +2250,7 @@
     const res = await fetch('/api/discounts');
     if (!res.ok) throw new Error(`캐시 조회 실패: HTTP ${res.status}`);
     const data = await res.json();
+    if (data && data.updated_at) liveDataUpdatedAt = data.updated_at;
     return (data && data.records) || [];
   }
 
@@ -2271,6 +2285,8 @@
       if (typeof renderCategoryChips === 'function') renderCategoryChips();
       if (typeof renderDiscountList === 'function') renderDiscountList();
       if (typeof renderBest3 === 'function') renderBest3();
+      if (typeof renderHeroTop3 === 'function') renderHeroTop3();
+      if (typeof renderHeroUpdatedBadge === 'function') renderHeroUpdatedBadge();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
     }
@@ -2295,6 +2311,60 @@
     if (d.startDate && d.startDate > today) return false;
     if (d.endDate && d.endDate < today) return false;
     return true;
+  }
+
+  // 히어로 영역의 "오늘 배달 할인 TOP 3" — 카테고리/앱 필터와 무관하게 지금 라이브인 할인 중
+  // 금액이 큰 순서 3건을 평문 텍스트로 보여줍니다(카드 UI인 BEST3와는 별개 · 중복 표시).
+  function renderHeroTop3(){
+    const el = document.getElementById('hero-top3');
+    if (!el) return;
+
+    const live = discounts.filter(isDiscountLive);
+    const top3 = live.slice().sort((a, b) => b.amount - a.amount).slice(0, 3);
+
+    if (!top3.length){
+      el.innerHTML = `<p style="color:var(--muted);">오늘 진행 중인 할인 정보를 불러오는 중이에요...</p>`;
+      return;
+    }
+
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = top3.map((d, i) => `
+      <p class="flex items-center gap-1.5 flex-wrap">
+        <span>${medals[i]}</span>
+        <span class="font-bold" style="color:var(--text);">${escapeHtml(d.name)}</span>
+        <span style="color:var(--muted);">— ${APP_LABEL[d.app[0]] || d.app[0]} —</span>
+        <span class="font-bold" style="color:var(--primary);">${d.amount.toLocaleString('ko-KR')}원 할인</span>
+      </p>`).join('');
+
+    const totalCount = live.length;
+
+    el.innerHTML = `
+      <p class="font-display text-base sm:text-lg mb-2" style="color:var(--primary);">🔥 오늘 배달 할인 TOP 3</p>
+      ${rows}
+      <button type="button" onclick="document.getElementById('discount-list-section').scrollIntoView({behavior:'smooth', block:'start'})" class="inline-block mt-2 font-semibold text-sm" style="color:var(--primary);">전체 할인 ${totalCount}개 보기 →</button>
+    `;
+  }
+
+  // 히어로 영역의 "🟢 OO:OO 기준 업데이트" — /api/discounts가 내려주는 실제 캐시 동기화 시각을
+  // KST로 변환해 보여줍니다. 값이 아직 없으면(최초 로드 전) 배지를 비워둡니다.
+  function renderHeroUpdatedBadge(){
+    const el = document.getElementById('hero-updated-badge');
+    if (!el) return;
+    if (!liveDataUpdatedAt){
+      el.textContent = '';
+      return;
+    }
+    const d = new Date(liveDataUpdatedAt);
+    if (isNaN(d.getTime())){
+      el.textContent = '';
+      return;
+    }
+    const kstText = d.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).replace(/\. /g, '.').replace(/\.$/, '');
+    el.textContent = `🟢 ${kstText} 기준 업데이트`;
   }
 
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
