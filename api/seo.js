@@ -719,7 +719,12 @@ function renderReportCta(brandLabel){
 
 // sync-airtable.js가 "오늘 어떤 브랜드가 어떤 앱에서 얼마 할인 중인지" 판정할 때
 // 이 파일과 동일한 필드 파싱/브랜드 매칭 로직을 그대로 재사용하기 위한 named export.
-export { PAGE_DEFS, mapRecord, isLive, getTodayKST };
+//
+// [추가] fmtWon/escapeHtml/APP_LABEL/NAV_LABEL도 함께 export합니다.
+// api/home.js(홈 SSR)가 "오늘 배달 할인 / BEST3 / 오늘 할인 브랜드" 텍스트를 만들 때
+// 이미 검증된 이 파일의 표기 규칙(금액 포맷, HTML 이스케이프, 앱 표시명, 페이지 한글 라벨)을
+// 그대로 재사용하기 위함이며, 기존 함수의 동작은 전혀 바뀌지 않습니다.
+export { PAGE_DEFS, mapRecord, isLive, getTodayKST, fmtWon, escapeHtml, APP_LABEL, NAV_LABEL };
 
 export default async function handler(req, res){
   const pageKey = (req.query.page || '').toString();
