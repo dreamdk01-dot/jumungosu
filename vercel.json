@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/home.js": {
-      "includeFiles": "index.html"
+      "includeFiles": "app.html"
     }
   },
   "rewrites": [
@@ -26,7 +26,7 @@
     { "source": "/lotteria-discount", "destination": "/api/seo?page=lotteria-discount" },
     { "source": "/mcdonald-discount", "destination": "/api/seo?page=mcdonald-discount" },
     { "source": "/momstouch-discount", "destination": "/api/seo?page=momstouch-discount" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/app.html" }
   ],
   "crons": [
     { "path": "/api/check-event-deadline?secret=REPLACE_WITH_YOUR_CRON_SECRET", "schedule": "10 13 * * *" }
