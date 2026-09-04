@@ -382,6 +382,14 @@
     <button type="button" id="best3-view-all-link" onclick="document.getElementById('discount-list-section').scrollIntoView({behavior:'smooth', block:'start'})" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
+  <!-- 오늘 할인 브랜드: 지금 브랜드 SEO 페이지(10개)가 있는 브랜드 중, 오늘 실제로 할인 중인
+       브랜드만 골라 금액 큰 순서로 보여주고 각 브랜드 페이지로 바로 연결합니다.
+       (홈 → 오늘 할인 브랜드 → 브랜드 상세 → 앱별 비교로 이어지는 내부링크 체인) -->
+  <section id="today-brand-links-section" class="mb-8 hidden">
+    <h2 class="font-display text-lg sm:text-2xl mb-3" style="color:var(--primary);">🔥 오늘 할인 브랜드</h2>
+    <div id="today-brand-links" class="flex flex-col gap-2"></div>
+  </section>
+
   <!-- EVENT BANNER -->
   <button id="home-event-banner" onclick="switchTab('event')" class="hidden w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
     style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
@@ -1050,30 +1058,59 @@
     </div>
 
     <!-- 실제 <a href> 링크 — 크롤러가 자바스크립트 실행 없이도 이 페이지들을 발견할 수 있도록
-         원본 HTML에 정적으로 존재해야 함 (sitemap.xml과 별개의 발견 경로) -->
+         원본 HTML에 정적으로 존재해야 함 (sitemap.xml과 별개의 발견 경로).
+         기존엔 20개를 구분 없이 한 줄에 나열했는데, 주제별로 묶어서 사람 눈에도 스캔하기 쉽고
+         같은 주제 링크끼리 앵커텍스트 맥락이 더 뚜렷해지도록 재구성했습니다. 링크 자체(href)는
+         하나도 빠짐없이 그대로입니다. -->
     <div class="dashed-divider pt-6 pb-6 mb-2">
-      <p class="text-xs font-semibold mb-2" style="color:var(--muted);">오늘의 할인 비교</p>
-      <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
-        <a href="/today-delivery-discount" class="footer-link" style="color:var(--muted);">오늘 배달 할인</a>
-        <a href="/today-chicken-discount" class="footer-link" style="color:var(--muted);">오늘 치킨 할인</a>
-        <a href="/delivery-app-compare" class="footer-link" style="color:var(--muted);">배달앱 할인 비교</a>
-        <a href="/baemin-discount" class="footer-link" style="color:var(--muted);">배민 할인</a>
-        <a href="/coupangeats-discount" class="footer-link" style="color:var(--muted);">쿠팡이츠 할인</a>
-        <a href="/yogiyo-discount" class="footer-link" style="color:var(--muted);">요기요 할인</a>
-        <a href="/ddangyo-discount" class="footer-link" style="color:var(--muted);">땡겨요 할인</a>
-        <a href="/chicken-app-compare" class="footer-link" style="color:var(--muted);">치킨 배달앱 할인 비교</a>
-        <a href="/today-pizza-discount" class="footer-link" style="color:var(--muted);">오늘 피자 할인</a>
-        <a href="/today-burger-discount" class="footer-link" style="color:var(--muted);">오늘 햄버거 할인</a>
-        <a href="/bbq-discount" class="footer-link" style="color:var(--muted);">BBQ 할인</a>
-        <a href="/bhc-discount" class="footer-link" style="color:var(--muted);">BHC 할인</a>
-        <a href="/gyochon-discount" class="footer-link" style="color:var(--muted);">교촌치킨 할인</a>
-        <a href="/gubne-discount" class="footer-link" style="color:var(--muted);">굽네치킨 할인</a>
-        <a href="/chegatjip-discount" class="footer-link" style="color:var(--muted);">처갓집 할인</a>
-        <a href="/dominopizza-discount" class="footer-link" style="color:var(--muted);">도미노피자 할인</a>
-        <a href="/pizzahut-discount" class="footer-link" style="color:var(--muted);">피자헛 할인</a>
-        <a href="/lotteria-discount" class="footer-link" style="color:var(--muted);">롯데리아 할인</a>
-        <a href="/mcdonald-discount" class="footer-link" style="color:var(--muted);">맥도날드 할인</a>
-        <a href="/momstouch-discount" class="footer-link" style="color:var(--muted);">맘스터치 할인</a>
+      <p class="text-xs font-semibold mb-3" style="color:var(--muted);">오늘의 할인 비교</p>
+      <div class="space-y-4 text-xs">
+        <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+          <a href="/today-delivery-discount" class="footer-link font-semibold" style="color:var(--primary);">오늘 배달 할인 전체</a>
+        </div>
+
+        <div>
+          <p class="mb-1.5 font-semibold" style="color:var(--text);">🍗 오늘 치킨 할인</p>
+          <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+            <a href="/today-chicken-discount" class="footer-link" style="color:var(--muted);">전체 비교</a>
+            <a href="/chicken-app-compare" class="footer-link" style="color:var(--muted);">배달앱별 비교</a>
+            <a href="/bbq-discount" class="footer-link" style="color:var(--muted);">BBQ</a>
+            <a href="/bhc-discount" class="footer-link" style="color:var(--muted);">BHC</a>
+            <a href="/gyochon-discount" class="footer-link" style="color:var(--muted);">교촌치킨</a>
+            <a href="/gubne-discount" class="footer-link" style="color:var(--muted);">굽네치킨</a>
+            <a href="/chegatjip-discount" class="footer-link" style="color:var(--muted);">처갓집</a>
+          </div>
+        </div>
+
+        <div>
+          <p class="mb-1.5 font-semibold" style="color:var(--text);">🍕 오늘 피자 할인</p>
+          <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+            <a href="/today-pizza-discount" class="footer-link" style="color:var(--muted);">전체 비교</a>
+            <a href="/dominopizza-discount" class="footer-link" style="color:var(--muted);">도미노피자</a>
+            <a href="/pizzahut-discount" class="footer-link" style="color:var(--muted);">피자헛</a>
+          </div>
+        </div>
+
+        <div>
+          <p class="mb-1.5 font-semibold" style="color:var(--text);">🍔 오늘 햄버거 할인</p>
+          <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+            <a href="/today-burger-discount" class="footer-link" style="color:var(--muted);">전체 비교</a>
+            <a href="/lotteria-discount" class="footer-link" style="color:var(--muted);">롯데리아</a>
+            <a href="/mcdonald-discount" class="footer-link" style="color:var(--muted);">맥도날드</a>
+            <a href="/momstouch-discount" class="footer-link" style="color:var(--muted);">맘스터치</a>
+          </div>
+        </div>
+
+        <div>
+          <p class="mb-1.5 font-semibold" style="color:var(--text);">📱 배달앱별 할인</p>
+          <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+            <a href="/delivery-app-compare" class="footer-link" style="color:var(--muted);">앱별 비교</a>
+            <a href="/baemin-discount" class="footer-link" style="color:var(--muted);">배민 할인</a>
+            <a href="/yogiyo-discount" class="footer-link" style="color:var(--muted);">요기요 할인</a>
+            <a href="/coupangeats-discount" class="footer-link" style="color:var(--muted);">쿠팡이츠 할인</a>
+            <a href="/ddangyo-discount" class="footer-link" style="color:var(--muted);">땡겨요 할인</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2288,6 +2325,7 @@
       if (typeof renderDiscountList === 'function') renderDiscountList();
       if (typeof renderBest3 === 'function') renderBest3();
       if (typeof renderBest3ViewAllLink === 'function') renderBest3ViewAllLink();
+      if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
     }
@@ -2321,6 +2359,54 @@
     if (!el) return;
     const totalCount = discounts.filter(isDiscountLive).length;
     el.textContent = `전체 할인 ${totalCount}개 보기 →`;
+  }
+
+  // 브랜드 SEO 페이지(seo.js의 singleBrand 10개)와 정확히 매칭되도록, 그쪽과 동일한 브랜드
+  // 판정 키워드를 그대로 씁니다 (seo.js normBrand(d.name).includes(key) 로직과 동일한 규칙).
+  const BRAND_LINKS = [
+    { slug: 'bbq-discount', label: 'BBQ', key: 'bbq' },
+    { slug: 'bhc-discount', label: 'BHC', key: 'bhc' },
+    { slug: 'gyochon-discount', label: '교촌치킨', key: '교촌' },
+    { slug: 'gubne-discount', label: '굽네치킨', key: '굽네' },
+    { slug: 'chegatjip-discount', label: '처갓집', key: '처갓집' },
+    { slug: 'dominopizza-discount', label: '도미노피자', key: '도미노' },
+    { slug: 'pizzahut-discount', label: '피자헛', key: '피자헛' },
+    { slug: 'lotteria-discount', label: '롯데리아', key: '롯데리아' },
+    { slug: 'mcdonald-discount', label: '맥도날드', key: '맥도날드' },
+    { slug: 'momstouch-discount', label: '맘스터치', key: '맘스터치' },
+  ];
+  function normalizeBrandNameForLink(s){
+    return String(s || '').replace(/\s+/g, '').toLowerCase();
+  }
+
+  // "오늘 할인 브랜드" 섹션: 브랜드 SEO 페이지가 있는 10개 브랜드 중, 오늘 실제로 라이브인
+  // 할인이 있는 브랜드만 금액 큰 순서로 최대 5개 보여주고 각 브랜드 페이지로 링크합니다.
+  // 오늘 하나도 없으면(운영 초기 등) 섹션 자체를 숨겨서 빈 껍데기가 노출되지 않게 합니다.
+  function renderTodayBrandLinks(){
+    const sectionEl = document.getElementById('today-brand-links-section');
+    const el = document.getElementById('today-brand-links');
+    if (!sectionEl || !el) return;
+
+    const live = discounts.filter(isDiscountLive);
+    const matched = BRAND_LINKS.map(b => {
+      const rows = live.filter(d => normalizeBrandNameForLink(d.name).includes(b.key));
+      if (!rows.length) return null;
+      const maxAmount = Math.max(...rows.map(d => d.amount));
+      return { ...b, amount: maxAmount };
+    }).filter(Boolean).sort((a, b) => b.amount - a.amount).slice(0, 5);
+
+    if (!matched.length){
+      sectionEl.classList.add('hidden');
+      el.innerHTML = '';
+      return;
+    }
+
+    sectionEl.classList.remove('hidden');
+    el.innerHTML = matched.map(b => `
+      <a href="/${b.slug}" class="flex items-center justify-between px-4 py-3 rounded-lg transition hover:brightness-105" style="background:var(--card); border:1px solid var(--line);">
+        <span class="font-semibold text-sm" style="color:var(--text);">${escapeHtml(b.label)}</span>
+        <span class="font-bold text-sm" style="color:var(--primary);">${b.amount.toLocaleString('ko-KR')}원 할인 →</span>
+      </a>`).join('');
   }
 
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
