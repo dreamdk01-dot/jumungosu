@@ -404,7 +404,7 @@
     </div>
 
     <!-- 카테고리와 무관하게 지금 라이브인 전체 할인 개수 → 할인 리스트 섹션으로 스크롤 이동 -->
-    <button type="button" id="best3-view-all-link" onclick="document.getElementById('brand-search-section').scrollIntoView({behavior:'smooth', block:'start'})" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
+    <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
   <!-- 오늘 할인 브랜드: 지금 브랜드 SEO 페이지(10개)가 있는 브랜드 중, 오늘 실제로 할인 중인
@@ -428,7 +428,7 @@
   <!-- 할인 추천 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
        실제 할인 콘텐츠(브랜드 검색/할인 리스트)로 유도하기 위해 추가. 이벤트 배너와 달리
        서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="document.getElementById('brand-search-section').scrollIntoView({behavior:'smooth', block:'start'})" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+  <button type="button" onclick="scrollToBrandSearch()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
     style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
     <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">🔥 오늘 뭐 먹을지 고민된다면? <span style="color:var(--muted); font-weight:500;">지금 가장 눈여겨볼 할인만 모아봤어요</span></span>
     <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">할인 추천 보기 →</span>
@@ -2412,8 +2412,24 @@
     return true;
   }
 
+  // "전체 할인 N개 보기 →" / 할인 추천 배너 클릭 시 공용으로 쓰는 스크롤 함수.
+  // scrollIntoView(block:'start')만 쓰면 sticky 헤더(모바일은 퀵내비 줄까지 2단)가
+  // 목적지 상단을 가려서 "브랜드 검색"이 안 보이는 문제가 생길 수 있어, 헤더의 실제 높이를
+  // 매번 직접 측정해 그만큼 보정한 좌표로 window.scrollTo를 호출한다.
+  // (헤더 높이를 하드코딩하지 않고 offsetHeight로 매번 재는 이유: 모바일/PC 헤더 높이가
+  //  다르고, 로그인 여부에 따라 표시되는 버튼이 달라져 높이가 살짝 바뀔 수 있기 때문)
+  function scrollToBrandSearch(){
+    const target = document.getElementById('brand-search-section');
+    if (!target) return;
+    const header = document.querySelector('header');
+    const headerH = header ? header.offsetHeight : 0;
+    const extraGap = 12; // 헤더 바로 아래 딱 붙지 않도록 약간의 여백
+    const targetY = target.getBoundingClientRect().top + window.pageYOffset - headerH - extraGap;
+    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+  }
+
   // BEST3 하단의 "전체 할인 N개 보기 →" — 카테고리 필터와 무관하게 지금 라이브인 전체 할인
-  // 개수를 보여주고, 누르면 할인 리스트 섹션으로 스크롤합니다.
+  // 개수를 보여주고, 누르면 브랜드 검색 영역이 화면 상단에 보이도록 스크롤합니다.
   function renderBest3ViewAllLink(){
     const el = document.getElementById('best3-view-all-link');
     if (!el) return;
