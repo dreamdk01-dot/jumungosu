@@ -3359,15 +3359,19 @@
 
     document.getElementById('result-count').textContent = groups.length;
 
-    const half = Math.ceil(groups.length / 2);
-    const firstHalfCards = groups.slice(0, half).map(brandGroupCardHtml);
-    const secondHalfCards = groups.slice(half).map(brandGroupCardHtml);
+    const cardHtmls = groups.map(brandGroupCardHtml);
 
-    // 필터/정렬이 바뀌어도 항상 리스트 앞쪽(3~4번째 카드 사이)에 광고 카드가 고정 노출되도록 삽입
+    // 쿠팡파트너스 광고는 항상 "5번째 할인 카드 다음"(할인이 5개 미만이면 전부 다음)에 위치.
+    // firstHalfCards(반쪽)가 아니라 지금 필터링·정렬이 끝난 전체 결과(groups) 개수를 기준으로
+    // 계산해야, 선착순 필터처럼 결과가 적을 때도 몇 번째 절반에 있는지와 무관하게 정확한 위치에 들어간다.
     if (groups.length > 0){
-      const adInsertIndex = Math.min(3, firstHalfCards.length);
-      firstHalfCards.splice(adInsertIndex, 0, affiliateAdCardHtml());
+      const adInsertIndex = Math.min(5, groups.length);
+      cardHtmls.splice(adInsertIndex, 0, affiliateAdCardHtml());
     }
+
+    const half = Math.ceil(cardHtmls.length / 2);
+    const firstHalfCards = cardHtmls.slice(0, half);
+    const secondHalfCards = cardHtmls.slice(half);
 
     document.getElementById('discount-list').innerHTML = firstHalfCards.join('') || emptyState();
     document.getElementById('discount-list-more').innerHTML = secondHalfCards.join('');
