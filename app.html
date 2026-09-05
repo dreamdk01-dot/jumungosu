@@ -404,7 +404,7 @@
     </div>
 
     <!-- 카테고리와 무관하게 지금 라이브인 전체 할인 개수 → 할인 리스트 섹션으로 스크롤 이동 -->
-    <button type="button" id="best3-view-all-link" onclick="document.getElementById('discount-list-section').scrollIntoView({behavior:'smooth', block:'start'})" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
+    <button type="button" id="best3-view-all-link" onclick="document.getElementById('brand-search-section').scrollIntoView({behavior:'smooth', block:'start'})" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
   <!-- 오늘 할인 브랜드: 지금 브랜드 SEO 페이지(10개)가 있는 브랜드 중, 오늘 실제로 할인 중인
@@ -424,6 +424,15 @@
   <!-- 배너 데이터가 도착하기 전(또는 네트워크 문제로 실패했을 때) 예전 테스트 문구가 그대로 노출되지 않도록,
        실제 콘텐츠가 준비되기 전까지는 이 스켈레톤만 보여준다. -->
   <div id="home-event-banner-skeleton" class="w-full mb-4 rounded-lg animate-pulse" style="background:var(--card-alt); height:60px;"></div>
+
+  <!-- 할인 추천 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
+       실제 할인 콘텐츠(브랜드 검색/할인 리스트)로 유도하기 위해 추가. 이벤트 배너와 달리
+       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
+  <button type="button" onclick="document.getElementById('brand-search-section').scrollIntoView({behavior:'smooth', block:'start'})" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+    style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
+    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">🔥 오늘 뭐 먹을지 고민된다면? <span style="color:var(--muted); font-weight:500;">지금 가장 눈여겨볼 할인만 모아봤어요</span></span>
+    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">할인 추천 보기 →</span>
+  </button>
 
   <!-- 실시간 1위 할인 자랑글 유입 배너 -->
   <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
@@ -451,7 +460,7 @@
   </section>
 
   <!-- 브랜드 검색 (STEP 2와 할인 리스트 사이 — 검색 즉시 바로 아래 결과가 보이도록 배치) -->
-  <section class="mb-6">
+  <section id="brand-search-section" class="mb-6">
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
     <div class="relative max-w-[320px]">
       <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
