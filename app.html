@@ -310,7 +310,7 @@
     <!-- desktop nav -->
     <nav class="hidden sm:flex items-center gap-6 font-medium text-sm">
       <button id="tab-home" onclick="switchTab('home')" class="nav-link tab-underline active pb-1" style="color:var(--text);">홈</button>
-      <button id="tab-event" onclick="switchTab('event')" class="nav-link tab-underline pb-1" style="color:var(--muted);">이벤트</button>
+      <button id="tab-event" onclick="switchTab('event')" class="hidden nav-link tab-underline pb-1" style="color:var(--muted);">이벤트</button>
       <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
@@ -330,7 +330,7 @@
   <div class="sm:hidden border-t" style="border-color:var(--line);">
     <div class="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between text-sm font-medium">
       <button id="quicknav-tab-home" onclick="switchTab('home')" class="nav-link" style="color:var(--text);">홈</button>
-      <button id="quicknav-tab-event" onclick="switchTab('event')" class="nav-link" style="color:var(--text);">이벤트</button>
+      <button id="quicknav-tab-event" onclick="switchTab('event')" class="hidden nav-link" style="color:var(--text);">이벤트</button>
       <button id="quicknav-tab-board" onclick="switchTab('board')" class="nav-link" style="color:var(--text);">게시판</button>
       <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold" style="color:var(--text);">로그인</button>
     </div>
@@ -340,7 +340,7 @@
   <div id="mobile-menu" class="hidden sm:hidden menu-in border-t" style="border-color:var(--line); background:var(--surface);">
     <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
       <button onclick="switchTab('home')" class="text-left py-2 nav-link" style="color:var(--text);">홈</button>
-      <button onclick="switchTab('event')" class="text-left py-2 nav-link" style="color:var(--text);">이벤트</button>
+      <button onclick="switchTab('event')" class="hidden text-left py-2 nav-link" style="color:var(--text);">이벤트</button>
       <button onclick="switchTab('board')" class="text-left py-2 nav-link" style="color:var(--text);">게시판</button>
       <button id="tab-auth-mobile" onclick="switchTab('auth')" class="text-left py-2 nav-link" style="color:var(--text);">로그인/회원가입</button>
       <button id="tab-logout-mobile" onclick="logout()" class="hidden text-left py-2 nav-link text-xs" style="color:var(--muted);">로그아웃</button>
@@ -5832,7 +5832,9 @@
 
     if (eventSkeleton) eventSkeleton.classList.add('hidden');
     if (promoSkeleton) promoSkeleton.classList.add('hidden');
-    if (eventBanner) eventBanner.classList.remove('hidden');
+    // [이벤트 잠시 숨김] 이벤트 이용자가 적어 운영 중단 - 홈 배너 노출만 잠시 막아둠.
+    // 재활성화 시 아래 주석만 풀면 됨 (배너 문구를 채우는 로직/이벤트 데이터/투표 기능은 전부 그대로 유지됨).
+    // if (eventBanner) eventBanner.classList.remove('hidden');
     if (promoBanner) promoBanner.classList.remove('hidden');
   }
 
@@ -7723,7 +7725,7 @@
       title: '이벤트 | 주문의 고수 - 투표하고 기프티콘 받기',
       description: '주문의 고수에서 진행 중인 투표 이벤트에 참여하고 추첨을 통해 기프티콘을 받아보세요.',
       ogTitle: '이벤트 | 주문의 고수',
-      indexable: true,
+      indexable: false,
     },
     board: {
       title: '자유게시판 | 주문의 고수 - 실시간 할인 제보 커뮤니티',
