@@ -425,13 +425,13 @@
        실제 콘텐츠가 준비되기 전까지는 이 스켈레톤만 보여준다. -->
   <div id="home-event-banner-skeleton" class="w-full mb-4 rounded-lg animate-pulse" style="background:var(--card-alt); height:60px;"></div>
 
-  <!-- 할인 추천 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
-       실제 할인 콘텐츠(브랜드 검색/할인 리스트)로 유도하기 위해 추가. 이벤트 배너와 달리
-       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="scrollToBrandSearch()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+  <!-- 오늘의 선착순 쿠폰 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
+       할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가. 서버에서 문구를 불러오지
+       않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
+  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
     style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
-    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">🔥 오늘 뭐 먹을지 고민된다면? <span style="color:var(--muted); font-weight:500;">지금 가장 눈여겨볼 할인만 모아봤어요</span></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">할인 추천 보기 →</span>
+    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--muted); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
+    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
   </button>
 
   <!-- 실시간 1위 할인 자랑글 유입 배너 -->
@@ -3407,6 +3407,15 @@
       }
     }
     renderDiscountList();
+  }
+
+  // 홈의 "오늘의 선착순 쿠폰" 배너 클릭 시 호출. 새 필터 로직을 만들지 않고 기존
+  // toggleLimitedTimeFilter()/onlyLimitedTimeFilter를 그대로 재사용한다. toggleLimitedTimeFilter()는
+  // '토글'이라 이미 켜진 상태에서 또 부르면 꺼지므로, 꺼져있을 때만 호출해 항상 "켜짐"으로 만든다.
+  // 스크롤은 기존 scrollToBrandSearch()(전체 할인 보기 버튼과 동일한 함수)를 그대로 재사용한다.
+  function goToLimitedTimeCoupons(){
+    if (!onlyLimitedTimeFilter) toggleLimitedTimeFilter();
+    scrollToBrandSearch();
   }
 
   function emptyState(){
