@@ -503,7 +503,7 @@ async function renderPage(pageKey, discounts){
 
     // 할인이 없는 날에도 페이지가 비어보이지 않도록: 오늘 할인 하이라이트(또는 없음 안내) +
     // 최근 이력 + 앱별 빈도 + 이용 가이드 + 알림 CTA + 같은 카테고리 크로스링크 + 실시간 제보 CTA를 항상 채워 넣는다.
-    bodyHtml = renderTodayHighlight(groups, brandLabel) + (groups.length ? renderCompareTable(groups) : '');
+    bodyHtml = renderTodayHighlight(groups, brandLabel) + renderBrandInsight(pageKey, groups, live) + (groups.length ? renderCompareTable(groups) : '');
 
     const stats = await fetchBrandStats(pageKey.replace('-discount', ''));
     extraSectionsHtml = [
@@ -650,6 +650,96 @@ async function fetchBrandStats(brandKey){
 // 브랜드 페이지 전용 섹션 렌더링
 // ---------------------------------------------------------------
 const PLATFORM_ORDER = ['baemin', 'yogiyo', 'coupang', 'ddangyo'];
+
+// 이름 끝의 "(브랜드데이)" 같은 괄호 프로모션 표기를 떼어낸 기본 브랜드명을 반환.
+// 특정 문자열("브랜드데이")을 하드코딩해서 찾지 않고, "이름 (무언가)" 형태 자체를 일반화해서 판정한다.
+function baseBrandName(name){
+  return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
+
+// 브랜드 페이지 전용 "오늘의 할인 체크포인트" — 오늘 실제 live 데이터(groups/live)만 보고
+// 그 자리에서 문장을 생성한다. 고정된 브랜드별 문구를 저장해두지 않으므로, 데이터가 바뀌면
+// 다음 요청에서 문장도 자동으로 바뀐다. 새로운 Supabase/Airtable 조회는 하지 않는다.
+//   groups: groupByBrand(live)의 결과(이미 renderPage에서 계산된 것을 그대로 받음)
+//   live:   groups로 묶이기 전의 원본 배열 — "동일 브랜드+동일 앱에 서로 다른 레코드가
+//           여러 개 있는지" 판정에는 groups(앱당 최대값 1개로 뭉개짐)로는 알 수 없어서 필요.
+function renderBrandInsight(pageKey, groups, live){
+  if (!groups.length){
+    return `<section class="brand-insight" style="margin:16px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
+      <h2 style="font-size:14px; margin:0 0 4px; color:${TEXT};">오늘의 할인 체크포인트</h2>
+      <p style="font-size:13px; color:${MUTED}; margin:0;">현재 확인된 할인은 없지만 할인 정보는 변경될 수 있으니 나중에 다시 확인해보세요.</p>
+    </section>`;
+  }
+
+  // 이 페이지의 모든 그룹(브랜드데이 등 변형 포함)을 합친 전체 앱 집합
+  const allApps = new Set();
+  groups.forEach(g => Object.keys(g.apps).forEach(a => allApps.add(a)));
+
+  // C. 괄호 프로모션 표기가 붙은 이름과, 그 기본 이름을 공유하는 다른 그룹이 함께 존재하는지
+  //    (예: "도미노피자"와 "도미노피자 (브랜드데이)"가 동시에 groups에 있는 경우)
+  let promoVariant = null;
+  const byBaseName = new Map();
+  groups.forEach(g => {
+    const base = baseBrandName(g.name);
+    if (!byBaseName.has(base)) byBaseName.set(base, new Set());
+    byBaseName.get(base).add(g.name);
+  });
+  for (const [base, names] of byBaseName){
+    if (names.size >= 2){ promoVariant = { base, names: [...names] }; break; }
+  }
+
+  // B. groups로는 앱당 최대 금액 하나만 남아 사라지는 정보라, 그룹핑 전 live에서
+  //    "같은 앱에 금액 또는 선착순 조건이 서로 다른 레코드가 2개 이상"인지 직접 판정한다.
+  let sameAppMultiCondition = null;
+  if (Array.isArray(live)){
+    const byApp = {};
+    live.forEach(d => {
+      d.app.forEach(a => {
+        if (!byApp[a]) byApp[a] = new Set();
+        byApp[a].add(`${d.amount}|${d.limitedTime || ''}`);
+      });
+    });
+    for (const [app, conditionSet] of Object.entries(byApp)){
+      if (conditionSet.size >= 2){ sameAppMultiCondition = app; break; }
+    }
+  }
+
+  // D. limitedTime이 실제로 존재하는 값이 있으면 그 값을 그대로 사용 (추측/생성 없음)
+  let limitedTimeSample = null;
+  if (Array.isArray(live)){
+    const found = live.find(d => !!d.limitedTime);
+    if (found) limitedTimeSample = found.limitedTime;
+  }
+
+  // 우선순위: C(프로모션 동시존재) > B(동일앱 복수조건) > A(여러앱)/E(단일앱) > F는 위에서 이미 처리됨
+  let mainSentence = '';
+  if (promoVariant){
+    const others = promoVariant.names.filter(n => n !== promoVariant.base);
+    const otherLabel = others.length ? escapeHtml(others.join(', ')) : escapeHtml(promoVariant.names[0]);
+    mainSentence = `오늘 ${escapeHtml(promoVariant.base)}에는 일반 할인 외에 별도 프로모션(${otherLabel})도 함께 진행 중입니다. 아래 비교표에서 이름을 확인하고 원하는 조건을 선택하세요.`;
+  } else if (sameAppMultiCondition){
+    const appName = escapeHtml(APP_LABEL[sameAppMultiCondition] || sameAppMultiCondition);
+    mainSentence = `같은 배달앱(${appName}) 안에서도 할인 금액이나 적용 조건이 다를 수 있으니, 주문 전 쿠폰 조건을 확인하는 것이 좋습니다.`;
+  } else if (allApps.size >= 2){
+    mainSentence = `오늘은 ${allApps.size}개 배달앱에서 할인을 함께 확인할 수 있어, 앱별 조건을 비교해보고 주문하는 것이 유리할 수 있습니다.`;
+  } else if (allApps.size === 1){
+    const onlyApp = [...allApps][0];
+    const appName = escapeHtml(APP_LABEL[onlyApp] || onlyApp);
+    mainSentence = `현재 확인되는 할인은 ${appName}에 집중되어 있으므로, 해당 앱의 쿠폰 적용 조건을 먼저 확인하는 것이 좋습니다.`;
+  }
+
+  const limitedNotice = limitedTimeSample
+    ? `<p style="font-size:12px; color:${MUTED}; margin:6px 0 0;">${escapeHtml(limitedTimeSample)} 선착순 등 시간 제한 조건이 있을 수 있으니 주문 전에 확인하세요.</p>`
+    : '';
+
+  if (!mainSentence && !limitedNotice) return '';
+
+  return `<section class="brand-insight" style="margin:16px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
+    <h2 style="font-size:14px; margin:0 0 6px; color:${TEXT};">오늘의 할인 체크포인트</h2>
+    ${mainSentence ? `<p style="font-size:13px; line-height:1.6; color:${TEXT}; margin:0;">${mainSentence}</p>` : ''}
+    ${limitedNotice}
+  </section>`;
+}
 
 function renderTodayHighlight(groups, brandLabel){
   if (!groups.length){
