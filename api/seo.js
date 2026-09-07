@@ -420,6 +420,60 @@ function renderCompareTable(groups){
   return `<table style="width:100%; border-collapse:collapse; font-size:14px; margin:16px 0;">${header}${rows}</table>`;
 }
 
+// TOP/주요 페이지(today-*, singleApp, multiAppOnly)에 붙는 짧은 편집자 코멘트.
+// 이미 존재하는 renderTodaySummary(1위/2위/총건수/선착순 안내)와 겹치지 않도록,
+// 여기서는 그 함수가 다루지 않는 새로운 사실(상위 금액대 분포/브랜드데이/앱 간 금액 차이/
+// 카테고리 분포)만 짧게 덧붙인다. singleBrand(10개 브랜드 페이지)는 P1-①의
+// renderBrandInsight가 이미 전담하고 있으므로 여기서는 관여하지 않는다(빈 문자열 반환).
+// 새로운 Supabase/Airtable 조회는 하지 않고, renderPage()에서 이미 계산된 live/groups만 사용한다.
+function renderTopEditorComment(pageKey, live, groups){
+  const def = PAGE_DEFS[pageKey];
+  if (!def || def.singleBrand) return '';
+
+  let sentence = '';
+
+  if (def.multiAppOnly){
+    if (!groups || !groups.length) return '';
+    const top1 = groups[0];
+    const amounts = Object.values(top1.apps);
+    const sameAmount = new Set(amounts).size === 1;
+    sentence = `오늘 ${escapeHtml(top1.name)} 할인은 ${top1.appCount}개 앱에서 동시에 확인됩니다.`;
+    if (!sameAmount){
+      sentence += ' 앱마다 할인 금액이 달라 비교해볼 만합니다.';
+    }
+  } else if (def.singleApp){
+    if (!live.length) return '';
+    // top1은 전체 live 중 최댓값(정렬 후 첫 값은 slice 여부와 무관하게 항상 동일).
+    const top1 = live.slice().sort((a, b) => b.amount - a.amount)[0];
+    const appLabel = APP_LABEL[def.singleApp] || def.singleApp;
+    // 카테고리 집계는 표시 리스트(def.limit로 잘린 목록)가 아니라 전체 live 기준으로 계산한다.
+    const catCount = {};
+    live.forEach(d => (d.category || []).forEach(c => { catCount[c] = (catCount[c] || 0) + 1; }));
+    const topCatEntry = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0];
+    sentence = `${escapeHtml(appLabel)}에서는 오늘 ${escapeHtml(top1.name)} ${fmtWon(top1.amount)} 할인이 가장 큽니다.`;
+    if (topCatEntry && topCatEntry[1] >= 2){
+      sentence += ` ${escapeHtml(topCatEntry[0])} 카테고리 할인이 ${topCatEntry[1]}건으로 눈에 띕니다.`;
+    }
+  } else {
+    // today-delivery/chicken/pizza/burger-discount
+    // "N건" 집계는 표시 리스트(def.limit로 잘린 목록)가 아니라 전체 live 기준으로 계산한다.
+    // (표시 리스트 자체의 정렬/노출 개수는 renderPage()의 sorted 변수가 그대로 담당하며 여기서는 건드리지 않음)
+    if (!live.length) return '';
+    const highCount = live.filter(d => d.amount >= 5000).length;
+    const hasBrandDay = live.some(d => /\(브랜드데이\)/.test(d.name));
+    const parts = [];
+    if (hasBrandDay) parts.push('오늘 확인된 할인 중 일부는 브랜드데이 등 특정 날짜에 진행되는 특별 할인입니다.');
+    if (highCount >= 2) parts.push(`5,000원 이상 할인이 ${highCount}건 확인되어 비교해볼 만합니다.`);
+    sentence = parts.join(' ');
+  }
+
+  if (!sentence) return '';
+  return `<section class="top-editor-comment" style="margin:16px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
+    <h2 style="font-size:14px; margin:0 0 6px; color:${TEXT};">💡 오늘 눈여겨볼 점</h2>
+    <p style="font-size:13px; line-height:1.6; color:${TEXT}; margin:0;">${sentence}</p>
+  </section>`;
+}
+
 function renderSingleAppList(list){
   const rows = list.map((d, i) => `
     <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:${i % 2 === 0 ? CARD : SURFACE}; border-radius:8px; margin-bottom:8px;">
@@ -493,9 +547,10 @@ async function renderPage(pageKey, discounts){
     let groups = groupByBrand(live).filter(g => g.appCount >= 2);
     groups.sort((a, b) => b.maxAmount - a.maxAmount);
     groups = groups.slice(0, def.limit);
-    bodyHtml = groups.length
+    bodyHtml = (groups.length
       ? renderCompareTable(groups)
-      : `<p style="color:${MUTED};">현재 2개 이상 앱에서 동시에 할인 중인 브랜드가 없어요. 잠시 후 다시 확인해주세요.</p>`;
+      : `<p style="color:${MUTED};">현재 2개 이상 앱에서 동시에 할인 중인 브랜드가 없어요. 잠시 후 다시 확인해주세요.</p>`)
+      + renderTopEditorComment(pageKey, live, groups);
   } else if (def.singleBrand){
     // 브랜드 하나만 필터링된 상태 — 앱이 1개뿐이어도(appCount>=2 조건 없이) 그대로 비교표로 보여준다.
     const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount).slice(0, def.limit);
@@ -516,15 +571,17 @@ async function renderPage(pageKey, discounts){
     ].join('');
   } else if (def.singleApp){
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
-    bodyHtml = sorted.length
+    bodyHtml = (sorted.length
       ? renderSingleAppList(sorted)
-      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`;
+      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
+      + renderTopEditorComment(pageKey, live, null);
   } else {
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
     const summaryHtml = renderTodaySummary(pageKey, live);
     bodyHtml = summaryHtml + (sorted.length
       ? renderSingleAppList(sorted.map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` })))
-      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`);
+      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
+      + renderTopEditorComment(pageKey, live, null);
   }
 
   // 구조화 데이터: 이 페이지가 "무엇을 나열하는 목록"인지 구글에 명시
