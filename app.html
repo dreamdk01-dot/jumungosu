@@ -646,6 +646,7 @@
           <div>
             <label class="text-xs font-medium block mb-1" style="color:var(--muted);">카테고리 선택</label>
             <select id="board-compose-category" onchange="handleComposeCategoryChange()" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
+            <p id="board-compose-category-hint" class="text-xs mt-1.5 break-keep" style="color:var(--muted);"></p>
           </div>
 
           <!-- 마스터 계정에게만 보이는 공지사항 고정 체크박스. 일반 회원 화면에는 아예 렌더링되지 않는다. -->
@@ -669,7 +670,7 @@
               <input id="board-compose-brand" type="text" placeholder="예) BBQ 뿌링클" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             </div>
             <div>
-              <label class="text-xs font-medium block mb-1" style="color:var(--muted);">할인 조합 상세 내역</label>
+              <label id="board-compose-combo-label" class="text-xs font-medium block mb-1" style="color:var(--muted);">할인 조합 상세 내역</label>
               <input id="board-compose-combo" type="text" placeholder="예) 삼성카드 2천원 + 브랜드할인 5천원 + 신규 5천원" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             </div>
             <div>
@@ -4174,6 +4175,15 @@
   };
   const DEFAULT_SIMPLE_PLACEHOLDER = { title: '제목을 입력하세요', content: '내용을 입력하세요' };
 
+  // 글쓰기 폼 상단, 카테고리 select 바로 아래에 표시되는 카테고리별 한 줄 안내 문구.
+  // 새 DB 필드가 아니라 순수 UI 텍스트이며, 사용자가 어떤 글을 쓰려는지 즉시 알 수 있게 돕는다.
+  const BOARD_COMPOSE_CATEGORY_HINT = {
+    food: '여러 할인 혜택을 조합해서 저렴하게 주문한 방법을 공유해주세요.',
+    realtime: '지금 확인한 새로운 할인정보를 빠르게 알려주세요.',
+    free: '오늘 먹고 싶은 메뉴나 맛집을 자유롭게 추천해주세요.',
+    store: '우리 동네에서만 알 수 있는 맛집·지점 정보를 공유해주세요.',
+  };
+
   // 우점자(store) 글쓰기 폼: 시/도 + 시/군/구 + 매장명을 조합해 "경기도 화성시 교촌치킨 봉담점 추천합니다 👍"
   // 형태의 완성된 제목 문자열을 만든다. 지역이나 매장명 중 하나라도 비어있으면 빈 문자열 반환.
   function buildStorePostTitle(){
@@ -4200,6 +4210,14 @@
     document.getElementById('board-compose-store-fields').classList.toggle('hidden', !isStore);
     document.getElementById('board-compose-title').classList.toggle('hidden', isStore);
     if (isStore) updateStoreTitlePreview();
+
+    const hintEl = document.getElementById('board-compose-category-hint');
+    if (hintEl) hintEl.textContent = BOARD_COMPOSE_CATEGORY_HINT[category] || '';
+
+    // 실시간 할인 제보는 "빠른 제보"가 목적이라, 조합 상세 내역까지 필수로 요구하지 않는다.
+    // 필드 자체는 삭제하지 않고(DB 컬럼 그대로), 라벨과 필수 여부만 카테고리에 따라 조정한다.
+    const comboLabel = document.getElementById('board-compose-combo-label');
+    if (comboLabel) comboLabel.textContent = category === 'realtime' ? '할인 조합 상세 내역 (선택)' : '할인 조합 상세 내역';
 
     const titleInput = document.getElementById('board-compose-title');
     const contentInput = document.getElementById('board-compose-content');
@@ -4859,7 +4877,9 @@
         const detail = document.getElementById('board-compose-detail').value.trim();
         const amount = parseInt(amountRaw.replace(/[^0-9]/g, ''), 10);
 
-        if (!amountRaw || !app || !brandMenu || !comboDetail || isNaN(amount)){
+        // 실시간 할인 제보는 조합 상세 내역을 필수로 요구하지 않는다(위 라벨의 '(선택)' 표시와 일치).
+        const comboRequired = category !== 'realtime';
+        if (!amountRaw || !app || !brandMenu || (comboRequired && !comboDetail) || isNaN(amount)){
           errEl.textContent = '모든 항목을 입력해주세요.';
           errEl.classList.remove('hidden');
           return;
