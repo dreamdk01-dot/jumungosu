@@ -1,74 +1,3 @@
-// [브랜드 SEO 페이지 이력 기능] 이 함수(sync-airtable)가 실행될 때마다 오늘(KST) 기준으로
-// "브랜드별·앱별 정액 할인이 있었는지"를 Supabase brand_discount_daily 테이블에 upsert 해둡니다.
-// 브랜드 SEO 페이지(/bbq-discount, /dominopizza-discount 등)의 "최근 할인 이력" / "최근 30일
-// 앱별 할인 횟수" 섹션이 이 데이터를 읽어갑니다.
-//
-// 브랜드명→brand_key 정규화와 플랫폼 변환은 새로 만들지 않고 seo.js의 PAGE_DEFS/mapRecord를
-// 그대로 재사용합니다 — 브랜드 SEO 페이지가 실제로 쓰는 판정 기준과 완전히 동일하게 맞추기 위함입니다.
-//   - brand_key: PAGE_DEFS의 각 singleBrand 페이지 키(예: 'dominopizza-discount')에서
-//     '-discount'를 뗀 값 (seo.js가 브랜드 페이지를 렌더링할 때 쓰는 것과 동일한 규칙).
-//   - platform: mapRecord()가 이미 배달의민족→baemin, 요기요→yogiyo, 쿠팡이츠→coupang,
-//     땡겨요→ddangyo 로 정규화해서 반환하는 값을 그대로 씀 (여기서 별도 변환하지 않음).
-import { PAGE_DEFS, mapRecord, isLive, getTodayKST } from './seo.js';
-
-const BRAND_PAGE_KEYS = Object.keys(PAGE_DEFS).filter((k) => PAGE_DEFS[k].singleBrand);
-
-// 오늘 라이브 상태인 할인들을 브랜드×앱별로 정리해서, brand_discount_daily에 upsert할
-// { brand_key, date_kst, platform, amount } 행 배열을 만듭니다.
-// 같은 brand_key+date_kst+platform 조합은 하나로 집계(레코드가 여럿이면 더 큰 금액을 대표로 씀).
-function buildBrandDailyRows(records) {
-  const discounts = records.map(mapRecord).filter(Boolean).filter(isLive);
-  const today = getTodayKST();
-  const rows = [];
-
-  for (const pageKey of BRAND_PAGE_KEYS) {
-    const def = PAGE_DEFS[pageKey];
-    const brandKey = pageKey.replace('-discount', '');
-    const matched = discounts.filter(def.filter);
-    const bestByApp = {};
-    matched.forEach((d) => {
-      // 할인금액이 정상적인 양수가 아니거나 앱 정보가 없는 레코드는 이력에 남기지 않음
-      if (!(d.amount > 0)) return;
-      const app = d.app[0];
-      if (!app) return;
-      if (!bestByApp[app] || d.amount > bestByApp[app]) bestByApp[app] = d.amount;
-    });
-    Object.entries(bestByApp).forEach(([platform, amount]) => {
-      rows.push({ brand_key: brandKey, date_kst: today, platform, amount });
-    });
-  }
-  return rows;
-}
-
-// brand_discount_daily에 upsert. rows가 0개면 Supabase 요청 없이 0을 반환하고 정상 종료.
-// 실패하면 에러를 그대로 throw해서(호출부에서 잡아 console.error로 남김) 원인을 로그에서 바로 확인할 수 있게 함.
-async function updateBrandDailyHistory(records) {
-  const rows = buildBrandDailyRows(records);
-  if (!rows.length) return 0;
-
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/brand_discount_daily?on_conflict=brand_key,date_kst,platform`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        Prefer: 'resolution=merge-duplicates',
-      },
-      body: JSON.stringify(rows),
-    }
-  );
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`brand_discount_daily 저장 오류 (HTTP ${res.status}): ${text.slice(0, 300)}`);
-  }
-  return rows.length;
-}
-
 export default async function handler(req, res) {
   const providedSecret = req.query.secret || (req.headers.authorization || '').replace('Bearer ', '');
   if (!process.env.SYNC_SECRET || providedSecret !== process.env.SYNC_SECRET) {
@@ -121,15 +50,42 @@ export default async function handler(req, res) {
       throw new Error(`Supabase 저장 오류 (HTTP ${upsertRes.status}): ${text.slice(0, 300)}`);
     }
 
-    // 3) 브랜드별 오늘의 할인 이력 기록 (best-effort — 실패해도 위의 캐시 동기화 응답은 그대로 성공 처리)
-    let historyRows = 0;
+    // 할인 데이터 동기화가 정상 완료됐으므로, 홈 화면 "UPDATED" 배지도 자동으로 지금 시각으로
+    // 갱신한다. 실패해도 위의 캐시 동기화(핵심 기능)는 이미 성공했으므로 sync 자체는 실패
+    // 처리하지 않고, 콘솔에만 명확히 로그를 남긴다(best-effort).
+    // set_discount_updated_at RPC는 관리자 수동 저장 전용으로 그대로 두고 건드리지 않으며,
+    // 여기서는 service_role로 app_config 테이블을 직접 UPDATE한다(RLS는 service_role이 우회).
     try {
-      historyRows = await updateBrandDailyHistory(records);
-    } catch (historyErr) {
-      console.error('[sync-airtable] 브랜드 이력 기록 실패 (brand_discount_daily 확인 필요)', historyErr);
+      // 서버 실행 환경의 타임존에 의존하지 않도록, UTC 기준 시각에 9시간을 명시적으로 더해
+      // KST 벽시계 시각을 직접 계산한다. 관리자 수동 저장값과 완전히 같은 포맷
+      // ('YYYY-MM-DDTHH:mm:00', 타임존 표기 없음)으로 맞춰서, app.html의 표시 로직은
+      // 전혀 손대지 않아도 그대로 정상 동작하게 한다.
+      const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+      const kstNow = new Date(Date.now() + KST_OFFSET_MS);
+      const pad = (n) => String(n).padStart(2, '0');
+      const kstDateTime =
+        `${kstNow.getUTCFullYear()}-${pad(kstNow.getUTCMonth() + 1)}-${pad(kstNow.getUTCDate())}` +
+        `T${pad(kstNow.getUTCHours())}:${pad(kstNow.getUTCMinutes())}:00`;
+
+      const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/app_config?key=eq.discount_updated_at`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ value: kstDateTime }),
+      });
+
+      if (!updateRes.ok) {
+        const text = await updateRes.text().catch(() => '');
+        throw new Error(`app_config(discount_updated_at) 갱신 오류 (HTTP ${updateRes.status}): ${text.slice(0, 300)}`);
+      }
+    } catch (updatedAtErr) {
+      console.error('[sync-airtable] discount_updated_at 자동 갱신 실패 (app_config 테이블 확인 필요)', updatedAtErr);
     }
 
-    return res.status(200).json({ ok: true, count: records.length, historyRows, syncedAt: new Date().toISOString() });
+    return res.status(200).json({ ok: true, count: records.length, syncedAt: new Date().toISOString() });
   } catch (err) {
     console.error('[sync-airtable]', err);
     return res.status(500).json({ error: err.message || '알 수 없는 오류' });
