@@ -433,6 +433,53 @@ function renderSingleAppList(list){
   return `<div style="margin:16px 0;">${rows}</div>`;
 }
 
+// today-delivery/chicken/pizza/burger-discount 4개 페이지 전용 카테고리 라벨.
+// PAGE_DEFS의 h1/intro를 재사용하지 않는 이유: 문장 안에 자연스럽게 들어갈 짧은 명사형이 필요해서.
+const TODAY_SUMMARY_LABEL = {
+  'today-delivery-discount': '배달',
+  'today-chicken-discount': '치킨',
+  'today-pizza-discount': '피자',
+  'today-burger-discount': '햄버거',
+};
+
+// today-* 4페이지의 할인 리스트 위에 붙는 "오늘의 OO 할인 하이라이트" 요약.
+// 새로운 데이터 집계 로직을 만들지 않고, 브랜드 페이지에서 이미 쓰고 있는 groupByBrand()를
+// 그대로 재사용해서 브랜드 판정 기준(브랜드데이 표기 등)이 다른 페이지와 어긋나지 않게 한다.
+// live는 이미 mapRecord()+isLive()+해당 카테고리 filter를 거친 배열이라, 존재하지 않는
+// 할인이나 조건을 새로 만들어내지 않는다. 데이터가 없으면 빈 문자열을 반환해 자연스럽게 생략한다.
+function renderTodaySummary(pageKey, live){
+  const label = TODAY_SUMMARY_LABEL[pageKey];
+  if (!label || !live.length) return '';
+
+  const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount);
+  const top1 = groups[0];
+  const bestApp = (g) => PLATFORM_ORDER.find(a => g.apps[a] === g.maxAmount);
+
+  let sentence = `오늘 ${label} 할인 중 가장 큰 할인은 ${escapeHtml(top1.name)}의 ${APP_LABEL[bestApp(top1)]} ${fmtWon(top1.maxAmount)} 할인입니다.`;
+
+  // 2위가 1위와 다른 브랜드일 때만 언급 (동일 브랜드가 여러 앱에 걸쳐 상위권을 채우는 경우를
+  // groupByBrand()가 이미 브랜드 단위로 묶어주므로, 여기서 나오는 2위는 항상 다른 브랜드다)
+  const top2 = groups[1];
+  if (top2){
+    sentence += ` 그다음으로 ${escapeHtml(top2.name)}의 ${APP_LABEL[bestApp(top2)]} ${fmtWon(top2.maxAmount)} 할인이 확인됩니다.`;
+  }
+
+  const countSentence = `현재 확인된 ${label} 할인 브랜드는 총 ${groups.length}곳입니다.`;
+
+  // limitedTime 필드가 실제로 존재하는 항목이 하나라도 있을 때만 주의 문구를 붙인다(추측 금지).
+  const hasLimitedTime = live.some(d => !!d.limitedTime);
+  const limitedNotice = hasLimitedTime
+    ? `<p style="font-size:12px; color:${MUTED}; margin:8px 0 0;">일부 할인은 선착순 또는 시간 제한 조건이 있을 수 있으니 주문 전에 조건을 확인하세요.</p>`
+    : '';
+
+  return `<section style="margin:16px 0 20px; padding:16px 18px; background:${CARD}; border:1px solid ${LINE}; border-radius:10px;">
+    <h2 style="font-size:15px; margin:0 0 8px; color:${TEXT};">오늘의 ${label} 할인 하이라이트</h2>
+    <p style="font-size:14px; line-height:1.7; color:${TEXT}; margin:0;">${sentence}</p>
+    <p style="font-size:13px; color:${MUTED}; margin:8px 0 0;">${countSentence}</p>
+    ${limitedNotice}
+  </section>`;
+}
+
 async function renderPage(pageKey, discounts){
   const def = PAGE_DEFS[pageKey];
   const canonical = `${SITE_URL}/${pageKey}`;
@@ -474,9 +521,10 @@ async function renderPage(pageKey, discounts){
       : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`;
   } else {
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
-    bodyHtml = sorted.length
+    const summaryHtml = renderTodaySummary(pageKey, live);
+    bodyHtml = summaryHtml + (sorted.length
       ? renderSingleAppList(sorted.map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` })))
-      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`;
+      : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`);
   }
 
   // 구조화 데이터: 이 페이지가 "무엇을 나열하는 목록"인지 구글에 명시
