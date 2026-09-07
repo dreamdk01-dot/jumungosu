@@ -432,7 +432,7 @@
   <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
        "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
        id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
-  <section id="brand-search-section" class="mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
+  <section id="brand-search-section" class="max-sm:mb-7 sm:mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
     <p class="font-display text-base sm:text-lg mb-0.5" style="color:var(--text);">🔎 할인 찾기</p>
     <p class="text-[11px] sm:text-xs mb-4" style="color:var(--muted);">조건을 선택하면 아래 할인 리스트가 바로 바뀌어요</p>
 
@@ -470,7 +470,7 @@
         <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
       </div>
     </div>
-    <p class="text-[12px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
+    <p class="text-[12px] leading-relaxed break-keep max-sm:mb-5 sm:mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
 
