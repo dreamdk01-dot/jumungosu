@@ -5736,7 +5736,7 @@
         ${noticeBadge}
         <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
         <div class="flex-1 min-w-0">
-          <p class="text-sm break-keep" style="color:var(--text);">${escapeHtml(title)}${commentCount > 0 ? ` <span class="text-xs font-bold whitespace-nowrap" style="color:var(--primary);">[${commentCount}]</span>` : ''}</p>
+          <p class="text-sm sm:text-base font-semibold break-keep" style="color:var(--text);">${escapeHtml(title)}${commentCount > 0 ? ` <span class="text-xs font-bold whitespace-nowrap" style="color:var(--primary);">[${commentCount}]</span>` : ''}</p>
           <div class="flex items-center gap-1.5 text-[12px] mt-1 flex-wrap" style="color:var(--muted);">
             <span>${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
             <span>·</span>
@@ -5829,7 +5829,7 @@
 
     el.innerHTML = pagePosts.length
       ? pagePosts.map(postCardHtml).join('')
-      : `<div class="text-center py-10 text-sm" style="color:var(--muted);">아직 등록된 글이 없어요. 첫 글을 남겨보세요!</div>`;
+      : `<div class="text-center py-10 text-sm" style="color:var(--muted);">아직 등록된 글이 없어요. <button type="button" onclick="openBoardCompose()" class="font-semibold underline" style="color:var(--primary);">첫 글을 남겨보세요!</button></div>`;
 
     renderBoardPagination(totalPages);
   }
