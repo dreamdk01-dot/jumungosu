@@ -379,7 +379,7 @@
   <!-- BEST 3 TICKET -->
   <section class="mt-4 mb-6 sm:mt-8 sm:mb-10">
     <div class="mb-2 sm:mb-4 flex items-center gap-2 flex-wrap">
-      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">오늘의 할인</h2>
+      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">오늘의 할인 BEST 3</h2>
       <div class="relative inline-block">
         <button id="best3-category-btn" onclick="toggleBest3CategoryDropdown()" type="button" class="px-2.5 py-1 rounded-md text-sm font-semibold outline-none flex items-center gap-1" style="background:var(--card); border:1px solid var(--line); color:var(--primary);">
           <span id="best3-category-btn-label">치킨</span>
@@ -387,7 +387,6 @@
         </button>
         <div id="best3-category-dropdown" class="hidden absolute left-0 top-full mt-1 rounded-md py-1 z-30 max-h-72 overflow-y-auto" style="background:var(--card); border:1px solid var(--line); min-width:140px; box-shadow:0 8px 20px rgba(0,0,0,0.35);"></div>
       </div>
-      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">BEST 3</h2>
     </div>
 
     <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35);">
@@ -406,44 +405,6 @@
     <!-- 카테고리와 무관하게 지금 라이브인 전체 할인 개수 → 할인 리스트 섹션으로 스크롤 이동 -->
     <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
-
-  <!-- 오늘 할인 브랜드: 지금 브랜드 SEO 페이지(10개)가 있는 브랜드 중, 오늘 실제로 할인 중인
-       브랜드만 골라 금액 큰 순서로 보여주고 각 브랜드 페이지로 바로 연결합니다.
-       (홈 → 오늘 할인 브랜드 → 브랜드 상세 → 앱별 비교로 이어지는 내부링크 체인) -->
-  <section id="today-brand-links-section" class="mb-8 hidden">
-    <h2 class="font-display text-lg sm:text-2xl mb-3" style="color:var(--primary);">🔥 오늘 할인 브랜드</h2>
-    <div id="today-brand-links" class="flex flex-col gap-2"></div>
-  </section>
-
-  <!-- EVENT BANNER -->
-  <button id="home-event-banner" onclick="switchTab('event')" class="hidden w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
-    style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
-    <span id="home-event-banner-text" class="font-bold text-base sm:text-lg" style="color:var(--text);"></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">참여하기 →</span>
-  </button>
-  <!-- 배너 데이터가 도착하기 전(또는 네트워크 문제로 실패했을 때) 예전 테스트 문구가 그대로 노출되지 않도록,
-       실제 콘텐츠가 준비되기 전까지는 이 스켈레톤만 보여준다. -->
-  <div id="home-event-banner-skeleton" class="w-full mb-4 rounded-lg animate-pulse" style="background:var(--card-alt); height:60px;"></div>
-
-  <!-- 오늘의 선착순 쿠폰 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
-       할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가. 서버에서 문구를 불러오지
-       않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
-    style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
-    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--muted); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
-  </button>
-
-  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
-  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
-    style="background:linear-gradient(90deg, rgba(255,90,54,0.16), rgba(255,184,0,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,90,54,0.28);">
-    <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
-      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
-    </div>
-    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
-  </button>
-  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
 
   <!-- FILTERS -->
   <section class="mb-8">
@@ -499,6 +460,44 @@
     </div>
 
     <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4"></div>
+
+  <!-- 오늘 할인 브랜드: 지금 브랜드 SEO 페이지(10개)가 있는 브랜드 중, 오늘 실제로 할인 중인
+       브랜드만 골라 금액 큰 순서로 보여주고 각 브랜드 페이지로 바로 연결합니다.
+       (홈 → 오늘 할인 브랜드 → 브랜드 상세 → 앱별 비교로 이어지는 내부링크 체인) -->
+  <section id="today-brand-links-section" class="mb-8 hidden">
+    <h2 class="font-display text-lg sm:text-2xl mb-3" style="color:var(--primary);">🔥 오늘 할인 브랜드</h2>
+    <div id="today-brand-links" class="flex flex-col gap-2"></div>
+  </section>
+
+  <!-- EVENT BANNER -->
+  <button id="home-event-banner" onclick="switchTab('event')" class="hidden w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+    style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
+    <span id="home-event-banner-text" class="font-bold text-base sm:text-lg" style="color:var(--text);"></span>
+    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">참여하기 →</span>
+  </button>
+  <!-- 배너 데이터가 도착하기 전(또는 네트워크 문제로 실패했을 때) 예전 테스트 문구가 그대로 노출되지 않도록,
+       실제 콘텐츠가 준비되기 전까지는 이 스켈레톤만 보여준다. -->
+  <div id="home-event-banner-skeleton" class="w-full mb-4 rounded-lg animate-pulse" style="background:var(--card-alt); height:60px;"></div>
+
+  <!-- 오늘의 선착순 쿠폰 배너 — 이벤트 임시 운영 중단으로 비어있는 이벤트 배너 자리를 대신해,
+       할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가. 서버에서 문구를 불러오지
+       않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
+  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+    style="background:linear-gradient(90deg, rgba(255,184,0,0.16), rgba(255,90,54,0.16)); border:1px dashed var(--primary);">
+    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--muted); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
+    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
+  </button>
+
+  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
+  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
+    style="background:linear-gradient(90deg, rgba(255,90,54,0.16), rgba(255,184,0,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,90,54,0.28);">
+    <div class="flex-1 min-w-0">
+      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
+      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
+    </div>
+    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
+  </button>
+  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
 
     <!-- ===== 서비스 소개 + FAQ (SEO 보강용). 예전엔 할인 리스트 전부(두 번째 그리드·북마크 배너까지) 다음,
          즉 페이지 맨 마지막에 있었는데, 조금 위로(북마크 팁 배너보다 앞으로) 옮기고 "배달앱 할인 비교"라는
