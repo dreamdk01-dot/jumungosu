@@ -591,25 +591,31 @@
 <!-- ===== BOARD PAGE (자유게시판) ===== -->
 <main id="page-board" class="max-w-5xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
-    <h2 class="font-display text-2xl mb-1" style="color:var(--primary);">자유게시판</h2>
+    <h1 class="font-display text-2xl mb-1" style="color:var(--primary);">자유게시판</h1>
     <p class="text-sm mb-6" style="color:var(--muted);">유저들이 직접 전하는 실시간 중복 할인 꿀팁과 우리 동네 맛집 정보를 확인하세요!</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
       <!-- 좌측 사이드바: 카테고리 메뉴 -->
       <aside class="sm:col-span-1">
-        <nav class="flex flex-col gap-2">
-          <button id="board-tab-all" onclick="switchBoardTab('all')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🗂 전체</button>
-          <button id="board-tab-food" onclick="switchBoardTab('food')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🔥 할인의 고수</button>
-          <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
-          <button id="board-tab-free" onclick="switchBoardTab('free')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
-          <button id="board-tab-store" onclick="switchBoardTab('store')" class="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📍 우리동네 점바점 자랑</button>
+        <nav class="flex flex-row flex-wrap sm:flex-col gap-2">
+          <button id="board-tab-all" onclick="switchBoardTab('all')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🗂 전체</button>
+          <button id="board-tab-food" onclick="switchBoardTab('food')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🔥 할인의 고수</button>
+          <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
+          <button id="board-tab-free" onclick="switchBoardTab('free')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
+          <button id="board-tab-store" onclick="switchBoardTab('store')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📍 우리동네 점바점 자랑</button>
         </nav>
       </aside>
 
       <!-- 우측 메인 콘텐츠: 글쓰기 + 게시글 리스트 -->
       <div class="sm:col-span-3">
-        <!-- 글쓰기 버튼 -->
-        <button onclick="openBoardCompose()" class="w-full mb-4 py-3 rounded-md font-display text-base" style="background:var(--card); border:1px dashed var(--line); color:var(--muted);">✏️ 글쓰기</button>
+        <!-- 정렬 탭 + 글쓰기 CTA (한 줄에 배치해 목록에 더 빨리 도달하도록 함) -->
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-1">
+            <button id="board-sort-latest" onclick="setBoardSort('latest')" class="px-3 py-1.5 rounded-md text-xs font-bold" style="background:var(--primary); color:#1C1A17;">🕐 최신</button>
+            <button id="board-sort-popular" onclick="setBoardSort('popular')" class="px-3 py-1.5 rounded-md text-xs font-semibold" style="background:transparent; color:var(--muted);">🔥 인기</button>
+          </div>
+          <button onclick="openBoardCompose()" class="shrink-0 px-4 py-2 rounded-md font-display text-sm" style="background:var(--card); border:1px dashed var(--line); color:var(--muted);">✏️ 글쓰기</button>
+        </div>
 
         <!-- 글쓰기 폼 -->
         <div id="board-compose" class="hidden rounded-lg p-4 mb-5 space-y-3" style="background:var(--card);">
@@ -679,12 +685,6 @@
             <button onclick="closeBoardCompose()" class="px-4 py-2.5 rounded-md text-sm font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
           </div>
           <p id="board-compose-error" class="text-xs hidden" style="color:var(--accent);"></p>
-        </div>
-
-        <!-- 정렬 탭 -->
-        <div class="flex items-center gap-1 mb-2">
-          <button id="board-sort-latest" onclick="setBoardSort('latest')" class="px-3 py-1.5 rounded-md text-xs font-bold" style="background:var(--primary); color:#1C1A17;">🕐 최신</button>
-          <button id="board-sort-popular" onclick="setBoardSort('popular')" class="px-3 py-1.5 rounded-md text-xs font-semibold" style="background:transparent; color:var(--muted);">🔥 인기</button>
         </div>
 
         <!-- 게시글 목록 -->
