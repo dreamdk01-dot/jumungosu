@@ -797,215 +797,7 @@
 </main>
 
 <!-- ===== ADMIN PAGE ===== -->
-<main id="page-admin" class="max-w-5xl mx-auto px-4 pb-20 hidden">
-  <section class="mt-8 mb-2">
-    <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
-      <div class="flex items-center gap-2">
-        <h2 class="font-display text-2xl" style="color:var(--primary);">사장님 대시보드</h2>
-        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
-        <span id="admin-dashboard-role-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full"></span>
-      </div>
-    </div>
-    <p id="admin-dashboard-role-desc" class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
-  </section>
-
-  <!-- 홈 배너 관리 -->
-  <section class="mb-12">
-    <h3 class="font-display text-xl mb-4" style="color:var(--text);">홈 배너 관리</h3>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🎁 이벤트 배너 문구</p>
-        <input id="admin-banner-event-text" type="text" maxlength="60" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🔥 꿀팁 배너 뱃지 문구</p>
-        <input id="admin-banner-promo-badge" type="text" maxlength="30" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">꿀팁 배너 제목 문구</p>
-        <input id="admin-banner-promo-title" type="text" maxlength="60" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">꿀팁 배너가 연결될 게시글</p>
-        <select id="admin-banner-promo-post" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
-      </div>
-      <div class="rounded-lg p-4 md:col-span-2" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🗳️ 이벤트 투표 페이지 제목</p>
-        <input id="admin-event-page-title-input" type="text" maxlength="60" placeholder="비워두면 자동으로 'N월 최애 후라이드 치킨 투표 (~N/N까지)' 형식으로 표시돼요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-      </div>
-    </div>
-    <button type="button" id="admin-banner-save-btn" onclick="saveHomeBannerConfig()" class="mt-4 px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">배너 저장하기</button>
-  </section>
-
-  <!-- 통계 대시보드 -->
-  <section class="mb-12">
-    <h3 class="font-display text-xl mb-4" style="color:var(--text);">통계 대시보드</h3>
-
-    <!-- 숫자 중심 통계 카드 (비율 표기 없음) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">오늘의 방문자 수</p>
-        <p class="font-mono text-2xl font-bold" style="color:var(--primary);"><span id="stat-today-visitors">0</span>명</p>
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">누적 방문자 수</p>
-        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="stat-total-visitors">0</span>명</p>
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">오늘 신규 가입자 수</p>
-        <p class="font-mono text-2xl font-bold" style="color:var(--accent);"><span id="stat-today-signups">0</span>명</p>
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">총 누적 회원 수</p>
-        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="stat-total-members">0</span>명</p>
-      </div>
-    </div>
-
-    <!--
-      최근 7일 방문자·가입자 추이 그래프는 현재 하드코딩된 데모 수치(62~105명 등)라서
-      실시간 연동된 회원 통계(총 누적 회원 수 / 오늘 신규 가입자 수)와 값이 어긋나 보일 수 있어
-      실제 집계 로직이 붙기 전까지 화면에서 숨겨둡니다. (관련 JS 호출도 하단에서 함께 주석 처리됨)
-
-    <div class="rounded-lg p-4" style="background:var(--card);">
-      <p class="font-mono text-xs mb-4" style="color:var(--muted);">최근 7일 방문자·가입자 추이 (단위: 명)</p>
-
-      <div class="mb-6">
-        <p class="text-xs font-semibold mb-2" style="color:var(--tag-baemin);">방문자 수</p>
-        <div id="chart-visitors-values" class="grid grid-cols-7 gap-2 text-center mb-1"></div>
-        <div id="chart-visitors-bars" class="grid grid-cols-7 gap-2 items-end" style="height:80px;"></div>
-        <div id="chart-visitors-days" class="grid grid-cols-7 gap-2 text-center mt-1"></div>
-      </div>
-
-      <div>
-        <p class="text-xs font-semibold mb-2" style="color:var(--accent);">신규 가입자 수</p>
-        <div id="chart-signups-values" class="grid grid-cols-7 gap-2 text-center mb-1"></div>
-        <div id="chart-signups-bars" class="grid grid-cols-7 gap-2 items-end" style="height:80px;"></div>
-        <div id="chart-signups-days" class="grid grid-cols-7 gap-2 text-center mt-1"></div>
-      </div>
-    </div>
-    -->
-  </section>
-
-  <!-- 신고된 게시글 관리 -->
-  <section class="mb-12">
-    <h3 class="font-display text-xl mb-4" style="color:var(--text);">신고된 게시글 관리</h3>
-    <p class="text-xs mb-4" style="color:var(--muted);">영구 삭제는 상단의 '운영자 로그인 상태'가 ON일 때만 가능합니다.</p>
-
-    <!-- 블라인드된 게시글 목록 -->
-    <div class="rounded-lg p-4" style="background:var(--card);">
-      <p class="font-mono text-xs mb-3" style="color:var(--muted);">신고 5회 누적 블라인드 게시글 (<span id="admin-reported-count">0</span>건)</p>
-      <div id="admin-reported-list" class="space-y-2"></div>
-    </div>
-  </section>
-
-  <!-- 할인 정보 관리 -->
-  <section class="mb-12">
-    <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
-      <h3 class="font-display text-xl" style="color:var(--text);">할인 정보 관리</h3>
-      <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:var(--card); border:1px solid var(--line);">
-        <label for="admin-discount-updated-date" class="text-xs font-medium" style="color:var(--muted);">홈화면 UPDATED 날짜</label>
-        <input id="admin-discount-updated-date" type="date" class="px-2 py-1 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-        <button type="button" id="admin-discount-updated-save-btn" onclick="saveDiscountUpdatedAt()" class="text-xs font-medium px-3 py-1.5 rounded-md" style="background:var(--primary); color:#1C1A17;">저장</button>
-      </div>
-    </div>
-    <p class="text-xs" style="color:var(--muted);">할인 브랜드 데이터는 이제 Airtable에서 관리합니다. Airtable에서 값을 수정하면 사이트에 자동으로 반영돼요 (최대 5분 이내). 저장 버튼을 누른 시각(시:분)이 날짜와 함께 자동으로 기록돼요.</p>
-  </section>
-
-  <!-- 이벤트 관리 -->
-  <section class="mb-12">
-    <h3 class="font-display text-xl mb-4" style="color:var(--text);">이벤트 관리</h3>
-    <p id="admin-event-week-label" class="text-xs mb-4" style="color:var(--muted);"></p>
-
-    <div class="grid lg:grid-cols-5 gap-5">
-      <!-- 투표 후보 관리 (다음 이벤트 초안 — 저장해도 지금 공개된 이벤트에는 영향 없음) -->
-      <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">다음 이벤트 후보 관리 (초안)</p>
-        <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
-        <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
-        <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">초안 저장하기</button>
-        <button type="button" id="admin-vote-publish-btn" onclick="publishDraftEvent()" class="w-full text-xs font-bold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">🚀 지금 공개하기</button>
-        <p class="text-[12px] mt-2" style="color:var(--muted);">※ 초안은 저장해도 방문자에게 안 보여요. '지금 공개하기'를 눌러야 실제로 전환됩니다.</p>
-      </div>
-
-
-      <!-- 실시간 득표율 -->
-      <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">실시간 득표율 현황</p>
-        <div id="admin-vote-stats" class="space-y-3"></div>
-      </div>
-
-      <!-- 참여자 리스트 -->
-      <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2">
-            <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
-            <select id="admin-participant-event-select" onchange="handleParticipantEventChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);"></select>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="loadEventParticipants()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
-            <button type="button" id="admin-draw-winner-btn" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
-            <button type="button" onclick="downloadParticipantsCSV()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⬇ 참여자 CSV 다운로드</button>
-          </div>
-        </div>
-        <input id="admin-participant-search" type="text" oninput="renderAdminParticipants()" placeholder="🔍 이름 · 이메일 · 투표 항목으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-        <div class="overflow-x-auto overflow-y-auto rounded-md" style="max-height:340px; border:1px solid var(--line);">
-          <table class="w-full text-sm">
-            <thead style="position:sticky; top:0; background:var(--card); z-index:1;">
-              <tr class="text-left" style="color:var(--muted);">
-                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이름</th>
-                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이메일</th>
-                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">투표 항목</th>
-              </tr>
-            </thead>
-            <tbody id="admin-participant-list" class="dashed-divider"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 지난 이벤트 보기 -->
-      <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
-        <p class="font-mono text-xs mb-3" style="color:var(--muted);">지난 이벤트 보기</p>
-        <select id="admin-vote-history-select" onchange="loadVoteEventHistory(this.value)" class="w-full px-3 py-2 rounded-md text-sm outline-none mb-3" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <option value="">회차를 선택하세요</option>
-        </select>
-        <div id="admin-vote-history-results" class="space-y-3">
-          <p class="text-xs" style="color:var(--muted);">회차를 선택하면 그 달의 득표 결과와 당첨자를 볼 수 있어요.</p>
-        </div>
-      </div>
-
-      <!-- 당첨자 리스트 (Supabase winners 테이블과 연동, 랜덤 추첨 시마다 자동 갱신) -->
-      <div class="lg:col-span-5 rounded-lg p-4" style="background:var(--card);">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2">
-            <p class="font-mono text-xs" style="color:var(--muted);">🏆 당첨자 리스트 (<span id="admin-winner-count">0</span>명)</p>
-            <select id="admin-winner-event-select" onchange="handleWinnerEventFilterChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);">
-              <option value="">전체 회차</option>
-            </select>
-          </div>
-          <button type="button" onclick="loadWinnersList()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left" style="color:var(--muted);">
-                <th class="font-mono text-xs font-normal pb-2">회차</th>
-                <th class="font-mono text-xs font-normal pb-2">당첨 일시</th>
-                <th class="font-mono text-xs font-normal pb-2">이름</th>
-                <th class="font-mono text-xs font-normal pb-2">이메일</th>
-                <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
-                <th class="font-mono text-xs font-normal pb-2">메일</th>
-                <th class="font-mono text-xs font-normal pb-2">선물 지급</th>
-                <th class="font-mono text-xs font-normal pb-2 text-right">삭제</th>
-              </tr>
-            </thead>
-            <tbody id="admin-winner-list" class="dashed-divider"></tbody>
-          </table>
-          <p id="admin-winner-empty" class="text-xs text-center py-4" style="color:var(--muted);">아직 추첨된 당첨자가 없어요.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
+<main id="page-admin" class="max-w-5xl mx-auto px-4 pb-20 hidden"></main>
 
 <!-- ===== ABOUT PAGE (소개) — 애드센스 등 광고 심사를 위한 독립 페이지. 모달이 아닌 실제 탭/URL로 구성 ===== -->
 <main id="page-about" class="max-w-3xl mx-auto px-4 pb-20 hidden">
@@ -2801,6 +2593,238 @@
   // 관리자 페이지 접근(조회) 권한 — 마스터를 포함한 매니저 목록 전체
   function isManagerUser(){
     return !!(isLoggedIn && currentUser && MANAGER_EMAILS.includes(currentUser.email));
+  }
+
+  // ---------- 관리자 대시보드 DOM 지연 생성 ----------
+  // 관리자 UI 마크업을 정적 HTML로 두지 않고, isManagerUser() 확인 후에만 DOM에 생성한다.
+  // (구글 애드센스 재심사/SEO 목적 — 일반 방문자의 최초 HTML/DOM에 관리자 UI가 아예 존재하지 않게 함)
+  // 내용 자체는 기존 <main id="page-admin"> 안에 있던 마크업을 한 글자도 바꾸지 않고 그대로 옮긴 것이다.
+  function adminDashboardMarkup(){
+    return `
+  <section class="mt-8 mb-2">
+    <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+      <div class="flex items-center gap-2">
+        <h2 class="font-display text-2xl" style="color:var(--primary);">사장님 대시보드</h2>
+        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:var(--card-alt); color:var(--muted);">테스트 전용</span>
+        <span id="admin-dashboard-role-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full"></span>
+      </div>
+    </div>
+    <p id="admin-dashboard-role-desc" class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
+  </section>
+
+  <!-- 홈 배너 관리 -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">홈 배너 관리</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🎁 이벤트 배너 문구</p>
+        <input id="admin-banner-event-text" type="text" maxlength="60" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🔥 꿀팁 배너 뱃지 문구</p>
+        <input id="admin-banner-promo-badge" type="text" maxlength="30" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">꿀팁 배너 제목 문구</p>
+        <input id="admin-banner-promo-title" type="text" maxlength="60" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">꿀팁 배너가 연결될 게시글</p>
+        <select id="admin-banner-promo-post" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
+      </div>
+      <div class="rounded-lg p-4 md:col-span-2" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">🗳️ 이벤트 투표 페이지 제목</p>
+        <input id="admin-event-page-title-input" type="text" maxlength="60" placeholder="비워두면 자동으로 'N월 최애 후라이드 치킨 투표 (~N/N까지)' 형식으로 표시돼요" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      </div>
+    </div>
+    <button type="button" id="admin-banner-save-btn" onclick="saveHomeBannerConfig()" class="mt-4 px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">배너 저장하기</button>
+  </section>
+
+  <!-- 통계 대시보드 -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">통계 대시보드</h3>
+
+    <!-- 숫자 중심 통계 카드 (비율 표기 없음) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">오늘의 방문자 수</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--primary);"><span id="stat-today-visitors">0</span>명</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">누적 방문자 수</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="stat-total-visitors">0</span>명</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">오늘 신규 가입자 수</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--accent);"><span id="stat-today-signups">0</span>명</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">총 누적 회원 수</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="stat-total-members">0</span>명</p>
+      </div>
+    </div>
+
+    <!--
+      최근 7일 방문자·가입자 추이 그래프는 현재 하드코딩된 데모 수치(62~105명 등)라서
+      실시간 연동된 회원 통계(총 누적 회원 수 / 오늘 신규 가입자 수)와 값이 어긋나 보일 수 있어
+      실제 집계 로직이 붙기 전까지 화면에서 숨겨둡니다. (관련 JS 호출도 하단에서 함께 주석 처리됨)
+
+    <div class="rounded-lg p-4" style="background:var(--card);">
+      <p class="font-mono text-xs mb-4" style="color:var(--muted);">최근 7일 방문자·가입자 추이 (단위: 명)</p>
+
+      <div class="mb-6">
+        <p class="text-xs font-semibold mb-2" style="color:var(--tag-baemin);">방문자 수</p>
+        <div id="chart-visitors-values" class="grid grid-cols-7 gap-2 text-center mb-1"></div>
+        <div id="chart-visitors-bars" class="grid grid-cols-7 gap-2 items-end" style="height:80px;"></div>
+        <div id="chart-visitors-days" class="grid grid-cols-7 gap-2 text-center mt-1"></div>
+      </div>
+
+      <div>
+        <p class="text-xs font-semibold mb-2" style="color:var(--accent);">신규 가입자 수</p>
+        <div id="chart-signups-values" class="grid grid-cols-7 gap-2 text-center mb-1"></div>
+        <div id="chart-signups-bars" class="grid grid-cols-7 gap-2 items-end" style="height:80px;"></div>
+        <div id="chart-signups-days" class="grid grid-cols-7 gap-2 text-center mt-1"></div>
+      </div>
+    </div>
+    -->
+  </section>
+
+  <!-- 신고된 게시글 관리 -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">신고된 게시글 관리</h3>
+    <p class="text-xs mb-4" style="color:var(--muted);">영구 삭제는 상단의 '운영자 로그인 상태'가 ON일 때만 가능합니다.</p>
+
+    <!-- 블라인드된 게시글 목록 -->
+    <div class="rounded-lg p-4" style="background:var(--card);">
+      <p class="font-mono text-xs mb-3" style="color:var(--muted);">신고 5회 누적 블라인드 게시글 (<span id="admin-reported-count">0</span>건)</p>
+      <div id="admin-reported-list" class="space-y-2"></div>
+    </div>
+  </section>
+
+  <!-- 할인 정보 관리 -->
+  <section class="mb-12">
+    <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+      <h3 class="font-display text-xl" style="color:var(--text);">할인 정보 관리</h3>
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:var(--card); border:1px solid var(--line);">
+        <label for="admin-discount-updated-date" class="text-xs font-medium" style="color:var(--muted);">홈화면 UPDATED 날짜</label>
+        <input id="admin-discount-updated-date" type="date" class="px-2 py-1 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <button type="button" id="admin-discount-updated-save-btn" onclick="saveDiscountUpdatedAt()" class="text-xs font-medium px-3 py-1.5 rounded-md" style="background:var(--primary); color:#1C1A17;">저장</button>
+      </div>
+    </div>
+    <p class="text-xs" style="color:var(--muted);">할인 브랜드 데이터는 이제 Airtable에서 관리합니다. Airtable에서 값을 수정하면 사이트에 자동으로 반영돼요 (최대 5분 이내). 저장 버튼을 누른 시각(시:분)이 날짜와 함께 자동으로 기록돼요.</p>
+  </section>
+
+  <!-- 이벤트 관리 -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">이벤트 관리</h3>
+    <p id="admin-event-week-label" class="text-xs mb-4" style="color:var(--muted);"></p>
+
+    <div class="grid lg:grid-cols-5 gap-5">
+      <!-- 투표 후보 관리 (다음 이벤트 초안 — 저장해도 지금 공개된 이벤트에는 영향 없음) -->
+      <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">다음 이벤트 후보 관리 (초안)</p>
+        <div id="admin-vote-option-editor" class="space-y-2 mb-3"></div>
+        <button type="button" onclick="addVoteOptionField()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px dashed var(--line);">+ 후보 추가</button>
+        <button type="button" id="admin-vote-save-btn" onclick="saveVoteEventOptions()" class="w-full text-xs font-semibold py-2 rounded-md mb-2" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">초안 저장하기</button>
+        <button type="button" id="admin-vote-publish-btn" onclick="publishDraftEvent()" class="w-full text-xs font-bold py-2 rounded-md" style="background:var(--primary); color:#1C1A17;">🚀 지금 공개하기</button>
+        <p class="text-[12px] mt-2" style="color:var(--muted);">※ 초안은 저장해도 방문자에게 안 보여요. '지금 공개하기'를 눌러야 실제로 전환됩니다.</p>
+      </div>
+
+
+      <!-- 실시간 득표율 -->
+      <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">실시간 득표율 현황</p>
+        <div id="admin-vote-stats" class="space-y-3"></div>
+      </div>
+
+      <!-- 참여자 리스트 -->
+      <div class="lg:col-span-3 rounded-lg p-4" style="background:var(--card);">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <p class="font-mono text-xs" style="color:var(--muted);">투표 참여자 (기프티콘 추첨 대상자, <span id="admin-participant-count">0</span>명)</p>
+            <select id="admin-participant-event-select" onchange="handleParticipantEventChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);"></select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="loadEventParticipants()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
+            <button type="button" id="admin-draw-winner-btn" onclick="drawRandomWinner()" class="font-mono text-xs px-3 py-1.5 rounded-md font-semibold" style="background:var(--primary); color:#1C1A17;">🎁 랜덤 1명 추첨</button>
+            <button type="button" onclick="downloadParticipantsCSV()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">⬇ 참여자 CSV 다운로드</button>
+          </div>
+        </div>
+        <input id="admin-participant-search" type="text" oninput="renderAdminParticipants()" placeholder="🔍 이름 · 이메일 · 투표 항목으로 검색" class="w-full mb-3 px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+        <div class="overflow-x-auto overflow-y-auto rounded-md" style="max-height:340px; border:1px solid var(--line);">
+          <table class="w-full text-sm">
+            <thead style="position:sticky; top:0; background:var(--card); z-index:1;">
+              <tr class="text-left" style="color:var(--muted);">
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이름</th>
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">이메일</th>
+                <th class="font-mono text-xs font-normal pb-2 pt-2 px-2">투표 항목</th>
+              </tr>
+            </thead>
+            <tbody id="admin-participant-list" class="dashed-divider"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 지난 이벤트 보기 -->
+      <div class="lg:col-span-2 rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-3" style="color:var(--muted);">지난 이벤트 보기</p>
+        <select id="admin-vote-history-select" onchange="loadVoteEventHistory(this.value)" class="w-full px-3 py-2 rounded-md text-sm outline-none mb-3" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+          <option value="">회차를 선택하세요</option>
+        </select>
+        <div id="admin-vote-history-results" class="space-y-3">
+          <p class="text-xs" style="color:var(--muted);">회차를 선택하면 그 달의 득표 결과와 당첨자를 볼 수 있어요.</p>
+        </div>
+      </div>
+
+      <!-- 당첨자 리스트 (Supabase winners 테이블과 연동, 랜덤 추첨 시마다 자동 갱신) -->
+      <div class="lg:col-span-5 rounded-lg p-4" style="background:var(--card);">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <p class="font-mono text-xs" style="color:var(--muted);">🏆 당첨자 리스트 (<span id="admin-winner-count">0</span>명)</p>
+            <select id="admin-winner-event-select" onchange="handleWinnerEventFilterChange(this.value)" class="text-xs font-semibold px-2 py-1 rounded-md" style="background:var(--surface); color:var(--primary); border:1px solid var(--line);">
+              <option value="">전체 회차</option>
+            </select>
+          </div>
+          <button type="button" onclick="loadWinnersList()" class="font-mono text-xs px-3 py-1.5 rounded-md" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">↻ 새로고침</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left" style="color:var(--muted);">
+                <th class="font-mono text-xs font-normal pb-2">회차</th>
+                <th class="font-mono text-xs font-normal pb-2">당첨 일시</th>
+                <th class="font-mono text-xs font-normal pb-2">이름</th>
+                <th class="font-mono text-xs font-normal pb-2">이메일</th>
+                <th class="font-mono text-xs font-normal pb-2">투표 항목</th>
+                <th class="font-mono text-xs font-normal pb-2">메일</th>
+                <th class="font-mono text-xs font-normal pb-2">선물 지급</th>
+                <th class="font-mono text-xs font-normal pb-2 text-right">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="admin-winner-list" class="dashed-divider"></tbody>
+          </table>
+          <p id="admin-winner-empty" class="text-xs text-center py-4" style="color:var(--muted);">아직 추첨된 당첨자가 없어요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+`;
+  }
+
+  // 관리자 권한이 확인된 시점에만 호출 — 이미 렌더링되어 있으면 아무 것도 하지 않는다(중복 삽입 방지).
+  function ensureAdminDashboardRendered(){
+    const container = document.getElementById('page-admin');
+    if (!container || container.dataset.rendered === '1') return;
+    container.innerHTML = adminDashboardMarkup();
+    container.dataset.rendered = '1';
+  }
+
+  // 로그아웃 등으로 관리자 권한을 잃었을 때 DOM에서도 관리자 UI를 완전히 비운다.
+  function clearAdminDashboardRendered(){
+    const container = document.getElementById('page-admin');
+    if (!container) return;
+    container.innerHTML = '';
+    delete container.dataset.rendered;
   }
   // 헤더/내 정보 등에 붙일 역할 뱃지 텍스트 ('MASTER' | 'MANAGER' | '')
   function getUserRoleBadge(){
@@ -6012,6 +6036,7 @@
   // 매니저 목록(마스터 포함)에 있을 때만 관리자 대시보드로 이동합니다.
   function handleAdminNavClick(){
     if (isManagerUser()){
+      ensureAdminDashboardRendered();
       switchTab('admin');
     } else {
       showToast('관리자 권한이 없습니다.');
@@ -6810,6 +6835,12 @@
     const showAdminBtn = isManagerUser();
     if (desktopAdminBtn) desktopAdminBtn.classList.toggle('hidden', !showAdminBtn);
     if (mobileAdminBtn) mobileAdminBtn.classList.toggle('hidden', !showAdminBtn);
+    // 관리자 UI는 권한이 확인된 시점에만 DOM에 생성한다 (일반 방문자의 HTML/DOM에는 아예 존재하지 않음)
+    if (showAdminBtn){
+      ensureAdminDashboardRendered();
+    } else {
+      clearAdminDashboardRendered();
+    }
     renderAdminRoleBadge();
 
     // 관리자 권한을 잃은 상태(로그아웃/일반 유저 전환)로 바뀌면 관리자 페이지에 남아있지 않도록 처리
@@ -7142,6 +7173,10 @@
   ];
 
   async function renderDashboardStats(){
+    // page-admin이 아직 렌더링되지 않은 상태(관리자 권한 미확인 방문자)라면 조용히 종료.
+    // (관리자 DOM은 이제 isManagerUser() 확인 후에만 생성되므로, 이 시점엔 없을 수 있음)
+    if (!document.getElementById('stat-today-visitors')) return;
+
     document.getElementById('stat-today-visitors').textContent = dashboardStats.todayVisitors.toLocaleString('ko-KR');
     document.getElementById('stat-total-visitors').textContent = dashboardStats.totalVisitors.toLocaleString('ko-KR');
     // 회원 수/방문자 수 항목은 우선 데모 값으로 먼저 그려두고, 아래에서 Supabase 실측치로 교체합니다.
@@ -7270,6 +7305,7 @@
   function renderAdminVoteStats(){
     const total = voteOptions.reduce((s,o)=>s+o.votes,0);
     const el = document.getElementById('admin-vote-stats');
+    if (!el) return;
     el.innerHTML = voteOptions.map(o => {
       const pct = total > 0 ? Math.round((o.votes/total)*100) : 0;
       return `
@@ -7287,6 +7323,7 @@
 
   function renderAdminParticipants(){
     const el = document.getElementById('admin-participant-list');
+    if (!el) return;
     document.getElementById('admin-participant-count').textContent = participants.length;
 
     const searchInput = document.getElementById('admin-participant-search');
