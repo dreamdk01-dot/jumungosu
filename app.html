@@ -2817,6 +2817,21 @@
     if (!container || container.dataset.rendered === '1') return;
     container.innerHTML = adminDashboardMarkup();
     container.dataset.rendered = '1';
+
+    // DOM이 방금 생성됐으므로, 페이지 최초 로드 시(당시엔 관리자 DOM이 아직 없어 조용히
+    // 스킵됐던) 통계/당첨자/투표/참여자 등 기존 렌더링·조회 함수를 여기서 다시 실행해준다.
+    // 새로운 조회 로직이 아니라 기존 함수를 그대로 재호출하는 것뿐이다.
+    renderDashboardStats();       // 통계 대시보드(방문자/회원 수)
+    loadWinnersList();            // 당첨자 리스트 (Supabase winners 테이블에서 다시 조회)
+    renderAdminVoteStats();       // 실시간 득표율 (이미 로드된 voteOptions 기준 재렌더링)
+    renderAdminParticipants();    // 참여자 리스트 (이미 로드된 participants 기준 재렌더링)
+    renderVoteOptionEditor();     // 다음 이벤트 후보 관리(초안) 입력값
+    renderVoteHistorySelect();    // 지난 이벤트 보기 드롭다운
+    renderParticipantEventSelect(); // 참여자 패널의 회차 선택 드롭다운
+    renderAdminBannerPostSelect();  // 홈 배너 관리 입력값(문구/뱃지/연결 게시글)
+    renderReportedPosts();        // 신고된 게시글 목록
+    const discountDateInput = document.getElementById('admin-discount-updated-date');
+    if (discountDateInput && !discountDateInput.value) discountDateInput.value = (discountUpdatedAtValue || '').slice(0, 10);
   }
 
   // 로그아웃 등으로 관리자 권한을 잃었을 때 DOM에서도 관리자 UI를 완전히 비운다.
