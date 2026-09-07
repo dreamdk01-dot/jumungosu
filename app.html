@@ -168,6 +168,13 @@
   .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.5px; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
 
+  /* BEST3 1위 카드를 살짝 강조. renderBest3()의 JS/마크업은 그대로 두고, DOM 순서 기준
+     CSS 선택자로만 구분해서 과장되지 않게(얇은 테두리) 1/2/3위 위계를 드러낸다. */
+  #best3-list > div:first-child,
+  #best3-list-mobile > div:first-child{
+    border:1px solid var(--primary);
+  }
+
   /* ticket notch effect - perforated top/bottom edges */
   .ticket{
     position:relative;
@@ -410,10 +417,11 @@
        "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
        id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
   <section id="brand-search-section" class="mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
-    <p class="font-display text-base sm:text-lg mb-3" style="color:var(--text);">🔎 할인 찾기</p>
+    <p class="font-display text-base sm:text-lg mb-0.5" style="color:var(--text);">🔎 할인 찾기</p>
+    <p class="text-[11px] sm:text-xs mb-4" style="color:var(--muted);">조건을 선택하면 아래 할인 리스트가 바로 바뀌어요</p>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
-    <div class="flex gap-2 flex-wrap mb-5" id="app-filters">
+    <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
       <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
       <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
       <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
@@ -421,7 +429,7 @@
     </div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
-    <div class="flex gap-2 flex-wrap scrollbar-none mb-5" id="category-filters"></div>
+    <div class="flex gap-2 flex-wrap scrollbar-none pb-4 mb-4" id="category-filters" style="border-bottom:1px solid var(--line);"></div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
     <div class="relative max-w-[320px]">
@@ -3267,11 +3275,11 @@
 
     return `
       <div class="rounded-md p-4" data-brand-key="${escapeHtml(group.key)}" style="background:var(--card); border:1px solid var(--line);">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-11 h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
+        <div class="flex items-center gap-3 mb-2.5">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
           <div class="flex-1 min-w-0">
-            <p class="font-mono text-xl sm:text-2xl font-extrabold leading-tight" style="color:var(--accent);">${headlineText}</p>
-            <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--muted);">${escapeHtml(group.displayName)}</p>
+            <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(group.displayName)}</p>
+            <p class="font-mono text-xl sm:text-2xl font-extrabold leading-tight mt-0.5" style="color:var(--accent);">${headlineText}</p>
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
