@@ -5822,21 +5822,23 @@
 
     return `
       <div id="board-post-${p.id}" class="rounded-lg p-4 my-2" style="background:var(--card); ${p.isNotice ? 'border:1px solid var(--primary);' : ''}">
-        <div class="flex items-center gap-2 mb-1 flex-wrap">
+        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
           ${p.isNotice ? `<span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:var(--primary); color:#1C1A17;">📌 공지</span>` : ''}
           <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
           <span class="font-semibold text-sm truncate min-w-0 flex-1">${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
-          <div class="flex items-center gap-2 shrink-0 ml-auto">
-            <button onclick="togglePostExpand(${p.id})" class="text-xs font-semibold flex items-center gap-1 px-2 py-1 rounded-md" style="color:var(--primary);">▲ 접기</button>
+        </div>
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <p class="font-mono text-[12px]" style="color:var(--muted);">${formatPostTimestamp(p)}</p>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="togglePostExpand(${p.id})" class="text-xs font-semibold flex items-center gap-1 px-1" style="color:var(--primary);" aria-label="접기">▲</button>
             ${canModify ? `
               <button onclick="event.stopPropagation(); editPost(${p.id})" class="text-xs font-semibold shrink-0" style="color:var(--muted);">수정</button>
               <button onclick="event.stopPropagation(); deletePost(${p.id})" class="text-xs font-semibold shrink-0" style="color:var(--accent);">삭제</button>
             ` : ''}
           </div>
         </div>
-        <p class="font-mono text-[12px] mb-2" style="color:var(--muted);">${formatPostTimestamp(p)}</p>
         ${bodyHtml}
-        <div class="flex items-center gap-3 dashed-divider pt-3 flex-wrap">
+        <div class="flex items-center gap-3 dashed-divider mt-1 pt-4 flex-wrap">
           <button onclick="event.stopPropagation(); likePost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">👍 <span>${p.likes}</span></button>
           <button onclick="event.stopPropagation(); dislikePost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">👎 <span>${p.dislikes}</span></button>
           <button onclick="event.stopPropagation(); reportPost(${p.id})" class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted);">🚨 신고</button>
