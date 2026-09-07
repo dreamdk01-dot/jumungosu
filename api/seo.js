@@ -420,6 +420,16 @@ function renderCompareTable(groups){
   return `<table style="width:100%; border-collapse:collapse; font-size:14px; margin:16px 0;">${header}${rows}</table>`;
 }
 
+// today-delivery/chicken/pizza/burger-discount 4페이지의 브랜드데이 코멘트를 페이지 성격에
+// 맞게 표현하기 위한 라벨. P1-②의 CATEGORY_TODAY_PAGE(브랜드 페이지→오늘 종합페이지 링크용)와는
+// 목적이 달라 별도로 둔다 — 기존 상수는 건드리지 않는다.
+const TODAY_PAGE_BRAND_DAY_LABEL = {
+  'today-delivery-discount': '전체 배달',
+  'today-chicken-discount': '치킨',
+  'today-pizza-discount': '피자',
+  'today-burger-discount': '햄버거',
+};
+
 // TOP/주요 페이지(today-*, singleApp, multiAppOnly)에 붙는 짧은 편집자 코멘트.
 // 이미 존재하는 renderTodaySummary(1위/2위/총건수/선착순 안내)와 겹치지 않도록,
 // 여기서는 그 함수가 다루지 않는 새로운 사실(상위 금액대 분포/브랜드데이/앱 간 금액 차이/
@@ -462,7 +472,12 @@ function renderTopEditorComment(pageKey, live, groups){
     const highCount = live.filter(d => d.amount >= 5000).length;
     const hasBrandDay = live.some(d => /\(브랜드데이\)/.test(d.name));
     const parts = [];
-    if (hasBrandDay) parts.push('오늘 확인된 할인 중 일부는 브랜드데이 등 특정 날짜에 진행되는 특별 할인입니다.');
+    if (hasBrandDay){
+      const label = TODAY_PAGE_BRAND_DAY_LABEL[pageKey];
+      parts.push(label
+        ? `오늘 ${label} 할인 중에는 브랜드데이 형태의 특별 프로모션도 함께 확인됩니다.`
+        : '오늘 확인된 할인 중 일부는 브랜드데이 등 특정 날짜에 진행되는 특별 할인입니다.');
+    }
     if (highCount >= 2) parts.push(`5,000원 이상 할인이 ${highCount}건 확인되어 비교해볼 만합니다.`);
     sentence = parts.join(' ');
   }
