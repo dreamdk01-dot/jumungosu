@@ -3279,7 +3279,10 @@
           <div class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
           <div class="flex-1 min-w-0">
             <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(group.displayName)}</p>
-            <p class="font-mono text-xl sm:text-2xl font-extrabold leading-tight mt-0.5" style="color:var(--accent);">${headlineText}</p>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <p class="font-mono text-xl sm:text-2xl font-extrabold leading-tight" style="color:var(--accent);">${headlineText}</p>
+              <span class="font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:${APP_COLOR[maxBadge.app]}; color:#1C1A17; font-size:10px;">${APP_LABEL[maxBadge.app]}</span>
+            </div>
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
