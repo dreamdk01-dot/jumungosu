@@ -379,7 +379,7 @@
   <!-- BEST 3 TICKET -->
   <section class="mt-4 mb-6 sm:mt-8 sm:mb-10">
     <div class="mb-2 sm:mb-4 flex items-center gap-2 flex-wrap">
-      <h2 class="font-display text-lg sm:text-2xl" style="color:var(--primary);">오늘의 할인 BEST 3</h2>
+      <h2 class="font-display text-xl sm:text-2xl" style="color:var(--primary);">오늘의 할인 BEST 3</h2>
       <div class="relative inline-block">
         <button id="best3-category-btn" onclick="toggleBest3CategoryDropdown()" type="button" class="px-2.5 py-1 rounded-md text-sm font-semibold outline-none flex items-center gap-1" style="background:var(--card); border:1px solid var(--line); color:var(--primary);">
           <span id="best3-category-btn-label">치킨</span>
@@ -389,7 +389,7 @@
       </div>
     </div>
 
-    <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+    <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35); border:1px solid var(--line);">
       <!-- 모바일: 1·2·3위 가로 한 줄 리스트형 (여백을 없애고 세로 높이를 최소화) -->
       <div id="best3-list-mobile" class="sm:hidden space-y-2"></div>
       <!-- 데스크탑(sm 이상): 기존 영수증 카드형 그대로 유지 -->
@@ -406,8 +406,12 @@
     <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
-  <!-- FILTERS -->
-  <section class="mb-8">
+  <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
+       "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
+       id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
+  <section id="brand-search-section" class="mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
+    <p class="font-display text-base sm:text-lg mb-3" style="color:var(--text);">🔎 할인 찾기</p>
+
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
     <div class="flex gap-2 flex-wrap mb-5" id="app-filters">
       <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
@@ -417,14 +421,11 @@
     </div>
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
-    <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
-  </section>
+    <div class="flex gap-2 flex-wrap scrollbar-none mb-5" id="category-filters"></div>
 
-  <!-- 브랜드 검색 (STEP 2와 할인 리스트 사이 — 검색 즉시 바로 아래 결과가 보이도록 배치) -->
-  <section id="brand-search-section" class="mb-6">
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
     <div class="relative max-w-[320px]">
-      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
+      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--card); border:1px solid var(--line); color:var(--text);">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
       <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
     </div>
@@ -441,7 +442,7 @@
         <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
           <span id="sort-toggle-label">할인 최대</span> <span>↕</span>
         </button>
-        <span class="font-mono text-xs whitespace-nowrap" style="color:var(--muted);"><span id="result-count">0</span>건</span>
+        <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
       </div>
     </div>
     <p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>
@@ -3265,12 +3266,12 @@
     }).join('');
 
     return `
-      <div class="rounded-md p-4" data-brand-key="${escapeHtml(group.key)}" style="background:var(--card);">
+      <div class="rounded-md p-4" data-brand-key="${escapeHtml(group.key)}" style="background:var(--card); border:1px solid var(--line);">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-11 h-11 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${group.badge.slice(0,2)}</div>
           <div class="flex-1 min-w-0">
-            <p class="font-bold text-base sm:text-lg truncate">${escapeHtml(group.displayName)}</p>
-            <p class="font-mono text-lg sm:text-xl font-extrabold" style="color:var(--accent);">${headlineText}</p>
+            <p class="font-mono text-xl sm:text-2xl font-extrabold leading-tight" style="color:var(--accent);">${headlineText}</p>
+            <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--muted);">${escapeHtml(group.displayName)}</p>
           </div>
         </div>
         <div class="space-y-1.5 dashed-divider pt-3">${badgeRows}</div>
