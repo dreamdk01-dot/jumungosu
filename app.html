@@ -181,23 +181,15 @@
     border:1px solid var(--primary);
   }
 
-  /* ticket notch effect - perforated top/bottom edges */
+  /* BEST3 카드 그룹 컨테이너. 예전엔 영수증처럼 위아래에 구멍이 뚫린 티켓 느낌이었는데,
+     Pretendard·개선된 다크 UI에 맞춰 일반적인 카드 스타일(배경+얇은 테두리)로 정리했다.
+     배경을 var(--bg)로 둔 이유: renderBest3()가 그리는 실제 1/2/3위 카드는 var(--surface)
+     배경을 쓰는데(수정 금지 대상이라 그대로 둠), 이 부모까지 같은 surface면 카드가
+     묻혀 보이므로, 부모는 한 단계 더 어둡게 둬서 카드가 상대적으로 밝게 도드라지게 한다. */
   .ticket{
-    position:relative;
-    background:var(--card);
-    border-radius:4px;
+    background:var(--bg);
+    border-radius:10px;
   }
-  .ticket::before, .ticket::after{
-    content:"";
-    position:absolute;
-    left:0; right:0;
-    height:14px;
-    background-image: radial-gradient(circle at 12px 50%, var(--bg) 7px, transparent 7.5px);
-    background-size:24px 14px;
-    background-repeat:repeat-x;
-  }
-  .ticket::before{ top:-7px; }
-  .ticket::after{ bottom:-7px; transform:rotate(180deg); }
 
   .dashed-divider{
     border-top:2px dashed var(--line);
@@ -402,15 +394,17 @@
       </div>
     </div>
 
-    <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="box-shadow:0 8px 24px rgba(0,0,0,0.35); border:1px solid var(--line);">
+    <div class="ticket px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-5" style="border:1px solid var(--line);">
       <!-- 모바일: 1·2·3위 가로 한 줄 리스트형 (여백을 없애고 세로 높이를 최소화) -->
       <div id="best3-list-mobile" class="sm:hidden space-y-2"></div>
-      <!-- 데스크탑(sm 이상): 기존 영수증 카드형 그대로 유지 -->
+      <!-- 데스크탑(sm 이상): 브랜드 카드형 그리드 -->
       <div class="hidden sm:grid sm:grid-cols-3 gap-4">
         <div id="best3-list" class="contents"></div>
       </div>
-      <div class="dashed-divider mt-3 pt-3 sm:mt-5 sm:pt-4 flex items-center justify-between">
-        <div class="barcode" id="barcode"></div>
+      <!-- id="barcode"는 renderBarcode()가 실제로 채우는 대상이라 요소 자체는 남겨두되(JS 에러 방지),
+           영수증 컨셉 정리 차원에서 화면에는 보이지 않도록 hidden 처리. UPDATED 배지만 오른쪽에 표시. -->
+      <div class="mt-3 pt-3 sm:mt-4 sm:pt-4 flex items-center justify-end" style="border-top:1px solid var(--line);">
+        <div class="barcode hidden" id="barcode"></div>
         <span class="font-mono text-xs" id="best3-updated-badge" style="color:var(--muted);"></span>
       </div>
     </div>
@@ -447,9 +441,9 @@
 
   <!-- DISCOUNT LIST -->
   <section id="discount-list-section">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-1">
-      <h3 class="font-display text-lg sm:text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
-      <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3 mb-1">
+      <h3 class="font-display text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
+      <div class="flex items-center justify-end sm:justify-start gap-2 flex-wrap w-full sm:w-auto">
         <button id="limited-time-filter-btn" onclick="toggleLimitedTimeFilter()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted); background:transparent;">
           ⏰ 선착순
         </button>
@@ -459,7 +453,7 @@
         <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
       </div>
     </div>
-    <p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>
+    <p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap text-right sm:text-left" style="color:var(--muted);"></p>
     <p class="text-[12px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
