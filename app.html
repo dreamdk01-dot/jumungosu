@@ -441,9 +441,10 @@
 
   <!-- DISCOUNT LIST -->
   <section id="discount-list-section">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3 mb-1">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-3 mb-1 sm:justify-between">
       <h3 class="font-display text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
-      <div class="flex items-center justify-end sm:justify-start gap-2 flex-wrap w-full sm:w-auto">
+      <p id="discount-list-updated" class="font-mono text-[12px] whitespace-nowrap shrink-0 ml-auto sm:ml-0 text-right sm:text-left sm:order-3 sm:basis-full" style="color:var(--muted);"></p>
+      <div class="flex items-center justify-end sm:justify-start gap-2 flex-wrap basis-full sm:basis-auto sm:order-2">
         <button id="limited-time-filter-btn" onclick="toggleLimitedTimeFilter()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted); background:transparent;">
           ⏰ 선착순
         </button>
@@ -453,7 +454,6 @@
         <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
       </div>
     </div>
-    <p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap text-right sm:text-left" style="color:var(--muted);"></p>
     <p class="text-[12px] leading-relaxed break-keep mb-4" style="color:var(--accent); opacity:0.85;">※ 표기된 금액은 멤버십 최대 할인 기준일 수 있으며, 랜덤/선착순 쿠폰은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
 
     <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
