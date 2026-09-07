@@ -195,6 +195,22 @@
     border-top:2px dashed var(--line);
   }
 
+  /* 게시글 수정을 '화면 전체를 덮는 명확한 수정 화면'으로 보이게 하는 오버레이.
+     editPost()가 열 때만 #board-compose에 이 클래스를 추가하고, closeBoardCompose()에서
+     제거한다. 기존 글쓰기(openBoardCompose)는 이 클래스를 쓰지 않아 원래 인라인 위치 그대로다. */
+  .board-edit-overlay{
+    position:fixed !important;
+    inset:0;
+    z-index:50;
+    overflow-y:auto;
+    background:var(--bg) !important;
+    border-radius:0 !important;
+    margin:0 !important;
+    max-width:640px;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+
   .barcode{
     display:flex; align-items:flex-end; gap:2px; height:28px;
   }
@@ -619,6 +635,12 @@
 
         <!-- 글쓰기 폼 -->
         <div id="board-compose" class="hidden rounded-lg p-4 mb-5 space-y-3" style="background:var(--card);">
+          <!-- editPost()가 열 때만 보이는 헤더: '게시글 수정'임을 명확히 하고, 화면 전체를 덮는
+               오버레이(board-edit-overlay)로 전환됐을 때 상단에 고정된 뒤로가기 역할을 한다. -->
+          <div id="board-compose-edit-header" class="hidden items-center gap-2 mb-1 pb-3" style="border-bottom:1px solid var(--line);">
+            <button type="button" onclick="closeBoardCompose()" class="text-sm font-semibold shrink-0" style="color:var(--muted);">← 취소</button>
+            <p class="font-display text-base flex-1 text-center" style="color:var(--text);">게시글 수정</p>
+          </div>
           <p class="text-sm font-bold rounded-md px-3 py-2" style="background:rgba(255,90,54,0.12); color:var(--text); border:1px solid var(--accent);">⚠️ 욕설, 비속어, 음란성 사진 및 부적절한 광고 내용을 작성할 경우 서비스 이용이 제한될 수 있습니다. 부적절한 콘텐츠는 유저 신고에 의해 즉시 블라인드 처리됩니다.</p>
 
           <div>
@@ -4219,12 +4241,22 @@
 
       handleComposeCategoryChange();
 
-      document.getElementById('board-compose').classList.remove('hidden');
+      const composeEl = document.getElementById('board-compose');
+      composeEl.classList.remove('hidden', 'board-edit-overlay');
+      const editHeader = document.getElementById('board-compose-edit-header');
+      editHeader.classList.add('hidden');
+      editHeader.classList.remove('flex');
     });
   }
 
   function closeBoardCompose(){
-    document.getElementById('board-compose').classList.add('hidden');
+    const composeEl = document.getElementById('board-compose');
+    composeEl.classList.add('hidden');
+    composeEl.classList.remove('board-edit-overlay');
+    const editHeader = document.getElementById('board-compose-edit-header');
+    editHeader.classList.add('hidden');
+    editHeader.classList.remove('flex');
+    popModalHistoryIfOpen('board-edit-modal');
     document.getElementById('board-compose-title').value = '';
     document.getElementById('board-compose-content').value = '';
     document.getElementById('board-compose-amount').value = '';
@@ -5064,7 +5096,15 @@
     renderBoardComposeImageThumbs();
 
     document.getElementById('board-compose-submit-btn').textContent = '수정 완료';
-    document.getElementById('board-compose').classList.remove('hidden');
+
+    const composeEl = document.getElementById('board-compose');
+    composeEl.classList.remove('hidden');
+    composeEl.classList.add('board-edit-overlay');
+    const editHeader = document.getElementById('board-compose-edit-header');
+    editHeader.classList.remove('hidden');
+    editHeader.classList.add('flex');
+    composeEl.scrollTop = 0;
+    pushModalHistoryState('board-edit-modal');
   }
 
   async function deletePost(id){
@@ -7768,6 +7808,7 @@
     'user-info-modal': () => closeUserInfoModal(),
     'terms-modal': () => closeTermsModal(),
     'signup-modal': () => closeModal(),
+    'board-edit-modal': () => closeBoardCompose(),
   };
 
   window.addEventListener('popstate', function(event){
