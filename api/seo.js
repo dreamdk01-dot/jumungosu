@@ -651,6 +651,14 @@ async function fetchBrandStats(brandKey){
 // ---------------------------------------------------------------
 const PLATFORM_ORDER = ['baemin', 'yogiyo', 'coupang', 'ddangyo'];
 
+// singleBrand 페이지가 오늘 0건일 때, 실제 데이터가 있는 카테고리 종합 페이지로 안내하기 위한 매핑.
+// BRAND_CATEGORY에 실제로 존재하는 값('치킨'/'피자'/'버거')과 정확히 맞췄다(추측으로 만들지 않음).
+const CATEGORY_TODAY_PAGE = {
+  '치킨': { pageKey: 'today-chicken-discount', label: '치킨' },
+  '피자': { pageKey: 'today-pizza-discount', label: '피자' },
+  '버거': { pageKey: 'today-burger-discount', label: '햄버거' },
+};
+
 // 이름 끝의 "(브랜드데이)" 같은 괄호 프로모션 표기를 떼어낸 기본 브랜드명을 반환.
 // 특정 문자열("브랜드데이")을 하드코딩해서 찾지 않고, "이름 (무언가)" 형태 자체를 일반화해서 판정한다.
 function baseBrandName(name){
@@ -665,9 +673,14 @@ function baseBrandName(name){
 //           여러 개 있는지" 판정에는 groups(앱당 최대값 1개로 뭉개짐)로는 알 수 없어서 필요.
 function renderBrandInsight(pageKey, groups, live){
   if (!groups.length){
+    const categoryPage = CATEGORY_TODAY_PAGE[BRAND_CATEGORY[pageKey]];
+    const categoryLinkHtml = categoryPage
+      ? `<p style="font-size:13px; margin:8px 0 0;"><a href="/${categoryPage.pageKey}" style="color:${PRIMARY}; font-weight:600; text-decoration:none;">오늘 확인 가능한 ${escapeHtml(categoryPage.label)} 할인 전체 보기 →</a></p>`
+      : '';
     return `<section class="brand-insight" style="margin:16px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
       <h2 style="font-size:14px; margin:0 0 4px; color:${TEXT};">오늘의 할인 체크포인트</h2>
       <p style="font-size:13px; color:${MUTED}; margin:0;">현재 확인된 할인은 없지만 할인 정보는 변경될 수 있으니 나중에 다시 확인해보세요.</p>
+      ${categoryLinkHtml}
     </section>`;
   }
 
