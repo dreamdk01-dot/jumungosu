@@ -909,6 +909,153 @@
   </section>
 </main>
 
+<!-- ===== 배달앱 멤버십 비교 (SEO 콘텐츠 페이지) =====
+     - 목적: 특정 배달앱의 최대 할인금액이 유독 큰 경우, 그게 멤버십 가입자 기준일 수 있다는
+       점을 설명하는 콘텐츠. 브랜드×멤버십별 할인금액을 개별 수집/관리하지 않고, 멤버십
+       자체의 가격·혜택만 설명한 뒤 기존 할인 리스트와 "역할만" 연결한다.
+     - 가격/혜택은 전부 실제 웹 검색으로 확인한 공식 발표·보도자료 기준이며, 확인 시점을
+       명시하고 실제 결제 전 앱에서 재확인하라는 안내를 반복해서 넣었다(계속 바뀌는 값이라
+       페이지 자체가 "완전히 확정된 값"처럼 보이지 않게 하는 것이 중요).
+     - 날짜(최종 업데이트/정보 기준일)를 나중에 쉽게 바꿀 수 있도록 한 곳(initMembershipDates)
+       에서만 관리하고, 화면에 보이는 모든 날짜 표시는 거기서 텍스트를 채운다. -->
+<main id="page-membership" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+  <div class="pt-8 pb-4">
+    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">배달앱 멤버십 비교</h1>
+    <p class="text-sm leading-relaxed break-keep" style="color:var(--muted);">배달앱 할인금액은 쿠폰뿐 아니라 멤버십 가입 여부에 따라 달라질 수 있어요. 배민클럽·요기패스X·쿠팡 와우의 가격과 혜택을 비교해봤습니다.</p>
+    <p class="mt-3 inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--card); color:var(--primary); border:1px solid var(--line);">📅 최종 업데이트: <span class="membership-updated-date">2026년 9월 8일</span></p>
+  </div>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">왜 배달앱마다 최대 할인금액이 다를까요?</h2>
+    <p class="text-sm leading-relaxed break-keep mb-3" style="color:var(--text);">
+      주문의 고수는 각 배달앱에서 확인되는 브랜드별 <strong style="color:var(--accent);">최대 할인금액</strong>을 기준으로 비교해서 보여드리고 있어요. 그런데 유독 한 배달앱의 최대 할인금액이 다른 앱보다 크게 높을 때가 있는데, 이런 경우 그 금액이 <strong>멤버십(구독) 가입자 기준</strong>일 가능성이 있습니다.
+    </p>
+    <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">
+      배달앱 간 최대 할인금액 차이가 크다면, 멤버십 비용을 감안하더라도 특정 배달앱을 이용하는 쪽이 더 저렴할 수 있어요. 다만 이건 실제 주문금액·주문 횟수·할인 조건·배달비에 따라 달라지기 때문에, 무조건 "멤버십 가입이 이득"이라고 말씀드리기는 어렵습니다. 아래 비교를 보고 본인의 주문 패턴에 맞는지 판단해보세요.
+    </p>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-4" style="color:var(--text);">멤버십 비교</h2>
+
+    <div class="space-y-4">
+      <!-- 배민클럽 -->
+      <div class="rounded-lg p-4 sm:p-5" style="background:var(--card); border:1px solid var(--line);">
+        <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <p class="font-display text-lg" style="color:var(--primary);">배민클럽</p>
+          <p class="font-mono text-lg font-extrabold" style="color:var(--accent);">월 1,990원~<span class="text-xs font-normal" style="color:var(--muted);"> (정가 3,990원)</span></p>
+        </div>
+        <ul class="text-sm leading-relaxed break-keep space-y-1.5 mb-3" style="color:var(--text);">
+          <li>🚴 배달 혜택: 최소주문금액 없이 배달팁 무료 (1인분 주문도 가능)</li>
+          <li>🎁 기타 혜택: 배민 B마트 10% 할인 등</li>
+          <li>👍 이런 분에게 유리: 적은 금액을 자주 시키거나, 최소주문금액 맞추기가 번거로운 분</li>
+        </ul>
+        <p class="text-xs break-keep mb-2" style="color:var(--accent); opacity:0.9;">⚠️ 2026년 10월 1일부터 적립 기능이 추가된 신규 배민클럽으로 개편 예정이며, 이용료는 아직 공식 발표되지 않았습니다.</p>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <p class="font-mono text-[11px]" style="color:var(--muted);">정보 기준일: <span class="membership-info-date">2026.09.08</span></p>
+          <a href="https://baemin.com/" target="_blank" rel="noopener nofollow" class="text-xs font-semibold underline" style="color:var(--primary);">배달의민족 공식 사이트</a>
+        </div>
+      </div>
+
+      <!-- 요기패스X -->
+      <div class="rounded-lg p-4 sm:p-5" style="background:var(--card); border:1px solid var(--line);">
+        <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <p class="font-display text-lg" style="color:var(--primary);">요기요 멤버십 (요기패스X)</p>
+          <p class="font-mono text-lg font-extrabold" style="color:var(--accent);">월 2,900원</p>
+        </div>
+        <ul class="text-sm leading-relaxed break-keep space-y-1.5 mb-3" style="color:var(--text);">
+          <li>🚴 배달 혜택: 15,000원 이상 주문 시 배달비 무료</li>
+          <li>🎁 기타 혜택: 요기마켓 할인, 결제 시 포인트 적립 등</li>
+          <li>👍 이런 분에게 유리: 한 번에 15,000원 이상 시키는 경우가 많거나, 이미 네이버플러스멤버십(월 4,900원)에 가입돼 있는 분 (추가 비용 없이 요기패스X 혜택 이용 가능)</li>
+        </ul>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <p class="font-mono text-[11px]" style="color:var(--muted);">정보 기준일: <span class="membership-info-date">2026.09.08</span></p>
+          <a href="https://www.yogiyo.co.kr/" target="_blank" rel="noopener nofollow" class="text-xs font-semibold underline" style="color:var(--primary);">요기요 공식 사이트</a>
+        </div>
+      </div>
+
+      <!-- 쿠팡 와우 -->
+      <div class="rounded-lg p-4 sm:p-5" style="background:var(--card); border:1px solid var(--line);">
+        <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <p class="font-display text-lg" style="color:var(--primary);">쿠팡 와우</p>
+          <p class="font-mono text-lg font-extrabold" style="color:var(--accent);">월 7,890원</p>
+        </div>
+        <ul class="text-sm leading-relaxed break-keep space-y-1.5 mb-3" style="color:var(--text);">
+          <li>🚴 배달 혜택: 쿠팡이츠 무제한 무료배달</li>
+          <li>🎁 기타 혜택: 로켓배송 무료배송·무료반품, 쿠팡플레이 무료 시청 등</li>
+          <li>👍 이런 분에게 유리: 쿠팡 쇼핑·쿠팡플레이 등을 함께 자주 이용해서, 배달 혜택 외에도 멤버십 비용을 나눠 회수할 수 있는 분</li>
+        </ul>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <p class="font-mono text-[11px]" style="color:var(--muted);">정보 기준일: <span class="membership-info-date">2026.09.08</span></p>
+          <a href="https://news.coupang.com/" target="_blank" rel="noopener nofollow" class="text-xs font-semibold underline" style="color:var(--primary);">쿠팡 뉴스룸(공식 발표)</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs leading-relaxed break-keep mt-4" style="color:var(--muted);">
+      멤버십 가격 및 혜택은 각 서비스의 정책에 따라 변경될 수 있습니다. 실제 가입 및 주문 전 각 서비스 공식 앱·사이트에서 최신 조건을 확인해주세요.
+    </p>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">멤버십 비용까지 내면 정말 더 싼가요?</h2>
+    <p class="text-sm leading-relaxed break-keep mb-3" style="color:var(--text);">
+      정답은 "경우에 따라 다르다"입니다. 다만 아래에 해당할수록 멤버십 비용을 내고도 이득을 볼 가능성이 높아요.
+    </p>
+    <ul class="text-sm leading-relaxed break-keep space-y-2" style="color:var(--text);">
+      <li>✔ 배달앱 간 최대 할인금액 차이가 클 때 — 그 차액이 멤버십 월 이용료보다 크다면 한두 번 주문만으로도 본전을 뽑을 수 있어요.</li>
+      <li>✔ 배달을 자주 이용할 때 — 배달비 무료 혜택이 쌓일수록 멤버십 비용 대비 절감액이 커져요.</li>
+      <li>✔ 멤버십 혜택을 다른 서비스에서도 함께 쓸 때 — 예를 들어 쿠팡 와우처럼 쇼핑·OTT 혜택까지 겸하는 멤버십은 배달만 놓고 보면 손해여도 전체로 보면 이득일 수 있어요.</li>
+    </ul>
+    <p class="text-sm leading-relaxed break-keep mt-3" style="color:var(--text);">
+      반대로 배달을 가끔만 시키거나, 이미 이용 중인 배달앱의 할인금액이 다른 앱과 큰 차이가 없다면 굳이 멤버십에 가입하지 않아도 괜찮을 수 있습니다.
+    </p>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="font-display text-xl mb-3" style="color:var(--text);">자주 묻는 질문</h2>
+    <div class="space-y-5">
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 배달앱 멤버십은 가입하는 게 이득인가요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">주문 빈도와 금액에 따라 달라져요. 한 달에 배달을 몇 번이나 시키는지, 배달비를 얼마나 아낄 수 있는지 먼저 따져보시는 걸 추천해요.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 배달앱 멤버십 가격은 얼마인가요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">확인 시점 기준으로 배민클럽은 프로모션가 월 1,990원(정가 3,990원), 요기패스X는 월 2,900원, 쿠팡 와우는 월 7,890원이에요. 가격은 자주 바뀌니 가입 전 앱에서 다시 확인해주세요.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 배민클럽과 요기패스X는 무엇이 다른가요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">배민클럽은 최소주문금액 없이 배달비가 무료인 반면, 요기패스X는 15,000원 이상 주문해야 배달비가 무료예요. 소액 주문이 잦다면 배민클럽 쪽 조건이 더 유리할 수 있어요.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 쿠팡 와우 회원이면 배달 할인도 받을 수 있나요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">네, 쿠팡 와우 멤버십에는 쿠팡이츠 무제한 무료배달 혜택이 포함되어 있어요.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 멤버십이 있으면 배달앱 할인금액이 달라지나요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">네, 브랜드에 따라 멤버십 회원에게 더 큰 정액 할인을 제공하는 경우가 있어요. 주문의 고수에 표시되는 최대 할인금액도 이런 멤버십 조건이 반영된 값일 수 있습니다.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1" style="color:var(--primary);">Q. 멤버십 비용까지 계산하면 어느 배달앱이 저렴한가요?</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--text);">한 앱이 항상 저렴하다고 말씀드리긴 어려워요. 본인의 주문 횟수·금액, 그리고 위에서 비교한 멤버십별 이용료와 혜택을 함께 놓고 계산해보시는 걸 추천해요.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-10 rounded-lg p-4" style="background:var(--card); border:1px solid var(--accent);">
+    <p class="text-xs leading-relaxed break-keep" style="color:var(--accent); opacity:0.9;">
+      ※ 최대 할인금액은 배달앱 멤버십 가입 등 특정 조건에서 적용될 수 있습니다. 실제 할인금액과 적용 조건은 주문 전에 해당 배달앱에서 확인해주세요.
+    </p>
+  </section>
+
+  <section>
+    <p class="text-sm break-keep" style="color:var(--muted);">
+      <button type="button" onclick="switchTab('home')" class="underline" style="color:var(--primary);">오늘의 할인 비교로 돌아가기</button> ·
+      <button type="button" onclick="switchTab('board')" class="underline" style="color:var(--primary);">게시판에서 실시간 할인 제보 보기</button>
+    </p>
+  </section>
+</main>
+
 <!-- ===== FOOTER (always visible across all pages) ===== -->
 <footer class="border-t" style="background:#141210; border-color:var(--line);">
   <div class="max-w-5xl mx-auto px-4 py-10">
@@ -925,6 +1072,7 @@
 
       <div class="flex flex-col gap-3 text-sm sm:items-end">
         <button onclick="switchTab('about')" class="footer-link text-left sm:text-right" style="color:var(--muted);">서비스 소개</button>
+        <button onclick="switchTab('membership')" class="footer-link text-left sm:text-right" style="color:var(--muted);">배달앱 멤버십 비교</button>
         <button onclick="openTermsModal('terms')" class="footer-link text-left sm:text-right" style="color:var(--muted);">이용약관</button>
         <button onclick="openTermsModal('privacy')" class="footer-link text-left sm:text-right" style="color:var(--muted);">개인정보처리방침</button>
         <button onclick="openB2BModal()" class="footer-link text-left sm:text-right" style="color:var(--muted);">B2B 제휴 제안</button>
@@ -7878,6 +8026,12 @@
       ogTitle: '서비스 소개 | 주문의 고수',
       indexable: true,
     },
+    membership: {
+      title: '배달앱 멤버십 비교 | 배민클럽·요기패스X·쿠팡 와우 | 주문의 고수',
+      description: '배민클럽, 요기요 멤버십(요기패스X), 쿠팡 와우 월 이용료와 배달 혜택을 비교하고, 배달앱 할인금액이 멤버십에 따라 달라지는 이유를 확인하세요.',
+      ogTitle: '배달앱 멤버십 비교 | 주문의 고수',
+      indexable: true,
+    },
     auth: {
       title: '로그인 · 회원가입 | 주문의 고수',
       description: '주문의 고수 로그인 및 회원가입 페이지입니다.',
@@ -7919,11 +8073,11 @@
   }
 
   // ---------- TABS ----------
-  const PAGES = ['home', 'event', 'board', 'auth', 'admin', 'about'];
+  const PAGES = ['home', 'event', 'board', 'auth', 'admin', 'about', 'membership'];
 
   // 탭 ↔ URL 경로 매핑. 뒤로가기(popstate) 시에도 같은 매핑으로 어느 탭인지 복원한다.
-  const TAB_TO_PATH = { home: '/home', event: '/event', board: '/board', auth: '/auth', admin: '/admin', about: '/about' };
-  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/event': 'event', '/board': 'board', '/auth': 'auth', '/admin': 'admin', '/about': 'about' };
+  const TAB_TO_PATH = { home: '/home', event: '/event', board: '/board', auth: '/auth', admin: '/admin', about: '/about', membership: '/membership' };
+  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/event': 'event', '/board': 'board', '/auth': 'auth', '/admin': 'admin', '/about': 'about', '/membership': 'membership' };
 
   // pushHistory=false로 호출하면(popstate 등) 주소는 이미 바뀌어 있는 상태이므로 새로 pushState하지 않는다.
   function switchTab(tab, pushHistory){
