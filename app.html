@@ -171,7 +171,9 @@
   button, a, [onclick]{
     -webkit-tap-highlight-color: transparent;
   }
-  .font-display{ font-family:'Black Han Sans', sans-serif; letter-spacing:0.5px; }
+  .font-display{ font-family:'Pretendard Variable', 'Pretendard', -apple-system, sans-serif; letter-spacing:0; }
+  h1.font-display{ font-weight:800; }
+  h2.font-display, h3.font-display{ font-weight:700; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
 
   /* BEST3 1위 카드를 살짝 강조. renderBest3()의 JS/마크업은 그대로 두고, DOM 순서 기준
@@ -325,7 +327,7 @@
         <path d="M18 29 L26 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
         <path d="M23 29 L31 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span class="font-display text-2xl sm:text-3xl tracking-wide" style="color:var(--primary);">주문의 고수</span>
+      <span class="font-display text-2xl sm:text-3xl tracking-wide" style="color:var(--primary); font-family:'Black Han Sans', sans-serif; letter-spacing:0.5px;">주문의 고수</span>
     </button>
 
     <!-- desktop nav -->
