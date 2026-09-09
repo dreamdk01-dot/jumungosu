@@ -36,6 +36,7 @@ import {
   fmtWon,
   escapeHtml,
   APP_LABEL,
+  groupGachaRecords,
 } from './seo.js';
 
 const INDEX_HTML_PATH = path.join(process.cwd(), 'app.html');
@@ -76,7 +77,7 @@ async function fetchLiveDiscounts() {
   }
   const rows = await res.json();
   const rawRecords = (rows && rows[0] && rows[0].records) || [];
-  return rawRecords.map(mapRecord).filter(Boolean).filter(isLive);
+  return groupGachaRecords(rawRecords.map(mapRecord).filter(Boolean)).filter(isLive);
 }
 
 // 홈 화면의 "UPDATED" 배지(admin이 저장한 app_config 값)와 동일한 값을 서버에서도 조회합니다.
@@ -122,6 +123,15 @@ function limitedTimeBadgeHtml(d) {
     : '';
 }
 
+// 뽑기(랜덤 당첨) 배지. 단일 금액 뽑기는 "🎰 뽑기", 여러 금액 뽑기는 "🎰 최대 N원"으로 구분한다
+// (app.html/seo.js와 동일한 규칙). SSR 단계이므로 클릭 펼침 없이 텍스트로만 안내한다.
+function gachaBadgeHtml(d) {
+  if (!d.isRandom) return '';
+  const amounts = Array.isArray(d.randomAmounts) ? d.randomAmounts : null;
+  const label = amounts && amounts.length > 1 ? `🎰 최대 ${fmtWon(amounts[amounts.length - 1])}` : '🎰 뽑기';
+  return `<span style="font-size:11px; color:var(--primary); margin-left:6px;">${label}</span>`;
+}
+
 function appTagHtml(app) {
   return `<span style="display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted);">${escapeHtml(APP_LABEL[app] || app)}</span>`;
 }
@@ -139,6 +149,7 @@ function renderSsrDiscountCards(list) {
       <div class="flex items-center gap-1 flex-wrap">
         ${d.app.map(appTagHtml).join('')}
         ${limitedTimeBadgeHtml(d)}
+        ${gachaBadgeHtml(d)}
       </div>
     </div>`
     )
@@ -159,6 +170,7 @@ function renderSsrBest3Desktop(list) {
       <div class="flex gap-1 flex-wrap items-center">
         ${d.app.map(appTagHtml).join('')}
         ${limitedTimeBadgeHtml(d)}
+        ${gachaBadgeHtml(d)}
       </div>
     </div>`
     )
@@ -176,6 +188,7 @@ function renderSsrBest3Mobile(list) {
           <span class="font-mono text-xs font-bold shrink-0" style="color:var(--primary); width:14px;">${i + 1}</span>
           <span class="font-bold text-sm truncate">${escapeHtml(d.name)}</span>
           ${d.app.slice(0, 1).map(appTagHtml).join('')}
+          ${d.isRandom ? `<span class="text-[11px] shrink-0" title="뽑기 쿠폰">🎰</span>` : ''}
         </div>
         <span class="font-mono text-sm font-bold shrink-0" style="color:var(--primary);">${fmtWon(d.amount)}</span>
       </div>
