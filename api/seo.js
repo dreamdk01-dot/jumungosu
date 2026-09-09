@@ -646,7 +646,7 @@ async function renderPage(pageKey, discounts){
     extraSectionsHtml = [
       renderHistorySection(stats, brandLabel),
       renderPlatformFreqSection(stats, brandLabel),
-      renderHowToSection(brandLabel),
+      renderStatsInsight(stats, brandLabel),
       renderNotifyCta(brandLabel),
       renderCrossLinkSection(pageKey),
       renderRelatedLinksSection(pageKey),
@@ -1022,18 +1022,39 @@ function renderPlatformFreqSection(stats, brandLabel){
   </section>`;
 }
 
-function renderHowToSection(brandLabel){
-  const steps = [
-    '배달앱(배민·요기요·쿠팡이츠·땡겨요)에서 브랜드명을 검색해요.',
-    '가게 화면의 쿠폰함 또는 할인 배너에서 진행 중인 정액 할인을 확인해요.',
-    '장바구니/주문서 작성 화면에서 쿠폰을 다운로드하거나 자동 적용해요.',
-    '결제 전 최종 할인 금액이 반영됐는지 한 번 더 확인 후 주문해요.',
-  ];
-  return `<section style="margin:28px 0;">
-    <h2 style="font-size:16px; margin:0 0 10px;">💡 ${escapeHtml(brandLabel)} 할인받는 방법</h2>
-    <ol style="margin:0; padding-left:20px; font-size:14px; line-height:1.9; color:${TEXT};">
-      ${steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
-    </ol>
+// 브랜드마다 실제로 달라지는 데이터 기반 문장 1~2개를 만든다. 새 DB/API 조회를 추가하지 않고
+// renderHistorySection/renderPlatformFreqSection이 이미 쓰는 stats(get_brand_discount_stats
+// RPC 결과)를 그대로 재사용한다. 실제 데이터가 없는 항목은 절대 문장으로 지어내지 않고,
+// stats 자체가 없을 때만(=아직 이력이 전혀 없는 브랜드) 기존 4단계 안내를 훨씬 짧은 한 문장으로
+// 축소해서 최소한의 이용 안내는 유지한다. "유리합니다/추천합니다" 같은 단정적 표현은 쓰지 않고
+// "확인됐어요/기준" 같은 사실 서술형 표현만 사용한다.
+function renderStatsInsight(stats, brandLabel){
+  const parts = [];
+  if (stats){
+    const { count_30 = 0, recent = [], platform_counts_30 = {} } = stats;
+    if (count_30 > 0){
+      parts.push(`최근 30일 중 ${count_30}일 동안 할인이 확인된 브랜드예요.`);
+    }
+    // 가장 자주 할인이 확인된 앱 — 1위가 유일할 때만 언급(동률이면 근거가 약해 표현하지 않음)
+    const platEntries = Object.entries(platform_counts_30).filter(([, n]) => Number(n) > 0).sort((a, b) => b[1] - a[1]);
+    if (platEntries.length && (platEntries.length === 1 || platEntries[0][1] > platEntries[1][1])){
+      parts.push(`최근 30일 기준으로는 ${escapeHtml(APP_SHORT[platEntries[0][0]] || platEntries[0][0])}에서 할인이 가장 자주 확인됐어요(${platEntries[0][1]}회).`);
+    } else if (recent.length){
+      const top = recent.slice().sort((a, b) => b.amount - a.amount)[0];
+      parts.push(`최근 이력 중 가장 컸던 할인은 ${escapeHtml(APP_SHORT[top.platform] || top.platform)} ${fmtWon(top.amount)}이었어요(${escapeHtml(top.date_kst)} 기준).`);
+    }
+  }
+
+  if (!parts.length){
+    return `<section style="margin:28px 0;">
+      <h2 style="font-size:16px; margin:0 0 10px;">💡 ${escapeHtml(brandLabel)} 할인받는 방법</h2>
+      <p style="font-size:14px; line-height:1.7; color:${TEXT}; margin:0;">배달앱(배민·요기요·쿠팡이츠·땡겨요)에서 브랜드명을 검색한 뒤, 쿠폰함이나 할인 배너에서 정액 할인을 확인하고 결제 전 최종 금액을 다시 확인하세요.</p>
+    </section>`;
+  }
+
+  return `<section style="margin:28px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
+    <h2 style="font-size:14px; margin:0 0 6px; color:${TEXT};">📌 ${escapeHtml(brandLabel)} 할인 데이터로 보면</h2>
+    <p style="font-size:13px; line-height:1.7; color:${TEXT}; margin:0;">${parts.join(' ')}</p>
   </section>`;
 }
 
