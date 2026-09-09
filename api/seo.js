@@ -274,6 +274,7 @@ const FIELD_ALIASES = {
   startDate: ['시작일', '할인시작일', '시작 일', 'StartDate', 'Start'],
   endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
   limitedTime: ['선착순 시간', '선착순시간', '선착순', 'LimitedTime'],
+  isGacha: ['뽑기', '뽑기 여부', '뽑기여부', 'Gacha', 'Random'],
 };
 const PLATFORM_ALIASES = {
   baemin: ['배달의민족', '배민', 'baemin'],
@@ -335,8 +336,9 @@ function mapRecord(record){
   const endDateRaw = pickField(f, 'endDate');
   const endDate = endDateRaw ? endDateRaw.toString().slice(0, 10) : null;
   const limitedTime = (pickField(f, 'limitedTime') || '').toString().trim() || null;
+  const isGacha = pickField(f, 'isGacha') === true; // Airtable 체크박스는 체크 시 true
 
-  return { name, app: [app], category, amount, startDate, endDate, limitedTime };
+  return { name, app: [app], category, amount, startDate, endDate, limitedTime, isGacha, isRandom: false, randomAmounts: null };
 }
 
 // index.html의 판정과 동일하게, 시작일이 아직 안 됐으면(예: 브랜드데이를 며칠 전에 미리
@@ -352,17 +354,57 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 }
 
+// 뽑기(랜덤 당첨) 레코드 묶기. app.html의 groupGachaDiscounts()와 동일한 규칙을 그대로 따른다:
+// - isGacha=true인 레코드는 같은 그룹에 행이 1개뿐이어도(=뽑을 수 있는 금액이 한 종류뿐이어도)
+//   반드시 isRandom=true로 유지한다. "금액 종류가 하나라 일반 할인"으로 되돌리지 않는다.
+// - 같은 브랜드/앱/카테고리라도 기간·선착순 조건이 다르면 서로 다른 프로모션일 수 있으므로
+//   그룹 키에 함께 넣어 잘못 합쳐지는 것을 막는다. (seo.js는 minOrder를 애초에 파싱하지 않으므로
+//   키에서 제외 — app.html/home.js에서 온 레코드와 이 파일의 데이터 스키마 차이일 뿐, 뽑기 판정
+//   로직 자체는 동일하다.)
+// mapRecord+isLive를 거친 배열에 딱 한 번 적용하면 이후 모든 렌더 함수(groupByBrand,
+// renderSingleAppList, renderCompareTable 등)에 자동으로 반영되므로, 뽑기 판정 로직을 여러
+// 군데에 중복 구현하지 않는다.
+function groupGachaRecords(list){
+  const gachaKey = d => [
+    d.name.trim().toLowerCase().replace(/\s+/g, ''), d.app[0], d.category.slice().sort().join(','),
+    d.startDate || '', d.endDate || '', d.limitedTime || '',
+  ].join('||');
+
+  const groups = new Map();
+  const result = [];
+
+  list.forEach(d => {
+    if (!d.isGacha){ result.push(d); return; }
+    const key = gachaKey(d);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(d);
+  });
+
+  groups.forEach(rows => {
+    if (rows.length < 2){
+      result.push({ ...rows[0], isRandom: true, randomAmounts: [rows[0].amount] });
+      return;
+    }
+    const sortedAmounts = rows.map(r => r.amount).sort((a, b) => a - b);
+    const base = rows.slice().sort((a, b) => a.amount - b.amount)[0];
+    result.push({ ...base, amount: sortedAmounts[0], isRandom: true, randomAmounts: sortedAmounts });
+  });
+
+  return result;
+}
+
 // 브랜드 그룹핑: 같은 브랜드를 앱별로 묶어서 { name, apps: {baemin: amount, ...}, maxAmount } 형태로 변환
 function groupByBrand(list){
   const map = new Map();
   list.forEach(d => {
     const key = d.name.trim().toLowerCase().replace(/\s+/g, '');
-    if (!map.has(key)) map.set(key, { name: d.name.trim(), apps: {}, limitedTime: {} });
+    if (!map.has(key)) map.set(key, { name: d.name.trim(), apps: {}, limitedTime: {}, gacha: {}, gachaAmounts: {} });
     const g = map.get(key);
     d.app.forEach(a => {
       // 같은 앱에 여러 행이 있으면 더 큰 금액을 대표로 사용
       if (!g.apps[a] || d.amount > g.apps[a]) g.apps[a] = d.amount;
       if (d.limitedTime) g.limitedTime[a] = d.limitedTime;
+      if (d.isRandom){ g.gacha[a] = true; g.gachaAmounts[a] = d.randomAmounts || [d.amount]; }
     });
   });
   return Array.from(map.values()).map(g => ({
@@ -407,7 +449,11 @@ function renderCompareTable(groups){
       if (!amt) return `<td style="text-align:center; padding:10px 8px; color:${MUTED}; border-bottom:1px solid ${LINE};">-</td>`;
       const isMax = amt === g.maxAmount;
       const timeTag = g.limitedTime[a] ? `<br><span style="font-size:10px; color:#FF5A36;">⏰${escapeHtml(g.limitedTime[a])}</span>` : '';
-      return `<td style="text-align:center; padding:10px 8px; border-bottom:1px solid ${LINE}; font-weight:${isMax ? '700' : '400'}; color:${isMax ? PRIMARY : TEXT};">${fmtWon(amt)}${timeTag}</td>`;
+      const gachaAmounts = g.gachaAmounts[a];
+      const gachaTag = g.gacha[a]
+        ? `<br><span style="font-size:10px; color:${PRIMARY};">${gachaAmounts && gachaAmounts.length > 1 ? `🎰 최대 ${fmtWon(gachaAmounts[gachaAmounts.length - 1])}` : '🎰 뽑기'}</span>`
+        : '';
+      return `<td style="text-align:center; padding:10px 8px; border-bottom:1px solid ${LINE}; font-weight:${isMax ? '700' : '400'}; color:${isMax ? PRIMARY : TEXT};">${fmtWon(amt)}${timeTag}${gachaTag}</td>`;
     }).join('');
     const bestApp = apps.find(a => g.apps[a] === g.maxAmount);
     return `<tr>
@@ -490,15 +536,21 @@ function renderTopEditorComment(pageKey, live, groups){
 }
 
 function renderSingleAppList(list){
-  const rows = list.map((d, i) => `
+  const rows = list.map((d, i) => {
+    const gachaTag = d.isRandom
+      ? `<span style="font-size:11px; color:${PRIMARY}; margin-left:6px;">${Array.isArray(d.randomAmounts) && d.randomAmounts.length > 1 ? `🎰 최대 ${fmtWon(d.randomAmounts[d.randomAmounts.length - 1])}` : '🎰 뽑기'}</span>`
+      : '';
+    return `
     <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:${i % 2 === 0 ? CARD : SURFACE}; border-radius:8px; margin-bottom:8px;">
       <div>
         <span style="font-family:monospace; color:${MUTED}; font-size:12px; margin-right:8px;">${i + 1}</span>
         <span style="font-weight:700; color:${TEXT};">${escapeHtml(d.name)}</span>
         ${d.limitedTime ? `<span style="font-size:11px; color:#FF5A36; margin-left:6px;">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>` : ''}
+        ${gachaTag}
       </div>
       <span style="font-family:monospace; font-weight:700; color:${PRIMARY};">${fmtWon(d.amount)} 할인</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div style="margin:16px 0;">${rows}</div>`;
 }
 
@@ -523,14 +575,19 @@ function renderTodaySummary(pageKey, live){
   const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount);
   const top1 = groups[0];
   const bestApp = (g) => PLATFORM_ORDER.find(a => g.apps[a] === g.maxAmount);
+  const gachaSuffix = (g, a) => {
+    if (!g.gacha || !g.gacha[a]) return '';
+    const amounts = g.gachaAmounts && g.gachaAmounts[a];
+    return amounts && amounts.length > 1 ? ` (🎰 최대 ${fmtWon(amounts[amounts.length - 1])})` : ' (🎰 뽑기)';
+  };
 
-  let sentence = `오늘 ${label} 할인 중 가장 큰 할인은 ${escapeHtml(top1.name)}의 ${APP_LABEL[bestApp(top1)]} ${fmtWon(top1.maxAmount)} 할인입니다.`;
+  let sentence = `오늘 ${label} 할인 중 가장 큰 할인은 ${escapeHtml(top1.name)}의 ${APP_LABEL[bestApp(top1)]} ${fmtWon(top1.maxAmount)} 할인입니다${gachaSuffix(top1, bestApp(top1))}.`;
 
   // 2위가 1위와 다른 브랜드일 때만 언급 (동일 브랜드가 여러 앱에 걸쳐 상위권을 채우는 경우를
   // groupByBrand()가 이미 브랜드 단위로 묶어주므로, 여기서 나오는 2위는 항상 다른 브랜드다)
   const top2 = groups[1];
   if (top2){
-    sentence += ` 그다음으로 ${escapeHtml(top2.name)}의 ${APP_LABEL[bestApp(top2)]} ${fmtWon(top2.maxAmount)} 할인이 확인됩니다.`;
+    sentence += ` 그다음으로 ${escapeHtml(top2.name)}의 ${APP_LABEL[bestApp(top2)]} ${fmtWon(top2.maxAmount)} 할인이 확인됩니다${gachaSuffix(top2, bestApp(top2))}.`;
   }
 
   const countSentence = `현재 확인된 ${label} 할인 브랜드는 총 ${groups.length}곳입니다.`;
@@ -835,9 +892,13 @@ function renderTodayHighlight(groups, brandLabel){
   }
   const best = groups[0];
   const bestApp = PLATFORM_ORDER.find(a => best.apps[a] === best.maxAmount);
+  const gachaAmounts = best.gachaAmounts && best.gachaAmounts[bestApp];
+  const gachaTag = best.gacha && best.gacha[bestApp]
+    ? `<span style="font-size:13px; font-weight:700; color:${PRIMARY}; margin-left:8px;">${gachaAmounts && gachaAmounts.length > 1 ? `🎰 최대 ${fmtWon(gachaAmounts[gachaAmounts.length - 1])}` : '🎰 뽑기'}</span>`
+    : '';
   return `<div style="margin:16px 0; padding:18px 20px; background:linear-gradient(135deg, ${CARD}, ${SURFACE}); border:1px solid ${PRIMARY}; border-radius:10px;">
     <p style="font-size:12px; color:${MUTED}; margin:0 0 6px;">🔥 현재 가장 큰 할인</p>
-    <p style="font-size:20px; font-weight:800; color:${PRIMARY}; margin:0;">${APP_LABEL[bestApp]} ${fmtWon(best.maxAmount)} 할인</p>
+    <p style="font-size:20px; font-weight:800; color:${PRIMARY}; margin:0;">${APP_LABEL[bestApp]} ${fmtWon(best.maxAmount)} 할인${gachaTag}</p>
   </div>`;
 }
 
@@ -947,7 +1008,7 @@ function renderReportCta(brandLabel){
 // api/home.js(홈 SSR)가 "오늘 배달 할인 / BEST3 / 오늘 할인 브랜드" 텍스트를 만들 때
 // 이미 검증된 이 파일의 표기 규칙(금액 포맷, HTML 이스케이프, 앱 표시명, 페이지 한글 라벨)을
 // 그대로 재사용하기 위함이며, 기존 함수의 동작은 전혀 바뀌지 않습니다.
-export { PAGE_DEFS, mapRecord, isLive, getTodayKST, fmtWon, escapeHtml, APP_LABEL, NAV_LABEL };
+export { PAGE_DEFS, mapRecord, isLive, getTodayKST, fmtWon, escapeHtml, APP_LABEL, NAV_LABEL, groupGachaRecords };
 
 export default async function handler(req, res){
   const pageKey = (req.query.page || '').toString();
@@ -960,7 +1021,7 @@ export default async function handler(req, res){
 
   try {
     const rawRecords = await fetchCachedRecords();
-    const discounts = rawRecords.map(mapRecord).filter(Boolean);
+    const discounts = groupGachaRecords(rawRecords.map(mapRecord).filter(Boolean));
     const html = await renderPage(pageKey, discounts);
 
     // 60초 동안은 Vercel 엣지 캐시로 응답 → Supabase 조회 없이 즉시 응답, 크롤러가 몰려도 안전
