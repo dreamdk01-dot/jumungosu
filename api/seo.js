@@ -622,7 +622,8 @@ async function renderPage(pageKey, discounts){
     bodyHtml = (groups.length
       ? renderCompareTable(groups)
       : `<p style="color:${MUTED};">현재 2개 이상 앱에서 동시에 할인 중인 브랜드가 없어요. 잠시 후 다시 확인해주세요.</p>`)
-      + renderTopEditorComment(pageKey, live, groups);
+      + renderTopEditorComment(pageKey, live, groups)
+      + renderRelatedLinksSection(pageKey);
   } else if (def.singleBrand){
     // 브랜드 하나만 필터링된 상태 — 앱이 1개뿐이어도(appCount>=2 조건 없이) 그대로 비교표로 보여준다.
     const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount).slice(0, def.limit);
@@ -639,6 +640,7 @@ async function renderPage(pageKey, discounts){
       renderHowToSection(brandLabel),
       renderNotifyCta(brandLabel),
       renderCrossLinkSection(pageKey),
+      renderRelatedLinksSection(pageKey),
       renderReportCta(brandLabel),
     ].join('');
   } else if (def.singleApp){
@@ -646,14 +648,16 @@ async function renderPage(pageKey, discounts){
     bodyHtml = (sorted.length
       ? renderSingleAppList(sorted)
       : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
-      + renderTopEditorComment(pageKey, live, null);
+      + renderTopEditorComment(pageKey, live, null)
+      + renderRelatedLinksSection(pageKey);
   } else {
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
     const summaryHtml = renderTodaySummary(pageKey, live);
     bodyHtml = summaryHtml + (sorted.length
       ? renderSingleAppList(sorted.map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` })))
       : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
-      + renderTopEditorComment(pageKey, live, null);
+      + renderTopEditorComment(pageKey, live, null)
+      + renderRelatedLinksSection(pageKey);
   }
 
   // 구조화 데이터: 이 페이지가 "무엇을 나열하는 목록"인지 구글에 명시
@@ -688,6 +692,10 @@ async function renderPage(pageKey, discounts){
   .wrap{ max-width:720px; margin:0 auto; padding:24px 16px 60px; }
   h1{ font-size:22px; margin:4px 0 8px; }
   table{ display:block; overflow-x:auto; white-space:nowrap; }
+  /* 한글이 단어 중간에서 끊기지 않도록 어절 단위로만 줄바꿈. 긴 영문/URL은 필요시 정상적으로
+     줄바꿈되게(overflow-wrap) 해서 가로 overflow는 방지한다. 표(td/th)는 제외 — table의
+     white-space:nowrap(가로 스크롤 허용)이 기존 의도이므로 그대로 둔다. */
+  h1, h2, h3, p, li, a, button{ word-break: keep-all; overflow-wrap: break-word; }
 </style>
 </head>
 <body>
@@ -991,6 +999,77 @@ function renderCrossLinkSection(currentKey){
   return `<section style="margin:28px 0;">
     <h2 style="font-size:16px; margin:0 0 10px;">오늘의 ${escapeHtml(category)} 할인</h2>
     <div>${chips}</div>
+  </section>`;
+}
+
+// 카테고리(치킨/피자/버거) → 그 카테고리에 속한 singleBrand 페이지 키 목록. BRAND_CATEGORY를
+// 거꾸로 뒤집은 것뿐이라 새 데이터를 만들지 않는다.
+const CATEGORY_BRAND_PAGES = {};
+Object.entries(BRAND_CATEGORY).forEach(([pageKey, category]) => {
+  if (!CATEGORY_BRAND_PAGES[category]) CATEGORY_BRAND_PAGES[category] = [];
+  CATEGORY_BRAND_PAGES[category].push(pageKey);
+});
+
+// 카테고리(치킨) → 앱 비교 페이지. 현재 PAGE_DEFS에 실제로 존재하는 것만 연결한다(피자/버거는
+// 전용 앱비교 페이지가 없으므로 링크하지 않음 — 존재하지 않는 URL을 만들어내지 않기 위함).
+const CATEGORY_APP_COMPARE_PAGE = { '치킨': 'chicken-app-compare' };
+
+// singleApp 페이지 키 ↔ 앱 코드
+const SINGLE_APP_PAGE_BY_APP = { baemin: 'baemin-discount', yogiyo: 'yogiyo-discount', coupang: 'coupangeats-discount', ddangyo: 'ddangyo-discount' };
+
+function linkChip(href, label){
+  return `<a href="${href}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(label)}</a>`;
+}
+
+// 페이지 유형별로 "의미적으로 강한" 관련 링크만 최소한으로 보강한다. renderNav()가 이미
+// 20개 페이지 전체를 매 페이지 하단에 나열하고 있으므로, 여기서는 그것과 겹치지 않게
+// "이 페이지 주제와 실제로 관련된" 링크만 소수(최대 4~5개) 추가한다. 대상이 없으면
+// 빈 문자열을 반환해 억지로 섹션을 만들지 않는다.
+function renderRelatedLinksSection(pageKey){
+  const def = PAGE_DEFS[pageKey];
+  let title = '';
+  let chips = [];
+
+  if (def.singleApp){
+    // 앱별 페이지 → 오늘 전체 배달 할인 + 배달앱 비교
+    title = '함께 보면 좋아요';
+    chips = [
+      linkChip('/today-delivery-discount', '오늘 배달 할인 전체 보기'),
+      linkChip('/delivery-app-compare', '배달앱 할인 비교'),
+    ];
+  } else if (def.multiAppOnly){
+    // 비교 페이지 → 각 앱 페이지 전체 + 관련 오늘 할인 페이지
+    const relatedToday = pageKey === 'chicken-app-compare' ? 'today-chicken-discount' : 'today-delivery-discount';
+    title = '앱별로 자세히 보기';
+    chips = [
+      linkChip(`/${relatedToday}`, `${NAV_LABEL[relatedToday]} 전체 보기`),
+      ...Object.values(SINGLE_APP_PAGE_BY_APP).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
+    ];
+  } else if (def.singleBrand){
+    // 브랜드 페이지 → 같은 카테고리 today 종합 페이지 + (있으면) 앱비교 페이지
+    const category = BRAND_CATEGORY[pageKey];
+    const todayPage = CATEGORY_TODAY_PAGE[category];
+    const comparePage = CATEGORY_APP_COMPARE_PAGE[category];
+    if (!todayPage && !comparePage) return '';
+    title = '함께 보면 좋아요';
+    if (todayPage) chips.push(linkChip(`/${todayPage.pageKey}`, `오늘 ${todayPage.label} 할인 전체 보기`));
+    if (comparePage) chips.push(linkChip(`/${comparePage}`, NAV_LABEL[comparePage]));
+  } else {
+    // today-* 4페이지 → 앱별 페이지 4개 + 같은 카테고리 브랜드 페이지(있는 경우만, 최대 5개)
+    const label = TODAY_SUMMARY_LABEL[pageKey];
+    const brandPages = CATEGORY_BRAND_PAGES[label] || [];
+    if (!brandPages.length && pageKey !== 'today-delivery-discount') return '';
+    title = '앱/브랜드별로 자세히 보기';
+    chips = [
+      ...Object.values(SINGLE_APP_PAGE_BY_APP).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
+      ...brandPages.slice(0, 5).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
+    ];
+  }
+
+  if (!chips.length) return '';
+  return `<section style="margin:28px 0;">
+    <h2 style="font-size:16px; margin:0 0 10px;">${escapeHtml(title)}</h2>
+    <div>${chips.join('')}</div>
   </section>`;
 }
 
