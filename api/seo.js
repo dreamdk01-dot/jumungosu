@@ -271,6 +271,7 @@ const FIELD_ALIASES = {
   platform: ['플랫폼', '앱', '배달앱', '플랫폼명', 'App', 'Platform'],
   category: ['카테고리', '분류', 'Category'],
   amount: ['할인금액', '금액', '할인가', '할인 금액', 'Amount', 'Price'],
+  minOrder: ['최소주문금액', '최소주문액', '최소 주문금액', '최소주문', 'MinOrder'],
   startDate: ['시작일', '할인시작일', '시작 일', 'StartDate', 'Start'],
   endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
   limitedTime: ['선착순 시간', '선착순시간', '선착순', 'LimitedTime'],
@@ -331,6 +332,8 @@ function mapRecord(record){
 
   const categoryRaw = (pickField(f, 'category') || '').toString().trim();
   const category = categoryRaw ? categoryRaw.split(',').map(c => c.trim()).filter(Boolean) : ['기타'];
+  const minOrderNum = parseNum(pickField(f, 'minOrder'));
+  const minOrder = (typeof minOrderNum === 'number' && minOrderNum > 0) ? minOrderNum : null;
   const startDateRaw = pickField(f, 'startDate');
   const startDate = startDateRaw ? startDateRaw.toString().slice(0, 10) : null;
   const endDateRaw = pickField(f, 'endDate');
@@ -338,7 +341,7 @@ function mapRecord(record){
   const limitedTime = (pickField(f, 'limitedTime') || '').toString().trim() || null;
   const isGacha = pickField(f, 'isGacha') === true; // Airtable 체크박스는 체크 시 true
 
-  return { name, app: [app], category, amount, startDate, endDate, limitedTime, isGacha, isRandom: false, randomAmounts: null };
+  return { name, app: [app], category, amount, minOrder, startDate, endDate, limitedTime, isGacha, isRandom: false, randomAmounts: null };
 }
 
 // index.html의 판정과 동일하게, 시작일이 아직 안 됐으면(예: 브랜드데이를 며칠 전에 미리
@@ -348,6 +351,20 @@ function isLive(d){
   if (d.startDate && d.startDate > today) return false;
   if (d.endDate && d.endDate < today) return false;
   return true;
+}
+
+// app.html의 formatDiscountPeriod()와 동일한 표시 규칙("9/7 ~ 9/10" / "~9/10까지" / "9/7부터").
+// isLive()가 이미 하는 startDate/endDate 판정과는 완전히 별개이며, 여기서는 화면 문구만 만든다.
+function formatDiscountPeriod(d){
+  if (!d.startDate && !d.endDate) return '';
+  const fmt = iso => {
+    const dt = new Date(iso);
+    if (isNaN(dt.getTime())) return '';
+    return `${dt.getMonth() + 1}/${dt.getDate()}`;
+  };
+  if (d.startDate && d.endDate) return `${fmt(d.startDate)} ~ ${fmt(d.endDate)}`;
+  if (d.endDate) return `~${fmt(d.endDate)}까지`;
+  return `${fmt(d.startDate)}부터`;
 }
 
 function escapeHtml(str){
@@ -398,11 +415,16 @@ function groupByBrand(list){
   const map = new Map();
   list.forEach(d => {
     const key = d.name.trim().toLowerCase().replace(/\s+/g, '');
-    if (!map.has(key)) map.set(key, { name: d.name.trim(), apps: {}, limitedTime: {}, gacha: {}, gachaAmounts: {} });
+    if (!map.has(key)) map.set(key, { name: d.name.trim(), apps: {}, limitedTime: {}, gacha: {}, gachaAmounts: {}, minOrder: {}, period: {} });
     const g = map.get(key);
     d.app.forEach(a => {
-      // 같은 앱에 여러 행이 있으면 더 큰 금액을 대표로 사용
-      if (!g.apps[a] || d.amount > g.apps[a]) g.apps[a] = d.amount;
+      // 같은 앱에 여러 행이 있으면 더 큰 금액을 대표로 사용. 이때 그 대표 행의 최소주문금액/
+      // 기간도 함께 갱신해서 "표시된 금액"과 "표시된 조건"이 같은 레코드에서 나오게 한다.
+      if (!g.apps[a] || d.amount > g.apps[a]){
+        g.apps[a] = d.amount;
+        g.minOrder[a] = (typeof d.minOrder === 'number') ? d.minOrder : null;
+        g.period[a] = formatDiscountPeriod(d);
+      }
       if (d.limitedTime) g.limitedTime[a] = d.limitedTime;
       if (d.isRandom){ g.gacha[a] = true; g.gachaAmounts[a] = d.randomAmounts || [d.amount]; }
     });
@@ -422,6 +444,44 @@ function fmtTodayLabel(){
   const today = getTodayKST();
   const [y, m, d] = today.split('-');
   return `${y}년 ${parseInt(m, 10)}월 ${parseInt(d, 10)}일`;
+}
+
+// 홈 화면의 "UPDATED" 배지(admin이 저장한 app_config.discount_updated_at 값)와 완전히 동일한
+// 값을 서버에서 조회한다. home.js의 fetchDiscountUpdatedAt()/formatUpdatedBadge()와 로직을
+// 그대로 맞춰서(새 조회 방식을 만들지 않음), 홈과 SEO 페이지에 서로 다른 시각이 보이는 일이
+// 없게 한다. 실패해도 null을 반환해 배지 자리만 비워지고 페이지 렌더링에는 영향이 없다.
+async function fetchDiscountUpdatedAt(){
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_discount_updated_at`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) || null;
+  } catch {
+    return null;
+  }
+}
+
+// home.js의 formatUpdatedBadge()와 동일한 표시 규칙 (🟢 할인정보 업데이트 MM/DD HH:mm).
+function formatUpdatedBadge(dateStr){
+  const raw = (dateStr || '').toString();
+  if (!raw) return '';
+  const hasTime = raw.includes('T');
+  const d = new Date(hasTime ? raw : `${raw}T00:00:00`);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateLabel = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+  const timeLabel = hasTime ? ` ${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
+  return `🟢 할인정보 업데이트 ${dateLabel}${timeLabel}`;
 }
 
 // ---------------------------------------------------------------
@@ -453,7 +513,12 @@ function renderCompareTable(groups){
       const gachaTag = g.gacha[a]
         ? `<br><span style="font-size:10px; color:${PRIMARY};">${gachaAmounts && gachaAmounts.length > 1 ? `🎰 최대 ${fmtWon(gachaAmounts[gachaAmounts.length - 1])}` : '🎰 뽑기'}</span>`
         : '';
-      return `<td style="text-align:center; padding:10px 8px; border-bottom:1px solid ${LINE}; font-weight:${isMax ? '700' : '400'}; color:${isMax ? PRIMARY : TEXT};">${fmtWon(amt)}${timeTag}${gachaTag}</td>`;
+      // 최소주문금액/기간은 실제 값이 있을 때만, 표가 넓어지지 않도록 한 줄로 압축해서 붙인다.
+      const metaBits = [];
+      if (typeof g.minOrder[a] === 'number') metaBits.push(`최소 ${fmtWon(g.minOrder[a])}`);
+      if (g.period[a]) metaBits.push(g.period[a]);
+      const metaTag = metaBits.length ? `<br><span style="font-size:9px; color:${MUTED};">${escapeHtml(metaBits.join(' · '))}</span>` : '';
+      return `<td style="text-align:center; padding:10px 8px; border-bottom:1px solid ${LINE}; font-weight:${isMax ? '700' : '400'}; color:${isMax ? PRIMARY : TEXT};">${fmtWon(amt)}${timeTag}${gachaTag}${metaTag}</td>`;
     }).join('');
     const bestApp = apps.find(a => g.apps[a] === g.maxAmount);
     return `<tr>
@@ -540,15 +605,26 @@ function renderSingleAppList(list){
     const gachaTag = d.isRandom
       ? `<span style="font-size:11px; color:${PRIMARY}; margin-left:6px;">${Array.isArray(d.randomAmounts) && d.randomAmounts.length > 1 ? `🎰 최대 ${fmtWon(d.randomAmounts[d.randomAmounts.length - 1])}` : '🎰 뽑기'}</span>`
       : '';
+    // 최소주문금액/할인기간은 실제 값이 있을 때만 보조텍스트로 붙인다(둘 다 없으면 아무것도 표시 안 함).
+    const metaParts = [];
+    if (typeof d.minOrder === 'number') metaParts.push(`최소주문 ${fmtWon(d.minOrder)}`);
+    const periodText = formatDiscountPeriod(d);
+    if (periodText) metaParts.push(periodText);
+    const metaHtml = metaParts.length
+      ? `<p style="font-size:11px; color:${MUTED}; margin:4px 0 0 20px;">${escapeHtml(metaParts.join(' · '))}</p>`
+      : '';
     return `
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:${i % 2 === 0 ? CARD : SURFACE}; border-radius:8px; margin-bottom:8px;">
-      <div>
-        <span style="font-family:monospace; color:${MUTED}; font-size:12px; margin-right:8px;">${i + 1}</span>
-        <span style="font-weight:700; color:${TEXT};">${escapeHtml(d.name)}</span>
-        ${d.limitedTime ? `<span style="font-size:11px; color:#FF5A36; margin-left:6px;">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>` : ''}
-        ${gachaTag}
+    <div style="padding:12px; background:${i % 2 === 0 ? CARD : SURFACE}; border-radius:8px; margin-bottom:8px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-family:monospace; color:${MUTED}; font-size:12px; margin-right:8px;">${i + 1}</span>
+          <span style="font-weight:700; color:${TEXT};">${escapeHtml(d.name)}</span>
+          ${d.limitedTime ? `<span style="font-size:11px; color:#FF5A36; margin-left:6px;">⏰ ${escapeHtml(d.limitedTime)} 선착순</span>` : ''}
+          ${gachaTag}
+        </div>
+        <span style="font-family:monospace; font-weight:700; color:${PRIMARY};">${fmtWon(d.amount)} 할인</span>
       </div>
-      <span style="font-family:monospace; font-weight:700; color:${PRIMARY};">${fmtWon(d.amount)} 할인</span>
+      ${metaHtml}
     </div>`;
   }).join('');
   return `<div style="margin:16px 0;">${rows}</div>`;
@@ -610,6 +686,7 @@ async function renderPage(pageKey, discounts){
   const def = PAGE_DEFS[pageKey];
   const canonical = `${SITE_URL}/${pageKey}`;
   const todayLabel = fmtTodayLabel();
+  const updatedBadge = formatUpdatedBadge(await fetchDiscountUpdatedAt());
 
   let bodyHtml;
   let extraSectionsHtml = '';
@@ -765,6 +842,7 @@ ${jsonLdScripts}
   <p style="font-size:12px; color:${MUTED}; margin:0 0 4px;">${escapeHtml(todayLabel)} 기준</p>
   <h1>${escapeHtml(def.h1)}</h1>
   <p style="font-size:14px; line-height:1.6; color:${MUTED}; margin-bottom:8px;">${escapeHtml(def.intro)}</p>
+  ${updatedBadge ? `<p style="font-size:12px; color:${PRIMARY}; margin:0 0 8px;">${escapeHtml(updatedBadge)}</p>` : ''}
   <p style="font-size:12px; color:${MUTED}; opacity:0.85;">※ 할인 정보는 실시간으로 바뀔 수 있으며, 주문 전 앱에서 한 번 더 확인해주세요.</p>
 
   ${bodyHtml}
@@ -957,9 +1035,20 @@ function renderTodayHighlight(groups, brandLabel){
   const gachaTag = best.gacha && best.gacha[bestApp]
     ? `<span style="font-size:13px; font-weight:700; color:${PRIMARY}; margin-left:8px;">${gachaAmounts && gachaAmounts.length > 1 ? `🎰 최대 ${fmtWon(gachaAmounts[gachaAmounts.length - 1])}` : '🎰 뽑기'}</span>`
     : '';
+  const timeTag = best.limitedTime && best.limitedTime[bestApp]
+    ? `<span style="font-size:13px; font-weight:700; color:#FF5A36; margin-left:8px;">⏰ ${escapeHtml(best.limitedTime[bestApp])} 선착순</span>`
+    : '';
+  // 최소주문금액/기간은 실제 값이 있을 때만 헤드라인 아래 작은 줄로 붙인다.
+  const metaBits = [];
+  if (typeof best.minOrder[bestApp] === 'number') metaBits.push(`최소주문 ${fmtWon(best.minOrder[bestApp])}`);
+  if (best.period[bestApp]) metaBits.push(best.period[bestApp]);
+  const metaHtml = metaBits.length
+    ? `<p style="font-size:12px; color:${MUTED}; margin:6px 0 0;">${escapeHtml(metaBits.join(' · '))}</p>`
+    : '';
   return `<div style="margin:16px 0; padding:18px 20px; background:linear-gradient(135deg, ${CARD}, ${SURFACE}); border:1px solid ${PRIMARY}; border-radius:10px;">
     <p style="font-size:12px; color:${MUTED}; margin:0 0 6px;">🔥 현재 가장 큰 할인</p>
-    <p style="font-size:20px; font-weight:800; color:${PRIMARY}; margin:0;">${APP_LABEL[bestApp]} ${fmtWon(best.maxAmount)} 할인${gachaTag}</p>
+    <p style="font-size:20px; font-weight:800; color:${PRIMARY}; margin:0;">${APP_LABEL[bestApp]} ${fmtWon(best.maxAmount)} 할인${gachaTag}${timeTag}</p>
+    ${metaHtml}
   </div>`;
 }
 
