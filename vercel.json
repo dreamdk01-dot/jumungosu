@@ -5,30 +5,179 @@
     }
   },
   "rewrites": [
-    { "source": "/", "destination": "/api/home" },
-    { "source": "/today-delivery-discount", "destination": "/api/seo?page=today-delivery-discount" },
-    { "source": "/today-chicken-discount", "destination": "/api/seo?page=today-chicken-discount" },
-    { "source": "/today-pizza-discount", "destination": "/api/seo?page=today-pizza-discount" },
-    { "source": "/today-burger-discount", "destination": "/api/seo?page=today-burger-discount" },
-    { "source": "/delivery-app-compare", "destination": "/api/seo?page=delivery-app-compare" },
-    { "source": "/baemin-discount", "destination": "/api/seo?page=baemin-discount" },
-    { "source": "/coupangeats-discount", "destination": "/api/seo?page=coupangeats-discount" },
-    { "source": "/yogiyo-discount", "destination": "/api/seo?page=yogiyo-discount" },
-    { "source": "/ddangyo-discount", "destination": "/api/seo?page=ddangyo-discount" },
-    { "source": "/chicken-app-compare", "destination": "/api/seo?page=chicken-app-compare" },
-    { "source": "/bbq-discount", "destination": "/api/seo?page=bbq-discount" },
-    { "source": "/bhc-discount", "destination": "/api/seo?page=bhc-discount" },
-    { "source": "/gyochon-discount", "destination": "/api/seo?page=gyochon-discount" },
-    { "source": "/gubne-discount", "destination": "/api/seo?page=gubne-discount" },
-    { "source": "/chegatjip-discount", "destination": "/api/seo?page=chegatjip-discount" },
-    { "source": "/dominopizza-discount", "destination": "/api/seo?page=dominopizza-discount" },
-    { "source": "/pizzahut-discount", "destination": "/api/seo?page=pizzahut-discount" },
-    { "source": "/lotteria-discount", "destination": "/api/seo?page=lotteria-discount" },
-    { "source": "/mcdonald-discount", "destination": "/api/seo?page=mcdonald-discount" },
-    { "source": "/momstouch-discount", "destination": "/api/seo?page=momstouch-discount" },
-    { "source": "/((?!api/).*)", "destination": "/app.html" }
+    {
+      "source": "/",
+      "destination": "/api/home"
+    },
+    {
+      "source": "/today-delivery-discount",
+      "destination": "/api/seo?page=today-delivery-discount"
+    },
+    {
+      "source": "/today-chicken-discount",
+      "destination": "/api/seo?page=today-chicken-discount"
+    },
+    {
+      "source": "/today-pizza-discount",
+      "destination": "/api/seo?page=today-pizza-discount"
+    },
+    {
+      "source": "/today-burger-discount",
+      "destination": "/api/seo?page=today-burger-discount"
+    },
+    {
+      "source": "/delivery-app-compare",
+      "destination": "/api/seo?page=delivery-app-compare"
+    },
+    {
+      "source": "/baemin-discount",
+      "destination": "/api/seo?page=baemin-discount"
+    },
+    {
+      "source": "/coupangeats-discount",
+      "destination": "/api/seo?page=coupangeats-discount"
+    },
+    {
+      "source": "/yogiyo-discount",
+      "destination": "/api/seo?page=yogiyo-discount"
+    },
+    {
+      "source": "/ddangyo-discount",
+      "destination": "/api/seo?page=ddangyo-discount"
+    },
+    {
+      "source": "/chicken-app-compare",
+      "destination": "/api/seo?page=chicken-app-compare"
+    },
+    {
+      "source": "/bbq-discount",
+      "destination": "/api/seo?page=bbq-discount"
+    },
+    {
+      "source": "/bhc-discount",
+      "destination": "/api/seo?page=bhc-discount"
+    },
+    {
+      "source": "/gyochon-discount",
+      "destination": "/api/seo?page=gyochon-discount"
+    },
+    {
+      "source": "/gubne-discount",
+      "destination": "/api/seo?page=gubne-discount"
+    },
+    {
+      "source": "/chegatjip-discount",
+      "destination": "/api/seo?page=chegatjip-discount"
+    },
+    {
+      "source": "/dominopizza-discount",
+      "destination": "/api/seo?page=dominopizza-discount"
+    },
+    {
+      "source": "/pizzahut-discount",
+      "destination": "/api/seo?page=pizzahut-discount"
+    },
+    {
+      "source": "/lotteria-discount",
+      "destination": "/api/seo?page=lotteria-discount"
+    },
+    {
+      "source": "/mcdonald-discount",
+      "destination": "/api/seo?page=mcdonald-discount"
+    },
+    {
+      "source": "/momstouch-discount",
+      "destination": "/api/seo?page=momstouch-discount"
+    },
+    {
+      "source": "/pooradak-discount",
+      "destination": "/api/seo?page=pooradak-discount"
+    },
+    {
+      "source": "/norangtongdak-discount",
+      "destination": "/api/seo?page=norangtongdak-discount"
+    },
+    {
+      "source": "/hosigi-discount",
+      "destination": "/api/seo?page=hosigi-discount"
+    },
+    {
+      "source": "/jadam-discount",
+      "destination": "/api/seo?page=jadam-discount"
+    },
+    {
+      "source": "/kkuvrako-discount",
+      "destination": "/api/seo?page=kkuvrako-discount"
+    },
+    {
+      "source": "/nene-discount",
+      "destination": "/api/seo?page=nene-discount"
+    },
+    {
+      "source": "/ttoraeorae-discount",
+      "destination": "/api/seo?page=ttoraeorae-discount"
+    },
+    {
+      "source": "/banolrim-discount",
+      "destination": "/api/seo?page=banolrim-discount"
+    },
+    {
+      "source": "/youthpizza-discount",
+      "destination": "/api/seo?page=youthpizza-discount"
+    },
+    {
+      "source": "/7st-pizza-discount",
+      "destination": "/api/seo?page=7st-pizza-discount"
+    },
+    {
+      "source": "/mrpizza-discount",
+      "destination": "/api/seo?page=mrpizza-discount"
+    },
+    {
+      "source": "/leejaemo-discount",
+      "destination": "/api/seo?page=leejaemo-discount"
+    },
+    {
+      "source": "/baskinrobbins-discount",
+      "destination": "/api/seo?page=baskinrobbins-discount"
+    },
+    {
+      "source": "/dunkin-discount",
+      "destination": "/api/seo?page=dunkin-discount"
+    },
+    {
+      "source": "/touslesjours-discount",
+      "destination": "/api/seo?page=touslesjours-discount"
+    },
+    {
+      "source": "/starbucks-discount",
+      "destination": "/api/seo?page=starbucks-discount"
+    },
+    {
+      "source": "/myeongrang-discount",
+      "destination": "/api/seo?page=myeongrang-discount"
+    },
+    {
+      "source": "/ddeokcham-discount",
+      "destination": "/api/seo?page=ddeokcham-discount"
+    },
+    {
+      "source": "/burgerking-discount",
+      "destination": "/api/seo?page=burgerking-discount"
+    },
+    {
+      "source": "/whattheburger-discount",
+      "destination": "/api/seo?page=whattheburger-discount"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/app.html"
+    }
   ],
   "crons": [
-    { "path": "/api/check-event-deadline?secret=REPLACE_WITH_YOUR_CRON_SECRET", "schedule": "10 13 * * *" }
+    {
+      "path": "/api/check-event-deadline?secret=REPLACE_WITH_YOUR_CRON_SECRET",
+      "schedule": "10 13 * * *"
+    }
   ]
 }
