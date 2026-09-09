@@ -216,6 +216,189 @@ const PAGE_DEFS = {
     limit: 10,
     singleBrand: true,
   },
+
+  // ---- 2차 확장: 브랜드 20개 (치킨 7 / 피자 5 / 카페·디저트 4 / 분식 2 / 버거 2) ----
+  'pooradak-discount': {
+    title: '푸라닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '푸라닭을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '푸라닭 할인 비교',
+    intro: '오늘 푸라닭이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('푸라닭'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'norangtongdak-discount': {
+    title: '노랑통닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '노랑통닭을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '노랑통닭 할인 비교',
+    intro: '오늘 노랑통닭이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('노랑통닭'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'hosigi-discount': {
+    title: '호식이두마리치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '호식이두마리치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '호식이두마리치킨 할인 비교',
+    intro: '오늘 호식이두마리치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('호식이'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'jadam-discount': {
+    title: '자담치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '자담치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '자담치킨 할인 비교',
+    intro: '오늘 자담치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('자담'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'kkuvrako-discount': {
+    title: '꾸브라꼬숯불치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '꾸브라꼬숯불치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '꾸브라꼬숯불치킨 할인 비교',
+    intro: '오늘 꾸브라꼬숯불치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    // 실제 데이터에 '꾸브라꼬숯불치킨'과 '꾸브라꼬치킨' 두 표기가 혼재되어 있어, 공통 부분 '꾸브라꼬'로 둘 다 포괄한다.
+    filter: d => normBrand(d.name).includes('꾸브라꼬'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'nene-discount': {
+    title: '네네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '네네치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '네네치킨 할인 비교',
+    intro: '오늘 네네치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('네네'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'ttoraeorae-discount': {
+    title: '또래오래 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '또래오래를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '또래오래 할인 비교',
+    intro: '오늘 또래오래가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('또래오래'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'banolrim-discount': {
+    title: '반올림피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '반올림피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '반올림피자 할인 비교',
+    intro: '오늘 반올림피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('반올림'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'youthpizza-discount': {
+    title: '청년피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '청년피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '청년피자 할인 비교',
+    intro: '오늘 청년피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('청년피자'),
+    limit: 10,
+    singleBrand: true,
+  },
+  '7st-pizza-discount': {
+    title: '7번가피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '7번가피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '7번가피자 할인 비교',
+    intro: '오늘 7번가피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('7번가'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'mrpizza-discount': {
+    title: '미스터피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '미스터피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '미스터피자 할인 비교',
+    intro: '오늘 미스터피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('미스터피자'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'leejaemo-discount': {
+    title: '이재모피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '이재모피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '이재모피자 할인 비교',
+    intro: '오늘 이재모피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('이재모'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'baskinrobbins-discount': {
+    title: '배스킨라빈스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '배스킨라빈스를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '배스킨라빈스 할인 비교',
+    intro: '오늘 배스킨라빈스가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('배스킨라빈스'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'dunkin-discount': {
+    title: '던킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '던킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '던킨 할인 비교',
+    intro: '오늘 던킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('던킨'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'touslesjours-discount': {
+    title: '뚜레쥬르 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '뚜레쥬르를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '뚜레쥬르 할인 비교',
+    intro: '오늘 뚜레쥬르가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('뚜레쥬르'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'starbucks-discount': {
+    title: '스타벅스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '스타벅스를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '스타벅스 할인 비교',
+    intro: '오늘 스타벅스가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('스타벅스'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'myeongrang-discount': {
+    title: '명랑핫도그 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '명랑핫도그를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '명랑핫도그 할인 비교',
+    intro: '오늘 명랑핫도그가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('명랑핫도그'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'ddeokcham-discount': {
+    title: '떡참 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '떡참을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '떡참 할인 비교',
+    intro: '오늘 떡참이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('떡참'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'burgerking-discount': {
+    title: '버거킹 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '버거킹을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '버거킹 할인 비교',
+    intro: '오늘 버거킹이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('버거킹'),
+    limit: 10,
+    singleBrand: true,
+  },
+  'whattheburger-discount': {
+    title: '왓더버거 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    description: '왓더버거를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
+    h1: '왓더버거 할인 비교',
+    intro: '오늘 왓더버거가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
+    filter: d => normBrand(d.name).includes('왓더버거'),
+    limit: 10,
+    singleBrand: true,
+  },
 };
 
 // 브랜드명 매칭용 정규화 (공백 제거 + 소문자화). singleBrand 페이지들이 이걸로 브랜드를 골라낸다.
@@ -261,6 +444,21 @@ const BRAND_CATEGORY = {
   'lotteria-discount': '버거',
   'mcdonald-discount': '버거',
   'momstouch-discount': '버거',
+  // ---- 2차 확장 브랜드 (배스킨라빈스/던킨/뚜레쥬르/스타벅스/명랑핫도그/떡참은 이번엔 매핑하지 않음) ----
+  'pooradak-discount': '치킨',
+  'norangtongdak-discount': '치킨',
+  'hosigi-discount': '치킨',
+  'jadam-discount': '치킨',
+  'kkuvrako-discount': '치킨',
+  'nene-discount': '치킨',
+  'ttoraeorae-discount': '치킨',
+  'banolrim-discount': '피자',
+  'youthpizza-discount': '피자',
+  '7st-pizza-discount': '피자',
+  'mrpizza-discount': '피자',
+  'leejaemo-discount': '피자',
+  'burgerking-discount': '버거',
+  'whattheburger-discount': '버거',
 };
 
 // ---------------------------------------------------------------
@@ -1158,7 +1356,7 @@ function renderCrossLinkSection(currentKey){
   if (!category) return '';
   const siblings = Object.keys(BRAND_CATEGORY).filter(k => BRAND_CATEGORY[k] === category && k !== currentKey);
   if (!siblings.length) return '';
-  const chips = siblings.map(k => `<a href="/${k}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(NAV_LABEL[k] || k)}</a>`).join('');
+  const chips = siblings.map(k => `<a href="/${k}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)}</a>`).join('');
   return `<section style="margin:28px 0;">
     <h2 style="font-size:16px; margin:0 0 10px;">오늘의 ${escapeHtml(category)} 할인</h2>
     <div>${chips}</div>
@@ -1225,7 +1423,7 @@ function renderRelatedLinksSection(pageKey){
     title = '앱/브랜드별로 자세히 보기';
     chips = [
       ...Object.values(SINGLE_APP_PAGE_BY_APP).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
-      ...brandPages.slice(0, 5).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
+      ...brandPages.slice(0, 5).map(k => linkChip(`/${k}`, NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)),
     ];
   }
 
