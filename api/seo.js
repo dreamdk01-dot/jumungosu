@@ -427,6 +427,29 @@ const NAV_LINKS = [
   ['lotteria-discount', '롯데리아 할인'],
   ['mcdonald-discount', '맥도날드 할인'],
   ['momstouch-discount', '맘스터치 할인'],
+  // ---- 2차 확장 브랜드 20개 중 NAV_LABEL 조회(renderCrossLinkSection 등)에 쓰이는 라벨.
+  //      home.js의 buildBrandLinks()도 이 export를 그대로 가져다 쓰므로, 여기 추가만으로
+  //      두 곳 모두에서 신규 브랜드 라벨 품질이 함께 좋아진다(기존 20개는 무변경).
+  ['norangtongdak-discount', '노랑통닭 할인'],
+  ['jadam-discount', '자담치킨 할인'],
+  ['pooradak-discount', '푸라닭 할인'],
+  ['nene-discount', '네네치킨 할인'],
+  ['hosigi-discount', '호식이두마리치킨 할인'],
+  ['kkuvrako-discount', '꾸브라꼬숯불치킨 할인'],
+  ['ttoraeorae-discount', '또래오래 할인'],
+  ['mrpizza-discount', '미스터피자 할인'],
+  ['banolrim-discount', '반올림피자 할인'],
+  ['youthpizza-discount', '청년피자 할인'],
+  ['7st-pizza-discount', '7번가피자 할인'],
+  ['leejaemo-discount', '이재모피자 할인'],
+  ['burgerking-discount', '버거킹 할인'],
+  ['whattheburger-discount', '왓더버거 할인'],
+  ['starbucks-discount', '스타벅스 할인'],
+  ['baskinrobbins-discount', '배스킨라빈스 할인'],
+  ['dunkin-discount', '던킨 할인'],
+  ['touslesjours-discount', '뚜레쥬르 할인'],
+  ['myeongrang-discount', '명랑핫도그 할인'],
+  ['ddeokcham-discount', '떡참 할인'],
 ];
 
 const NAV_LABEL = Object.fromEntries(NAV_LINKS);
@@ -682,15 +705,95 @@ function formatUpdatedBadge(dateStr){
   return `🟢 할인정보 업데이트 ${dateLabel}${timeLabel}`;
 }
 
+// 공통 footer 대표 브랜드 허브. singleBrand 30개를 전부 나열하지 않고, 인지도 + 실제 할인
+// 데이터가 쌓이는 브랜드를 기준으로 카테고리별 대표만 노출한다(치킨9 + 피자7 + 버거4 + 카페·디저트4
+// = 24개). 여기 없는 브랜드(호식이두마리치킨/꾸브라꼬숯불치킨/또래오래/왓더버거 등)도 페이지
+// 자체는 그대로 있고, renderCrossLinkSection()/renderRelatedLinksSection()의 카테고리 내부링크로
+// 계속 발견 가능하다 — footer 비노출이 SEO 페이지 삭제를 뜻하지 않는다.
+// 라벨은 NAV_LABEL(할인 페이지용 긴 표기)이 아니라 footer 전용 짧은 브랜드명을 명시적으로 쓴다.
+const FOOTER_BRAND_SECTIONS = [
+  {
+    icon: '🍗', title: '오늘 치킨 할인',
+    links: [['today-chicken-discount', '전체 비교'], ['chicken-app-compare', '배달앱별 비교']],
+    brands: [
+      ['bbq-discount', 'BBQ'],
+      ['bhc-discount', 'BHC'],
+      ['gyochon-discount', '교촌치킨'],
+      ['gubne-discount', '굽네치킨'],
+      ['chegatjip-discount', '처갓집양념치킨'],
+      ['norangtongdak-discount', '노랑통닭'],
+      ['jadam-discount', '자담치킨'],
+      ['pooradak-discount', '푸라닭'],
+      ['nene-discount', '네네치킨'],
+    ],
+  },
+  {
+    icon: '🍕', title: '오늘 피자 할인',
+    links: [['today-pizza-discount', '전체 비교']],
+    brands: [
+      ['dominopizza-discount', '도미노피자'],
+      ['pizzahut-discount', '피자헛'],
+      ['mrpizza-discount', '미스터피자'],
+      ['banolrim-discount', '반올림피자'],
+      ['youthpizza-discount', '청년피자'],
+      ['7st-pizza-discount', '7번가피자'],
+      ['leejaemo-discount', '이재모피자'],
+    ],
+  },
+  {
+    icon: '🍔', title: '오늘 햄버거 할인',
+    links: [['today-burger-discount', '전체 비교']],
+    brands: [
+      ['mcdonald-discount', '맥도날드'],
+      ['lotteria-discount', '롯데리아'],
+      ['burgerking-discount', '버거킹'],
+      ['momstouch-discount', '맘스터치'],
+    ],
+  },
+  {
+    icon: '☕', title: '카페·디저트 할인',
+    links: [],
+    brands: [
+      ['starbucks-discount', '스타벅스'],
+      ['baskinrobbins-discount', '배스킨라빈스'],
+      ['dunkin-discount', '던킨'],
+      ['touslesjours-discount', '뚜레쥬르'],
+    ],
+  },
+];
+
+const FOOTER_APP_SECTION = {
+  icon: '📱', title: '배달앱별 할인',
+  links: [['delivery-app-compare', '앱별 비교']],
+  brands: [
+    ['baemin-discount', '배민 할인'],
+    ['yogiyo-discount', '요기요 할인'],
+    ['coupangeats-discount', '쿠팡이츠 할인'],
+    ['ddangyo-discount', '땡겨요 할인'],
+  ],
+};
+
 // ---------------------------------------------------------------
 // HTML 렌더링
 // ---------------------------------------------------------------
 function renderNav(currentKey){
-  const items = NAV_LINKS.map(([key, label]) => {
+  const pill = ([key, label]) => {
     const active = key === currentKey;
     return `<a href="/${key}" style="display:inline-block; margin:0 6px 8px 0; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; text-decoration:none; ${active ? `background:${PRIMARY}; color:${BG};` : `background:${CARD}; color:${MUTED}; border:1px solid ${LINE};`}">${escapeHtml(label)}</a>`;
-  }).join('');
-  return `<nav style="margin:20px 0 28px;">${items}</nav>`;
+  };
+  const section = (icon, title, entries) => `<div style="margin-bottom:14px;">
+    <p style="font-size:12px; font-weight:700; color:${MUTED}; margin:0 0 6px;">${icon ? icon + ' ' : ''}${escapeHtml(title)}</p>
+    <div>${entries.map(pill).join('')}</div>
+  </div>`;
+
+  const parts = [];
+  parts.push(section('', '오늘의 할인 비교', [['today-delivery-discount', '오늘 배달 할인 전체']]));
+  FOOTER_BRAND_SECTIONS.forEach(sec => {
+    parts.push(section(sec.icon, sec.title, [...sec.links, ...sec.brands]));
+  });
+  parts.push(section(FOOTER_APP_SECTION.icon, FOOTER_APP_SECTION.title, [...FOOTER_APP_SECTION.links, ...FOOTER_APP_SECTION.brands]));
+
+  return `<nav style="margin:20px 0 28px;">${parts.join('')}</nav>`;
 }
 
 function renderCompareTable(groups){
