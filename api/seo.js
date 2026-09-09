@@ -613,6 +613,11 @@ async function renderPage(pageKey, discounts){
 
   let bodyHtml;
   let extraSectionsHtml = '';
+  // 실제로 화면(bodyHtml)에 렌더링되는 순위 리스트와 100% 동일한 이름만 담는다. JSON-LD의
+  // itemListElement는 이 배열로부터만 만들어지므로, 화면에 없는 정보가 구조화 데이터에만
+  // 존재하는 불일치가 생기지 않는다. singleBrand는 "여러 항목의 순위 목록"이 아니라
+  // "브랜드 하나의 앱별 비교"라 애초에 이 배열을 만들지 않는다(=ItemList 미출력).
+  let listItems = null;
   const live = discounts.filter(isLive).filter(def.filter);
 
   if (def.multiAppOnly){
@@ -624,6 +629,10 @@ async function renderPage(pageKey, discounts){
       : `<p style="color:${MUTED};">현재 2개 이상 앱에서 동시에 할인 중인 브랜드가 없어요. 잠시 후 다시 확인해주세요.</p>`)
       + renderTopEditorComment(pageKey, live, groups)
       + renderRelatedLinksSection(pageKey);
+    listItems = groups.map(g => {
+      const bestApp = PLATFORM_ORDER.find(a => g.apps[a] === g.maxAmount);
+      return `${g.name} - ${APP_LABEL[bestApp]} ${fmtWon(g.maxAmount)} 할인`;
+    });
   } else if (def.singleBrand){
     // 브랜드 하나만 필터링된 상태 — 앱이 1개뿐이어도(appCount>=2 조건 없이) 그대로 비교표로 보여준다.
     const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount).slice(0, def.limit);
@@ -650,24 +659,68 @@ async function renderPage(pageKey, discounts){
       : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
       + renderTopEditorComment(pageKey, live, null)
       + renderRelatedLinksSection(pageKey);
+    listItems = sorted.map(d => `${d.name} - ${fmtWon(d.amount)} 할인`);
   } else {
-    const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit);
+    const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit).map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` }));
     const summaryHtml = renderTodaySummary(pageKey, live);
     bodyHtml = summaryHtml + (sorted.length
-      ? renderSingleAppList(sorted.map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` })))
+      ? renderSingleAppList(sorted)
       : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
       + renderTopEditorComment(pageKey, live, null)
       + renderRelatedLinksSection(pageKey);
+    listItems = sorted.map(d => `${d.name} - ${fmtWon(d.amount)} 할인`);
   }
 
-  // 구조화 데이터: 이 페이지가 "무엇을 나열하는 목록"인지 구글에 명시
-  const jsonLd = {
+
+  // 구조화 데이터 1: ItemList — 실제 화면에 렌더링된 순위 리스트(listItems)가 있을 때만 만든다.
+  // singleBrand(브랜드 1개의 앱별 비교)는 "여러 항목의 순위 목록"이 아니라서 애초에 listItems가
+  // 없고, listItems가 빈 배열인 경우(오늘 데이터 0건)에도 억지로 빈 ItemList를 만들지 않는다.
+  const itemListJsonLd = (listItems && listItems.length) ? {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: def.h1,
     description: def.description,
     url: canonical,
+    itemListElement: listItems.map((name, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name,
+    })),
+  } : null;
+
+  // 구조화 데이터 2: BreadcrumbList — 실제 존재하고 클릭해서 갈 수 있는 URL만 사용한다.
+  // singleBrand(브랜드 페이지)는 실제로 renderRelatedLinksSection()에서도 쓰는 것과 동일한
+  // BRAND_CATEGORY→CATEGORY_TODAY_PAGE 매핑을 재사용해 "홈 > 오늘 OO 할인 > 브랜드 할인 비교"
+  // 3단계로, 그 외 페이지는 "홈 > 현재 페이지" 2단계로 만든다. 새 URL/새 페이지를 만들지 않는다.
+  const breadcrumbItems = [{ name: '홈', url: `${SITE_URL}/` }];
+  if (def.singleBrand){
+    const categoryPage = CATEGORY_TODAY_PAGE[BRAND_CATEGORY[pageKey]];
+    if (categoryPage){
+      breadcrumbItems.push({ name: PAGE_DEFS[categoryPage.pageKey].h1, url: `${SITE_URL}/${categoryPage.pageKey}` });
+    }
+  }
+  breadcrumbItems.push({ name: def.h1, url: canonical });
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
   };
+
+  // JSON-LD를 <script> 태그 안에 안전하게 넣기 위한 방어. JSON.stringify는 '<' 문자를
+  // 이스케이프하지 않으므로, 브랜드명 등 원본 데이터에 "</script>"가 섞여 있으면 스크립트
+  // 태그가 그 지점에서 조기 종료되고 그 뒤가 임의로 실행 가능한 스크립트로 파싱될 수 있다
+  // (JSON 값 자체나 의미는 전혀 바뀌지 않음 — \u003c는 파싱하면 그대로 '<'로 복원됨).
+  const safeJsonStringify = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+
+  const jsonLdScripts = [itemListJsonLd, breadcrumbJsonLd]
+    .filter(Boolean)
+    .map(obj => `<script type="application/ld+json">${safeJsonStringify(obj)}</script>`)
+    .join('\n');
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -685,7 +738,7 @@ async function renderPage(pageKey, discounts){
 <meta property="og:url" content="${canonical}">
 <meta property="og:image" content="${SITE_URL}/og-image.png">
 <link rel="icon" type="image/png" href="/favicon.png">
-<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+${jsonLdScripts}
 <style>
   body{ margin:0; background:${BG}; color:${TEXT}; font-family:'Noto Sans KR', -apple-system, sans-serif; }
   a{ color:${PRIMARY}; }
