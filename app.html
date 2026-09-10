@@ -4018,12 +4018,18 @@
     }
 
     const draftInfo = parseEventMonthInfo(DRAFT_EVENT_ID);
+    // 개인정보(event_votes) 파기 기준으로만 쓰는 구조화된 종료 시각. date_range 문자열을 새로
+    // 파싱하는 게 아니라, 이미 투표 마감 판정에 실제로 쓰이고 있는 getEventVoteDeadline()의
+    // 계산 결과(그 달 마지막 날 22:00 KST)를 그대로 재사용한다 — 화면에는 아무 변화가 없다.
+    const deadlineMs = getEventVoteDeadline(DRAFT_EVENT_ID);
+    const endAtIso = deadlineMs !== null ? new Date(deadlineMs).toISOString() : null;
     try {
       const { error } = await supabaseClient.rpc('upsert_vote_event', {
         p_event_id: DRAFT_EVENT_ID,
         p_week_label: `${draftInfo.month}월`,
         p_date_range: draftInfo.dateRange,
         p_options: cleaned,
+        p_end_at: endAtIso,
       });
       if (error) throw error;
 
