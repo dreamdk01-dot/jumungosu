@@ -90,53 +90,105 @@ async function updateBrandDailyHistory(records) {
   return rows.length;
 }
 
+// "현재 시점 기준 달력상 N개월 전"을 안전하게 계산한다. Date.setMonth()를 그대로 쓰면
+// 목표 월에 그 날짜가 없을 때(예: 8/31의 6개월 전인 "2/31") 다음 달로 overflow되어
+// "2/28"이 아니라 "3/3"처럼 튕겨나가는 문제가 있었다(실측으로 확인). 이 함수는 목표 월에
+// 그 날짜가 없으면 그 달의 마지막 날로 안전하게 고정한다(예: 8/31 → 2/28, 3/31 → 9/30).
+function subtractMonthsSafe(date, months) {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const targetMonthIndex = m - months;
+  const daysInTargetMonth = new Date(Date.UTC(y, targetMonthIndex + 1, 0)).getUTCDate();
+  const day = Math.min(date.getUTCDate(), daysInTargetMonth);
+  return new Date(Date.UTC(
+    y, targetMonthIndex, day,
+    date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds()
+  ));
+}
+
+// b2b-attachments 버킷의 전체 객체 목록을 offset 기반으로 끝까지 수집한다(삭제는 절대 하지
+// 않고 조회만 함). 페이지 크기(PAGE_SIZE)보다 적게 반환되면 마지막 페이지로 보고 멈춘다.
+// 혹시 모를 API 이상 응답으로 이 조건이 영영 안 걸리는 경우에 대비해 MAX_PAGES로 상한을 둬서
+// 무한루프를 방지한다(대량의 파일이 있어도 안전하게 종료됨).
+async function listAllB2BAttachments() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const PAGE_SIZE = 100;
+  const MAX_PAGES = 500; // 최대 50,000개까지 안전하게 순회, 그 이상이면 무한루프 방지를 위해 중단
+
+  const allFiles = [];
+  let offset = 0;
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const listRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/b2b-attachments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ prefix: '', limit: PAGE_SIZE, offset, sortBy: { column: 'created_at', order: 'asc' } }),
+    });
+    if (!listRes.ok) {
+      const text = await listRes.text().catch(() => '');
+      throw new Error(`b2b-attachments 목록 조회 오류 (HTTP ${listRes.status}, offset ${offset}): ${text.slice(0, 300)}`);
+    }
+    const pageFiles = await listRes.json();
+    allFiles.push(...(pageFiles || []));
+
+    if (!pageFiles || pageFiles.length < PAGE_SIZE) break; // 마지막 페이지(표준 pagination 종료 조건)
+    offset += PAGE_SIZE;
+  }
+
+  return allFiles;
+}
+
 // B2B 문의 첨부파일(Storage) 중 업로드 후 6개월이 지난 것만 삭제한다. b2b-attachments 버킷에는
 // 누구나 업로드할 수 있는 INSERT 정책만 있고 DELETE 정책이 없어(클라이언트 anon/authenticated
 // 키로는 삭제가 원천적으로 불가능), service_role 키를 이미 안전하게 갖고 있는 이 서버리스 함수
 // 안에서만 Storage REST API(list/remove)로 처리한다. 다른 버킷(board-images 등)은 이 함수가
-// 전혀 참조하지 않는다. 6개월 경계는 달력 기준(setMonth)으로 계산해 윤달 등 오차가 없게 한다.
+// 전혀 참조하지 않는다.
+//
+// 1) 삭제 대상을 판단하기 전에 전체 목록을 먼저 끝까지 수집한다(listAllB2BAttachments, 삭제는
+//    이 단계에서 하지 않음). list 도중에 곧바로 지우면, offset 기준 다음 페이지를 조회할 때
+//    이미 지운 파일만큼 목록이 당겨져서 아직 확인 안 한 파일을 건너뛸 위험이 있다 — 그래서
+//    "먼저 전부 모으고, 맨 마지막에 한 번만 삭제"하는 방식(우선순위 A)을 쓴다.
 async function purgeExpiredB2BAttachments() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const listRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/b2b-attachments`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-    },
-    body: JSON.stringify({ prefix: '', limit: 1000, sortBy: { column: 'created_at', order: 'asc' } }),
-  });
-  if (!listRes.ok) {
-    const text = await listRes.text().catch(() => '');
-    throw new Error(`b2b-attachments 목록 조회 오류 (HTTP ${listRes.status}): ${text.slice(0, 300)}`);
-  }
-  const files = await listRes.json();
+  const files = await listAllB2BAttachments();
 
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 6);
+  const cutoff = subtractMonthsSafe(new Date(), 6);
 
-  const expiredPaths = (files || [])
+  const expiredPaths = files
     .filter((f) => f && f.name && f.created_at && new Date(f.created_at) < cutoff)
     .map((f) => f.name);
 
   if (!expiredPaths.length) return 0;
 
-  const removeRes = await fetch(`${SUPABASE_URL}/storage/v1/object/b2b-attachments`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-    },
-    body: JSON.stringify({ prefixes: expiredPaths }),
-  });
-  if (!removeRes.ok) {
-    const text = await removeRes.text().catch(() => '');
-    throw new Error(`b2b-attachments 삭제 오류 (HTTP ${removeRes.status}): ${text.slice(0, 300)}`);
+  // Supabase Storage 공식 문서 기준 remove()는 한 번 호출에 최대 1000개 제한이 있어,
+  // 1000개씩 나눠서 여러 번 삭제 요청을 보낸다(삭제 대상이 1000개를 넘는 상황에서도 안전).
+  const REMOVE_CHUNK_SIZE = 1000;
+  let removedCount = 0;
+  for (let i = 0; i < expiredPaths.length; i += REMOVE_CHUNK_SIZE) {
+    const chunk = expiredPaths.slice(i, i + REMOVE_CHUNK_SIZE);
+    const removeRes = await fetch(`${SUPABASE_URL}/storage/v1/object/b2b-attachments`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ prefixes: chunk }),
+    });
+    if (!removeRes.ok) {
+      const text = await removeRes.text().catch(() => '');
+      throw new Error(`b2b-attachments 삭제 오류 (HTTP ${removeRes.status}, ${removedCount}개 삭제 후 실패): ${text.slice(0, 300)}`);
+    }
+    removedCount += chunk.length;
   }
-  return expiredPaths.length;
+  return removedCount;
 }
 
 export default async function handler(req, res) {
