@@ -615,12 +615,12 @@
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
       <!-- 좌측 사이드바: 카테고리 메뉴 -->
       <aside class="sm:col-span-1">
-        <nav class="flex flex-row flex-wrap sm:flex-col gap-2">
-          <button id="board-tab-all" onclick="switchBoardTab('all')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🗂 전체</button>
-          <button id="board-tab-food" onclick="switchBoardTab('food')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🔥 할인의 고수</button>
-          <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
-          <button id="board-tab-free" onclick="switchBoardTab('free')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
-          <button id="board-tab-store" onclick="switchBoardTab('store')" class="shrink-0 sm:w-full text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📍 우리동네 점바점 자랑</button>
+        <nav class="grid grid-cols-2 gap-2 sm:flex sm:flex-col">
+          <button id="board-tab-all" onclick="switchBoardTab('all')" class="col-span-2 sm:col-span-1 sm:shrink-0 sm:w-full text-center sm:text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-bold transition" style="background:#FEE500; color:#1C1A17;">🗂 전체</button>
+          <button id="board-tab-food" onclick="switchBoardTab('food')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🔥 할인의 고수</button>
+          <button id="board-tab-realtime" onclick="switchBoardTab('realtime')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 실시간 할인 제보</button>
+          <button id="board-tab-free" onclick="switchBoardTab('free')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">💬 오늘 뭐 먹지?</button>
+          <button id="board-tab-store" onclick="switchBoardTab('store')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📍 우리동네 점바점 자랑</button>
         </nav>
       </aside>
 
