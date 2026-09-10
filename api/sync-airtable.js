@@ -90,6 +90,55 @@ async function updateBrandDailyHistory(records) {
   return rows.length;
 }
 
+// B2B 문의 첨부파일(Storage) 중 업로드 후 6개월이 지난 것만 삭제한다. b2b-attachments 버킷에는
+// 누구나 업로드할 수 있는 INSERT 정책만 있고 DELETE 정책이 없어(클라이언트 anon/authenticated
+// 키로는 삭제가 원천적으로 불가능), service_role 키를 이미 안전하게 갖고 있는 이 서버리스 함수
+// 안에서만 Storage REST API(list/remove)로 처리한다. 다른 버킷(board-images 등)은 이 함수가
+// 전혀 참조하지 않는다. 6개월 경계는 달력 기준(setMonth)으로 계산해 윤달 등 오차가 없게 한다.
+async function purgeExpiredB2BAttachments() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const listRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/b2b-attachments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify({ prefix: '', limit: 1000, sortBy: { column: 'created_at', order: 'asc' } }),
+  });
+  if (!listRes.ok) {
+    const text = await listRes.text().catch(() => '');
+    throw new Error(`b2b-attachments 목록 조회 오류 (HTTP ${listRes.status}): ${text.slice(0, 300)}`);
+  }
+  const files = await listRes.json();
+
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 6);
+
+  const expiredPaths = (files || [])
+    .filter((f) => f && f.name && f.created_at && new Date(f.created_at) < cutoff)
+    .map((f) => f.name);
+
+  if (!expiredPaths.length) return 0;
+
+  const removeRes = await fetch(`${SUPABASE_URL}/storage/v1/object/b2b-attachments`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify({ prefixes: expiredPaths }),
+  });
+  if (!removeRes.ok) {
+    const text = await removeRes.text().catch(() => '');
+    throw new Error(`b2b-attachments 삭제 오류 (HTTP ${removeRes.status}): ${text.slice(0, 300)}`);
+  }
+  return expiredPaths.length;
+}
+
 export default async function handler(req, res) {
   const providedSecret = req.query.secret || (req.headers.authorization || '').replace('Bearer ', '');
   if (!process.env.SYNC_SECRET || providedSecret !== process.env.SYNC_SECRET) {
@@ -195,6 +244,20 @@ export default async function handler(req, res) {
       console.error('[sync-airtable] 브랜드 이력 기록 실패 (brand_discount_daily 확인 필요)', historyErr);
     }
 
+    // 5) B2B 문의 첨부파일(Storage) 6개월 경과분 정리 (best-effort — 실패해도 위 2)/3)/4)와
+    //    무관하게 sync 자체는 성공 응답을 유지한다). 별도 cron을 새로 만들지 않고, 이미
+    //    5분 간격으로 안정적으로 실행되는 이 함수를 그대로 재사용한다.
+    let b2bAttachmentsPurgedCount = 0;
+    let b2bAttachmentsPurgedOk = false;
+    let b2bAttachmentsPurgedError = null;
+    try {
+      b2bAttachmentsPurgedCount = await purgeExpiredB2BAttachments();
+      b2bAttachmentsPurgedOk = true;
+    } catch (b2bErr) {
+      b2bAttachmentsPurgedError = b2bErr.message || String(b2bErr);
+      console.error('[sync-airtable] B2B 첨부파일 정리 실패 (b2b-attachments 버킷/service_role 권한 확인 필요)', b2bErr);
+    }
+
     return res.status(200).json({
       ok: true,
       count: records.length,
@@ -203,6 +266,9 @@ export default async function handler(req, res) {
       historyRows,
       historyOk,
       historyError,
+      b2bAttachmentsPurgedCount,
+      b2bAttachmentsPurgedOk,
+      b2bAttachmentsPurgedError,
       syncedAt: new Date().toISOString(),
     });
   } catch (err) {
