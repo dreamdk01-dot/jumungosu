@@ -1390,6 +1390,13 @@
             <p class="text-xs mb-1" style="color:var(--muted);">가입일</p>
             <p id="user-info-joined" class="text-sm font-semibold" style="color:var(--text);">-</p>
           </div>
+          <div>
+            <p class="text-xs mb-1" style="color:var(--muted);">마케팅 정보 수신</p>
+            <p class="text-sm font-semibold flex items-center gap-2" style="color:var(--text);">
+              <span id="user-info-marketing-status">-</span>
+              <button type="button" id="user-info-marketing-toggle-btn" onclick="toggleMarketingOptIn()" class="text-[12px] font-semibold" style="color:var(--muted); text-decoration:underline;">변경</button>
+            </p>
+          </div>
         </div>
 
         <!-- 비밀번호 변경 -->
@@ -4693,25 +4700,59 @@
   // boardComposeImageItems를 순서대로 처리해 최종 이미지 URL 배열을 반환한다.
   // - file이 있는 항목(새로 고른 사진)만 워터마크 합성 후 Storage에 업로드
   // - url만 있는 항목(수정 모드에서 그대로 유지된 기존 이미지)은 재업로드하지 않고 그대로 사용
+  // Storage public URL(예: https://xxx.supabase.co/storage/v1/object/public/board-images/<uid>/<file>)에서
+  // 실제 object path(<uid>/<file>)만 안전하게 추출한다. board-images 버킷의 표준 public URL 형태와
+  // 일치하지 않는 값(다른 버킷 URL, 손상된 문자열 등)은 null을 반환해 절대 다른 파일을 잘못 건드리지 않는다.
+  function extractBoardImagePath(url){
+    if (typeof url !== 'string') return null;
+    const marker = '/storage/v1/object/public/board-images/';
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    const path = url.slice(idx + marker.length);
+    return path || null;
+  }
+
+  // 게시글에 연결됐던 이미지 URL 목록을 받아 Storage에서 실제로 삭제한다. board-images 버킷에는
+  // "본인(auth.uid()) 폴더의 파일만 삭제 가능"한 owner 전용 DELETE 정책이 이미 적용돼 있어,
+  // 다른 회원의 이미지는 애초에 삭제 권한이 없다(Storage 정책이 최종적으로 보장).
+  async function deleteBoardImagesByUrls(urls){
+    const paths = (urls || []).map(extractBoardImagePath).filter(Boolean);
+    if (!paths.length) return;
+    const { error } = await supabaseClient.storage.from('board-images').remove(paths);
+    if (error) throw error;
+  }
+
   async function uploadBoardImagesIfNeeded(){
     const urls = [];
-    for (const item of boardComposeImageItems){
-      if (item.url && !item.file){
-        urls.push(item.url);
-        continue;
+    const newlyUploadedPaths = []; // 이번 호출에서 실제로 "새로" 올라간 파일만 추적(기존 유지 이미지는 제외) — 중간 실패 시 롤백용
+    try {
+      for (const item of boardComposeImageItems){
+        if (item.url && !item.file){
+          urls.push(item.url);
+          continue;
+        }
+        const watermarkedFile = await addJumungosuWatermark(item.file);
+        const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+
+        const { error: uploadError } = await supabaseClient.storage
+          .from('board-images')
+          .upload(path, watermarkedFile, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw uploadError;
+        newlyUploadedPaths.push(path);
+
+        const { data } = supabaseClient.storage.from('board-images').getPublicUrl(path);
+        urls.push(data.publicUrl);
       }
-      const watermarkedFile = await addJumungosuWatermark(item.file);
-      const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-
-      const { error: uploadError } = await supabaseClient.storage
-        .from('board-images')
-        .upload(path, watermarkedFile, { cacheControl: '3600', upsert: false });
-      if (uploadError) throw uploadError;
-
-      const { data } = supabaseClient.storage.from('board-images').getPublicUrl(path);
-      urls.push(data.publicUrl);
+      return urls;
+    } catch (err){
+      // 여러 장 중 일부만 성공한 상태에서 실패하면, 이번에 새로 올라간 파일만 정리해서
+      // 연결된 게시글 없이 Storage에만 남는 orphan 파일이 생기지 않게 한다.
+      if (newlyUploadedPaths.length){
+        try { await supabaseClient.storage.from('board-images').remove(newlyUploadedPaths); }
+        catch (cleanupErr){ console.warn('[주문의 고수] 업로드 실패 후 정리 중 오류', cleanupErr); }
+      }
+      throw err;
     }
-    return urls;
   }
 
   // ---------------------------------------------------------------
@@ -5160,6 +5201,9 @@
           const p = boardPosts.find(x => x.id === editingPostId);
           if (!p || !canModifyPost(p)) return;
 
+          // update 전 원본 이미지 목록을 미리 확보(아래에서 p.images를 새 값으로 덮어쓰기 전에 백업)
+          const previousImages = (Array.isArray(p.images) && p.images.length) ? p.images : (p.image ? [p.image] : []);
+
           const { data, error } = await supabaseClient
             .from('posts')
             .update(payload)
@@ -5167,6 +5211,15 @@
             .select('updated_at')
             .single();
           if (error) throw error;
+
+          // DB 저장이 확실히 성공한 뒤에만 실행 — 새 이미지 업로드가 실패하면 위 catch에서 이미
+          // 함수가 종료되어 여기 도달하지 않으므로, 기존 정상 이미지를 잘못 지울 위험이 없다.
+          const nextImages = payload.images || [];
+          const removedImages = previousImages.filter(url => !nextImages.includes(url));
+          if (removedImages.length){
+            try { await deleteBoardImagesByUrls(removedImages); }
+            catch (cleanupErr){ console.warn('[주문의 고수] 게시글 수정 - 제거된 이미지 정리 실패 (board-images 버킷/정책 확인 필요)', cleanupErr); }
+          }
 
           p.totalDiscount = payload.total_discount;
           p.app = payload.app;
@@ -5325,7 +5378,22 @@
     if (!p || !canModifyPost(p)) return;
     if (!confirm('정말 이 글을 삭제하시겠습니까?')) return;
 
+    // 이미지 URL을 posts row 삭제 전에 먼저 확보해둔다(삭제 후에는 이 정보를 다시 조회할 수 없음).
+    const imagesToDelete = (Array.isArray(p.images) && p.images.length) ? p.images : (p.image ? [p.image] : []);
+
     try {
+      // Storage 이미지를 먼저 지우고, 그게 확인된 뒤에만 posts row를 지운다(반대 순서로 하면
+      // "게시글은 삭제됐는데 이미지만 Storage에 orphan으로 남는" 상황이 생길 수 있어 더 위험하다).
+      if (imagesToDelete.length){
+        try {
+          await deleteBoardImagesByUrls(imagesToDelete);
+        } catch (storageErr){
+          console.warn('[주문의 고수] 게시글 이미지 삭제 실패 (board-images 버킷/정책 확인 필요)', storageErr);
+          showToast('이미지 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+          return;
+        }
+      }
+
       const { error } = await supabaseClient.from('posts').delete().eq('id', id);
       if (error) throw error;
 
@@ -6429,7 +6497,7 @@
         return;
       }
 
-      applyAuthSession(data.session.access_token, { id: data.user?.id, nickname: name, email, region, level: 0, role: 'USER' });
+      applyAuthSession(data.session.access_token, { id: data.user?.id, nickname: name, email, region, marketingOptIn, level: 0, role: 'USER' });
       closeModal();
       resetSignupForm('su');
       castVote({ name, email });
@@ -6767,6 +6835,7 @@
       email: user.email,
       phone: user.phone || '',
       region: user.region || '',
+      marketingOptIn: !!user.marketingOptIn,
       level: typeof user.level === 'number' ? user.level : 0,
       role: user.role || 'USER', // 서버가 내려주는 실제 권한. 신규 가입/소셜 로그인은 항상 일반 회원(USER)
       attendanceCount: 0,       // 아래 loadMyProfileStats()가 Supabase profiles 테이블 실측치로 채워줌
@@ -6870,6 +6939,7 @@
       email: supaUser.email,
       phone: meta.phone || '',
       region: meta.region || '',
+      marketingOptIn: meta.marketing_opt_in === true,
       level: 0,
       role: 'USER',
     };
@@ -7164,6 +7234,7 @@
     document.getElementById('user-info-email').textContent = currentUser.email || '-';
     document.getElementById('user-info-region').textContent = currentUser.region || '-';
     document.getElementById('user-info-joined').textContent = formatJoinedDate(currentUser.joinedAt);
+    document.getElementById('user-info-marketing-status').textContent = currentUser.marketingOptIn ? '수신 동의' : '수신 거부';
 
     const stats = computeMyTotalStats();
     document.getElementById('user-info-level').textContent = stats.level >= MAX_LEVEL ? `${stats.level} MAX` : stats.level;
@@ -7341,6 +7412,42 @@
 
   // 출석체크: Supabase의 check_in_attendance() RPC(SECURITY DEFINER)가 하루 1회만
   // 인정되도록 서버에서 판단하고, attendance_count/last_attendance_date를 갱신해 돌려준다.
+  // 마케팅 정보 수신동의를 마이페이지에서 직접 변경/철회할 수 있게 한다. marketing_opt_in만
+  // 바꾸는 게 목적이지만, 현재 알고 있는 nickname/region도 함께 명시적으로 실어 보내
+  // 다른 user_metadata가 사라지지 않도록 한다(Supabase의 updateUser({data})는 기존
+  // 메타데이터와 병합되지만, 혹시 모를 상황에 대비한 이중 안전장치).
+  async function toggleMarketingOptIn(){
+    if (!isLoggedIn || !currentUser) return; // 비로그인 상태에서는 변경 불가
+
+    const btn = document.getElementById('user-info-marketing-toggle-btn');
+    const statusEl = document.getElementById('user-info-marketing-status');
+    const previousValue = currentUser.marketingOptIn;
+    const nextValue = !previousValue;
+
+    if (btn) btn.disabled = true;
+
+    try {
+      const { error } = await supabaseClient.auth.updateUser({
+        data: {
+          nickname: currentUser.name,
+          region: currentUser.region,
+          marketing_opt_in: nextValue,
+        },
+      });
+      if (error) throw error;
+
+      currentUser.marketingOptIn = nextValue;
+      if (statusEl) statusEl.textContent = nextValue ? '수신 동의' : '수신 거부';
+      showToast(nextValue ? '마케팅 정보 수신에 동의했어요.' : '마케팅 정보 수신을 거부했어요.');
+    } catch (e){
+      console.warn('[주문의 고수] 마케팅 수신동의 변경 실패 (Supabase Auth updateUser 확인 필요)', e);
+      if (statusEl) statusEl.textContent = previousValue ? '수신 동의' : '수신 거부'; // 실패 시 원래 상태로 표시 복원
+      showToast('변경에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   async function checkInAttendance(){
     if (!isLoggedIn || !currentUser) return;
 
