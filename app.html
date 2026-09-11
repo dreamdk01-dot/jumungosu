@@ -1697,6 +1697,9 @@
   // 잠깐 보여줄 기본값일 뿐입니다.
   const DISCOUNT_DATA_UPDATED_AT = '2026-07-29';
   let discountUpdatedAtValue = DISCOUNT_DATA_UPDATED_AT;
+  // 관리자 화면 전용 상태. discountUpdatedAtValue(홈페이지 fallback)는 그대로 두되, 관리자
+  // "홈페이지 UPDATED" 카드는 이 상태를 봐서 조회 실패 시 옛날 날짜 대신 "조회 실패"를 보여준다.
+  let discountUpdatedAtLoadState = 'loading'; // 'loading' | 'ok' | 'error'
 
   // 메인 화면 로딩 시 DB에서 최신 날짜를 조회해 배지를 다시 그린다.
   async function loadDiscountUpdatedAt(){
@@ -1706,14 +1709,17 @@
       if (data){
         discountUpdatedAtValue = data;
       }
+      discountUpdatedAtLoadState = 'ok';
     } catch (e){
       console.warn('[주문의 고수] 할인 업데이트 날짜 조회 실패 (app_config/get_discount_updated_at 확인 필요)', e);
+      discountUpdatedAtLoadState = 'error';
     }
     renderUpdatedBadges();
     // 관리자 페이지의 날짜 입력칸도 현재 값으로 채워둔다 (관리자가 아직 열어보지 않았어도 미리 반영)
     // 값에 시각까지 붙어있을 수 있으므로(YYYY-MM-DDTHH:mm:ss), <input type="date">에는 날짜 부분만 넣는다.
     const inputEl = document.getElementById('admin-discount-updated-date');
     if (inputEl && !inputEl.value) inputEl.value = (discountUpdatedAtValue || '').slice(0, 10);
+    renderAdminOpsSummary();
   }
 
   // 관리자가 '홈화면 UPDATED 날짜' 칸에서 직접 고른 날짜를 Supabase에 저장하고 배지를 갱신한다.
@@ -2476,6 +2482,14 @@
     const res = await fetch('/api/discounts');
     if (!res.ok) throw new Error(`캐시 조회 실패: HTTP ${res.status}`);
     const data = await res.json();
+    // 관리자 "마지막 동기화 시각" 표시용 — 응답에 updated_at이 포함돼 있으면 기록해둔다.
+    // 없어도 기존 기능(records 반환)에는 전혀 영향 없고, 관리자 화면에서만 "확인 불가"로 처리된다.
+    if (data && data.updated_at){
+      lastSyncAtValue = data.updated_at;
+      lastSyncLoadState = 'ok';
+    } else {
+      lastSyncLoadState = 'unavailable';
+    }
     return (data && data.records) || [];
   }
 
@@ -2512,8 +2526,11 @@
       if (typeof renderBest3 === 'function') renderBest3();
       if (typeof renderBest3ViewAllLink === 'function') renderBest3ViewAllLink();
       if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
+      renderAdminOpsSummary();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
+      lastSyncLoadState = 'error';
+      renderAdminOpsSummary();
     }
   }
 
@@ -2946,6 +2963,45 @@
     <p id="admin-dashboard-role-desc" class="text-sm mb-6" style="color:var(--muted);">할인 정보와 이벤트 현황을 관리하세요.</p>
   </section>
 
+  <!-- 오늘 운영 현황 (기존 discounts/isDiscountLive/groupGachaDiscounts 결과를 그대로 재사용, 새 API/테이블 없음) -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">오늘 운영 현황</h3>
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">전체 할인</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--primary);"><span id="admin-ops-total">-</span>건</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">선착순</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="admin-ops-limited">-</span>건</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">뽑기</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="admin-ops-gacha">-</span>건</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">오늘 종료</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--accent);"><span id="admin-ops-ending">-</span>건</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">마지막 동기화</p>
+        <p class="font-mono text-base font-bold" style="color:var(--text);" id="admin-ops-sync">-</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">홈페이지 UPDATED</p>
+        <p class="font-mono text-base font-bold" style="color:var(--text);" id="admin-ops-updated">-</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 오늘 선착순 할인 (limitedTime 자유 텍스트에서 시(hour)만 관대하게 추출해 시간순 그룹화) -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-4" style="color:var(--text);">오늘 선착순 할인</h3>
+    <div id="admin-ops-limited-list" class="space-y-3">
+      <p class="text-xs" style="color:var(--muted);">불러오는 중</p>
+    </div>
+  </section>
+
   <!-- 홈 배너 관리 -->
   <section class="mb-12">
     <h3 class="font-display text-xl mb-4" style="color:var(--text);">홈 배너 관리</h3>
@@ -3026,7 +3082,7 @@
   <!-- 신고된 게시글 관리 -->
   <section class="mb-12">
     <h3 class="font-display text-xl mb-4" style="color:var(--text);">신고된 게시글 관리</h3>
-    <p class="text-xs mb-4" style="color:var(--muted);">영구 삭제는 상단의 '운영자 로그인 상태'가 ON일 때만 가능합니다.</p>
+    <p class="text-xs mb-4" style="color:var(--muted);">영구 삭제는 MASTER 관리자만 가능합니다.</p>
 
     <!-- 블라인드된 게시글 목록 -->
     <div class="rounded-lg p-4" style="background:var(--card);">
@@ -3145,6 +3201,98 @@
 `;
   }
 
+  // ---------- 관리자: 오늘 운영 현황 / 오늘 선착순 할인 ----------
+  // "/api/discounts" 응답에 마지막 동기화 시각(updated_at)이 포함돼 있으면 기록해두는 값.
+  // 없거나 조회 자체가 실패하면 절대 옛날 날짜를 보여주지 않고 "확인 불가"로 안전하게 표시한다.
+  let lastSyncAtValue = null;
+  let lastSyncLoadState = 'loading'; // 'loading' | 'ok' | 'unavailable' | 'error'
+
+  // ISO 문자열을 KST 기준 'MM/DD HH:mm'으로 표시. 파싱 불가하면 null(호출부가 "확인 불가"로 처리).
+  function formatAdminSyncTime(iso){
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(kst.getUTCMonth() + 1)}/${pad(kst.getUTCDate())} ${pad(kst.getUTCHours())}:${pad(kst.getUTCMinutes())}`;
+  }
+
+  // "11시 선착순", "17시" 등 자유 텍스트에서 정렬·그룹핑용 시(0~23)만 관대하게 추출한다.
+  // 패턴을 못 찾아도 null만 반환할 뿐 해당 할인을 버리지 않는다(호출부가 "기타" 그룹으로 보존).
+  function parseLimitedTimeHour(text){
+    if (!text) return null;
+    const m = String(text).match(/(\d{1,2})\s*시/);
+    if (!m) return null;
+    const hour = parseInt(m[1], 10);
+    return (hour >= 0 && hour <= 23) ? hour : null;
+  }
+
+  // 선착순 할인 목록을 시간별로 묶어 compact한 리스트로 그린다.
+  function renderAdminLimitedTimeGroups(list, containerEl){
+    if (!containerEl) return;
+    if (!list.length){
+      containerEl.innerHTML = `<p class="text-xs" style="color:var(--muted);">오늘 등록된 선착순 할인이 없습니다.</p>`;
+      return;
+    }
+    const groups = new Map(); // key: hour(0~23) 또는 'etc' -> items[]
+    list.forEach(d => {
+      const hour = parseLimitedTimeHour(d.limitedTime);
+      const key = hour === null ? 'etc' : hour;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(d);
+    });
+    const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
+      if (a === 'etc') return 1;
+      if (b === 'etc') return -1;
+      return a - b;
+    });
+    containerEl.innerHTML = sortedKeys.map(key => {
+      const label = key === 'etc' ? '기타' : `${key}시`;
+      const itemsHtml = groups.get(key).map(d => `
+        <p class="text-xs" style="color:var(--text);">· ${escapeHtml(d.name)} / ${escapeHtml(APP_LABEL[d.app[0]] || d.app[0])} / ${d.amount.toLocaleString('ko-KR')}원</p>
+      `).join('');
+      return `
+        <div class="rounded-lg p-3" style="background:var(--card);">
+          <p class="font-mono text-xs font-semibold mb-1" style="color:var(--primary);">${escapeHtml(label)}</p>
+          ${itemsHtml}
+        </div>`;
+    }).join('');
+  }
+
+  // "오늘 운영 현황" 6개 카드 + "오늘 선착순 할인" 리스트를 채운다. 새 API/테이블을 만들지 않고
+  // 이미 홈페이지가 쓰는 discounts/isDiscountLive()/groupGachaDiscounts() 결과를 그대로 재사용한다.
+  function renderAdminOpsSummary(){
+    const totalEl = document.getElementById('admin-ops-total');
+    if (!totalEl) return; // 관리자 DOM이 아직 없으면 조용히 종료(기존 renderDashboardStats 패턴과 동일)
+
+    const live = discounts.filter(isDiscountLive);
+    const today = getTodayKST();
+    const limitedList = live.filter(d => d.limitedTime);
+
+    totalEl.textContent = live.length;
+    document.getElementById('admin-ops-limited').textContent = limitedList.length;
+    document.getElementById('admin-ops-gacha').textContent = live.filter(d => d.isRandom).length;
+    document.getElementById('admin-ops-ending').textContent = live.filter(d => d.endDate === today).length;
+
+    const syncEl = document.getElementById('admin-ops-sync');
+    if (syncEl){
+      if (lastSyncLoadState === 'loading') syncEl.textContent = '불러오는 중';
+      else if (lastSyncLoadState === 'ok' && lastSyncAtValue){
+        const formatted = formatAdminSyncTime(lastSyncAtValue);
+        syncEl.textContent = formatted || '확인 불가';
+      } else if (lastSyncLoadState === 'error') syncEl.textContent = '조회 실패';
+      else syncEl.textContent = '확인 불가';
+    }
+
+    const updatedEl = document.getElementById('admin-ops-updated');
+    if (updatedEl){
+      if (discountUpdatedAtLoadState === 'loading') updatedEl.textContent = '불러오는 중';
+      else if (discountUpdatedAtLoadState === 'error') updatedEl.textContent = '조회 실패';
+      else updatedEl.textContent = formatUpdatedBadge(discountUpdatedAtValue).replace('🟢 UPDATED ', '') || '확인 불가';
+    }
+
+    renderAdminLimitedTimeGroups(limitedList, document.getElementById('admin-ops-limited-list'));
+  }
+
   // 관리자 권한이 확인된 시점에만 호출 — 이미 렌더링되어 있으면 아무 것도 하지 않는다(중복 삽입 방지).
   function ensureAdminDashboardRendered(){
     const container = document.getElementById('page-admin');
@@ -3164,6 +3312,7 @@
     renderParticipantEventSelect(); // 참여자 패널의 회차 선택 드롭다운
     renderAdminBannerPostSelect();  // 홈 배너 관리 입력값(문구/뱃지/연결 게시글)
     renderReportedPosts();        // 신고된 게시글 목록
+    renderAdminOpsSummary();      // 오늘 운영 현황 / 오늘 선착순 할인
     const discountDateInput = document.getElementById('admin-discount-updated-date');
     if (discountDateInput && !discountDateInput.value) discountDateInput.value = (discountUpdatedAtValue || '').slice(0, 10);
   }
@@ -6535,7 +6684,22 @@
     }
     if (!confirm('이 게시글을 영구적으로 삭제하시겠습니까?')) return;
 
+    // 일반 사용자용 deletePost()와 동일한 방식/순서로 처리: 삭제 전에 이미지 URL을 먼저 확보하고,
+    // Storage 이미지를 지운 뒤에만 posts row를 지운다(반대 순서면 이미지가 orphan으로 남을 위험).
+    const p = boardPosts.find(x => x.id === id);
+    const imagesToDelete = p ? ((Array.isArray(p.images) && p.images.length) ? p.images : (p.image ? [p.image] : [])) : [];
+
     try {
+      if (imagesToDelete.length){
+        try {
+          await deleteBoardImagesByUrls(imagesToDelete);
+        } catch (storageErr){
+          console.warn('[주문의 고수] 관리자 영구삭제 - 이미지 삭제 실패 (board-images 버킷/정책 확인 필요)', storageErr);
+          showToast('이미지 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+          return;
+        }
+      }
+
       const { error } = await supabaseClient.from('posts').delete().eq('id', id);
       if (error) throw error;
 
