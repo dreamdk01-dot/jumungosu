@@ -170,6 +170,14 @@
       "destination": "/api/seo?page=whattheburger-discount"
     },
     {
+      "source": "/event",
+      "destination": "/api/event-gone"
+    },
+    {
+      "source": "/event/",
+      "destination": "/api/event-gone"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/app.html"
     }
