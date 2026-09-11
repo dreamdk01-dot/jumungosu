@@ -8599,6 +8599,12 @@
   function switchTab(tab, pushHistory){
     if (pushHistory === undefined) pushHistory = true;
 
+    // [공개 이벤트 잠시 비활성화] 이벤트 이용자가 적어 운영 중단 - 공개 화면 진입만 홈으로 돌린다.
+    // 재활성화 시 이 블록만 지우면 됨(이벤트 데이터/함수/관리자 기능은 전부 그대로 유지됨).
+    if (tab === 'event'){
+      tab = 'home';
+    }
+
     if (tab === 'admin' && !isManagerUser()){
       showToast('관리자 권한이 없습니다.');
       return;
@@ -8652,13 +8658,15 @@
     const rawPath = location.pathname;
     let initialTab = PATH_TO_TAB[rawPath] || 'home';
     if (initialTab === 'admin' && !isManagerUser()) initialTab = 'home';
+    // [공개 이벤트 잠시 비활성화] /event로 직접 들어와도 홈으로 정리한다. 재활성화 시 이 줄만 지우면 됨.
+    if (initialTab === 'event') initialTab = 'home';
     switchTab(initialTab, false);
 
-    // 이미 알고 있는 경로(/, /home, /event, /board, /auth, /admin)라면 주소는 그대로 두고,
-    // 낯선 경로(옛날 북마크 등)로 들어온 경우에만 홈 경로로 정리한다.
+    // 이미 알고 있는 경로(/, /home, /board, /auth, /admin)라면 주소는 그대로 두고,
+    // 낯선 경로(옛날 북마크 등)나 잠시 비활성화된 /event로 들어온 경우에만 홈 경로로 정리한다.
     // 공유 링크(?post=1&type=food)의 쿼리스트링은 뒤에서 handleSharedPostDeepLink()가 읽어야
     // 하므로, 정규화할 때도 반드시 location.search를 그대로 붙여서 유지한다.
-    const normalizedPath = (rawPath in PATH_TO_TAB)
+    const normalizedPath = (rawPath in PATH_TO_TAB && rawPath !== '/event')
       ? (rawPath + location.search)
       : (TAB_TO_PATH[initialTab] || '/home');
     history.replaceState({ tab: initialTab }, '', normalizedPath);
