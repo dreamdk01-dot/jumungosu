@@ -37,7 +37,7 @@ const APP_COLOR = { baemin: '#34C9B0', yogiyo: '#FF3D71', coupang: '#5B8DEF', dd
 // ---------------------------------------------------------------
 const PAGE_DEFS = {
   'today-delivery-discount': {
-    title: '오늘 배달 할인 순위 TOP 20 | 배민·요기요·쿠팡이츠·땡겨요 실시간 비교 - 주문의 고수',
+    title: '오늘 배달 할인 순위 TOP 20 | 배민·요기요·쿠팡이츠·땡겨요 실시간 비교 - 주문의고수',
     description: '오늘 기준 배민·요기요·쿠팡이츠·땡겨요에서 진행 중인 배달 할인 중 금액이 가장 큰 순서로 모았습니다. 실시간으로 업데이트되는 정액 할인 정보를 확인하세요.',
     h1: '오늘 배달 할인 순위',
     intro: '배민·요기요·쿠팡이츠·땡겨요 4개 배달앱에서 지금 진행 중인 할인 중, 실제로 받는 금액(원 단위)이 큰 순서로 모았습니다.',
@@ -45,7 +45,7 @@ const PAGE_DEFS = {
     limit: 20,
   },
   'today-chicken-discount': {
-    title: '오늘 치킨 할인 순위 TOP 15 | 배달앱별 비교 - 주문의 고수',
+    title: '오늘 치킨 할인 순위 TOP 15 | 배달앱별 비교 - 주문의고수',
     description: '오늘 배민·요기요·쿠팡이츠·땡겨요에서 치킨 브랜드별로 받을 수 있는 정액 할인을 한눈에 비교하세요. 매일 업데이트됩니다.',
     h1: '오늘 치킨 할인 순위',
     intro: 'BBQ, BHC, 교촌치킨, 굽네치킨 등 치킨 브랜드가 배민·요기요·쿠팡이츠·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -53,7 +53,7 @@ const PAGE_DEFS = {
     limit: 15,
   },
   'delivery-app-compare': {
-    title: '배달앱 할인 비교 (배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요) - 주문의 고수',
+    title: '배달앱 할인 비교 (배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요) - 주문의고수',
     description: '같은 브랜드를 배달앱마다 비교했을 때 어디가 가장 할인이 큰지 확인하세요. 배민·요기요·쿠팡이츠·땡겨요 실시간 할인 비교.',
     h1: '배달앱 할인 비교',
     intro: '같은 브랜드라도 배달앱마다 할인 금액이 다릅니다. 4개 앱에서 동시에 할인 중인 브랜드를 모아 비교했습니다.',
@@ -62,7 +62,7 @@ const PAGE_DEFS = {
     multiAppOnly: true, // 2개 이상 앱에서 동시에 할인 중인 브랜드만
   },
   'baemin-discount': {
-    title: '배민 할인 순위 TOP 15 | 배달의민족 오늘의 쿠폰 - 주문의 고수',
+    title: '배민 할인 순위 TOP 15 | 배달의민족 오늘의 쿠폰 - 주문의고수',
     description: '배달의민족(배민)에서 오늘 받을 수 있는 정액 할인 쿠폰을 브랜드별로 모았습니다. 실시간 업데이트.',
     h1: '배민(배달의민족) 할인 순위',
     intro: '배달의민족에서 지금 진행 중인 할인 중 금액이 큰 순서로 모았습니다.',
@@ -71,7 +71,7 @@ const PAGE_DEFS = {
     singleApp: 'baemin',
   },
   'coupangeats-discount': {
-    title: '쿠팡이츠 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의 고수',
+    title: '쿠팡이츠 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의고수',
     description: '쿠팡이츠에서 오늘 받을 수 있는 정액 할인 쿠폰을 브랜드별로 모았습니다. 선착순 쿠폰도 함께 표시됩니다.',
     h1: '쿠팡이츠 할인 순위',
     intro: '쿠팡이츠에서 지금 진행 중인 할인 중 금액이 큰 순서로 모았습니다.',
@@ -80,7 +80,7 @@ const PAGE_DEFS = {
     singleApp: 'coupang',
   },
   'yogiyo-discount': {
-    title: '요기요 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의 고수',
+    title: '요기요 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의고수',
     description: '요기요에서 오늘 받을 수 있는 정액 할인 쿠폰을 브랜드별로 모았습니다. 실시간 업데이트.',
     h1: '요기요 할인 순위',
     intro: '요기요에서 지금 진행 중인 할인 중 금액이 큰 순서로 모았습니다.',
@@ -89,7 +89,7 @@ const PAGE_DEFS = {
     singleApp: 'yogiyo',
   },
   'ddangyo-discount': {
-    title: '땡겨요 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의 고수',
+    title: '땡겨요 할인 순위 TOP 15 | 오늘의 쿠폰 - 주문의고수',
     description: '땡겨요에서 오늘 받을 수 있는 정액 할인 쿠폰을 브랜드별로 모았습니다. 실시간 업데이트.',
     h1: '땡겨요 할인 순위',
     intro: '땡겨요에서 지금 진행 중인 할인 중 금액이 큰 순서로 모았습니다.',
@@ -98,7 +98,7 @@ const PAGE_DEFS = {
     singleApp: 'ddangyo',
   },
   'chicken-app-compare': {
-    title: '치킨 배달앱 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '치킨 배달앱 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '치킨 브랜드를 배달앱 4곳에서 동시에 비교했습니다. 오늘 어디서 시키는 게 가장 저렴한지 확인하세요.',
     h1: '치킨 배달앱 할인 비교',
     intro: '같은 치킨 브랜드를 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때, 오늘은 어느 앱이 가장 할인이 큰지 모았습니다.',
@@ -109,7 +109,7 @@ const PAGE_DEFS = {
 
   // ---- 카테고리 2개 (오늘 피자/버거 할인) ----
   'today-pizza-discount': {
-    title: '오늘 피자 할인 순위 TOP 15 | 배달앱별 비교 - 주문의 고수',
+    title: '오늘 피자 할인 순위 TOP 15 | 배달앱별 비교 - 주문의고수',
     description: '오늘 배민·요기요·쿠팡이츠·땡겨요에서 피자 브랜드별로 받을 수 있는 정액 할인을 한눈에 비교하세요. 매일 업데이트됩니다.',
     h1: '오늘 피자 할인 순위',
     intro: '도미노피자, 피자헛 등 피자 브랜드가 배민·요기요·쿠팡이츠·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -117,7 +117,7 @@ const PAGE_DEFS = {
     limit: 15,
   },
   'today-burger-discount': {
-    title: '오늘 햄버거 할인 순위 TOP 15 | 배달앱별 비교 - 주문의 고수',
+    title: '오늘 햄버거 할인 순위 TOP 15 | 배달앱별 비교 - 주문의고수',
     description: '오늘 배민·요기요·쿠팡이츠·땡겨요에서 버거 브랜드별로 받을 수 있는 정액 할인을 한눈에 비교하세요. 매일 업데이트됩니다.',
     h1: '오늘 햄버거 할인 순위',
     intro: '맥도날드, 맘스터치, 롯데리아 등 버거 브랜드가 배민·요기요·쿠팡이츠·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -127,7 +127,7 @@ const PAGE_DEFS = {
 
   // ---- 브랜드별 10개 (브랜드 4개 앱 비교) ----
   'bbq-discount': {
-    title: 'BBQ 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: 'BBQ 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: 'BBQ 치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: 'BBQ 할인 비교',
     intro: '오늘 BBQ가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -136,7 +136,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'bhc-discount': {
-    title: 'BHC 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: 'BHC 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: 'BHC 치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: 'BHC 할인 비교',
     intro: '오늘 BHC가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -145,7 +145,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'gyochon-discount': {
-    title: '교촌치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '교촌치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '교촌치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '교촌치킨 할인 비교',
     intro: '오늘 교촌치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -154,7 +154,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'gubne-discount': {
-    title: '굽네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '굽네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '굽네치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '굽네치킨 할인 비교',
     intro: '오늘 굽네치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -163,7 +163,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'chegatjip-discount': {
-    title: '처갓집 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '처갓집 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '처갓집양념치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '처갓집 할인 비교',
     intro: '오늘 처갓집양념치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -172,7 +172,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'dominopizza-discount': {
-    title: '도미노피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '도미노피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '도미노피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '도미노피자 할인 비교',
     intro: '오늘 도미노피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -181,7 +181,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'pizzahut-discount': {
-    title: '피자헛 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '피자헛 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '피자헛을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '피자헛 할인 비교',
     intro: '오늘 피자헛이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -190,7 +190,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'lotteria-discount': {
-    title: '롯데리아 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '롯데리아 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '롯데리아를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '롯데리아 할인 비교',
     intro: '오늘 롯데리아가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -199,7 +199,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'mcdonald-discount': {
-    title: '맥도날드 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '맥도날드 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '맥도날드를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '맥도날드 할인 비교',
     intro: '오늘 맥도날드가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -208,7 +208,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'momstouch-discount': {
-    title: '맘스터치 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '맘스터치 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '맘스터치를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '맘스터치 할인 비교',
     intro: '오늘 맘스터치가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -219,7 +219,7 @@ const PAGE_DEFS = {
 
   // ---- 2차 확장: 브랜드 20개 (치킨 7 / 피자 5 / 카페·디저트 4 / 분식 2 / 버거 2) ----
   'pooradak-discount': {
-    title: '푸라닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '푸라닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '푸라닭을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '푸라닭 할인 비교',
     intro: '오늘 푸라닭이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -228,7 +228,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'norangtongdak-discount': {
-    title: '노랑통닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '노랑통닭 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '노랑통닭을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '노랑통닭 할인 비교',
     intro: '오늘 노랑통닭이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -237,7 +237,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'hosigi-discount': {
-    title: '호식이두마리치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '호식이두마리치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '호식이두마리치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '호식이두마리치킨 할인 비교',
     intro: '오늘 호식이두마리치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -246,7 +246,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'jadam-discount': {
-    title: '자담치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '자담치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '자담치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '자담치킨 할인 비교',
     intro: '오늘 자담치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -255,7 +255,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'kkuvrako-discount': {
-    title: '꾸브라꼬숯불치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '꾸브라꼬숯불치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '꾸브라꼬숯불치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '꾸브라꼬숯불치킨 할인 비교',
     intro: '오늘 꾸브라꼬숯불치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -265,7 +265,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'nene-discount': {
-    title: '네네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '네네치킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '네네치킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '네네치킨 할인 비교',
     intro: '오늘 네네치킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -274,7 +274,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'ttoraeorae-discount': {
-    title: '또래오래 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '또래오래 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '또래오래를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '또래오래 할인 비교',
     intro: '오늘 또래오래가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -283,7 +283,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'banolrim-discount': {
-    title: '반올림피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '반올림피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '반올림피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '반올림피자 할인 비교',
     intro: '오늘 반올림피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -292,7 +292,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'youthpizza-discount': {
-    title: '청년피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '청년피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '청년피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '청년피자 할인 비교',
     intro: '오늘 청년피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -301,7 +301,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   '7st-pizza-discount': {
-    title: '7번가피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '7번가피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '7번가피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '7번가피자 할인 비교',
     intro: '오늘 7번가피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -310,7 +310,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'mrpizza-discount': {
-    title: '미스터피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '미스터피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '미스터피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '미스터피자 할인 비교',
     intro: '오늘 미스터피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -319,7 +319,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'leejaemo-discount': {
-    title: '이재모피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '이재모피자 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '이재모피자를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '이재모피자 할인 비교',
     intro: '오늘 이재모피자가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -328,7 +328,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'baskinrobbins-discount': {
-    title: '배스킨라빈스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '배스킨라빈스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '배스킨라빈스를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '배스킨라빈스 할인 비교',
     intro: '오늘 배스킨라빈스가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -337,7 +337,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'dunkin-discount': {
-    title: '던킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '던킨 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '던킨을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '던킨 할인 비교',
     intro: '오늘 던킨이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -346,7 +346,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'touslesjours-discount': {
-    title: '뚜레쥬르 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '뚜레쥬르 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '뚜레쥬르를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '뚜레쥬르 할인 비교',
     intro: '오늘 뚜레쥬르가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -355,7 +355,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'starbucks-discount': {
-    title: '스타벅스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '스타벅스 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '스타벅스를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '스타벅스 할인 비교',
     intro: '오늘 스타벅스가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -364,7 +364,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'myeongrang-discount': {
-    title: '명랑핫도그 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '명랑핫도그 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '명랑핫도그를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '명랑핫도그 할인 비교',
     intro: '오늘 명랑핫도그가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -373,7 +373,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'ddeokcham-discount': {
-    title: '떡참 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '떡참 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '떡참을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '떡참 할인 비교',
     intro: '오늘 떡참이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -382,7 +382,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'burgerking-discount': {
-    title: '버거킹 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '버거킹 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '버거킹을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '버거킹 할인 비교',
     intro: '오늘 버거킹이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -391,7 +391,7 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'whattheburger-discount': {
-    title: '왓더버거 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의 고수',
+    title: '왓더버거 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
     description: '왓더버거를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
     h1: '왓더버거 할인 비교',
     intro: '오늘 왓더버거가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
@@ -1110,7 +1110,7 @@ async function renderPage(pageKey, discounts){
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${canonical}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="주문의 고수">
+<meta property="og:site_name" content="주문의고수">
 <meta property="og:title" content="${escapeHtml(def.title)}">
 <meta property="og:description" content="${escapeHtml(def.description)}">
 <meta property="og:url" content="${canonical}">
@@ -1138,7 +1138,7 @@ ${jsonLdScripts}
       <path d="M18 29 L26 4" stroke="${PRIMARY}" stroke-width="2" stroke-linecap="round"/>
       <path d="M23 29 L31 4" stroke="${PRIMARY}" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    주문의 고수
+    주문의고수
   </a>
   <p style="font-size:12px; color:${MUTED}; margin:0 0 4px;">${escapeHtml(todayLabel)} 기준</p>
   <h1>${escapeHtml(def.h1)}</h1>
@@ -1154,7 +1154,7 @@ ${jsonLdScripts}
   <p style="font-size:12px; color:${MUTED}; margin-top:32px;">다른 비교도 확인해보세요</p>
   ${renderNav(pageKey)}
 
-  <p style="font-size:11px; color:${MUTED}; opacity:0.7; margin-top:24px;">주문의 고수 · 운영: 문라잇 · <a href="/about" style="color:${MUTED};">서비스 소개</a></p>
+  <p style="font-size:11px; color:${MUTED}; opacity:0.7; margin-top:24px;">주문의고수 · 운영: 문라잇 · <a href="/about" style="color:${MUTED};">서비스 소개</a></p>
 </div>
 </body>
 </html>`;

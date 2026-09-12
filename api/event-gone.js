@@ -13,11 +13,11 @@ export default function handler(req, res) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>페이지를 찾을 수 없습니다 | 주문의 고수</title>
+<title>페이지를 찾을 수 없습니다 | 주문의고수</title>
 </head>
 <body>
 <p>현재 운영하지 않는 페이지입니다.</p>
-<p><a href="https://www.jumungosu.com/">주문의 고수 홈으로 이동</a></p>
+<p><a href="https://www.jumungosu.com/">주문의고수 홈으로 이동</a></p>
 </body>
 </html>`;
 
