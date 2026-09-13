@@ -364,18 +364,18 @@ const PAGE_DEFS = {
     singleBrand: true,
   },
   'myeongrang-discount': {
-    title: '명랑핫도그 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
-    description: '명랑핫도그를 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
-    h1: '명랑핫도그 할인 비교',
+    title: '명랑핫도그 할인·쿠폰 비교 | 오늘 배달앱 할인 - 주문의고수',
+    description: '오늘 명랑핫도그 할인·쿠폰을 배민·요기요·쿠팡이츠·땡겨요별로 비교하고 최근 할인 이력을 확인하세요.',
+    h1: '오늘 명랑핫도그 할인·쿠폰 비교',
     intro: '오늘 명랑핫도그가 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
     filter: d => normBrand(d.name).includes('명랑핫도그'),
     limit: 10,
     singleBrand: true,
   },
   'ddeokcham-discount': {
-    title: '떡참 할인 비교 | 배민 vs 요기요 vs 쿠팡이츠 vs 땡겨요 - 주문의고수',
-    description: '떡참을 오늘 배민·요기요·쿠팡이츠·땡겨요에서 비교했을 때 어디가 가장 할인이 큰지 확인하세요.',
-    h1: '떡참 할인 비교',
+    title: '떡참 할인·쿠폰 비교 | 오늘 배달앱 할인 - 주문의고수',
+    description: '오늘 떡참 할인·쿠폰을 배민·요기요·쿠팡이츠·땡겨요별로 비교하고 최근 할인 이력을 확인하세요.',
+    h1: '오늘 떡참 할인·쿠폰 비교',
     intro: '오늘 떡참이 4개 배달앱에서 각각 얼마나 할인 중인지 비교했습니다.',
     filter: d => normBrand(d.name).includes('떡참'),
     limit: 10,
@@ -448,8 +448,8 @@ const NAV_LINKS = [
   ['baskinrobbins-discount', '배스킨라빈스 할인·쿠폰'],
   ['dunkin-discount', '던킨 할인·쿠폰'],
   ['touslesjours-discount', '뚜레쥬르 할인·쿠폰'],
-  ['myeongrang-discount', '명랑핫도그 할인'],
-  ['ddeokcham-discount', '떡참 할인'],
+  ['myeongrang-discount', '명랑핫도그 할인·쿠폰'],
+  ['ddeokcham-discount', '떡참 할인·쿠폰'],
 ];
 
 const NAV_LABEL = Object.fromEntries(NAV_LINKS);
