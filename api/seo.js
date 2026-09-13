@@ -766,10 +766,10 @@ const FOOTER_APP_SECTION = {
   icon: '📱', title: '배달앱별 할인',
   links: [['delivery-app-compare', '앱별 비교']],
   brands: [
-    ['baemin-discount', '배민 할인'],
-    ['yogiyo-discount', '요기요 할인'],
-    ['coupangeats-discount', '쿠팡이츠 할인'],
-    ['ddangyo-discount', '땡겨요 할인'],
+    ['baemin-discount', '배민 쿠폰·할인'],
+    ['yogiyo-discount', '요기요 쿠폰·할인'],
+    ['coupangeats-discount', '쿠팡이츠 쿠폰·할인'],
+    ['ddangyo-discount', '땡겨요 쿠폰·할인'],
   ],
 };
 
