@@ -385,8 +385,9 @@
   </div>
 </header>
 
-<!-- ===== 카카오 애드핏 배너 (320x50) ===== -->
-<div class="max-w-5xl mx-auto px-4 pt-3 flex justify-center">
+<!-- ===== 카카오 애드핏 배너 (320x50) — id는 /shopping, /hot-deals에서만 숨기기 위한 것으로,
+     광고 자체의 스크립트/ID/정책 문구는 그대로 둔다 ===== -->
+<div id="top-ad-banner-wrap" class="max-w-5xl mx-auto px-4 pt-3 flex justify-center">
   <ins class="kakao_ad_area" style="display:none;"
     data-ad-unit = "DAN-dW2bG0VTBIhfCcOV"
     data-ad-width = "320"
@@ -1165,7 +1166,7 @@
 <main id="page-shopping" class="max-w-3xl mx-auto px-4 pb-20 hidden">
 
   <!-- ---- 인트로 화면 (/shopping) ---- -->
-  <div id="shopping-view-intro">
+  <div id="shopping-view-intro" class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
     <div class="pt-10 pb-8 text-center">
       <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑</p>
       <h1 class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h1>
@@ -1183,14 +1184,35 @@
       </div>
     </div>
 
+    <!-- 3단계 흐름 안내 — 상품 카드처럼 보이지 않도록 번호 원 + 짧은 문구만 사용.
+         grid-cols-3를 기본으로 써서 320px에서도 세로로 쌓이지 않고 한눈에 흐름이 보이게 하되,
+         칸이 좁아 문구가 밀리는 경우를 대비해 break-keep으로 자연스럽게 줄바꿈되게 한다. -->
+    <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8 sm:mb-10">
+      <div class="text-center">
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">1</div>
+        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">상황 선택</p>
+        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">대상·예산·수량 입력</p>
+      </div>
+      <div class="text-center">
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">2</div>
+        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 분석</p>
+        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">우선순위와 제외조건 반영</p>
+      </div>
+      <div class="text-center">
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">3</div>
+        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">최적 주문안 확인</p>
+        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">가장 적합한 주문 결론 제공</p>
+      </div>
+    </div>
+
     <div class="grid sm:grid-cols-2 gap-3 mt-4">
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🎁 맞춤 쇼핑</p>
-        <p class="text-xs break-keep" style="color:var(--muted);">대상·예산·수량·우선순위를 분석해 최적 주문안 1개와 대안을 추천해요.</p>
+        <p class="text-xs break-keep" style="color:var(--muted);">내 상황을 분석해 최적 주문안과 대안을 추천해요.</p>
       </div>
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 오늘의 핫딜</p>
-        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">질문 없이, 지금 가격이 매력적인 상품만 자동으로 선별해요.</p>
+        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">현재 가격이 매력적인 상품을 자동으로 선별해요.</p>
         <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">오늘의 핫딜 보러가기</button>
       </div>
     </div>
@@ -7409,7 +7431,8 @@
 
   // ---- 렌더링 ----
   function shoppingOptionBtnClass(selected){
-    return 'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition';
+    // break-keep 누락 시 '직장 상사·거래처' 같은 긴 선택지가 320px에서 단어 중간에 잘릴 수 있어 포함한다.
+    return 'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition break-keep';
   }
   function shoppingOptionBtnStyle(selected){
     return selected
@@ -7638,11 +7661,29 @@
     return `
       <div class="flex items-start justify-between gap-3">
         <span class="text-xs shrink-0 break-keep" style="color:var(--muted);">${label}</span>
-        <span class="text-sm font-medium text-right break-keep" style="color:var(--text);">${value}</span>
+        <span class="text-sm font-medium text-right break-keep min-w-0" style="color:var(--text);">${value}</span>
       </div>
     `;
   }
 
+
+  // 맞춤 쇼핑/핫딜에서는 헤더 바로 아래 카카오 애드핏 배너를 숨긴다(쿠팡 제휴 전환이 핵심 수익모델이라
+  // 질문 시작 전 외부 광고로 이탈하는 것을 막기 위함). 광고 스크립트·ID·정책 문구는 건드리지 않고
+  // 레이아웃용 래퍼(#top-ad-banner-wrap)의 표시 여부만 탭 단위로 토글한다.
+  const SHOPPING_AD_HIDDEN_TABS = ['shopping', 'hotdeals'];
+  function syncShoppingAdVisibility(tab){
+    const wrap = document.getElementById('top-ad-banner-wrap');
+    if (!wrap) return;
+    wrap.classList.toggle('hidden', SHOPPING_AD_HIDDEN_TABS.includes(tab));
+  }
+
+  // '쇼핑' 드롭다운 버튼은 PAGES.forEach의 'tab-' + p 규칙에 걸리지 않는 별도 UI라,
+  // /shopping·/shopping/chuseok·/hot-deals 중 어디에 있든 활성 색상으로 표시되도록 별도 동기화한다.
+  function updateShoppingNavActiveState(tab){
+    const btn = document.getElementById('tab-shopping-dropdown-btn');
+    if (!btn) return;
+    btn.style.color = SHOPPING_AD_HIDDEN_TABS.includes(tab) ? 'var(--primary)' : 'var(--muted)';
+  }
 
   // ---------- TABS ----------
   const PAGES = ['home', 'board', 'auth', 'admin', 'about', 'membership', 'privacy', 'terms', 'partner', 'shopping', 'hotdeals'];
@@ -7687,6 +7728,8 @@
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     updateSeoTags(tab);
+    syncShoppingAdVisibility(tab);
+    updateShoppingNavActiveState(tab);
 
     if (pushHistory){
       const path = TAB_TO_PATH[tab] || '/home';
