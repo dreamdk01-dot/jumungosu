@@ -167,50 +167,38 @@
     font-family:'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
   }
 
-  /* ===== 맞춤 쇼핑(/shopping, /shopping/chuseok) · 오늘의 핫딜(/hot-deals) 전용 라이트 테마 =====
-     syncShoppingTheme(tab)이 쇼핑 관련 탭일 때만 body에 이 클래스를 토글한다.
-     :root는 그대로 두고 #page-shopping/#page-hotdeals 안에서만 기존 변수명(--bg/--surface/--card/
-     --card-alt/--text/--muted/--line)을 재정의해서, 이미 그 변수를 참조하는 기존 인라인 스타일이
-     자동으로 밝은 색을 쓰게 한다. --primary(브랜드 주황)·--accent(에러색)는 전역 값을 그대로 쓴다
-     (브랜드 주황을 바꾸지 않는다는 요구사항 때문). 헤더/푸터는 이 선택자 밖이라 영향받지 않는다. */
-  body.shopping-light-mode{
-    background:#F7F4EE;
+  /* ===== 맞춤 쇼핑/핫딜 전용 화이트 상품 카드 (준비용) =====
+     페이지 전체는 기존 다크톤을 그대로 쓰고, 실제 쿠팡 상품·추천 결과 카드가 들어올 때만
+     이 클래스를 부여해 카드 내부만 흰색으로 보이게 하기 위한 사전 정의. #page-shopping/#page-hotdeals
+     범위 밖으로 새지 않도록 항상 이 두 id 아래로만 선택자를 제한한다. 현재 화면에는 이 클래스를
+     쓰는 요소가 없어 실제로는 아무 곳에도 적용되지 않는다(상품 카드 구현 단계에서 클래스만 붙이면 됨). */
+  #page-shopping .shopping-product-card,
+  #page-shopping .shopping-result-card,
+  #page-hotdeals .shopping-product-card{
+    background:#FFFFFF;
+    color:#231F1A;
+    border:1px solid #DED6CA;
+    border-radius:12px;
   }
-  body.shopping-light-mode #page-shopping,
-  body.shopping-light-mode #page-hotdeals{
-    --bg:#F7F4EE;
-    --surface:#FFFFFF;
-    --card:#FFFFFF;
-    --card-alt:#FFFFFF;
-    --text:#231F1A;
-    --muted:#6F675D;
-    --line:#DED6CA;
-    /* 전역 --accent(#FF5A36)는 밝은 배경(#F7F4EE ~3:1, #FFFFFF 미만)에서 작은 에러 문구에 쓰기엔
-       대비가 부족해 쇼핑 범위 안에서만 더 진한 값으로 재정의한다(전역 --accent는 그대로 유지). */
-    --accent:#C53B24;
-    /* 기존 변수 체계엔 없는 신규 토큰. 반드시 var(x, 기존변수) 형태의 폴백과 함께 사용해서
-       라이트 모드가 아닐 때(즉 정의되지 않을 때)는 기존 다크 테마 값으로 자연스럽게 떨어지게 한다. */
-    --shopping-surface-soft:#F1EBE2;
-    --shopping-accent-text:#8A4F00;
+  #page-shopping .shopping-product-card .shopping-card-muted,
+  #page-shopping .shopping-result-card .shopping-card-muted,
+  #page-hotdeals .shopping-product-card .shopping-card-muted{
+    color:#6F675D;
   }
-  /* 입력창 placeholder·focus — 쇼핑 전용 입력창에는 기존 .form-input 클래스(회원가입 폼 전용)가
-     적용되지 않으므로 별도로 지정한다. */
-  body.shopping-light-mode #page-shopping input::placeholder,
-  body.shopping-light-mode #page-hotdeals input::placeholder{
-    color:#9C9284;
+  #page-shopping .shopping-product-card .shopping-card-accent,
+  #page-shopping .shopping-result-card .shopping-card-accent,
+  #page-hotdeals .shopping-product-card .shopping-card-accent{
+    color:#8A4F00;
   }
-  body.shopping-light-mode #page-shopping input:focus,
-  body.shopping-light-mode #page-hotdeals input:focus{
-    outline:none;
-    border-color:var(--primary) !important;
-    box-shadow:0 0 0 3px rgba(255,184,0,0.25);
+  #page-shopping .shopping-product-card .shopping-card-soft,
+  #page-shopping .shopping-result-card .shopping-card-soft,
+  #page-hotdeals .shopping-product-card .shopping-card-soft{
+    background:#F1EBE2;
   }
-  /* 브라우저 자동입력 시 기본 노란 배경으로 텍스트가 묻히지 않도록 */
-  body.shopping-light-mode #page-shopping input:-webkit-autofill,
-  body.shopping-light-mode #page-hotdeals input:-webkit-autofill{
-    -webkit-text-fill-color:#231F1A;
-    -webkit-box-shadow:0 0 0px 1000px #FFFFFF inset;
-    box-shadow:0 0 0px 1000px #FFFFFF inset;
+  #page-shopping .shopping-product-card .shopping-card-error,
+  #page-shopping .shopping-result-card .shopping-card-error,
+  #page-hotdeals .shopping-product-card .shopping-card-error{
+    color:#C53B24;
   }
   /* 모바일 브라우저 기본 탭 하이라이트(누르면 반짝하는 회색/파란 음영) 전체 비활성화.
      버튼/링크를 누를 때 화면이 깜빡이는 느낌의 흔한 원인이라 사이트 전역에서 꺼둔다. */
@@ -1214,7 +1202,7 @@
   <!-- ---- 인트로 화면 (/shopping) ---- -->
   <div id="shopping-view-intro" class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
     <div class="pt-10 pb-8 text-center">
-      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--shopping-accent-text, var(--primary));">주문의고수 맞춤 쇼핑</p>
+      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑</p>
       <h1 class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h1>
       <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">상황에 맞는 선물과 수량을 분석해<br class="sm:hidden"> 가장 적합한 주문안을 찾아드려요.</p>
       <button type="button" onclick="enterShoppingChuseok()" class="px-8 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">추석 선물 찾기</button>
@@ -1235,17 +1223,17 @@
          칸이 좁아 문구가 밀리는 경우를 대비해 break-keep으로 자연스럽게 줄바꿈되게 한다. -->
     <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8 sm:mb-10">
       <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--shopping-surface-soft, var(--card-alt)); color:var(--shopping-accent-text, var(--primary)); border:1px solid var(--primary);">1</div>
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">1</div>
         <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">상황 선택</p>
         <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">대상·예산·수량 입력</p>
       </div>
       <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--shopping-surface-soft, var(--card-alt)); color:var(--shopping-accent-text, var(--primary)); border:1px solid var(--primary);">2</div>
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">2</div>
         <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 분석</p>
         <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">우선순위와 제외조건 반영</p>
       </div>
       <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--shopping-surface-soft, var(--card-alt)); color:var(--shopping-accent-text, var(--primary)); border:1px solid var(--primary);">3</div>
+        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">3</div>
         <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">최적 주문안 확인</p>
         <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">가장 적합한 주문 결론 제공</p>
       </div>
@@ -1259,7 +1247,7 @@
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 오늘의 핫딜</p>
         <p class="text-xs mb-2 break-keep" style="color:var(--muted);">현재 가격이 매력적인 상품을 자동으로 선별해요.</p>
-        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--shopping-accent-text, var(--primary));">오늘의 핫딜 보러가기</button>
+        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">오늘의 핫딜 보러가기</button>
       </div>
     </div>
   </div>
@@ -7493,7 +7481,7 @@
         <button type="button" onclick="goShoppingBack()" class="text-sm nav-link" style="color:var(--muted);" aria-label="이전 단계">← 이전</button>
         <span class="text-xs font-semibold break-keep" style="color:var(--muted);">${Math.min(shoppingStep, SHOPPING_TOTAL_STEPS)} / ${SHOPPING_TOTAL_STEPS}단계</span>
       </div>
-      <div class="w-full h-1.5 rounded-full mb-6" style="background:var(--shopping-surface-soft, var(--card-alt));">
+      <div class="w-full h-1.5 rounded-full mb-6" style="background:var(--card-alt);">
         <div class="h-1.5 rounded-full" style="width:${pct}%; background:var(--primary); transition:width .2s;"></div>
       </div>
     `;
@@ -7618,7 +7606,7 @@
   function renderShoppingStep4(){
     return `
       <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">선물에서 가장 중요한 것은 무엇인가요?</h2>
-      <p class="text-xs mb-5 break-keep" style="color:var(--shopping-accent-text, var(--primary)); font-weight:600;">최대 2개까지 선택할 수 있어요 (${shoppingAnswers.priorities.length}/2)</p>
+      <p class="text-xs mb-5 break-keep" style="color:var(--primary); font-weight:600;">최대 2개까지 선택할 수 있어요 (${shoppingAnswers.priorities.length}/2)</p>
       <div class="grid grid-cols-2 gap-2.5" role="group" aria-label="선물 우선순위 선택 (최대 2개)">
         ${SHOPPING_PRIORITIES.map(p => {
           const selected = shoppingAnswers.priorities.includes(p);
@@ -7677,7 +7665,7 @@
     return `
       <div class="text-center pt-2 pb-1">
         <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:var(--card-alt); border:1px solid var(--primary);">
-          <span style="color:var(--shopping-accent-text, var(--primary)); font-size:24px;">✓</span>
+          <span style="color:var(--primary); font-size:24px;">✓</span>
         </div>
         <h2 class="font-display text-xl sm:text-2xl mb-2 break-keep" style="color:var(--text);">맞춤 조건이 완성됐어요</h2>
         <p class="text-sm break-keep" style="color:var(--muted);">입력한 조건을 기준으로 최적 주문안을 계산할 준비가 완료됐습니다.</p>
@@ -7692,7 +7680,7 @@
         ${shoppingSummaryRow('배송 희망일', deliveryLabel)}
       </div>
 
-      <div class="mt-5 px-4 py-3 rounded-md text-xs break-keep" style="background:var(--shopping-surface-soft, var(--surface)); border:1px solid var(--line); color:var(--muted);">
+      <div class="mt-5 px-4 py-3 rounded-md text-xs break-keep" style="background:var(--surface); border:1px solid var(--line); color:var(--muted);">
         다음 개발 단계에서 실제 상품 데이터와 고수점수 추천 엔진이 연결됩니다.
       </div>
 
@@ -7732,13 +7720,6 @@
     const btn = document.getElementById('tab-shopping-dropdown-btn');
     if (!btn) return;
     btn.style.color = SHOPPING_TABS.includes(tab) ? 'var(--primary)' : 'var(--muted)';
-  }
-
-  // 쇼핑/핫딜 본문만 따뜻한 라이트 테마로 전환한다. body에 클래스만 토글하고 실제 색상은
-  // <style>의 body.shopping-light-mode 규칙(및 그 안의 #page-shopping/#page-hotdeals 변수 재정의)이
-  // 전담하므로, 다른 탭으로 이동하면 클래스가 빠지면서 기존 다크 배경이 그대로 복원된다.
-  function syncShoppingTheme(tab){
-    document.body.classList.toggle('shopping-light-mode', SHOPPING_TABS.includes(tab));
   }
 
   // ---------- TABS ----------
@@ -7786,7 +7767,6 @@
     updateSeoTags(tab);
     syncShoppingAdVisibility(tab);
     updateShoppingNavActiveState(tab);
-    syncShoppingTheme(tab);
 
     if (pushHistory){
       const path = TAB_TO_PATH[tab] || '/home';
