@@ -439,9 +439,9 @@
        전달하기 위해 핵심 문장을 H1으로 명시적으로 올렸습니다.
        바로 아래 있던 "오늘의 할인"(h2)은 그대로 두어 위계가 H1 → H2로 자연스럽게 이어집니다. -->
   <section class="mt-4 mb-5 sm:mt-8 sm:mb-7">
-    <h1 class="font-display text-2xl sm:text-4xl leading-snug mb-2 break-keep" style="color:var(--text);">
+    <h2 id="page-home-title" class="font-display text-2xl sm:text-4xl leading-snug mb-2 break-keep" style="color:var(--text);">
       오늘 배달 할인 비교
-    </h1>
+    </h2>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">
       <span style="color:var(--primary); font-weight:700;">배민 · 요기요 · 쿠팡이츠 · 땡겨요</span>, 오늘 어디가 가장 쌀까? 매일 업데이트되는 치킨·피자·버거 등 브랜드별 정액 할인을 한 화면에서 비교하세요.
     </p>
@@ -476,7 +476,7 @@
     </div>
 
     <!-- 카테고리와 무관하게 지금 라이브인 전체 할인 개수 → 할인 리스트 섹션으로 스크롤 이동 -->
-    <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
+    <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="hidden mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
   <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
@@ -607,7 +607,7 @@
 <!-- ===== BOARD PAGE (자유게시판) ===== -->
 <main id="page-board" class="max-w-5xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
-    <h1 class="font-display text-2xl mb-1" style="color:var(--primary);">자유게시판</h1>
+    <h2 id="page-board-title" class="font-display text-2xl mb-1" style="color:var(--primary);">자유게시판</h2>
     <p class="text-sm mb-6" style="color:var(--muted);">유저들이 직접 전하는 실시간 중복 할인 꿀팁과 우리 동네 맛집 정보를 확인하세요!</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
@@ -825,7 +825,7 @@
 <!-- ===== ABOUT PAGE (소개) — 애드센스 등 광고 심사를 위한 독립 페이지. 모달이 아닌 실제 탭/URL로 구성 ===== -->
 <main id="page-about" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-4">
-    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">주문의고수 소개</h1>
+    <h2 id="page-about-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">주문의고수 소개</h2>
     <p class="text-[15px] leading-[1.5] break-keep mb-2" style="color:var(--muted);">주문의고수는 소비자의 상황과 필요에 맞는 주문·구매 정보를 비교·분석해 더 나은 소비 선택을 돕는 서비스입니다.</p>
     <p class="text-[15px] leading-[1.5] break-keep mb-2" style="color:var(--muted);">현재는 여러 배달 플랫폼의 할인 정보를 한곳에서 비교할 수 있는 서비스를 제공하고 있으며, 앞으로는 선물 대상, 예산, 수량과 우선순위 등을 바탕으로 적합한 상품과 주문안을 찾을 수 있는 맞춤 쇼핑 서비스를 준비하고 있습니다.</p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">단순히 많은 상품과 할인 정보를 나열하는 것이 아니라, 이용자에게 지금 필요한 조건을 먼저 파악하고 그에 맞는 선택지를 찾기 쉽게 만드는 것이 주문의고수가 지향하는 방향입니다.</p>
@@ -951,7 +951,7 @@
        에서만 관리하고, 화면에 보이는 모든 날짜 표시는 거기서 텍스트를 채운다. -->
 <main id="page-membership" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-4">
-    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">배달앱 멤버십 가격·혜택 비교</h1>
+    <h2 id="page-membership-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">배달앱 멤버십 가격·혜택 비교</h2>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">배달앱 할인금액은 쿠폰뿐 아니라 멤버십 가입 여부에 따라 달라질 수 있어요. 배민클럽·요기패스X·쿠팡 와우의 가격과 혜택을 비교해봤습니다.</p>
     <p class="mt-3 inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style="background:var(--card); color:var(--primary); border:1px solid var(--line);">📅 최종 업데이트: <span class="membership-updated-date">2026년 9월 8일</span></p>
   </div>
@@ -1090,7 +1090,7 @@
 <!-- ===== PRIVACY (독립 URL /privacy — 회원가입 모달과 완전히 동일한 PRIVACY_CONTENT를 그대로 주입) ===== -->
 <main id="page-privacy" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-4">
-    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">개인정보처리방침</h1>
+    <h2 id="page-privacy-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">개인정보처리방침</h2>
   </div>
   <section class="mb-10" id="page-privacy-body"></section>
 </main>
@@ -1098,7 +1098,7 @@
 <!-- ===== TERMS (독립 URL /terms — 회원가입 모달과 완전히 동일한 TERMS_CONTENT를 그대로 주입) ===== -->
 <main id="page-terms" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-4">
-    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">이용약관</h1>
+    <h2 id="page-terms-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">이용약관</h2>
   </div>
   <section class="mb-10" id="page-terms-body"></section>
 </main>
@@ -1106,7 +1106,7 @@
 <!-- ===== PARTNER (독립 URL /partner — B2B 공식 제휴 랜딩페이지, 기존 modal과 동일 submitB2BProposal() 로직 공유) ===== -->
 <main id="page-partner" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-6">
-    <h1 class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">주문의고수와 함께하세요</h1>
+    <h2 id="page-partner-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">주문의고수와 함께하세요</h2>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">배달 할인을 찾는 사용자에게 브랜드의 프로모션을 더 빠르게 알릴 수 있습니다.</p>
     <button type="button" onclick="document.getElementById('partner-form').scrollIntoView({behavior:'smooth'});" class="mt-5 px-5 py-2.5 rounded-md font-display text-sm" style="background:var(--primary); color:#1C1A17;">제휴 문의하기</button>
   </div>
@@ -1230,10 +1230,16 @@
 <main id="page-shopping" class="max-w-3xl mx-auto px-4 pb-20 hidden">
 
   <!-- ---- 인트로 화면 (/shopping) ---- -->
-  <div id="shopping-view-intro" class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
+  <!-- 바깥 div는 display 관련 유틸리티를 전혀 갖지 않는다(순수하게 JS의 hidden 토글 대상 역할만).
+       sm:flex 등 반응형 display 유틸리티를 이 요소에 직접 걸면, Tailwind CDN이 생성하는 스타일시트에서
+       반응형 규칙이 기본 .hidden{display:none}보다 뒤에 위치해 데스크톱 폭에서 우선 적용되면서,
+       'hidden' 클래스를 추가해도 화면에 계속 보이는 문제가 있었다(추석 선물 찾기 클릭 후에도
+       소개 화면이 함께 남아 보이던 원인). 그래서 중앙 정렬용 sm:flex는 안쪽 래퍼로 옮겼다. -->
+  <div id="shopping-view-intro">
+   <div class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
     <div class="pt-10 pb-8 text-center">
       <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑</p>
-      <h1 class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h1>
+      <h2 id="page-shopping-intro-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h2>
       <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">상황에 맞는 선물과 수량을 분석해<br class="sm:hidden"> 가장 적합한 주문안을 찾아드려요.</p>
       <button type="button" onclick="enterShoppingChuseok()" class="px-8 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">추석 선물 찾기</button>
 
@@ -1280,6 +1286,7 @@
         <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">오늘의 핫딜 보러가기</button>
       </div>
     </div>
+   </div>
   </div>
 
   <!-- ---- 질문 플로우 (/shopping/chuseok) ---- -->
@@ -1293,7 +1300,7 @@
      #hotdeals-list-region은 다음 단계에서 실제 핫딜 카드 렌더링이 들어갈 자리로 비워둔다. ===== -->
 <main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-10 pb-2">
-    <h1 class="font-display text-2xl sm:text-3xl mb-2 break-keep" style="color:var(--text);">오늘의 핫딜</h1>
+    <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl mb-2 break-keep" style="color:var(--text);">오늘의 핫딜</h2>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">현재 가격과 구성 조건을 분석해 주문할 만한 상품만 보여드릴 예정입니다.</p>
   </div>
 
@@ -1527,7 +1534,7 @@
   <button type="button" onclick="closeImageLightbox()" class="absolute top-4 right-4 text-3xl leading-none" style="color:#fff; background:none; border:none;" aria-label="닫기">×</button>
   <button type="button" id="image-lightbox-prev" onclick="event.stopPropagation(); changeLightboxImage(-1)" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center text-xl font-bold" style="background:rgba(255,255,255,0.15); color:#fff;" aria-label="이전 사진">‹</button>
   <button type="button" id="image-lightbox-next" onclick="event.stopPropagation(); changeLightboxImage(1)" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center text-xl font-bold" style="background:rgba(255,255,255,0.15); color:#fff;" aria-label="다음 사진">›</button>
-  <img id="image-lightbox-img" src="" onclick="event.stopPropagation()" ontouchstart="handleLightboxTouchStart(event)" ontouchend="handleLightboxTouchEnd(event)" class="max-w-full max-h-full rounded-md" style="object-fit:contain;" alt="첨부 이미지 원본">
+  <img id="image-lightbox-img" onclick="event.stopPropagation()" ontouchstart="handleLightboxTouchStart(event)" ontouchend="handleLightboxTouchEnd(event)" class="max-w-full max-h-full rounded-md" style="object-fit:contain;" alt="첨부 이미지 원본">
   <div id="image-lightbox-counter" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:rgba(255,255,255,0.15); color:#fff;" onclick="event.stopPropagation()"></div>
 </div>
 
@@ -2571,6 +2578,7 @@
     if (!el) return;
     const totalCount = discounts.filter(isDiscountLive).length;
     el.textContent = `전체 할인 ${totalCount}개 보기 →`;
+    el.classList.remove('hidden'); // 텍스트가 채워진 뒤에만 노출(초기 HTML은 hidden 상태로 시작)
   }
 
   // 브랜드 SEO 페이지(seo.js의 singleBrand 10개)와 정확히 매칭되도록, 그쪽과 동일한 브랜드
@@ -5404,7 +5412,7 @@
     const modal = document.getElementById('image-lightbox-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
-    document.getElementById('image-lightbox-img').src = '';
+    document.getElementById('image-lightbox-img').removeAttribute('src');
     lightboxPostId = null;
     unlockBodyScroll();
   }
@@ -7309,6 +7317,7 @@
       history.pushState({ tab: 'shopping' }, '', '/shopping');
     }
     applyShoppingSeoVariant();
+    refreshShoppingIntroH1();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -7333,10 +7342,11 @@
     if (location.pathname === '/shopping/chuseok'){
       introEl.classList.add('hidden');
       chuseokEl.classList.remove('hidden');
-      renderShoppingChuseokStep();
+      renderShoppingChuseokStep(); // 내부에서 refreshShoppingChuseokH1()까지 호출함
     } else {
       chuseokEl.classList.add('hidden');
       introEl.classList.remove('hidden');
+      refreshShoppingIntroH1();
     }
   }
 
@@ -7526,6 +7536,7 @@
 
     if (shoppingStep > SHOPPING_TOTAL_STEPS){
       root.innerHTML = renderShoppingCompleteScreen();
+      refreshShoppingChuseokH1();
       return;
     }
 
@@ -7545,6 +7556,7 @@
       </button>
     `;
     updateShoppingNextButtonState();
+    refreshShoppingChuseokH1();
   }
 
   function renderShoppingStep1(){
@@ -7755,6 +7767,63 @@
     btn.style.color = SHOPPING_TABS.includes(tab) ? 'var(--primary)' : 'var(--muted)';
   }
 
+  // ===== 페이지 대표 제목(H1) 단일화 =====
+  // SPA 구조상 각 탭의 대표 제목 요소가 항상 DOM에 함께 존재해서, 전부 <h1>로 두면 숨겨진
+  // 탭의 <h1>까지 문서에 쌓여 한 문서에 <h1>이 여러 개 남는다. 그래서 정적 마크업에서는
+  // 전부 <h2>로 낮춰두고, 지금 실제로 보이는 화면의 제목 하나만 <h1>로 승격해 DOM에 h1이
+  // 항상 최대 1개만 존재하도록 관리한다. 텍스트·클래스·스타일은 그대로 옮기기만 한다.
+  function demoteCurrentH1(){
+    const current = document.querySelector('#app-content h1[data-active-h1]');
+    if (!current) return;
+    const h2 = document.createElement('h2');
+    Array.from(current.attributes).forEach(attr => h2.setAttribute(attr.name, attr.value));
+    h2.removeAttribute('data-active-h1');
+    h2.innerHTML = current.innerHTML;
+    current.replaceWith(h2);
+  }
+
+  function promoteToH1(el){
+    if (!el) return;
+    const h1 = document.createElement('h1');
+    Array.from(el.attributes).forEach(attr => h1.setAttribute(attr.name, attr.value));
+    h1.setAttribute('data-active-h1', '');
+    h1.innerHTML = el.innerHTML;
+    el.replaceWith(h1);
+  }
+
+  // 탭 이름 → 그 탭의 대표 제목 요소 id. 'shopping'은 /shopping(인트로)과 /shopping/chuseok(설문)
+  // 두 하위 화면이 있어 이 표에 넣지 않고 refreshShoppingIntroH1()/refreshShoppingChuseokH1()로 따로 처리한다.
+  const PAGE_H1_ID = {
+    home: 'page-home-title',
+    board: 'page-board-title',
+    about: 'page-about-title',
+    membership: 'page-membership-title',
+    privacy: 'page-privacy-title',
+    terms: 'page-terms-title',
+    partner: 'page-partner-title',
+    hotdeals: 'page-hotdeals-title',
+  };
+
+  function refreshStaticPageH1(tab){
+    demoteCurrentH1();
+    const id = PAGE_H1_ID[tab];
+    if (!id) return; // auth/admin 등 대표 제목이 없는 탭은 h1 없이 둔다
+    promoteToH1(document.getElementById(id));
+  }
+
+  function refreshShoppingIntroH1(){
+    demoteCurrentH1();
+    promoteToH1(document.getElementById('page-shopping-intro-title'));
+  }
+
+  // /shopping/chuseok의 대표 제목은 고정 문구가 아니라 지금 보이는 설문 단계(또는 완료 화면)의
+  // 질문 문구다. renderShoppingChuseokStep()이 매번 #shopping-chuseok-body를 통째로 다시 그리므로,
+  // 그 직후 이 함수를 호출해 방금 그려진 h2 하나를 h1로 승격한다.
+  function refreshShoppingChuseokH1(){
+    demoteCurrentH1();
+    promoteToH1(document.querySelector('#shopping-chuseok-body h2'));
+  }
+
   // ---------- TABS ----------
   const PAGES = ['home', 'board', 'auth', 'admin', 'about', 'membership', 'privacy', 'terms', 'partner', 'shopping', 'hotdeals'];
 
@@ -7800,6 +7869,14 @@
     updateSeoTags(tab);
     syncShoppingAdVisibility(tab);
     updateShoppingNavActiveState(tab);
+    // 대표 제목(H1) 승격: shopping 탭은 /shopping과 /shopping/chuseok 중 무엇을 보여줄지
+    // 아래 syncShoppingSubViewFromPath()가 결정하므로, 여기서는 이전 탭의 h1만 내리고
+    // 실제 승격은 그쪽에 맡긴다. 그 외 탭은 고정 제목 하나를 바로 승격한다.
+    if (tab === 'shopping'){
+      demoteCurrentH1();
+    } else {
+      refreshStaticPageH1(tab);
+    }
 
     if (pushHistory){
       const path = TAB_TO_PATH[tab] || '/home';
@@ -7884,6 +7961,7 @@
     renderCategoryChips();
     renderDiscountList();
     renderBest3();
+    renderBest3ViewAllLink();
     startAirtablePolling();
   })();
   setAuthMode('login');
