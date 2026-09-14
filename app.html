@@ -334,6 +334,20 @@
     <nav class="hidden sm:flex items-center gap-6 font-medium text-sm">
       <button id="tab-home" onclick="switchTab('home')" class="nav-link tab-underline active pb-1" style="color:var(--text);">홈</button>
       <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
+      <!-- '맞춤 쇼핑'/'오늘의 핫딜'을 상단 nav에 개별 항목으로 바로 늘어놓지 않고 '쇼핑' 드롭다운 하나로
+           묶어서, 기존 4개 항목(홈/게시판/로그인/관리자) 폭에 새 브랜드처럼 보이는 항목이 끼어들지 않게 한다. -->
+      <div class="relative">
+        <button id="tab-shopping-dropdown-btn" onclick="toggleShoppingNavDropdown(event)"
+          class="nav-link pb-1 flex items-center gap-1" style="color:var(--muted);"
+          aria-haspopup="true" aria-expanded="false" aria-controls="shopping-nav-dropdown">
+          쇼핑
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div id="shopping-nav-dropdown" class="hidden absolute right-0 top-full mt-2 w-40 rounded-lg py-1 z-50" role="menu" aria-label="쇼핑" style="background:var(--surface); border:1px solid var(--line); box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+          <button role="menuitem" onclick="switchTab('shopping'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">맞춤 쇼핑</button>
+          <button role="menuitem" onclick="switchTab('hotdeals'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">오늘의 핫딜</button>
+        </div>
+      </div>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
       <button id="tab-admin" onclick="handleAdminNavClick()" class="hidden nav-link tab-underline pb-1 px-3 py-1 rounded-full text-xs font-semibold" style="color:var(--bg); background:var(--primary);">관리자 대시보드</button>
@@ -362,6 +376,8 @@
     <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
       <button onclick="switchTab('home')" class="text-left py-2 nav-link" style="color:var(--text);">홈</button>
       <button onclick="switchTab('board')" class="text-left py-2 nav-link" style="color:var(--text);">게시판</button>
+      <button onclick="switchTab('shopping')" class="text-left py-2 nav-link" style="color:var(--text);">맞춤 쇼핑</button>
+      <button onclick="switchTab('hotdeals')" class="text-left py-2 nav-link" style="color:var(--text);">오늘의 핫딜</button>
       <button id="tab-auth-mobile" onclick="switchTab('auth')" class="text-left py-2 nav-link" style="color:var(--text);">로그인/회원가입</button>
       <button id="tab-logout-mobile" onclick="logout()" class="hidden text-left py-2 nav-link text-xs" style="color:var(--muted);">로그아웃</button>
       <button id="tab-admin-mobile" onclick="handleAdminNavClick()" class="hidden text-left py-2 nav-link font-semibold" style="color:var(--primary);">관리자 대시보드</button>
@@ -1139,6 +1155,72 @@
       <a href="/privacy" onclick="event.preventDefault(); switchTab('privacy');" class="underline" style="color:var(--primary);">개인정보처리방침</a>을 확인해 주세요.
     </p>
   </section>
+</main>
+
+
+<!-- ===== SHOPPING (맞춤 쇼핑) — 독립 URL /shopping, /shopping/chuseok
+     같은 탭 안에서 인트로(shopping-view-intro)와 질문 플로우(shopping-view-chuseok)를
+     JS로 토글하며, 실제 주소도 각각 /shopping, /shopping/chuseok로 유지한다.
+     이번 단계는 화면 골격만 구현하며 실제 상품/추천 데이터는 다음 단계에서 연결된다. ===== -->
+<main id="page-shopping" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+
+  <!-- ---- 인트로 화면 (/shopping) ---- -->
+  <div id="shopping-view-intro">
+    <div class="pt-10 pb-8 text-center">
+      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑</p>
+      <h1 class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h1>
+      <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">상황에 맞는 선물과 수량을 분석해<br class="sm:hidden"> 가장 적합한 주문안을 찾아드려요.</p>
+      <button type="button" onclick="enterShoppingChuseok()" class="px-8 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">추석 선물 찾기</button>
+
+      <!-- 320px처럼 좁은 화면에서 점(·) 구분 한 줄 표기가 가로로 넘치지 않도록, 모바일에서는 세로로 쌓고
+           sm 이상에서만 기존처럼 점으로 구분된 한 줄로 보여준다. -->
+      <div class="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-center sm:gap-4 mt-6 text-xs break-keep" style="color:var(--muted);">
+        <span>⏱ 약 30초 소요</span>
+        <span class="hidden sm:inline">·</span>
+        <span>회원가입 없이 이용</span>
+        <span class="hidden sm:inline">·</span>
+        <span>가격·배송 가능 여부 자동 반영 예정</span>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-3 mt-4">
+      <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🎁 맞춤 쇼핑</p>
+        <p class="text-xs break-keep" style="color:var(--muted);">대상·예산·수량·우선순위를 분석해 최적 주문안 1개와 대안을 추천해요.</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 오늘의 핫딜</p>
+        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">질문 없이, 지금 가격이 매력적인 상품만 자동으로 선별해요.</p>
+        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">오늘의 핫딜 보러가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- 질문 플로우 (/shopping/chuseok) ---- -->
+  <div id="shopping-view-chuseok" class="hidden pt-6">
+    <div id="shopping-chuseok-body"></div>
+  </div>
+</main>
+
+<!-- ===== HOT DEALS (오늘의 핫딜) — 독립 URL /hot-deals
+     이번 단계는 골격만 구현하며, 실제 자동수집 데이터가 없으므로 빈 상태만 보여준다.
+     #hotdeals-list-region은 다음 단계에서 실제 핫딜 카드 렌더링이 들어갈 자리로 비워둔다. ===== -->
+<main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+  <div class="pt-10 pb-2">
+    <h1 class="font-display text-2xl sm:text-3xl mb-2 break-keep" style="color:var(--text);">오늘의 핫딜</h1>
+    <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">현재 가격과 구성 조건을 분석해 주문할 만한 상품만 보여드릴 예정입니다.</p>
+  </div>
+
+  <div id="hotdeals-list-region" class="mt-8 mb-4">
+    <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
+      <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 자동 수집된 핫딜이 없습니다.</p>
+      <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">쿠팡 상품 데이터 연결 후 가격·구성·재고 상태를 기준으로 자동 업데이트됩니다.</p>
+    </div>
+  </div>
+
+  <div class="text-center mt-6">
+    <button type="button" onclick="switchTab('shopping')" class="px-6 py-3 rounded-md font-display text-sm break-keep" style="background:var(--primary); color:#1C1A17;">맞춤 쇼핑 시작하기</button>
+  </div>
 </main>
 
 <!-- ===== FOOTER (always visible across all pages) ===== -->
@@ -2565,6 +2647,39 @@
     if (!dropdown.contains(e.target) && !btn.contains(e.target)){
       dropdown.classList.add('hidden');
     }
+  });
+
+  // 상단 nav의 '쇼핑' 드롭다운(맞춤 쇼핑/오늘의 핫딜) — best3-category-dropdown과 동일한 패턴 +
+  // aria-expanded 동기화, Escape 닫기(포커스를 버튼으로 복귀)를 추가로 처리한다.
+  function setShoppingNavDropdownExpanded(expanded){
+    const btn = document.getElementById('tab-shopping-dropdown-btn');
+    if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  }
+  function toggleShoppingNavDropdown(e){
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('shopping-nav-dropdown');
+    dropdown.classList.toggle('hidden');
+    setShoppingNavDropdownExpanded(!dropdown.classList.contains('hidden'));
+  }
+  function closeShoppingNavDropdown(){
+    document.getElementById('shopping-nav-dropdown').classList.add('hidden');
+    setShoppingNavDropdownExpanded(false);
+  }
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('shopping-nav-dropdown');
+    const btn = document.getElementById('tab-shopping-dropdown-btn');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+    if (!dropdown.contains(e.target) && !btn.contains(e.target)){
+      closeShoppingNavDropdown();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const dropdown = document.getElementById('shopping-nav-dropdown');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+    closeShoppingNavDropdown();
+    const btn = document.getElementById('tab-shopping-dropdown-btn');
+    if (btn) btn.focus();
   });
 
   // 옵션을 탭하는 즉시 선택 확정 + 드롭다운 닫기 + BEST 3 갱신 (모바일/PC 동일한 한 번의 탭으로 완료)
@@ -6965,7 +7080,43 @@
       ogTitle: '관리자 | 주문의고수',
       indexable: false,
     },
+    shopping: {
+      title: '맞춤 쇼핑 - 상황에 맞는 최적 주문 추천 | 주문의고수',
+      description: '대상, 예산, 수량과 우선순위를 분석해 상황에 맞는 최적 주문안을 추천합니다.',
+      ogTitle: '맞춤 쇼핑 | 주문의고수',
+      indexable: true,
+    },
+    hotdeals: {
+      title: '오늘의 핫딜 - 주문할 만한 상품 선별 | 주문의고수',
+      description: '현재 가격과 상품 구성을 분석해 주문할 만한 핫딜을 선별합니다.',
+      ogTitle: '오늘의 핫딜 | 주문의고수',
+      indexable: true,
+    },
   };
+
+  // /shopping 탭 안에서 URL이 /shopping 인지 /shopping/chuseok 인지에 따라 SEO 태그를 다시 덮어쓴다.
+  // (PAGE_SEO는 탭 단위 매핑이라 같은 'shopping' 탭 안의 두 URL을 구분하지 못하므로 별도 처리)
+  const SHOPPING_CHUSEOK_SEO = {
+    title: '추석 선물 추천 - 예산과 대상별 맞춤 선물 찾기 | 주문의고수',
+    description: '선물 대상, 전체 예산, 수량과 우선순위를 입력하고 상황에 맞는 추석 선물 주문안을 찾아보세요.',
+    ogTitle: '추석 선물 추천 | 주문의고수',
+  };
+  function applyShoppingSeoVariant(){
+    const isChuseok = location.pathname === '/shopping/chuseok';
+    const seo = isChuseok ? SHOPPING_CHUSEOK_SEO : PAGE_SEO.shopping;
+    const fullUrl = 'https://www.jumungosu.com' + (isChuseok ? '/shopping/chuseok' : '/shopping');
+    document.title = seo.title;
+    const descEl = document.getElementById('meta-description');
+    if (descEl) descEl.setAttribute('content', seo.description);
+    const canonicalEl = document.getElementById('meta-canonical');
+    if (canonicalEl) canonicalEl.setAttribute('href', fullUrl);
+    const ogTitleEl = document.getElementById('meta-og-title');
+    if (ogTitleEl) ogTitleEl.setAttribute('content', seo.ogTitle);
+    const ogDescEl = document.getElementById('meta-og-description');
+    if (ogDescEl) ogDescEl.setAttribute('content', seo.description);
+    const ogUrlEl = document.getElementById('meta-og-url');
+    if (ogUrlEl) ogUrlEl.setAttribute('content', fullUrl);
+  }
 
   function updateSeoTags(tab){
     const seo = PAGE_SEO[tab] || PAGE_SEO.home;
@@ -6993,12 +7144,514 @@
     if (ogUrlEl) ogUrlEl.setAttribute('content', fullUrl);
   }
 
+
+  // ================= 맞춤 쇼핑 (추석 V1) =================
+  // 이번 단계는 화면·라우팅 골격만 구현한다. 실제 상품 데이터, 쿠팡 API, 고수점수 추천 엔진은
+  // 다음 단계에서 연결되며, 이 컨트롤러는 그 전까지 어떤 가짜 상품/가격/추천도 만들지 않는다.
+  // 개인정보(이름/전화번호/상세주소)는 받지 않고, 입력값은 서버나 Supabase로 전송하지 않는다(브라우저 메모리에만 보관).
+
+  const SHOPPING_RECIPIENTS = ['부모님', '배우자 부모님', '친척', '직장 상사·거래처', '직원·단체', '지인·친구'];
+  const SHOPPING_BUDGET_PRESETS = [
+    { label: '5만원 이하', value: 50000 },
+    { label: '10만원 이하', value: 100000 },
+    { label: '20만원 이하', value: 200000 },
+    { label: '30만원 이하', value: 300000 },
+  ];
+  const SHOPPING_QUANTITY_PRESETS = [
+    { label: '1개', min: 1, max: 1 },
+    { label: '2~5개', min: 2, max: 5 },
+    { label: '6~10개', min: 6, max: 10 },
+    { label: '11~30개', min: 11, max: 30 },
+  ];
+  const SHOPPING_PRIORITIES = ['고급스러움', '실용성', '건강한 이미지', '푸짐한 구성', '가성비', '실패 가능성이 낮은 선물'];
+  const SHOPPING_EXCLUSIONS = ['냉장·냉동상품 제외', '건강식품 제외', '육류 제외', '과일 제외'];
+  const SHOPPING_NO_LIMIT = '특별한 제한 없음';
+
+  function createEmptyShoppingAnswers(){
+    return {
+      recipient: '',
+      totalBudget: null,
+      quantity: null,
+      priorities: [],
+      exclusions: [],
+      desiredDeliveryDate: '',
+    };
+  }
+
+  // 개인정보를 다루지 않는 단순 클라이언트 상태이므로 전역 변수 하나로 관리한다.
+  let shoppingAnswers = createEmptyShoppingAnswers();
+  let shoppingStep = 1; // 1~5, 5단계를 넘어가면 완료 화면
+  let shoppingBudgetPreset = null; // 선택된 프리셋 값(숫자) 또는 'custom'
+  let shoppingBudgetCustomInput = '';
+  let shoppingQuantityMode = null; // 'preset' | 'custom' | null — 프리셋 선택과 직접 입력을 명확히 구분
+  let shoppingQuantityPreset = null; // { min, max } 또는 null (mode === 'preset'일 때만 의미 있음)
+  let shoppingQuantityRefined = null; // 범위 안에서 최종 확정한 정확한 수량 (mode === 'preset'일 때)
+  let shoppingQuantityCustomInput = ''; // 직접 입력란의 원문 텍스트 (mode === 'custom'일 때 재렌더링/단계 이동에도 유지)
+  const SHOPPING_TOTAL_STEPS = 5;
+
+  function resetShoppingFlow(){
+    shoppingAnswers = createEmptyShoppingAnswers();
+    shoppingStep = 1;
+    shoppingBudgetPreset = null;
+    shoppingBudgetCustomInput = '';
+    shoppingQuantityMode = null;
+    shoppingQuantityPreset = null;
+    shoppingQuantityRefined = null;
+    shoppingQuantityCustomInput = '';
+  }
+
+  // ---- 진입/이탈 ----
+  function enterShoppingChuseok(){
+    resetShoppingFlow();
+    document.getElementById('shopping-view-intro').classList.add('hidden');
+    document.getElementById('shopping-view-chuseok').classList.remove('hidden');
+    if (location.pathname !== '/shopping/chuseok'){
+      history.pushState({ tab: 'shopping' }, '', '/shopping/chuseok');
+    }
+    applyShoppingSeoVariant();
+    renderShoppingChuseokStep();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function exitToShoppingHome(){
+    document.getElementById('shopping-view-chuseok').classList.add('hidden');
+    document.getElementById('shopping-view-intro').classList.remove('hidden');
+    if (location.pathname !== '/shopping'){
+      history.pushState({ tab: 'shopping' }, '', '/shopping');
+    }
+    applyShoppingSeoVariant();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function editShoppingAnswers(){
+    // 완료 화면의 '조건 수정하기' — 입력값은 유지한 채 1단계부터 다시 검토하게 한다.
+    shoppingStep = 1;
+    document.getElementById('shopping-view-intro').classList.add('hidden');
+    document.getElementById('shopping-view-chuseok').classList.remove('hidden');
+    if (location.pathname !== '/shopping/chuseok'){
+      history.pushState({ tab: 'shopping' }, '', '/shopping/chuseok');
+    }
+    renderShoppingChuseokStep();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  // 탭 전환/새로고침/뒤로가기 직후 호출되어, 현재 주소가 /shopping인지 /shopping/chuseok인지에 맞춰
+  // 인트로 화면과 질문 플로우 중 무엇을 보여줄지만 맞춘다(내부 단계·입력값은 건드리지 않음).
+  function syncShoppingSubViewFromPath(){
+    const introEl = document.getElementById('shopping-view-intro');
+    const chuseokEl = document.getElementById('shopping-view-chuseok');
+    if (!introEl || !chuseokEl) return;
+    if (location.pathname === '/shopping/chuseok'){
+      introEl.classList.add('hidden');
+      chuseokEl.classList.remove('hidden');
+      renderShoppingChuseokStep();
+    } else {
+      chuseokEl.classList.add('hidden');
+      introEl.classList.remove('hidden');
+    }
+  }
+
+  // ---- 유효성 검사 ----
+  function isShoppingStepValid(step){
+    if (step === 1) return !!shoppingAnswers.recipient;
+    if (step === 2) return typeof shoppingAnswers.totalBudget === 'number' && shoppingAnswers.totalBudget > 0;
+    if (step === 3) return typeof shoppingAnswers.quantity === 'number' && shoppingAnswers.quantity > 0;
+    if (step === 4) return shoppingAnswers.priorities.length >= 1 && shoppingAnswers.priorities.length <= 2;
+    if (step === 5) return isShoppingDeliveryDateValid(); // 제외조건·배송희망일은 선택 입력이지만, 입력했다면 과거 날짜는 통과 불가
+    return false;
+  }
+
+  // ---- 단계 이동 ----
+  function goShoppingNext(){
+    if (!isShoppingStepValid(shoppingStep)) return;
+    if (shoppingStep >= SHOPPING_TOTAL_STEPS){
+      shoppingStep = SHOPPING_TOTAL_STEPS + 1; // 완료 화면
+    } else {
+      shoppingStep += 1;
+    }
+    renderShoppingChuseokStep();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function goShoppingBack(){
+    if (shoppingStep <= 1){
+      exitToShoppingHome();
+      return;
+    }
+    shoppingStep -= 1;
+    renderShoppingChuseokStep();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  // ---- 입력 핸들러 ----
+  function selectShoppingRecipient(value){
+    shoppingAnswers.recipient = value;
+    renderShoppingChuseokStep();
+  }
+
+  function selectShoppingBudgetPreset(value){
+    shoppingBudgetPreset = value;
+    shoppingAnswers.totalBudget = value;
+    renderShoppingChuseokStep();
+  }
+
+  function selectShoppingBudgetCustom(){
+    shoppingBudgetPreset = 'custom';
+    const n = parseShoppingPositiveInt(shoppingBudgetCustomInput);
+    shoppingAnswers.totalBudget = n;
+    renderShoppingChuseokStep();
+  }
+
+  function onShoppingBudgetCustomInput(v){
+    shoppingBudgetCustomInput = v;
+    if (shoppingBudgetPreset === 'custom'){
+      shoppingAnswers.totalBudget = parseShoppingPositiveInt(v);
+    }
+    updateShoppingNextButtonState();
+  }
+
+  function parseShoppingPositiveInt(raw){
+    // 음수/0/비정상 문자/지나치게 큰 값(10억 초과) 방지
+    if (raw === null || raw === undefined) return null;
+    const cleaned = String(raw).replace(/[^0-9]/g, '');
+    if (!cleaned) return null;
+    const n = parseInt(cleaned, 10);
+    if (!Number.isFinite(n) || n <= 0 || n > 1000000000) return null;
+    return n;
+  }
+
+  function selectShoppingQuantityPreset(min, max){
+    // 고정 범위를 선택하면 직접 입력 상태는 정리한다(직접 입력 모드/입력값이 남아 프리셋과 뒤섞이지 않도록).
+    shoppingQuantityMode = 'preset';
+    shoppingQuantityPreset = { min, max };
+    shoppingQuantityRefined = (min === max) ? min : null;
+    shoppingQuantityCustomInput = '';
+    shoppingAnswers.quantity = (min === max) ? min : null;
+    renderShoppingChuseokStep();
+  }
+
+  function selectShoppingQuantityExact(n){
+    shoppingQuantityRefined = n;
+    shoppingAnswers.quantity = n;
+    renderShoppingChuseokStep();
+  }
+
+  function selectShoppingQuantityCustomMode(){
+    shoppingQuantityMode = 'custom';
+    shoppingQuantityPreset = null;
+    shoppingQuantityRefined = null;
+    // 이미 입력해둔 숫자가 있으면 그대로 복원해서 답변에 반영한다.
+    shoppingAnswers.quantity = parseShoppingPositiveInt(shoppingQuantityCustomInput);
+    renderShoppingChuseokStep();
+  }
+
+  function onShoppingQuantityCustomInput(v){
+    shoppingQuantityCustomInput = v;
+    if (shoppingQuantityMode === 'custom'){
+      shoppingAnswers.quantity = parseShoppingPositiveInt(v);
+    }
+    updateShoppingNextButtonState();
+  }
+
+  function toggleShoppingPriority(value){
+    const idx = shoppingAnswers.priorities.indexOf(value);
+    if (idx >= 0){
+      shoppingAnswers.priorities.splice(idx, 1);
+    } else {
+      if (shoppingAnswers.priorities.length >= 2) return; // 최대 2개
+      shoppingAnswers.priorities.push(value);
+    }
+    renderShoppingChuseokStep();
+  }
+
+  function toggleShoppingExclusion(value){
+    if (value === SHOPPING_NO_LIMIT){
+      shoppingAnswers.exclusions = shoppingAnswers.exclusions.includes(SHOPPING_NO_LIMIT) ? [] : [SHOPPING_NO_LIMIT];
+    } else {
+      let list = shoppingAnswers.exclusions.filter(v => v !== SHOPPING_NO_LIMIT);
+      const idx = list.indexOf(value);
+      if (idx >= 0) list.splice(idx, 1); else list.push(value);
+      shoppingAnswers.exclusions = list;
+    }
+    renderShoppingChuseokStep();
+  }
+
+  // 사용자의 현지(브라우저 로컬) 날짜를 'YYYY-MM-DD'로 만든다. Date#toISOString()은 UTC 기준이라
+  // 한국시간 자정 직후(예: 00:30 KST)에는 아직 전날인 UTC 날짜를 돌려줘 하루가 어긋나므로 쓰지 않는다.
+  function getShoppingLocalDateStr(d){
+    d = d || new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function isShoppingDeliveryDateValid(){
+    if (!shoppingAnswers.desiredDeliveryDate) return true; // 미입력은 허용(선택 항목)
+    return shoppingAnswers.desiredDeliveryDate >= getShoppingLocalDateStr();
+  }
+
+  function onShoppingDeliveryDateInput(v){
+    shoppingAnswers.desiredDeliveryDate = v;
+    const errEl = document.getElementById('shopping-date-error');
+    if (errEl) errEl.classList.toggle('hidden', isShoppingDeliveryDateValid());
+    updateShoppingNextButtonState();
+  }
+
+  function updateShoppingNextButtonState(){
+    const btn = document.getElementById('shopping-step-next-btn');
+    if (!btn) return;
+    const valid = isShoppingStepValid(shoppingStep);
+    btn.disabled = !valid;
+    btn.style.opacity = valid ? '1' : '0.45';
+    btn.style.pointerEvents = valid ? 'auto' : 'none';
+  }
+
+  // ---- 렌더링 ----
+  function shoppingOptionBtnClass(selected){
+    return 'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition';
+  }
+  function shoppingOptionBtnStyle(selected){
+    return selected
+      ? 'background:var(--primary); color:#1C1A17; border:1px solid var(--primary); font-weight:700;'
+      : 'background:var(--card-alt); color:var(--text); border:1px solid var(--line);';
+  }
+
+  function renderShoppingProgress(){
+    const pct = Math.round((Math.min(shoppingStep, SHOPPING_TOTAL_STEPS) / SHOPPING_TOTAL_STEPS) * 100);
+    return `
+      <div class="flex items-center justify-between mb-2">
+        <button type="button" onclick="goShoppingBack()" class="text-sm nav-link" style="color:var(--muted);" aria-label="이전 단계">← 이전</button>
+        <span class="text-xs font-semibold break-keep" style="color:var(--muted);">${Math.min(shoppingStep, SHOPPING_TOTAL_STEPS)} / ${SHOPPING_TOTAL_STEPS}단계</span>
+      </div>
+      <div class="w-full h-1.5 rounded-full mb-6" style="background:var(--card-alt);">
+        <div class="h-1.5 rounded-full" style="width:${pct}%; background:var(--primary); transition:width .2s;"></div>
+      </div>
+    `;
+  }
+
+  function renderShoppingChuseokStep(){
+    const root = document.getElementById('shopping-chuseok-body');
+    if (!root) return;
+
+    if (shoppingStep > SHOPPING_TOTAL_STEPS){
+      root.innerHTML = renderShoppingCompleteScreen();
+      return;
+    }
+
+    let stepHtml = '';
+    if (shoppingStep === 1) stepHtml = renderShoppingStep1();
+    else if (shoppingStep === 2) stepHtml = renderShoppingStep2();
+    else if (shoppingStep === 3) stepHtml = renderShoppingStep3();
+    else if (shoppingStep === 4) stepHtml = renderShoppingStep4();
+    else if (shoppingStep === 5) stepHtml = renderShoppingStep5();
+
+    const isLast = shoppingStep === SHOPPING_TOTAL_STEPS;
+    root.innerHTML = `
+      ${renderShoppingProgress()}
+      ${stepHtml}
+      <button id="shopping-step-next-btn" type="button" onclick="goShoppingNext()" class="w-full mt-6 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">
+        ${isLast ? '내 상황에 맞는 주문안 보기' : '다음'}
+      </button>
+    `;
+    updateShoppingNextButtonState();
+  }
+
+  function renderShoppingStep1(){
+    return `
+      <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">누구에게 드릴 선물인가요?</h2>
+      <p class="text-xs mb-5 break-keep" style="color:var(--muted);">선물 대상에 맞춰 적합한 구성을 찾아드려요.</p>
+      <div class="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="선물 대상 선택">
+        ${SHOPPING_RECIPIENTS.map(r => `
+          <button type="button" role="radio" aria-checked="${shoppingAnswers.recipient === r}" onclick="selectShoppingRecipient('${r}')" class="${shoppingOptionBtnClass(shoppingAnswers.recipient === r)}" style="${shoppingOptionBtnStyle(shoppingAnswers.recipient === r)}">
+            ${shoppingAnswers.recipient === r ? '✓ ' : ''}${r}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderShoppingStep2(){
+    const isCustom = shoppingBudgetPreset === 'custom';
+    return `
+      <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">선물 전체 예산은 얼마인가요?</h2>
+      <p class="text-xs mb-5 break-keep" style="color:var(--muted);">상품 1개 가격이 아니라, 이번 주문 전체에 사용할 총예산이에요.</p>
+      <div class="space-y-2.5" role="radiogroup" aria-label="총예산 선택">
+        ${SHOPPING_BUDGET_PRESETS.map(p => `
+          <button type="button" role="radio" aria-checked="${shoppingBudgetPreset === p.value}" onclick="selectShoppingBudgetPreset(${p.value})" class="${shoppingOptionBtnClass(shoppingBudgetPreset === p.value)}" style="${shoppingOptionBtnStyle(shoppingBudgetPreset === p.value)}">
+            ${shoppingBudgetPreset === p.value ? '✓ ' : ''}${p.label}
+          </button>
+        `).join('')}
+        <button type="button" role="radio" aria-checked="${isCustom}" onclick="selectShoppingBudgetCustom()" class="${shoppingOptionBtnClass(isCustom)}" style="${shoppingOptionBtnStyle(isCustom)}">
+          ${isCustom ? '✓ ' : ''}직접 입력
+        </button>
+        ${isCustom ? `
+          <div class="pt-1">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="예) 150000"
+              value="${shoppingBudgetCustomInput || ''}"
+              oninput="onShoppingBudgetCustomInput(this.value); this.value=this.value.replace(/[^0-9]/g,'');"
+              class="w-full px-3 py-2.5 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:16px;"
+              aria-label="총예산 직접 입력(원)">
+            <p class="text-[11px] mt-1 break-keep" style="color:var(--muted);">원 단위 숫자만 입력해 주세요.</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  function renderShoppingStep3(){
+    const preset = shoppingQuantityPreset;
+    const isPresetMode = shoppingQuantityMode === 'preset';
+    const isCustomMode = shoppingQuantityMode === 'custom';
+    const needsRefine = isPresetMode && preset && preset.min !== preset.max;
+    const refineOptions = needsRefine
+      ? Array.from({ length: preset.max - preset.min + 1 }, (_, i) => preset.min + i)
+      : [];
+    return `
+      <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">선물이 몇 개 필요한가요?</h2>
+      <p class="text-xs mb-5 break-keep" style="color:var(--muted);">받으시는 분 수나 나눠드릴 개수를 기준으로 선택해 주세요.</p>
+      <div class="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="수량 범위 선택">
+        ${SHOPPING_QUANTITY_PRESETS.map(p => {
+          const active = isPresetMode && preset && preset.min === p.min && preset.max === p.max;
+          return `
+          <button type="button" role="radio" aria-checked="${active}" onclick="selectShoppingQuantityPreset(${p.min}, ${p.max})" class="${shoppingOptionBtnClass(active)}" style="${shoppingOptionBtnStyle(active)}">
+            ${active ? '✓ ' : ''}${p.label}
+          </button>`;
+        }).join('')}
+        <button type="button" role="radio" aria-checked="${isCustomMode}"
+          onclick="selectShoppingQuantityCustomMode()" class="${shoppingOptionBtnClass(isCustomMode)}" style="${shoppingOptionBtnStyle(isCustomMode)}">
+          ${isCustomMode ? '✓ ' : ''}직접 입력
+        </button>
+      </div>
+      ${needsRefine ? `
+        <div class="mt-5">
+          <p class="text-xs font-semibold mb-2 break-keep" style="color:var(--text);">정확한 수량을 선택해 주세요</p>
+          <div class="flex flex-wrap gap-2">
+            ${refineOptions.map(n => `
+              <button type="button" onclick="selectShoppingQuantityExact(${n})" class="px-4 py-2 rounded-full text-sm font-semibold" style="${shoppingOptionBtnStyle(shoppingQuantityRefined === n)}">${n}개</button>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      ${isCustomMode ? `
+        <div class="mt-4">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="예) 45"
+            value="${shoppingQuantityCustomInput || ''}"
+            oninput="onShoppingQuantityCustomInput(this.value); this.value=this.value.replace(/[^0-9]/g,'');"
+            class="w-full px-3 py-2.5 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:16px;"
+            aria-label="수량 직접 입력">
+          <p class="text-[11px] mt-1 break-keep" style="color:var(--muted);">개수를 숫자로 입력해 주세요.</p>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  function renderShoppingStep4(){
+    return `
+      <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">선물에서 가장 중요한 것은 무엇인가요?</h2>
+      <p class="text-xs mb-5 break-keep" style="color:var(--primary); font-weight:600;">최대 2개까지 선택할 수 있어요 (${shoppingAnswers.priorities.length}/2)</p>
+      <div class="grid grid-cols-2 gap-2.5" role="group" aria-label="선물 우선순위 선택 (최대 2개)">
+        ${SHOPPING_PRIORITIES.map(p => {
+          const selected = shoppingAnswers.priorities.includes(p);
+          const disabled = !selected && shoppingAnswers.priorities.length >= 2;
+          // 3개째 클릭은 실제로 아무 동작도 하지 않는(toggleShoppingPriority 내부에서 무시) 버튼이므로
+          // aria-disabled가 아니라 실제 disabled로 표시해 화면 동작과 보조기기 상태를 일치시킨다.
+          return `
+          <button type="button" aria-pressed="${selected}" onclick="toggleShoppingPriority('${p}')" ${disabled ? 'disabled' : ''}
+            class="${shoppingOptionBtnClass(selected)}" style="${shoppingOptionBtnStyle(selected)} ${disabled ? 'opacity:0.4;' : ''}">
+            ${selected ? '✓ ' : ''}${p}
+          </button>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderShoppingStep5(){
+    const noLimit = shoppingAnswers.exclusions.includes(SHOPPING_NO_LIMIT);
+    return `
+      <h2 class="font-display text-xl sm:text-2xl mb-1 break-keep" style="color:var(--text);">피하고 싶은 상품이 있나요?</h2>
+      <p class="text-xs mb-5 break-keep" style="color:var(--muted);">해당하는 항목을 모두 선택해 주세요. (선택 사항)</p>
+      <div class="grid grid-cols-2 gap-2.5 mb-3" role="group" aria-label="제외 조건 선택">
+        ${SHOPPING_EXCLUSIONS.map(ex => {
+          const selected = shoppingAnswers.exclusions.includes(ex);
+          // '특별한 제한 없음'이 선택된 상태에서 이 버튼을 눌러도 실제로는 제한없음을 해제하고
+          // 이 항목을 선택하도록 동작한다(toggleShoppingExclusion). 클릭 가능한 버튼이므로 aria-disabled를 쓰지 않는다.
+          return `
+          <button type="button" aria-pressed="${selected}" onclick="toggleShoppingExclusion('${ex}')" class="${shoppingOptionBtnClass(selected)}" style="${shoppingOptionBtnStyle(selected)} ${noLimit ? 'opacity:0.4;' : ''}">
+            ${selected ? '✓ ' : ''}${ex}
+          </button>`;
+        }).join('')}
+      </div>
+      <button type="button" aria-pressed="${noLimit}" onclick="toggleShoppingExclusion('${SHOPPING_NO_LIMIT}')" class="${shoppingOptionBtnClass(noLimit)} w-full" style="${shoppingOptionBtnStyle(noLimit)}">
+        ${noLimit ? '✓ ' : ''}${SHOPPING_NO_LIMIT}
+      </button>
+
+      <div class="mt-6">
+        <label class="text-xs font-semibold block mb-2 break-keep" style="color:var(--text);">배송 도착 희망일 (선택)</label>
+        <input type="date" value="${shoppingAnswers.desiredDeliveryDate || ''}" min="${getShoppingLocalDateStr()}" oninput="onShoppingDeliveryDateInput(this.value)"
+          class="w-full px-3 py-2.5 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:16px;"
+          aria-label="배송 도착 희망일" aria-describedby="shopping-date-error">
+        <p id="shopping-date-error" class="text-[11px] mt-1.5 break-keep ${isShoppingDeliveryDateValid() ? 'hidden' : ''}" style="color:var(--accent);" role="alert">오늘 이후 날짜만 선택할 수 있어요.</p>
+        <p class="text-[11px] mt-1.5 break-keep" style="color:var(--muted);">배송 가능 여부는 상품 데이터 연결 후 자동으로 확인됩니다.</p>
+      </div>
+    `;
+  }
+
+  function renderShoppingCompleteScreen(){
+    const a = shoppingAnswers;
+    const budgetLabel = a.totalBudget ? (a.totalBudget.toLocaleString('ko-KR') + '원') : '-';
+    const quantityLabel = a.quantity ? (a.quantity + '개') : '-';
+    const prioritiesLabel = a.priorities.length ? a.priorities.join(', ') : '선택 안 함';
+    const exclusionsLabel = a.exclusions.length ? a.exclusions.join(', ') : '특별한 제한 없음';
+    const deliveryLabel = a.desiredDeliveryDate || '희망일 지정 안 함';
+
+    return `
+      <div class="text-center pt-2 pb-1">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:var(--card-alt); border:1px solid var(--primary);">
+          <span style="color:var(--primary); font-size:24px;">✓</span>
+        </div>
+        <h2 class="font-display text-xl sm:text-2xl mb-2 break-keep" style="color:var(--text);">맞춤 조건이 완성됐어요</h2>
+        <p class="text-sm break-keep" style="color:var(--muted);">입력한 조건을 기준으로 최적 주문안을 계산할 준비가 완료됐습니다.</p>
+      </div>
+
+      <div class="mt-6 rounded-lg p-4 space-y-2.5" style="background:var(--card-alt); border:1px solid var(--line);">
+        ${shoppingSummaryRow('선물 대상', a.recipient || '-')}
+        ${shoppingSummaryRow('총예산', budgetLabel)}
+        ${shoppingSummaryRow('수량', quantityLabel)}
+        ${shoppingSummaryRow('우선순위', prioritiesLabel)}
+        ${shoppingSummaryRow('제외 조건', exclusionsLabel)}
+        ${shoppingSummaryRow('배송 희망일', deliveryLabel)}
+      </div>
+
+      <div class="mt-5 px-4 py-3 rounded-md text-xs break-keep" style="background:var(--surface); border:1px solid var(--line); color:var(--muted);">
+        다음 개발 단계에서 실제 상품 데이터와 고수점수 추천 엔진이 연결됩니다.
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 mt-6">
+        <button type="button" onclick="editShoppingAnswers()" class="py-3 rounded-md font-display text-sm break-keep" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">조건 수정하기</button>
+        <button type="button" onclick="exitToShoppingHome()" class="py-3 rounded-md font-display text-sm break-keep" style="background:var(--primary); color:#1C1A17;">맞춤 쇼핑 홈으로</button>
+      </div>
+    `;
+  }
+
+  function shoppingSummaryRow(label, value){
+    return `
+      <div class="flex items-start justify-between gap-3">
+        <span class="text-xs shrink-0 break-keep" style="color:var(--muted);">${label}</span>
+        <span class="text-sm font-medium text-right break-keep" style="color:var(--text);">${value}</span>
+      </div>
+    `;
+  }
+
+
   // ---------- TABS ----------
-  const PAGES = ['home', 'board', 'auth', 'admin', 'about', 'membership', 'privacy', 'terms', 'partner'];
+  const PAGES = ['home', 'board', 'auth', 'admin', 'about', 'membership', 'privacy', 'terms', 'partner', 'shopping', 'hotdeals'];
 
   // 탭 ↔ URL 경로 매핑. 뒤로가기(popstate) 시에도 같은 매핑으로 어느 탭인지 복원한다.
-  const TAB_TO_PATH = { home: '/home', board: '/board', auth: '/auth', admin: '/admin', about: '/about', membership: '/membership', privacy: '/privacy', terms: '/terms', partner: '/partner' };
-  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/board': 'board', '/auth': 'auth', '/admin': 'admin', '/about': 'about', '/membership': 'membership', '/privacy': 'privacy', '/terms': 'terms', '/partner': 'partner' };
+  // /shopping/chuseok은 'shopping' 탭 내부의 하위 화면(질문 플로우)이라 같은 탭으로 매핑하고,
+  // 실제 어느 화면을 보여줄지는 switchTab 이후 syncShoppingSubViewFromPath()가 location.pathname을 보고 결정한다.
+  const TAB_TO_PATH = { home: '/home', board: '/board', auth: '/auth', admin: '/admin', about: '/about', membership: '/membership', privacy: '/privacy', terms: '/terms', partner: '/partner', shopping: '/shopping', hotdeals: '/hot-deals' };
+  const PATH_TO_TAB = { '/': 'home', '': 'home', '/home': 'home', '/board': 'board', '/auth': 'auth', '/admin': 'admin', '/about': 'about', '/membership': 'membership', '/privacy': 'privacy', '/terms': 'terms', '/partner': 'partner', '/shopping': 'shopping', '/shopping/chuseok': 'shopping', '/hot-deals': 'hotdeals' };
 
   // pushHistory=false로 호출하면(popstate 등) 주소는 이미 바뀌어 있는 상태이므로 새로 pushState하지 않는다.
   function switchTab(tab, pushHistory){
@@ -7040,6 +7693,13 @@
       if (location.pathname !== path){
         history.pushState({ tab }, '', path);
       }
+    }
+
+    // 'shopping' 탭은 /shopping(인트로)과 /shopping/chuseok(질문 플로우) 두 URL을 공유하므로,
+    // 탭 전환 직후 실제 주소를 보고 어느 하위 화면을 보여줄지 별도로 동기화한다.
+    if (tab === 'shopping' && typeof syncShoppingSubViewFromPath === 'function'){
+      syncShoppingSubViewFromPath();
+      applyShoppingSeoVariant();
     }
   }
 
