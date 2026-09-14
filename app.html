@@ -382,7 +382,7 @@
 <main id="page-home" class="max-w-5xl mx-auto px-4 pb-20">
 
   <!-- ===== HERO (H1) =====
-       이 사이트는 index.html 하나를 홈/이벤트/게시판/소개 탭이 공유하는 SPA인데,
+       이 사이트는 index.html 하나를 홈/게시판/소개 탭이 공유하는 SPA인데,
        지금까지 홈 탭에는 실제 <h1>이 하나도 없었습니다(About 페이지에만 있었음).
        검색엔진과 첫 방문자 모두에게 "이 사이트가 뭘 해주는 곳인지"를 3초 안에
        전달하기 위해 핵심 문장을 H1으로 명시적으로 올렸습니다.
@@ -1520,82 +1520,6 @@
     </div>
     <p id="terms-modal-date" class="text-xs mb-4 shrink-0" style="color:var(--muted);">최초 시행일: 2026.7.29</p>
     <div id="terms-modal-body" class="overflow-y-auto pr-1 dashed-divider pt-4"></div>
-  </div>
-</div>
-
-<!-- ===== SIGNUP MODAL ===== -->
-<div id="signup-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4" style="background:rgba(0,0,0,0.6);">
-  <div class="w-full max-w-sm rounded-xl p-7 overflow-y-auto" style="background:var(--card-alt); max-height:90vh; -webkit-overflow-scrolling:touch;">
-    <div class="flex items-start justify-between mb-1.5">
-      <h3 class="font-display text-lg" style="color:var(--primary);">회원가입하고 투표하기</h3>
-      <button onclick="closeModal()" class="text-xl leading-none" style="color:var(--muted);">×</button>
-    </div>
-    <p class="text-xs mb-6" style="color:var(--muted);">추첨을 통해 5분께 선택하신 배달 플랫폼 2만원권을 드려요 🎁</p>
-
-    <form id="vote-signup-fields" class="space-y-4" autocomplete="off" onsubmit="return false;">
-      <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">이메일 (아이디)</label>
-        <div class="flex gap-2">
-          <input id="su-email" name="vote_signup_email" type="email" placeholder="you@example.com" autocomplete="new-email" oninput="resetEmailCheck('su')" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <button type="button" onclick="checkEmailDuplicate('su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">중복 확인</button>
-        </div>
-        <p id="su-email-check-msg" class="text-[12px] mt-1.5 hidden"></p>
-      </div>
-      <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호</label>
-        <div class="relative">
-          <input id="su-password" name="vote_signup_new_password" type="password" placeholder="8자 이상" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <button type="button" onclick="togglePwVisibility('su-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
-        </div>
-      </div>
-      <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">비밀번호 확인</label>
-        <div class="relative">
-          <input id="su-password-confirm" name="vote_signup_new_password_confirm" type="password" placeholder="비밀번호를 한 번 더 입력해주세요" autocomplete="new-password" oninput="checkPasswordMatch('su')" class="form-input w-full px-3 py-2.5 pr-14 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <button type="button" onclick="togglePwVisibility('su-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted);">보기</button>
-        </div>
-        <p id="su-password-match-msg" class="text-[12px] mt-1.5 hidden"></p>
-      </div>
-      <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">닉네임</label>
-        <div class="flex gap-2">
-          <input id="signup_nickname_vote" name="vote_signup_nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore oninput="resetNicknameCheck('su')" class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-          <button type="button" onclick="checkNicknameDuplicate('su')" class="shrink-0 px-3 py-2.5 rounded-lg text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">중복 확인</button>
-        </div>
-        <p id="su-nickname-check-msg" class="text-[12px] mt-1.5 hidden"></p>
-      </div>
-      <div>
-        <label class="text-xs font-medium block mb-1.5" style="color:var(--muted);">[선택] 관심 지역 설정 (할인받을 동네)</label>
-        <div class="flex gap-2">
-          <select id="su-sido" onchange="updateSigunguOptions('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
-          <select id="su-sigungu" onchange="updateRegionPreview('su')" class="form-input flex-1 px-3 py-2.5 rounded-lg text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></select>
-        </div>
-        <p class="text-[12px] mt-1.5" style="color:var(--muted);">선택한 동네: <span id="su-region-preview" style="color:var(--primary);">-</span></p>
-      </div>
-      <div class="space-y-2 pt-1">
-        <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
-          <input id="su-agree-age" type="checkbox" class="w-4 h-4">
-          <span><span style="color:var(--accent);">[필수]</span> 만 14세 이상입니다.</span>
-        </label>
-        <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
-          <input id="su-agree-terms" type="checkbox" class="w-4 h-4">
-          <span>
-            <span style="color:var(--accent);">[필수]</span>
-            <button type="button" onclick="event.stopPropagation(); openTermsModal('terms');" class="underline" style="color:var(--primary);">이용약관</button> 및
-            <button type="button" onclick="event.stopPropagation(); openTermsModal('privacy');" class="underline" style="color:var(--primary);">개인정보 처리방침</button> 동의
-          </span>
-        </label>
-        <label class="flex items-center gap-2 text-xs" style="color:var(--muted);">
-          <input id="su-marketing" type="checkbox" class="w-4 h-4">
-          <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
-        </label>
-      </div>
-    </form>
-
-    <button type="button" onclick="submitSignup()" class="w-full mt-6 py-3 rounded-lg font-display text-base" style="background:var(--primary); color:#1C1A17;">
-      가입하고 투표하기
-    </button>
-    <p id="signup-error" class="text-xs mt-2 hidden" style="color:var(--accent);"></p>
   </div>
 </div>
 
@@ -2977,7 +2901,7 @@
     container.dataset.rendered = '1';
 
     // DOM이 방금 생성됐으므로, 페이지 최초 로드 시(당시엔 관리자 DOM이 아직 없어 조용히
-    // 스킵됐던) 통계/당첨자/투표/참여자 등 기존 렌더링·조회 함수를 여기서 다시 실행해준다.
+    // 스킵됐던) 통계 등 기존 렌더링·조회 함수를 여기서 다시 실행해준다.
     // 새로운 조회 로직이 아니라 기존 함수를 그대로 재호출하는 것뿐이다.
     renderDashboardStats();       // 통계 대시보드(방문자/회원 수)
     renderAdminBannerPostSelect();  // 홈 배너 관리 입력값(문구/뱃지/연결 게시글)
@@ -3625,56 +3549,6 @@
 
   function emptyState(){
     return `<div class="sm:col-span-2 text-center py-10 text-sm" style="color:var(--muted);">조건에 맞는 할인 정보가 없어요. 필터를 조정해보세요.</div>`;
-  }
-
-  // ---------- EVENT / VOTE ----------
-  const RANK_BADGES = ['🥇', '🥈', '🥉']; // 관리자 페이지 등 다른 곳에서 아직 참조할 수 있어 하위 호환용으로 유지
-
-  // 투표 결과 1~3위에 쓰는 리본 달린 메달 SVG. 이모지 대신 사이트 어디서든 똑같이 보이는
-  // 벡터 아이콘으로, 실제 금/은/동 색상을 그대로 써서(브랜드 골드와는 별개) 누가 봐도
-  // 바로 "1등/2등/3등"임을 알아볼 수 있게 했다. 4위 이하는 기존처럼 "N위" 텍스트를 그대로 쓴다.
-  function medalIconHtml(rank){
-    const palette = [
-      { fill: '#FFD866', stroke: '#B8860B', ribbon: '#E63946' }, // 금
-      { fill: '#D8DEE4', stroke: '#8A9199', ribbon: '#3D5A80' }, // 은
-      { fill: '#D8935B', stroke: '#8B5A2B', ribbon: '#588157' }, // 동
-    ];
-    const p = palette[rank];
-    if (!p) return null;
-    return `<svg width="22" height="24" viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; flex-shrink:0;" aria-hidden="true">
-      <path d="M8 0 L4 11 L9.5 9 Z" fill="${p.ribbon}"/>
-      <path d="M16 0 L20 11 L14.5 9 Z" fill="${p.ribbon}"/>
-      <circle cx="12" cy="17" r="10" fill="${p.fill}" stroke="${p.stroke}" stroke-width="1.4"/>
-      <text x="12" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="${p.stroke}" font-family="sans-serif">${rank + 1}</text>
-    </svg>`;
-  }
-
-  // ---------- 공개 화면용 개인정보 마스킹 ----------
-  // 지난 당첨자처럼 "당첨된 게 실제로 있다"는 신뢰를 주기 위해 닉네임/이메일을 일부
-  // 노출하되, 그대로 다 보여주면 개인정보 유출이라 아래 규칙으로 가린다.
-  // - 닉네임: 1글자면 그대로, 2글자면 마지막 글자만 '*', 3글자 이상이면 첫/끝 글자만 남기고 중간은 '*'
-  // - 이메일: '@' 앞부분(로컬파트)이 3글자 이하면 첫 글자만 남기고 나머지 '*', 4글자 이상이면
-  //   앞 3글자를 남기고 나머지 글자 수만큼 '*'로 채움 (도메인은 그대로 노출 — 도메인만으론 개인 특정 불가)
-  // ---------- 공개 화면용 개인정보 마스킹 유틸 (참고용) ----------
-  // "지난 당첨자" 표시는 이제 get_public_past_winners RPC가 DB 안에서 마스킹까지 끝내서
-  // 내려주므로 이 함수들을 더 이상 호출하지 않는다. 다만 다음에 다른 화면(예: 명예의 전당
-  // 페이지 등)에서 클라이언트 쪽에서 참고용으로 다시 쓸 수도 있어 남겨둔다 — 단, 그 경우에도
-  // "네트워크 응답 자체에 원본이 실리지 않아야 하는 곳"이라면 반드시 서버(RPC)에서 마스킹하는
-  // 방식을 우선 고려할 것.
-  function maskNickname(name){
-    const chars = Array.from(String(name || ''));
-    if (chars.length <= 1) return chars.join('');
-    if (chars.length === 2) return chars[0] + '*';
-    return chars[0] + '*'.repeat(chars.length - 2) + chars[chars.length - 1];
-  }
-  function maskEmail(email){
-    if (!email || email === '-') return email;
-    const atIndex = email.indexOf('@');
-    if (atIndex === -1) return email;
-    const local = email.slice(0, atIndex);
-    const domain = email.slice(atIndex);
-    if (local.length <= 3) return local.slice(0, 1) + '*'.repeat(Math.max(local.length - 1, 1)) + domain;
-    return local.slice(0, 3) + '*'.repeat(local.length - 3) + domain;
   }
 
   // ---------- 자유게시판 ----------
@@ -5592,11 +5466,10 @@
 
   // 페이지 로드 시 Supabase에서 홈 배너 설정값을 불러온다. (누구나 조회 가능, 값이 없으면 위 기본값 유지)
   //
-  // 예전엔 get_home_banner_config()(5개 설정값을 한 번에 묶어서 돌려주는 함수) 하나로 전부
-  // 불러왔는데, 이 함수가 특정 키를 누락하거나 제대로 못 돌려주는 문제가 반복적으로 확인됐다
-  // (active_vote_event_id, event_vote_page_title 둘 다 같은 증상). "여러 값을 한 번에 묶어서
-  // 돌려주는" 방식 자체를 신뢰할 수 없어서, 이제는 get_app_config_value(key) 하나로 5개 값을
-  // 각각 확실하게 병렬 조회한다.
+  // 예전엔 get_home_banner_config()(여러 설정값을 한 번에 묶어서 돌려주는 함수) 하나로 전부
+  // 불러왔는데, 이 함수가 특정 키를 누락하거나 제대로 못 돌려주는 문제가 반복적으로 확인됐다.
+  // "여러 값을 한 번에 묶어서 돌려주는" 방식 자체를 신뢰할 수 없어서, 이제는
+  // get_app_config_value(key) 하나로 값들을 각각 확실하게 병렬 조회한다.
   async function loadHomeBannerConfig(){
     let loadedSuccessfully = false;
     try {
@@ -5778,103 +5651,6 @@
     }
   }
 
-  // ---------- MODAL (event page quick signup) ----------
-  function openModal(){
-    document.getElementById('signup-modal').classList.remove('hidden');
-    document.getElementById('signup-modal').classList.add('flex');
-    lockBodyScroll();
-    pushModalHistoryState('signup-modal');
-  }
-  function closeModal(){
-    popModalHistoryIfOpen('signup-modal');
-    document.getElementById('signup-modal').classList.add('hidden');
-    document.getElementById('signup-modal').classList.remove('flex');
-    unlockBodyScroll();
-  }
-  async function submitSignup(){
-    const email = document.getElementById('su-email').value.trim();
-    const pw = document.getElementById('su-password').value.trim();
-    const pwConfirm = document.getElementById('su-password-confirm').value.trim();
-    const name = document.getElementById('signup_nickname_vote').value.trim();
-    const region = getRegionValue('su');
-    const agreeAge = document.getElementById('su-agree-age').checked;
-    const agreeTerms = document.getElementById('su-agree-terms').checked;
-    const marketingOptIn = document.getElementById('su-marketing').checked;
-    const errEl = document.getElementById('signup-error');
-
-    if (!email || !pw || !pwConfirm || !name){
-      errEl.textContent = '필수 항목을 모두 입력해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-      errEl.textContent = '올바른 이메일 형식을 입력해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (!isEmailCheckPassed('su', email)){
-      errEl.textContent = '이메일 중복 확인을 먼저 완료해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    const nicknameFormatError = validateNicknameFormat(name);
-    if (nicknameFormatError){
-      errEl.textContent = nicknameFormatError;
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (!isNicknameCheckPassed('su', name)){
-      errEl.textContent = '닉네임 중복 확인을 먼저 완료해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (pw.length < 8){
-      errEl.textContent = '비밀번호는 8자 이상이어야 합니다.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (pw !== pwConfirm){
-      errEl.textContent = '비밀번호가 일치하지 않습니다.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    if (!agreeAge || !agreeTerms){
-      errEl.textContent = '필수 약관에 동의해주세요.';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    errEl.classList.add('hidden');
-
-    // ---------------------------------------------------------------
-    // Supabase Auth 표준 회원가입 (닉네임/관심지역은 user_metadata로 저장)
-    // ---------------------------------------------------------------
-    try {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password: pw,
-        options: { data: { nickname: name, region, marketing_opt_in: marketingOptIn } },
-      });
-      if (error) throw new Error(error.message || '회원가입에 실패했습니다.');
-
-      // Supabase가 이메일 인증을 요구하는 설정이면 signUp()은 에러 없이 성공하지만
-      // session은 null로 돌아온다. 이 경우 로그인 상태를 임의로 만들지 않고
-      // 이메일 인증부터 완료하도록 안내한다.
-      if (!data.session){
-        closeModal();
-        resetSignupForm('su');
-        alert('회원가입이 완료되었습니다!\n입력하신 이메일로 인증 링크를 보내드렸어요. 메일함에서 인증을 완료한 뒤 로그인해주세요.');
-        return;
-      }
-
-      applyAuthSession(data.session.access_token, { id: data.user?.id, nickname: name, email, region, marketingOptIn, level: 0, role: 'USER' });
-      closeModal();
-      resetSignupForm('su');
-    } catch (err){
-      errEl.textContent = err.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-      errEl.classList.remove('hidden');
-    }
-  }
-
   // ---------- B2B 제휴 제안 MODAL ----------
   const B2B_TYPE_LABEL = {
     franchise: '프랜차이즈 할인 제휴',
@@ -5887,7 +5663,6 @@
   const EMAILJS_SERVICE_ID = 'service_hjt5tqo';
   const EMAILJS_TEMPLATE_ID = 'template_16j1gyl';          // 관리자(jumungosu@gmail.com)에게 가는 알림 메일
   const EMAILJS_AUTOREPLY_TEMPLATE_ID = 'template_yr85ef7'; // 제안서 작성자에게 가는 자동응답 메일
-  const EMAILJS_WINNER_TEMPLATE_ID = 'template_winner_notice'; // ⚠️ EmailJS에서 새로 만드신 뒤, 실제 템플릿 ID로 교체해주세요
   if (window.emailjs) emailjs.init(EMAILJS_PUBLIC_KEY);
 
   function openB2BModal(){
@@ -6031,7 +5806,7 @@
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제2조 (용어의 정의)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">
-      ① “서비스”란 배달의민족, 요기요, 쿠팡이츠, 땡겨요 등 배달 플랫폼의 할인·프로모션 정보를 수집하여 이용자에게 제공하고, 투표 등 참여형 이벤트를 운영하는 일체의 서비스를 말합니다.<br>
+      ① “서비스”란 배달의민족, 요기요, 쿠팡이츠, 땡겨요 등 배달 플랫폼의 할인·프로모션 정보를 수집하여 이용자에게 제공하는 일체의 서비스를 말합니다.<br>
       ② “회원”이란 본 약관에 동의하고 회원가입을 완료하여 회사가 제공하는 서비스를 이용하는 자를 말합니다.<br>
       ③ “배달 플랫폼”이란 회사가 할인 정보를 수집·게시하는 대상이 되는 외부 배달 애플리케이션 및 이에 입점한 프랜차이즈·가맹점을 말하며, 회사와 해당 배달 플랫폼 사이에 별도의 공식 제휴 계약이 체결되어 있음을 의미하지 않습니다.
     </p>
@@ -6047,7 +5822,7 @@
       ① 회원은 이메일, 비밀번호, 닉네임 등 회사가 정한 정보를 정확하게 제공하여야 하며, 허위 정보 제공으로 인해 발생하는 불이익은 회원 본인이 부담합니다.<br>
       ② 본 서비스는 만 14세 이상 이용자를 대상으로 하며, 만 14세 미만의 아동은 회원가입 및 서비스 이용이 제한됩니다.<br>
       ③ 회원은 서비스 내 마이페이지를 통해 언제든지 탈퇴할 수 있습니다. 탈퇴 시 회원 계정은 삭제되나, 회원이 작성한 게시물은 삭제되지 않고 작성자 표시만 익명(탈퇴한 회원)으로 전환되어 서비스에 계속 남을 수 있습니다.<br>
-      ④ 부정 가입 및 이벤트 부정 참여 방지를 위해, 탈퇴한 계정과 동일한 이메일로는 탈퇴일로부터 7일간 재가입이 제한됩니다.
+      ④ 부정 가입 방지를 위해, 탈퇴한 계정과 동일한 이메일로는 탈퇴일로부터 7일간 재가입이 제한됩니다.
     </p>
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제5조 (서비스의 변경 및 중단)</p>
@@ -6088,13 +5863,7 @@
       ③ 회사는 회원이 서비스에서 확인한 정보를 이용하여 발생한 손해에 대해 회사의 고의 또는 중대한 과실이 없는 한 책임을 지지 않습니다.
     </p>
 
-    <p class="${ARTICLE_HEAD}" style="color:var(--accent);">제10조 (이벤트 참여 및 부정행위)</p>
-    <p class="${ARTICLE_BODY}" style="color:var(--text);">
-      ① 회사는 투표 등 참여형 이벤트를 운영하며, 회원은 본인의 계정으로 1인 1회에 한하여 이벤트에 참여할 수 있습니다.<br>
-      ② 중복 계정 생성, 자동화 프로그램 사용 등 부정한 방법으로 동일 이벤트에 중복 참여하거나 이벤트 진행을 방해하는 행위가 확인되는 경우, 당첨 발표 전후를 불문하고 당첨이 취소되며 경품(기프티콘 등)이 지급되지 않거나 이미 지급된 경품은 회수될 수 있습니다.<br>
-      ③ 회사는 당첨자에게 경품 지급에 필요한 연락처 등 정보를 별도로 요청할 수 있으며, 회원이 이에 응하지 않을 경우 경품 지급이 제한될 수 있습니다.<br>
-      ④ 회사는 부정 참여가 의심되는 경우 회원에게 사전 통지 없이 참여 이력을 확인하거나 필요한 조치를 취할 수 있습니다.
-    </p>
+    <p class="${ARTICLE_HEAD}" style="color:var(--accent);">제10조 (삭제)</p>
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제11조 (약관의 개정)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">회사는 관련 법령을 위반하지 않는 범위에서 본 약관을 개정할 수 있으며, 개정 시 서비스 내 공지사항 등을 통해 사전에 고지합니다.</p>
@@ -6102,7 +5871,7 @@
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제12조 (분쟁해결 및 준거법)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">본 약관과 관련하여 회사와 회원 간에 발생한 분쟁에 대해서는 대한민국 법을 준거법으로 하며, 소송이 제기될 경우 민사소송법상의 관할법원에 제기합니다.</p>
 
-    <p class="text-xs mt-6 leading-relaxed" style="color:var(--muted);">최초 시행일: 2026.7.29<br>개정일: 2026.9.11<br>시행일: 2026.9.11</p>
+    <p class="text-xs mt-6 leading-relaxed" style="color:var(--muted);">최초 시행일: 2026.7.29<br>개정일: 2026.9.14<br>시행일: 2026.9.14</p>
 
     <p class="text-xs mt-4 leading-relaxed" style="color:var(--muted);">상호명: 문라잇 (주문의고수) · 대표자: 김도경<br>사업자등록번호: 111-09-41041<br>통신판매업신고번호: 제 2023-화성봉담-0452 호<br>사업장 소재지: 경기도 화성시 효행구 봉담읍 동화길 89, 7층<br>이메일: jumungosu@gmail.com<br>고객문의: 카카오톡 채널 '주문고수'</p>
   `;
@@ -6112,10 +5881,9 @@
     <p class="${ARTICLE_BODY}" style="color:var(--text);">회사는 다음의 목적을 위하여 개인정보를 처리합니다. 처리한 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 별도의 동의를 받는 등 필요한 조치를 이행합니다.</p>
     <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
       <li>회원가입 의사 확인, 회원 식별·인증, 회원제 서비스 제공</li>
-      <li>참여형 이벤트(투표) 운영, 당첨자 선정 및 경품 지급 안내</li>
       <li>제휴 제안(B2B 문의) 접수, 검토 및 회신</li>
       <li>동의한 회원에 한한 마케팅성 정보 안내</li>
-      <li>부정 가입·이벤트 부정 참여 방지 등 서비스 부정 이용 방지</li>
+      <li>부정 가입 방지 등 서비스 부정 이용 방지</li>
       <li>서비스 이용 통계 분석 및 서비스 개선</li>
     </ul>
 
@@ -6129,16 +5897,11 @@
       <li>[선택] 관심지역 — 지역별 맞춤 할인 정보 제공</li>
       <li>[선택] 마케팅 정보 수신 동의 여부</li>
     </ul>
-    <p class="text-xs font-semibold mt-2" style="color:var(--text);">② 이벤트 참여 시 (아래 “이벤트 개인정보” 항목 별도 참고)</p>
-    <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
-      <li>투표 참여 시: 닉네임, 계정 이메일(로그인 정보에서 자동 처리)</li>
-      <li>당첨 시: 성명, 연락처, 이메일 — 경품 지급을 위해 별도 확인될 수 있음</li>
-    </ul>
-    <p class="text-xs font-semibold mt-2" style="color:var(--text);">③ B2B 제휴 문의 시 (아래 “B2B 제휴 문의” 항목 별도 참고)</p>
+    <p class="text-xs font-semibold mt-2" style="color:var(--text);">② B2B 제휴 문의 시 (아래 “B2B 제휴 문의” 항목 별도 참고)</p>
     <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
       <li>업체명, 담당자명, 연락처, 이메일, 제휴구분, 제안 제목, 제안 내용, 첨부파일</li>
     </ul>
-    <p class="text-xs font-semibold mt-2" style="color:var(--text);">④ 자동수집 항목</p>
+    <p class="text-xs font-semibold mt-2" style="color:var(--text);">③ 자동수집 항목</p>
     <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
       <li>접속 IP, 쿠키 및 유사기술, 서비스 이용기록, 방문기록, 브라우저·기기 관련 정보 — 서비스 운영, 통계 분석, 보안 강화, 광고 게재 목적으로 자동 생성·수집될 수 있습니다. 자세한 내용은 제7조(자동수집 장치 및 쿠키)를 참고해주세요.</li>
     </ul>
@@ -6146,14 +5909,12 @@
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제3조 (개인정보의 처리 및 보유기간)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">회사는 법령에 따른 개인정보 보유·이용기간 또는 이용자로부터 개인정보를 수집 시 동의받은 보유·이용기간 내에서 개인정보를 처리·보유합니다. 항목별 보유기간은 다음과 같습니다.</p>
     <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
-      <li>회원 정보: 회원 탈퇴 시까지 보유하며, 탈퇴 시 지체 없이 파기합니다. 다만 부정 가입 및 이벤트 부정 참여 방지를 위해 이메일 등 최소한의 정보는 탈퇴일로부터 7일간 별도 보관 후 파기합니다.</li>
+      <li>회원 정보: 회원 탈퇴 시까지 보유하며, 탈퇴 시 지체 없이 파기합니다. 다만 부정 가입 방지를 위해 이메일 등 최소한의 정보는 탈퇴일로부터 7일간 별도 보관 후 파기합니다.</li>
       <li>마케팅 정보 수신 동의: 동의를 철회하거나 회원 탈퇴 시까지 보유합니다. 회원은 마이페이지에서 언제든지 수신 동의를 변경·철회할 수 있습니다.</li>
-      <li>이벤트 투표 정보: 원칙적으로 해당 이벤트 종료일로부터 3개월간 보유 후 파기합니다.</li>
-      <li>이벤트 당첨자 정보(성명·연락처·이메일): 경품 지급 완료일로부터 3개월간 보유 후, 해당 개인식별정보만 파기합니다. 파기 이후에도 이벤트 진행 결과 자체(당첨 여부, 당첨 회차 등 비식별 정보)는 서비스 통계 목적으로 남을 수 있습니다.</li>
       <li>B2B 제휴 문의 정보: 접수일로부터 6개월간 보유 후 파기를 원칙으로 합니다.</li>
       <li>관계 법령의 규정에 의하여 보존할 필요가 있는 경우(예: 통신비밀보호법에 따른 서비스 이용기록 3개월)에는 해당 법령이 정한 기간 동안 보관합니다.</li>
     </ul>
-    <p class="${ARTICLE_BODY} mt-2" style="color:var(--text);">위 보유기간은 회사가 원칙으로 운영하는 기준이며, 개별 데이터의 수집 경위나 보관 형태에 따라 실제 파기 시점에는 일부 차이가 있을 수 있습니다. 예를 들어 이벤트 투표 정보 중 종료 시점이 명확히 특정되지 않은 과거 데이터는, 종료 시점이 확인되기 전까지 파기 대상에서 제외될 수 있습니다.</p>
+    <p class="${ARTICLE_BODY} mt-2" style="color:var(--text);">위 보유기간은 회사가 원칙으로 운영하는 기준이며, 개별 데이터의 수집 경위나 보관 형태에 따라 실제 파기 시점에는 일부 차이가 있을 수 있습니다.</p>
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제4조 (개인정보의 파기절차 및 방법)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">
@@ -6165,14 +5926,12 @@
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제5조 (개인정보 처리위탁)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리업무를 외부 업체에 위탁하고 있습니다.</p>
     <ul class="text-sm leading-relaxed list-disc list-inside mt-1" style="color:var(--text);">
-      <li>수탁업체: Supabase, Inc. / 위탁업무: 회원 인증, 회원·게시판·이벤트 데이터베이스 보관 및 관리, 파일(게시판 이미지, 제휴 제안 첨부파일) 저장</li>
+      <li>수탁업체: Supabase, Inc. / 위탁업무: 회원 인증, 회원·게시판 데이터베이스 보관 및 관리, 파일(게시판 이미지, 제휴 제안 첨부파일) 저장</li>
       <li>수탁업체: EmailJS (EmailJS Pte. Ltd.) / 위탁업무: B2B 제휴 문의 내용의 이메일 발송 대행</li>
       <li>수탁업체: Google LLC / 위탁업무: 서비스 이용 통계 분석(Google Analytics), 광고 게재(Google AdSense)</li>
       <li>수탁업체: Kakao Corp. / 위탁업무: 광고 게재(Kakao 애드핏)</li>
     </ul>
     <p class="${ARTICLE_BODY} mt-2" style="color:var(--text);">서비스는 Vercel Inc.의 서버 인프라를 통해 호스팅됩니다. 회원가입·로그인 등 회원 개인정보는 이용자의 브라우저에서 Supabase로 직접 전송·저장되며, Vercel이 이를 별도의 데이터베이스로 저장하는 구조는 아닙니다. 다만 웹사이트 접속 과정에서 발생하는 요청 처리 특성상 Vercel 인프라 로그에 접속 IP 등 정보가 일시적으로 남을 수 있습니다.</p>
-    <p class="${ARTICLE_BODY} mt-2" style="color:var(--text);">현재 이벤트 경품은 담당자가 수동으로 발송하고 있으며, 경품 발송 자체를 위해 별도의 외부 업체에 개인정보를 위탁하지 않습니다.</p>
-
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제6조 (개인정보의 국외 이전)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">회사는 서비스 제공을 위해 아래와 같이 개인정보를 국외로 이전하여 처리하고 있습니다. 확인되지 않은 이전 국가나 수탁자는 아래에 포함하지 않았습니다.</p>
     <div class="overflow-x-auto mt-2">
@@ -6191,7 +5950,7 @@
           <tr style="border-bottom:1px solid var(--line);">
             <td class="py-1 pr-2">Supabase, Inc.</td>
             <td class="py-1 pr-2">싱가포르</td>
-            <td class="py-1 pr-2">회원·게시판·이벤트 관련 데이터 전체</td>
+            <td class="py-1 pr-2">회원·게시판 관련 데이터 전체</td>
             <td class="py-1 pr-2">서버 인프라(DB·인증·스토리지) 운영</td>
             <td class="py-1 pr-2">서비스 이용 시 네트워크를 통해 실시간 전송</td>
             <td class="py-1 pr-2">제3조의 항목별 보유기간과 동일</td>
@@ -6242,7 +6001,7 @@
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제11조 (개인정보 처리방침의 변경 및 고지)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">이 개인정보 처리방침은 법령·정책 또는 서비스 변경에 따라 내용이 추가·삭제 및 수정될 수 있으며, 변경 시 서비스 내 공지사항 등을 통해 사전에 고지합니다.</p>
-    <p class="text-xs mt-4 leading-relaxed" style="color:var(--muted);">최초 시행일: 2026.7.29<br>개정일: 2026.9.11<br>시행일: 2026.9.11</p>
+    <p class="text-xs mt-4 leading-relaxed" style="color:var(--muted);">최초 시행일: 2026.7.29<br>개정일: 2026.9.14<br>시행일: 2026.9.14</p>
   `;
 
   function openTermsModal(type){
@@ -6507,12 +6266,12 @@
       badgeEl.textContent = 'MASTER';
       badgeEl.style.background = 'var(--primary)';
       badgeEl.style.color = '#1C1A17';
-      descEl.textContent = '할인 정보와 이벤트 현황을 관리하세요. (등록·수정·삭제 가능)';
+      descEl.textContent = '할인 정보와 운영 현황을 관리하세요. (등록·수정·삭제 가능)';
     } else if (isManagerUser()){
       badgeEl.textContent = 'MANAGER';
       badgeEl.style.background = 'var(--type-delivery)';
       badgeEl.style.color = '#1C1A17';
-      descEl.textContent = '할인 정보와 이벤트 현황을 조회할 수 있어요. (등록·수정·삭제는 마스터 계정만 가능)';
+      descEl.textContent = '할인 정보와 운영 현황을 조회할 수 있어요. (등록·수정·삭제는 마스터 계정만 가능)';
     } else {
       badgeEl.textContent = '';
     }
@@ -6895,7 +6654,7 @@
   }
 
   async function handleWithdraw(){
-    const confirmed = confirm('정말 탈퇴하시겠습니까? 탈퇴 시 기존 이벤트 참여 내역 및 기프티콘 추첨 대상에서 제외됩니다.');
+    const confirmed = confirm('정말 탈퇴하시겠습니까?');
     if (!confirmed) return;
 
     // ---------------------------------------------------------------
@@ -7128,7 +6887,6 @@
     'board-login-modal': () => closeBoardLoginPrompt(),
     'user-info-modal': () => closeUserInfoModal(),
     'terms-modal': () => closeTermsModal(),
-    'signup-modal': () => closeModal(),
     'board-edit-modal': () => closeBoardCompose(),
   };
 
@@ -7148,7 +6906,7 @@
 
   // ---------- 탭별 SEO 메타 정보 ----------
   // 이 사이트는 index.html 하나를 공유하는 SPA라서, canonical/title/description을 고정해두면
-  // 구글이 /board, /event, /about을 전부 "홈페이지의 대체 페이지"로 판단해 색인에서 접어버린다
+  // 구글이 /board, /about을 전부 "홈페이지의 대체 페이지"로 판단해 색인에서 접어버린다
   // (실제로 서치콘솔에서 "적절한 표준 태그가 포함된 대체 페이지"로 확인된 문제).
   // switchTab()이 호출될 때마다(첫 진입 포함) 아래 정보로 head 태그를 실제 페이지에 맞게 갱신해서,
   // 각 탭이 서로 다른 고유 페이지로 인식되게 한다.
@@ -7158,12 +6916,6 @@
       description: '배달의민족·요기요·쿠팡이츠·땡겨요 치킨·피자·버거 할인쿠폰을 한 곳에서 비교하세요. 매일 업데이트되는 브랜드별 최저가 할인정보!',
       ogTitle: '주문의고수 | 배달앱 할인 통합 비교',
       indexable: true,
-    },
-    event: {
-      title: '이벤트 | 주문의고수 - 투표하고 기프티콘 받기',
-      description: '주문의고수에서 진행 중인 투표 이벤트에 참여하고 추첨을 통해 기프티콘을 받아보세요.',
-      ogTitle: '이벤트 | 주문의고수',
-      indexable: false,
     },
     board: {
       title: '자유게시판 | 주문의고수 - 실시간 할인 제보 커뮤니티',
