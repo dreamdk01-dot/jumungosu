@@ -181,11 +181,5 @@
       "source": "/((?!api/).*)",
       "destination": "/app.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/check-event-deadline?secret=REPLACE_WITH_YOUR_CRON_SECRET",
-      "schedule": "10 13 * * *"
-    }
   ]
 }
