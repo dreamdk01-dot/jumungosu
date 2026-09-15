@@ -479,6 +479,19 @@
     <button type="button" id="best3-view-all-link" onclick="scrollToBrandSearch()" class="hidden mt-3 font-semibold text-sm" style="color:var(--primary);"></button>
   </section>
 
+  <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, BEST3보다 작고 담백한
+       시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
+       syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다. -->
+  <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
+    <button type="button" onclick="switchTab('hotdeals')" class="w-full text-left rounded-lg p-4 flex items-center justify-between gap-3" style="background:var(--card-alt); border:1px solid var(--line);">
+      <span class="min-w-0">
+        <span class="block text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">🎁 추석선물, 가격 비교하고 고르세요</span>
+        <span class="block text-xs break-keep" style="color:var(--muted);">쿠팡 추석 행사상품 중 가격 경쟁력이 확인된 상품만 엄선</span>
+      </span>
+      <span class="shrink-0 text-xs font-semibold px-3 py-2 rounded-md break-keep" style="background:var(--primary); color:#1C1A17;">2026 추석 기프트 보기</span>
+    </button>
+  </section>
+
   <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
        "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
        id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
@@ -1296,22 +1309,25 @@
 </main>
 
 <!-- ===== HOT DEALS (오늘의 핫딜) — 독립 URL /hot-deals
-     이번 단계는 골격만 구현하며, 실제 자동수집 데이터가 없으므로 빈 상태만 보여준다.
-     #hotdeals-list-region은 다음 단계에서 실제 핫딜 카드 렌더링이 들어갈 자리로 비워둔다. ===== -->
+     "시즌 기획전 + 일반 핫딜" 두 섹션을 코드상 분리해서 담는다(HOTDEALS_SEASONAL_ENABLED 플래그로
+     시즌 섹션 전체를 켜고 끌 수 있음. 꺼지면 자연스럽게 일반 핫딜 전용 페이지가 됨).
+     실제 검증된 상품 데이터(CHUSEOK_SEASONAL_PRODUCTS / GENERAL_HOTDEAL_PRODUCTS)가 들어오기 전까지는
+     두 배열 모두 비어 있고, 그 경우 상품 섹션은 렌더링되지 않고 빈 상태 안내만 표시된다.
+     제목·설명 텍스트는 renderHotdealsHero()가, 필터는 renderHotdealsFilterUI()가,
+     상품 영역은 renderHotdealsProducts()가 채운다(switchTab에서 hotdeals 탭 진입 시 호출). -->
 <main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
-  <div class="pt-10 pb-2">
-    <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl mb-2 break-keep" style="color:var(--text);">오늘의 핫딜</h2>
-    <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">현재 가격과 구성 조건을 분석해 주문할 만한 상품만 보여드릴 예정입니다.</p>
+  <div class="pt-8 pb-2">
+    <p id="hotdeals-hero-eyebrow" class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);"></p>
+    <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);"></h2>
+    <p id="hotdeals-hero-desc" class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);"></p>
+    <p id="hotdeals-hero-sub" class="text-sm leading-[1.5] break-keep mt-2" style="color:var(--muted);"></p>
   </div>
 
-  <div id="hotdeals-list-region" class="mt-8 mb-4">
-    <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
-      <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 자동 수집된 핫딜이 없습니다.</p>
-      <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">쿠팡 상품 데이터 연결 후 가격·구성·재고 상태를 기준으로 자동 업데이트됩니다.</p>
-    </div>
-  </div>
+  <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
 
-  <div class="text-center mt-6">
+  <div id="hotdeals-dynamic-root" class="mt-6"></div>
+
+  <div class="text-center mt-8">
     <button type="button" onclick="switchTab('shopping')" class="px-6 py-3 rounded-md font-display text-sm break-keep" style="background:var(--primary); color:#1C1A17;">맞춤 쇼핑 시작하기</button>
   </div>
 </main>
@@ -7824,6 +7840,241 @@
     promoteToH1(document.querySelector('#shopping-chuseok-body h2'));
   }
 
+
+  // ================= 오늘의 핫딜 (/hot-deals) — 시즌 기획전 + 일반 핫딜 =================
+  // 이번 단계는 쿠팡 파트너스 API 자동화가 아니라, 가격비교가 끝난 상품 데이터를 나중에
+  // 그대로 채워 넣을 수 있는 화면 골격을 먼저 만드는 작업이다. 그래서 아래 두 배열
+  // (CHUSEOK_SEASONAL_PRODUCTS / GENERAL_HOTDEAL_PRODUCTS)이 비어 있는 동안에는
+  // 어떤 가짜 상품·가격도 화면에 그리지 않는다 — 상품 섹션 자체가 렌더링되지 않는다.
+  //
+  // 나중에 검증된 상품을 추가할 때는 아래 배열에 객체만 채우면 된다(필드 설명은 각 배열 위 주석 참고).
+  // 추석이 끝나면 HOTDEALS_SEASONAL_ENABLED를 false로 바꾸는 것만으로 시즌 섹션 전체
+  // (히어로 문구·필터·BEST5·시즌 그리드)가 사라지고, 이 페이지는 자연스럽게 "일반 핫딜" 전용
+  // 페이지로 전환된다(GENERAL_HOTDEAL_PRODUCTS 섹션은 그대로 유지됨).
+  let HOTDEALS_SEASONAL_ENABLED = true;
+
+  // 상품 1개당 필드:
+  //   id, name, brand, category, target, budget, image,
+  //   coupangPrice, comparisonPrice, priceDifference, priceStatus,
+  //   shipping, benefits, checkedAt, affiliateUrl, featured, bestRank
+  // target은 '부모님'|'가족'|'직장·거래처'|'지인'|'연인' 중 하나(또는 배열),
+  // budget은 '1~3만원'|'3~5만원'|'5~10만원'|'10만원+' 중 하나,
+  // category는 아래 HOTDEALS_CATEGORIES 중 하나.
+  // featured:true + bestRank(1~5)를 주면 BEST 5에 자동으로 포함된다.
+  const CHUSEOK_SEASONAL_PRODUCTS = [
+    // 실제 가격비교가 끝난 추석 선물 약 30개가 여기에 채워질 예정. 지금은 비워둔다.
+  ];
+
+  const GENERAL_HOTDEAL_PRODUCTS = [
+    // 시즌과 무관한 상시 핫딜. 위와 동일한 필드 구조. 지금은 비워둔다.
+  ];
+
+  const HOTDEALS_TARGETS = ['전체', '부모님', '가족', '직장·거래처', '지인', '연인'];
+  const HOTDEALS_BUDGETS = ['전체', '1~3만원', '3~5만원', '5~10만원', '10만원+'];
+  const HOTDEALS_CATEGORIES = ['전체', '한우·육류', '과일', '수산', '건강식품', '가공식품', '견과', '디저트', '차·커피', '생활', '뷰티', '기타'];
+
+  let hotdealsTargetFilter = '전체';
+  let hotdealsBudgetFilter = '전체';
+  let hotdealsCategoryFilter = '전체';
+
+  function hotdealsProductMatchesFilter(p){
+    const targetOk = hotdealsTargetFilter === '전체' || (Array.isArray(p.target) ? p.target.includes(hotdealsTargetFilter) : p.target === hotdealsTargetFilter);
+    const budgetOk = hotdealsBudgetFilter === '전체' || p.budget === hotdealsBudgetFilter;
+    const categoryOk = hotdealsCategoryFilter === '전체' || p.category === hotdealsCategoryFilter;
+    return targetOk && budgetOk && categoryOk;
+  }
+
+  function setHotdealsTargetFilter(v){ hotdealsTargetFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
+  function setHotdealsBudgetFilter(v){ hotdealsBudgetFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
+  function setHotdealsCategoryFilter(v){ hotdealsCategoryFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
+
+  // ---- 히어로 문구 (텍스트만 갈아끼움 — #page-hotdeals-title 요소 자체는 H1↔H2 승격 시스템이
+  //      쓰고 있는 노드라서, 새로 만들지 않고 innerText만 바꾼다) ----
+  function renderHotdealsHero(){
+    const eyebrow = document.getElementById('hotdeals-hero-eyebrow');
+    const title = document.getElementById('page-hotdeals-title');
+    const desc = document.getElementById('hotdeals-hero-desc');
+    const sub = document.getElementById('hotdeals-hero-sub');
+    if (!eyebrow || !title || !desc || !sub) return;
+    if (HOTDEALS_SEASONAL_ENABLED){
+      eyebrow.textContent = '🎁 2026 추석 선물 가격비교';
+      title.textContent = '아무거나 추천하지 않습니다';
+      desc.textContent = '온라인 가격을 비교해 가격 경쟁력이 확인된 상품만 소개합니다.';
+      sub.textContent = '부모님부터 가족, 직장·거래처, 지인까지 예산에 맞는 추석 선물을 빠르게 찾아보세요.';
+    } else {
+      eyebrow.textContent = '';
+      title.textContent = '오늘의 핫딜';
+      desc.textContent = '현재 가격과 구성 조건을 분석해 주문할 만한 상품만 보여드립니다.';
+      sub.textContent = '';
+    }
+  }
+
+  // ---- 빠른 탐색 필터 UI (실제 상품 유무와 무관하게 항상 준비해두는 화면 골격) ----
+  function hotdealsFilterChipRowHtml(label, options, current, onclickName){
+    return `
+      <div class="mb-3 last:mb-0">
+        <p class="text-xs font-semibold mb-1.5 break-keep" style="color:var(--muted);">${label}</p>
+        <div class="flex flex-wrap gap-1.5">
+          ${options.map(opt => `
+            <button type="button" onclick="${onclickName}('${opt}')" class="px-3 py-1.5 rounded-full text-xs font-semibold border break-keep" style="${opt === current ? 'background:var(--primary); color:#1C1A17; border-color:var(--primary);' : 'background:var(--card-alt); color:var(--text); border-color:var(--line);'}">${opt}</button>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  function renderHotdealsFilterUI(){
+    const root = document.getElementById('hotdeals-filter-root');
+    if (!root) return;
+    if (!HOTDEALS_SEASONAL_ENABLED){
+      // 시즌 종료 후: 지금은 일반 핫딜 전용 필터 UI를 별도로 설계하지 않으므로 비워둔다.
+      root.innerHTML = '';
+      return;
+    }
+    root.innerHTML = `
+      <div class="rounded-lg p-4" style="background:var(--surface); border:1px solid var(--line);">
+        ${hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter')}
+        ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
+        ${hotdealsFilterChipRowHtml('카테고리', HOTDEALS_CATEGORIES, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}
+      </div>`;
+  }
+
+  // ---- 가격비교 배지 · 가격 비교 문구 (검증 범위를 넘는 과장 표현 금지: "가격비교를 했다"는
+  //      사실만 전달하고 "무조건 최저가" 같은 단정적 표현은 쓰지 않는다) ----
+  function hotdealsPriceBadgeHtml(){
+    return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full break-keep" style="background:rgba(255,184,0,0.15); color:var(--primary);">✓ 가격비교 확인</span>`;
+  }
+
+  function hotdealsPriceCompareHtml(p){
+    if (typeof p.coupangPrice !== 'number') return '';
+    const coupangLabel = '쿠팡 ' + p.coupangPrice.toLocaleString('ko-KR') + '원';
+    if (typeof p.comparisonPrice !== 'number'){
+      return `<p class="text-sm font-bold break-keep" style="color:var(--text);">${coupangLabel}</p>`;
+    }
+    const compareLabel = '비교 최저가 ' + p.comparisonPrice.toLocaleString('ko-KR') + '원';
+    const diff = p.comparisonPrice - p.coupangPrice;
+    let diffLine;
+    if (diff > 0) diffLine = `→ 쿠팡 ${diff.toLocaleString('ko-KR')}원 저렴`;
+    else if (diff === 0) diffLine = '→ 온라인 최저가와 동일';
+    else diffLine = `→ 비교 최저가보다 ${Math.abs(diff).toLocaleString('ko-KR')}원 비쌈`;
+    return `
+      <p class="text-sm font-bold break-keep" style="color:var(--text);">${coupangLabel}</p>
+      <p class="text-xs break-keep" style="color:var(--muted);">${compareLabel}</p>
+      <p class="text-xs font-semibold break-keep" style="color:var(--primary);">${diffLine}</p>`;
+  }
+
+  // ---- 상품 카드 (향후 검증상품 데이터를 그대로 넣을 컴포넌트) ----
+  function hotdealsProductCardHtml(p){
+    const imgHtml = p.image
+      ? `<img src="${p.image}" alt="${p.name || ''}" loading="lazy" class="w-full aspect-square object-cover rounded-md mb-2" style="background:var(--card-alt);">`
+      : `<div class="w-full aspect-square rounded-md mb-2" style="background:var(--card-alt);"></div>`;
+    const tagLine = [p.target, p.budget, p.category].filter(Boolean).join(' · ');
+    const shippingLine = p.shipping ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted);">${p.shipping}</p>` : '';
+    const benefitsLine = p.benefits ? `<p class="text-[10px] mt-0.5 break-keep" style="color:var(--muted);">${p.benefits}</p>` : '';
+    const checkedAtLine = p.checkedAt ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted); opacity:0.75;">가격 확인 ${p.checkedAt}</p>` : '';
+    const url = p.affiliateUrl || '#';
+    return `
+      <div class="rounded-lg p-3 flex flex-col" style="background:var(--card-alt); border:1px solid var(--line);">
+        ${imgHtml}
+        <div class="mb-1.5">${hotdealsPriceBadgeHtml()}</div>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">${p.name || ''}</p>
+        ${tagLine ? `<p class="text-[10px] mb-1.5 break-keep" style="color:var(--muted);">${tagLine}</p>` : ''}
+        ${hotdealsPriceCompareHtml(p)}
+        ${shippingLine}
+        ${benefitsLine}
+        ${checkedAtLine}
+        <a href="${url}" target="_blank" rel="noopener sponsored" class="mt-2 block text-center py-2 rounded-md text-xs font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡에서 확인하기</a>
+      </div>`;
+  }
+
+  function hotdealsProductGridHtml(items){
+    return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${items.map(hotdealsProductCardHtml).join('')}</div>`;
+  }
+
+  function hotdealsBest5SectionHtml(items){
+    if (!items.length) return '';
+    return `
+      <section class="mb-8">
+        <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">주문의고수 추석 BEST 5</h3>
+        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">가격 경쟁력과 선물 적합성을 함께 비교한 추천 상품입니다.</p>
+        ${hotdealsProductGridHtml(items)}
+      </section>`;
+  }
+
+  function hotdealsGridSectionHtml(title, items){
+    if (!items.length) return '';
+    return `
+      <section class="mb-8">
+        <h3 class="font-display text-lg mb-3 break-keep" style="color:var(--text);">${title}</h3>
+        ${hotdealsProductGridHtml(items)}
+      </section>`;
+  }
+
+  function hotdealsEmptyStateHtml(){
+    return `
+      <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
+        <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 가격비교가 끝난 상품이 없습니다.</p>
+        <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">가격 경쟁력이 확인된 상품만 골라 순차적으로 채워질 예정입니다.</p>
+      </div>`;
+  }
+
+  function hotdealsNoFilterMatchHtml(){
+    return `
+      <div class="rounded-lg p-6 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
+        <p class="text-sm break-keep" style="color:var(--muted);">선택한 조건에 맞는 상품이 아직 없습니다.</p>
+      </div>`;
+  }
+
+  // 기존 홈 화면 네이티브 광고 카드(affiliateAdCardHtml)에 이미 쓰이고 있는 문구를 그대로 재사용한다
+  // (새 법적 문구를 임의로 만들지 않기 위함). 실제 제휴 링크가 화면에 있을 때만 보여준다.
+  function hotdealsAffiliateDisclosureHtml(){
+    return `<p class="text-[10px] mt-6 leading-relaxed break-keep" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>`;
+  }
+
+  function renderHotdealsProducts(){
+    const root = document.getElementById('hotdeals-dynamic-root');
+    if (!root) return;
+
+    const seasonalAll = HOTDEALS_SEASONAL_ENABLED ? CHUSEOK_SEASONAL_PRODUCTS : [];
+    const seasonalFiltered = seasonalAll.filter(hotdealsProductMatchesFilter);
+    const bestFiltered = seasonalFiltered
+      .filter(p => p.featured)
+      .sort((a, b) => (a.bestRank || 99) - (b.bestRank || 99))
+      .slice(0, 5);
+    const generalFiltered = GENERAL_HOTDEAL_PRODUCTS.filter(hotdealsProductMatchesFilter);
+
+    const hasAnyProductAtAll = seasonalAll.length > 0 || GENERAL_HOTDEAL_PRODUCTS.length > 0;
+
+    let html = '';
+    html += hotdealsBest5SectionHtml(bestFiltered);
+    html += hotdealsGridSectionHtml('가격비교 통과 추석선물', seasonalFiltered);
+    html += hotdealsGridSectionHtml('🔥 지금 주목할 핫딜', generalFiltered);
+
+    if (!hasAnyProductAtAll){
+      html += hotdealsEmptyStateHtml();
+    } else if (seasonalFiltered.length === 0 && generalFiltered.length === 0){
+      html += hotdealsNoFilterMatchHtml();
+    }
+
+    if (hasAnyProductAtAll){
+      html += hotdealsAffiliateDisclosureHtml();
+    }
+
+    root.innerHTML = html;
+  }
+
+  function renderHotdealsPage(){
+    renderHotdealsHero();
+    renderHotdealsFilterUI();
+    renderHotdealsProducts();
+  }
+
+  // 홈의 추석 기획전 진입 배너: 시즌이 끝나 HOTDEALS_SEASONAL_ENABLED가 꺼지면 배너 자체를 숨긴다.
+  function syncHomeSeasonalBanner(){
+    const el = document.getElementById('home-seasonal-banner');
+    if (!el) return;
+    el.classList.toggle('hidden', !HOTDEALS_SEASONAL_ENABLED);
+  }
+
   // ---------- TABS ----------
   const PAGES = ['home', 'board', 'auth', 'admin', 'about', 'membership', 'privacy', 'terms', 'partner', 'shopping', 'hotdeals'];
 
@@ -7890,6 +8141,10 @@
     if (tab === 'shopping' && typeof syncShoppingSubViewFromPath === 'function'){
       syncShoppingSubViewFromPath();
       applyShoppingSeoVariant();
+    }
+
+    if (tab === 'hotdeals' && typeof renderHotdealsPage === 'function'){
+      renderHotdealsPage();
     }
   }
 
@@ -7964,6 +8219,7 @@
     renderBest3ViewAllLink();
     startAirtablePolling();
   })();
+  syncHomeSeasonalBanner();
   setAuthMode('login');
   updateAuthNavUI();
 
