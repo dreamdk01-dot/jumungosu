@@ -485,8 +485,8 @@
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
     <button type="button" onclick="switchTab('hotdeals')" class="w-full text-left rounded-lg p-4 flex items-center justify-between gap-3" style="background:var(--card-alt); border:1px solid var(--line);">
       <span class="min-w-0">
-        <span class="block text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">🎁 추석선물, 가격 비교하고 고르세요</span>
-        <span class="block text-xs break-keep" style="color:var(--muted);">쿠팡 추석 행사상품 중 가격 경쟁력이 확인된 상품만 엄선</span>
+        <span class="block text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">🎁 추석선물·명절 준비, 한곳에서 골라보세요</span>
+        <span class="block text-xs break-keep" style="color:var(--muted);">쿠팡 추석 행사상품 중 선물과 명절 준비에 유용한 상품을 엄선했어요</span>
       </span>
       <span class="shrink-0 text-xs font-semibold px-3 py-2 rounded-md break-keep" style="background:var(--primary); color:#1C1A17;">2026 추석 기프트 보기</span>
     </button>
@@ -7856,20 +7856,357 @@
   // 페이지로 전환된다(GENERAL_HOTDEAL_PRODUCTS 섹션은 그대로 유지됨).
   let HOTDEALS_SEASONAL_ENABLED = true;
 
-  // 상품 1개당 필드:
-  //   id, name, brand, category, subCategory, target, budget, image,
+  // 상품 1개당 필드 (기본 스키마):
+  //   id, name, brand, category, subCategory, target, targetLabel, targets, budget, image,
   //   coupangPrice, comparisonPrice, priceDifference, priceStatus,
   //   shipping, benefits, checkedAt, affiliateUrl, featured, bestRank
-  // target은 '부모님'|'가족'|'직장·거래처'|'지인'|'연인' 중 하나(또는 배열),
-  // budget은 '1~3만원'|'3~5만원'|'5~10만원'|'10만원+' 중 하나,
+  // target(단일 문자열, 필터링용 정확값 하나)은 '부모님'|'가족'|'직장·거래처'|'지인'|'연인' 중 하나를
+  // 쓰던 예전 방식이다. 엑셀 등 원본의 추천대상이 "부모님·친척·거래처"처럼 여러 대상이 섞인 자유
+  // 문구인 경우엔 대신 targetLabel(원문 표시용 그대로) + targets(정규화된 배열, 필터링용)를 쓴다
+  // — 원문에 없는 대상을 무리하게 추가하지 않으므로 targets가 빈 배열일 수 있고, 그 상품은
+  // '전체' 필터에서만 보인다. 카드에는 targetLabel(있으면)을 그대로 보여주고, 필터는 targets가
+  // 있으면 그것을, 없으면 기존 target을 쓰는 하위호환 방식이다(hotdealsProductMatchesFilter 참고).
+  // budget은 '1~3만원'|'3~5만원'|'5~10만원'|'10만원+' 중 하나 — 실제 구매가(로켓와우가가 있으면
+  // 그 값, 없으면 쿠팡가) 기준으로 계산해 넣는다. 원본에 가격 자체가 없으면 임의 추정하지 않고 비워둔다.
   // category는 쿠팡 2026 추석 페스타 실제 판매 카테고리와 맞춘 아래 HOTDEALS_CATEGORIES 13개 중 하나
   // (사용자에게 보이는 카테고리 필터는 이 13개만 사용한다).
   // subCategory는 선택 필드로, category보다 세부적인 분류(예: 한우·육류, 과일, 수산 등)를 적어두는
   // 용도다. 이번 단계에서는 별도 사용자 필터로 노출하지 않고, 향후 데이터 관리·세분화용으로만 쓴다.
   //   예) { category:'신선식품·선물세트', subCategory:'한우·육류' }
+  // priceStatus는 카드 상단 배지 문구로 그대로 쓰인다(예: '추석 페스타 추천'). 값이 없을 때만
+  // 과거 기본값인 '✓ 가격비교 확인'으로 대체된다 — 즉 외부 가격검증 전 상품에는 반드시
+  // priceStatus를 채워서(예: '추석 페스타 추천') 검증완료 배지가 잘못 붙지 않게 한다.
+  // 추가 선택 필드: rank(원본 순위), wowPrice(로켓와우 회원가), originalPrice(정상가),
+  // discountRate(0~1 소수, 카드에 %로 환산 표시), rating/reviewCount(평점·리뷰수 — reviewCount는
+  // "9,999+"처럼 문자열일 수도 있어 그 형태 그대로 표시), recommendationReason(선정이유, 카드에
+  // 보조 정보로 작게 표시), verificationStatus(외부가격검증 상태 텍스트, 현재는 표시에 미사용),
+  // coupangUrl(파트너스 링크가 아직 없는 일반 쿠팡 상품 URL — affiliateUrl과 분리해서 rel 속성과
+  // CTA 문구를 다르게 처리한다. 둘 다 없으면 CTA 대신 "상품 링크 확인 중"을 비활성 표시).
   // featured:true + bestRank(1~5)를 주면 BEST 5에 자동으로 포함된다.
   const CHUSEOK_SEASONAL_PRODUCTS = [
-    // 실제 가격비교가 끝난 추석 선물 약 30개가 여기에 채워질 예정. 지금은 비워둔다.
+    // 2026 추석 페스타 생활용품·선물세트 20선(엑셀 순위 1~20 그대로). 외부 가격비교는 아직 하지
+    // 않았으므로 comparisonPrice/priceDifference/affiliateUrl은 전부 비워두고, priceStatus로
+    // '추석 페스타 추천' 배지만 표시한다.
+    {
+      id: 'chuseok-living-01', rank: 1,
+      name: "오가니스트 히말라야 핑크솔트 클래식 선물세트 + 쇼핑백, 1세트",
+      brand: "LG생활건강",
+      category: '생활용품·선물세트', subCategory: "생활 선물세트",
+      targetLabel: "부모님·친척·거래처", targets: ["부모님", "가족", "직장·거래처"],
+      budget: '3~5만원',
+      coupangPrice: 43570, wowPrice: null, originalPrice: 71900, discountRate: 0.39,
+      rating: 5, reviewCount: 290,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "쇼핑백 포함 정식 생활 선물세트로 브랜드 신뢰도와 선물 완성도가 가장 높음",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: true, bestRank: 1,
+    },
+    {
+      id: 'chuseok-living-02', rank: 2,
+      name: "클래식 핸드크림 3종 기프트 세트, 30ml, 1개",
+      brand: "비욘드",
+      category: '생활용품·선물세트', subCategory: "핸드크림 선물세트",
+      targetLabel: "지인·직장동료·부담 없는 선물", targets: ["지인"],
+      budget: '1~3만원',
+      coupangPrice: 8940, wowPrice: 7990, originalPrice: 16500, discountRate: 0.45,
+      rating: 5, reviewCount: 4176,
+      shipping: "로켓배송", benefits: "와우쿠폰 51% · 일반 45% · 로켓상품 19,800원 이상 무료배송",
+      recommendationReason: "기프트 구성, 높은 평점, 충분한 리뷰와 강한 할인율을 함께 충족",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: "https://www.coupang.com/vp/products/7829906901?itemId=23740653591&vendorItemId=88353076010",
+      affiliateUrl: null,
+      featured: true, bestRank: 2,
+    },
+    {
+      id: 'chuseok-living-03', rank: 3,
+      name: "호텔 컬렉션 섬유스프레이 미스티크 향 본품, 360ml, 3개",
+      brand: "다우니",
+      category: '생활용품·선물세트', subCategory: "섬유탈취제",
+      targetLabel: "가족·지인·신혼가구", targets: ["가족", "지인"],
+      budget: '1~3만원',
+      coupangPrice: 14790, wowPrice: null, originalPrice: 19100, discountRate: 0.22,
+      rating: 5, reviewCount: 2937,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "인지도 높은 브랜드의 3개 구성으로 나눔 선물과 가정용 모두 적합",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: true, bestRank: 3,
+    },
+    {
+      id: 'chuseok-living-04', rank: 4,
+      name: "극손상케어 컨디셔너, 1.8L, 1개",
+      brand: "팬틴",
+      category: '생활용품·선물세트', subCategory: "대용량 컨디셔너",
+      targetLabel: "가족·부모님", targets: ["가족", "부모님"],
+      budget: '1~3만원',
+      coupangPrice: 17010, wowPrice: null, originalPrice: 18900, discountRate: 0.1,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "대용량·유명 브랜드·리뷰 1만 건 수준으로 구매 실패 가능성이 낮음",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: true, bestRank: 4,
+    },
+    {
+      id: 'chuseok-living-05', rank: 5,
+      name: "화이트닝 티엠 치약, 106g, 2개",
+      brand: "유시몰",
+      category: '생활용품·선물세트', subCategory: "프리미엄 치약",
+      targetLabel: "가족·지인·취향형 선물", targets: ["가족", "지인"],
+      budget: '1~3만원',
+      coupangPrice: 23640, wowPrice: null, originalPrice: 31800, discountRate: 0.25,
+      rating: 4.5, reviewCount: 6504,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "일반 치약보다 선물 이미지와 브랜드 차별성이 뚜렷함",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: true, bestRank: 5,
+    },
+    {
+      id: 'chuseok-living-06', rank: 6,
+      name: "치석 오리지널 치약, 120g, 3개",
+      brand: "메디안",
+      category: '생활용품·선물세트', subCategory: "치약 다입세트",
+      targetLabel: "가족·부담 없는 선물", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 5950, wowPrice: null, originalPrice: 12900, discountRate: 0.53,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "리뷰와 브랜드 인지도가 매우 높고 할인율이 큼",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-07', rank: 7,
+      name: "1+1 올인원파우더 리필 1kg, 2개",
+      brand: "뽀숑하우스",
+      category: '생활용품·선물세트', subCategory: "식기세척기·젖병 세제",
+      targetLabel: "육아가정·신혼가구", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 21660, wowPrice: null, originalPrice: 28000, discountRate: 0.22,
+      rating: 4.5, reviewCount: "9,999+",
+      shipping: "무료배송", benefits: "",
+      recommendationReason: "과일·야채·젖병·식기세척기에 쓰는 다목적 제품이며 리뷰가 충분함",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-08', rank: 8,
+      name: "오리지널 컬렉션 바디워시 우디 머스크향, 910g, 1개",
+      brand: "해피바스",
+      category: '생활용품·선물세트', subCategory: "대용량 바디워시",
+      targetLabel: "가족·지인", targets: ["가족", "지인"],
+      budget: '1~3만원',
+      coupangPrice: 8090, wowPrice: null, originalPrice: 13900, discountRate: 0.41,
+      rating: 5, reviewCount: 6845,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "익숙한 브랜드의 대용량 향기형 생활선물",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-09', rank: 9,
+      name: "과탄산소다 표백제, 3kg, 1개",
+      brand: "엄마의선택",
+      category: '생활용품·선물세트', subCategory: "산소계 표백제",
+      targetLabel: "가족·명절 준비 가정", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 10390, wowPrice: null, originalPrice: 20300, discountRate: 0.48,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "명절 전 주방·행주·식기 세척과 대청소에 유용하고 할인폭이 큼",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-10', rank: 10,
+      name: "무인쇄 종이용기 520ml, 100개입, 1개",
+      brand: "탐사",
+      category: '생활용품·선물세트', subCategory: "일회용 음식 보관용기",
+      targetLabel: "명절 준비 가정·음식 나눔", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 5190, wowPrice: null, originalPrice: 11900, discountRate: 0.56,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "전·반찬 포장과 귀가 음식 나눔에 직접적으로 유용함",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-11', rank: 11,
+      name: "잔류세제 걱정 없는 4 in 1 고농축 캡슐 세탁세제 워시테라피 10g × 50개입, 1개",
+      brand: "워시테라피",
+      category: '생활용품·선물세트', subCategory: "캡슐 세탁세제",
+      targetLabel: "가족·자취가구", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 9400, wowPrice: null, originalPrice: 10000, discountRate: 0.06,
+      rating: 5, reviewCount: 4262,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "리뷰가 충분하고 보관과 사용이 편한 캡슐형 실용상품",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: "https://www.coupang.com/vp/products/7986577736?itemId=22186104885&vendorItemId=92095079314",
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-12', rank: 12,
+      name: "오리지널 유아용 아기물티슈 캡형, 50g, 100매, 10개",
+      brand: "코멧",
+      category: '생활용품·선물세트', subCategory: "유아용 물티슈",
+      targetLabel: "육아가정·가족", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 10890, wowPrice: null, originalPrice: 18000, discountRate: 0.39,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "명절 방문객과 어린이가 많은 집에서 소모량이 높은 실용상품",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-13', rank: 13,
+      name: "컬링 에센스 2X 볼륨 컬 크림, 150ml, 1개",
+      brand: "미쟝센",
+      category: '생활용품·선물세트', subCategory: "헤어 컬크림",
+      targetLabel: "가족·지인", targets: ["가족", "지인"],
+      budget: '1~3만원',
+      coupangPrice: 6170, wowPrice: null, originalPrice: 10000, discountRate: 0.38,
+      rating: 5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "대중적인 브랜드와 매우 많은 리뷰, 부담 없는 가격",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-14', rank: 14,
+      name: "스타일케어 프로 스트롱홀드 헤어스프레이, 300ml, 1개",
+      brand: "미쟝센",
+      category: '생활용품·선물세트', subCategory: "헤어스프레이",
+      targetLabel: "가족·명절 외출 준비", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 6900, wowPrice: null, originalPrice: 10900, discountRate: 0.36,
+      rating: 4.5, reviewCount: "9,999+",
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "명절 모임 전 헤어스타일링 수요와 높은 리뷰 신뢰도",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-15', rank: 15,
+      name: "스탠다드 체크 골드2 개인용 혈당시험지, 50매, 2개",
+      brand: "SD바이오센서",
+      category: '생활용품·선물세트', subCategory: "혈당시험지",
+      targetLabel: "해당 기기 사용 부모님", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 16660, wowPrice: null, originalPrice: 17680, discountRate: 0.05,
+      rating: 5, reviewCount: 3236,
+      shipping: "무료배송", benefits: "",
+      recommendationReason: "부모님 실용 구매 수요가 있으나 호환 기기 확인이 필요함",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-16', rank: 16,
+      name: "멜라토닌 원적외선 수면 패치 슬립톡 36개입, 2개",
+      brand: "위드슬립",
+      category: '생활용품·선물세트', subCategory: "수면 패치",
+      targetLabel: "부모님·직장인", targets: ["부모님"],
+      budget: '1~3만원',
+      coupangPrice: 19200, wowPrice: null, originalPrice: 19800, discountRate: 0.03,
+      rating: 4.5, reviewCount: 2544,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "연휴 이동·수면 관리 관심층에 적합하나 개인차가 있어 보수적으로 배치",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-17', rank: 17,
+      name: "렌즈 식염수(워시액) 150ml, 10개",
+      brand: "메디아",
+      category: '생활용품·선물세트', subCategory: "렌즈 세정 식염수",
+      targetLabel: "렌즈 사용자·가족", targets: ["가족"],
+      budget: '1~3만원',
+      coupangPrice: 12650, wowPrice: null, originalPrice: 13770, discountRate: 0.08,
+      rating: 5, reviewCount: 3454,
+      shipping: "무료배송", benefits: "",
+      recommendationReason: "여행·귀성 때 휴대하기 좋은 소용량 다입 구성",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-18', rank: 18,
+      name: "일회용 기저귀 매트 교체 시트 패드 50p, 화이트, 1개",
+      brand: "케라타",
+      category: '생활용품·선물세트', subCategory: "기저귀 교체 패드",
+      targetLabel: "영유아 가족·귀성객", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 15320, wowPrice: null, originalPrice: 15900, discountRate: 0.03,
+      rating: 5, reviewCount: 971,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "귀성·외출 시 유용하고 유사 상품 중 리뷰와 구성이 상대적으로 우수",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-19', rank: 19,
+      name: "수세미 거치대 304 스테인레스 물빠짐 수세미 거치대, 실버, 1개",
+      brand: "BMKLN",
+      category: '생활용품·선물세트', subCategory: "주방 수세미 거치대",
+      targetLabel: "신혼가구·주방 정리 수요", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 9500, wowPrice: null, originalPrice: 19800, discountRate: 0.52,
+      rating: 4.5, reviewCount: 209,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "주방 정리용으로 실용적이고 할인율은 높지만 리뷰가 적어 하위 배치",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
+    {
+      id: 'chuseok-living-20', rank: 20,
+      name: "99.999% 천연오일 계피 시나몬 스프레이, 계피 스프레이, 500ml, 1개",
+      brand: "버그연구소",
+      category: '생활용품·선물세트', subCategory: "생활환경 스프레이",
+      targetLabel: "전원주택·명절 대청소 가정", targets: [],
+      budget: '1~3만원',
+      coupangPrice: 23200, wowPrice: null, originalPrice: 27900, discountRate: 0.16,
+      rating: 4.5, reviewCount: 181,
+      shipping: "일반배송", benefits: "",
+      recommendationReason: "명절 전 청소·생활환경 관리용이나 리뷰 기반이 약해 하위 배치",
+      checkedAt: "2026-09-15 23:46~23:59 KST", verificationStatus: "대기", priceStatus: "추석 페스타 추천",
+      coupangUrl: null,
+      affiliateUrl: null,
+      featured: false,
+    },
   ];
 
   const GENERAL_HOTDEAL_PRODUCTS = [
@@ -7887,7 +8224,18 @@
   let hotdealsCategoryFilter = '전체';
 
   function hotdealsProductMatchesFilter(p){
-    const targetOk = hotdealsTargetFilter === '전체' || (Array.isArray(p.target) ? p.target.includes(hotdealsTargetFilter) : p.target === hotdealsTargetFilter);
+    // targets(정규화 배열)가 있으면 그것을 우선 사용하고, 없으면 기존 target 필드(문자열 또는
+    // 배열)로 하위호환 처리한다 — GENERAL_HOTDEAL_PRODUCTS 등 기존 데이터 구조를 깨지 않기 위함.
+    let targetOk;
+    if (hotdealsTargetFilter === '전체'){
+      targetOk = true;
+    } else if (Array.isArray(p.targets)){
+      targetOk = p.targets.includes(hotdealsTargetFilter);
+    } else if (Array.isArray(p.target)){
+      targetOk = p.target.includes(hotdealsTargetFilter);
+    } else {
+      targetOk = p.target === hotdealsTargetFilter;
+    }
     const budgetOk = hotdealsBudgetFilter === '전체' || p.budget === hotdealsBudgetFilter;
     const categoryOk = hotdealsCategoryFilter === '전체' || p.category === hotdealsCategoryFilter;
     return targetOk && budgetOk && categoryOk;
@@ -7906,9 +8254,9 @@
     const sub = document.getElementById('hotdeals-hero-sub');
     if (!eyebrow || !title || !desc || !sub) return;
     if (HOTDEALS_SEASONAL_ENABLED){
-      eyebrow.textContent = '🎁 2026 추석 선물 가격비교';
+      eyebrow.textContent = '🎁 2026 추석 페스타 추천상품';
       title.textContent = '아무거나 추천하지 않습니다';
-      desc.textContent = '온라인 가격을 비교해 가격 경쟁력이 확인된 상품만 소개합니다.';
+      desc.textContent = '추석 선물부터 명절 준비 상품까지, 주문의고수가 고른 추석 행사상품을 소개합니다.';
       sub.textContent = '부모님부터 가족, 직장·거래처, 지인까지 예산에 맞는 추석 선물을 빠르게 찾아보세요.';
     } else {
       eyebrow.textContent = '';
@@ -7964,10 +8312,33 @@
 
   // ---- 가격비교 배지 · 가격 비교 문구 (검증 범위를 넘는 과장 표현 금지: "가격비교를 했다"는
   //      사실만 전달하고 "무조건 최저가" 같은 단정적 표현은 쓰지 않는다) ----
-  function hotdealsPriceBadgeHtml(){
-    return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full break-keep" style="background:rgba(255,184,0,0.15); color:var(--primary);">✓ 가격비교 확인</span>`;
+  function hotdealsPriceBadgeHtml(p){
+    // priceStatus가 있으면(예: '추석 페스타 추천') 그 문구를 그대로 배지로 쓰고,
+    // 없을 때만 과거 기본값인 검증완료 배지를 보여준다(외부 가격검증 전 상품에
+    // '가격비교 확인' 배지가 잘못 붙지 않도록).
+    const label = (p && p.priceStatus) || '✓ 가격비교 확인';
+    return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full break-keep" style="background:rgba(255,184,0,0.15); color:var(--primary);">${label}</span>`;
   }
 
+  function hotdealsDiscountBadgeHtml(p){
+    if (typeof p.discountRate !== 'number') return '';
+    const pct = Math.round(p.discountRate * 100);
+    return `<span class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded break-keep" style="background:rgba(255,90,54,0.12); color:var(--accent);">${pct}% 할인</span>`;
+  }
+
+  function hotdealsRatingHtml(p){
+    const ratingStr = typeof p.rating === 'number' ? p.rating.toFixed(1) : '';
+    const reviewStr = typeof p.reviewCount === 'number' ? p.reviewCount.toLocaleString('ko-KR') : (p.reviewCount || '');
+    const parts = [];
+    if (ratingStr) parts.push('★ ' + ratingStr);
+    if (reviewStr) parts.push('리뷰 ' + reviewStr);
+    if (!parts.length) return '';
+    return `<p class="text-[11px] mt-1 break-keep" style="color:var(--muted);">${parts.join(' · ')}</p>`;
+  }
+
+  // 외부 최저가 비교(comparisonPrice)가 이미 붙은 상품은 기존 문구를 그대로 쓰고,
+  // 아직 외부 비교 전이면서 로켓와우 회원가(wowPrice)만 있는 경우에는 "일반가/와우가"를
+  // 구분해서 보여준다(쿠팡 내부 가격 비교일 뿐, 외부 최저가 비교가 아님).
   function hotdealsPriceCompareHtml(p){
     if (typeof p.coupangPrice !== 'number') return '';
     const coupangLabel = '쿠팡 ' + p.coupangPrice.toLocaleString('ko-KR') + '원';
@@ -7986,27 +8357,58 @@
       <p class="text-xs font-semibold break-keep" style="color:var(--primary);">${diffLine}</p>`;
   }
 
+  function hotdealsPriceDisplayHtml(p){
+    if (typeof p.coupangPrice !== 'number') return '';
+    if (typeof p.comparisonPrice === 'number'){
+      return hotdealsPriceCompareHtml(p);
+    }
+    if (typeof p.wowPrice === 'number'){
+      return `
+        <p class="text-xs break-keep" style="color:var(--muted); text-decoration:line-through;">일반 ${p.coupangPrice.toLocaleString('ko-KR')}원</p>
+        <p class="text-sm font-bold break-keep" style="color:var(--text);">와우 ${p.wowPrice.toLocaleString('ko-KR')}원</p>`;
+    }
+    return `<p class="text-sm font-bold break-keep" style="color:var(--text);">쿠팡 ${p.coupangPrice.toLocaleString('ko-KR')}원</p>`;
+  }
+
+  // 실제 쿠팡 파트너스 링크(affiliateUrl)가 있으면 정상 CTA + sponsored 표기,
+  // 파트너스 링크는 아직 없지만 일반 쿠팡 상품 URL(coupangUrl)만 확보된 경우엔
+  // "쿠팡에서 보기"로 문구를 다르게 하고 sponsored는 붙이지 않는다(아직 제휴 링크가 아니므로).
+  // 둘 다 없으면(엑셀상 '확인 필요') 클릭되지 않는 비활성 상태로 표시한다.
+  function hotdealsProductCtaHtml(p){
+    if (p.affiliateUrl){
+      return `<a href="${p.affiliateUrl}" target="_blank" rel="noopener sponsored" class="mt-2 block text-center py-2 rounded-md text-xs font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡에서 확인하기</a>`;
+    }
+    if (p.coupangUrl){
+      return `<a href="${p.coupangUrl}" target="_blank" rel="noopener" class="mt-2 block text-center py-2 rounded-md text-xs font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡에서 보기</a>`;
+    }
+    return `<span class="mt-2 block text-center py-2 rounded-md text-xs font-semibold break-keep" style="background:var(--card-alt); color:var(--muted); border:1px solid var(--line);">상품 링크 확인 중</span>`;
+  }
+
   // ---- 상품 카드 (향후 검증상품 데이터를 그대로 넣을 컴포넌트) ----
   function hotdealsProductCardHtml(p){
     const imgHtml = p.image
       ? `<img src="${p.image}" alt="${p.name || ''}" loading="lazy" class="w-full aspect-square object-cover rounded-md mb-2" style="background:var(--card-alt);">`
       : `<div class="w-full aspect-square rounded-md mb-2" style="background:var(--card-alt);"></div>`;
-    const tagLine = [p.target, p.budget, p.category].filter(Boolean).join(' · ');
     const shippingLine = p.shipping ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted);">${p.shipping}</p>` : '';
     const benefitsLine = p.benefits ? `<p class="text-[10px] mt-0.5 break-keep" style="color:var(--muted);">${p.benefits}</p>` : '';
+    const targetLine = (p.targetLabel || p.target) ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted);">추천대상 ${p.targetLabel || p.target}</p>` : '';
+    const reasonLine = p.recommendationReason ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted); opacity:0.8;">${p.recommendationReason}</p>` : '';
     const checkedAtLine = p.checkedAt ? `<p class="text-[10px] mt-1 break-keep" style="color:var(--muted); opacity:0.75;">가격 확인 ${p.checkedAt}</p>` : '';
-    const url = p.affiliateUrl || '#';
     return `
       <div class="rounded-lg p-3 flex flex-col" style="background:var(--card-alt); border:1px solid var(--line);">
         ${imgHtml}
-        <div class="mb-1.5">${hotdealsPriceBadgeHtml()}</div>
-        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">${p.name || ''}</p>
-        ${tagLine ? `<p class="text-[10px] mb-1.5 break-keep" style="color:var(--muted);">${tagLine}</p>` : ''}
-        ${hotdealsPriceCompareHtml(p)}
+        <div class="mb-1.5">${hotdealsPriceBadgeHtml(p)}</div>
+        <p class="text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">${p.name || ''}</p>
+        ${p.brand ? `<p class="text-[10px] mb-1.5 break-keep" style="color:var(--muted);">${p.brand}</p>` : ''}
+        ${hotdealsPriceDisplayHtml(p)}
+        <div class="mt-1">${hotdealsDiscountBadgeHtml(p)}</div>
+        ${hotdealsRatingHtml(p)}
         ${shippingLine}
         ${benefitsLine}
+        ${targetLine}
+        ${reasonLine}
         ${checkedAtLine}
-        <a href="${url}" target="_blank" rel="noopener sponsored" class="mt-2 block text-center py-2 rounded-md text-xs font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡에서 확인하기</a>
+        ${hotdealsProductCtaHtml(p)}
       </div>`;
   }
 
@@ -8019,7 +8421,7 @@
     return `
       <section class="mb-8">
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">주문의고수 추석 BEST 5</h3>
-        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">가격 경쟁력과 선물 적합성을 함께 비교한 추천 상품입니다.</p>
+        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">선물 적합성을 고려해 주문의고수가 엄선한 추천 상품입니다.</p>
         ${hotdealsProductGridHtml(items)}
       </section>`;
   }
@@ -8044,8 +8446,8 @@
     }
     return `
       <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
-        <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 가격비교가 끝난 상품이 없습니다.</p>
-        <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">가격 경쟁력이 확인된 상품만 골라 순차적으로 채워질 예정입니다.</p>
+        <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 등록된 상품이 없습니다.</p>
+        <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">추석 페스타 추천상품을 순차적으로 채워나갈 예정입니다.</p>
       </div>`;
   }
 
@@ -8082,7 +8484,7 @@
       </div>`;
   }
 
-  function renderHotdealsProducts(hasAnyProductAtAll, disclosureAlreadyShown){
+  function renderHotdealsProducts(){
     const root = document.getElementById('hotdeals-dynamic-root');
     if (!root) return;
 
@@ -8094,9 +8496,17 @@
       .slice(0, 5);
     const generalFiltered = GENERAL_HOTDEAL_PRODUCTS.filter(hotdealsProductMatchesFilter);
 
+    // 필터 결과가 아니라 "필터와 무관하게 상품 자체가 존재하는지"를 여기서 직접 다시 계산한다
+    // (setHotdealsXFilter()들이 인자 없이 이 함수를 호출하므로, 호출부에 의존하지 않고 이 함수
+    // 자신이 매번 최신 상태를 스스로 판단해야 필터를 바꿀 때마다 정확한 빈 상태 문구가 나온다).
+    const hasAnyProductAtAll = seasonalAll.length > 0 || GENERAL_HOTDEAL_PRODUCTS.length > 0;
+    // 쿠팡 파트너스 링크가 노출되는 두 지점(추석 페스타 CTA / 상품 카드) 중 CTA가 위쪽에 항상
+    // 먼저 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 보여주고 여기서는 생략한다.
+    const disclosureAlreadyShown = HOTDEALS_SEASONAL_ENABLED;
+
     let html = '';
     html += hotdealsBest5SectionHtml(bestFiltered);
-    html += hotdealsGridSectionHtml('가격비교 통과 추석선물', seasonalFiltered);
+    html += hotdealsGridSectionHtml('2026 추석 페스타 선물 모음', seasonalFiltered);
     html += hotdealsGridSectionHtml('🔥 지금 주목할 핫딜', generalFiltered);
 
     if (!hasAnyProductAtAll){
@@ -8105,7 +8515,6 @@
       html += hotdealsNoFilterMatchHtml();
     }
 
-    // 위쪽 쿠팡 추석 페스타 CTA에서 이미 고지문을 보여줬다면 여기서 또 보여주지 않는다(중복 고지 방지).
     if (hasAnyProductAtAll && !disclosureAlreadyShown){
       html += hotdealsAffiliateDisclosureHtml();
     }
@@ -8115,15 +8524,9 @@
 
   function renderHotdealsPage(){
     renderHotdealsHero();
-    const hasAnyProductAtAll =
-      (HOTDEALS_SEASONAL_ENABLED && CHUSEOK_SEASONAL_PRODUCTS.length > 0) ||
-      GENERAL_HOTDEAL_PRODUCTS.length > 0;
-    // 쿠팡 파트너스 링크가 페이지에 노출되는 두 지점(추석 페스타 CTA / 상품 카드) 중
-    // CTA가 먼저(위쪽에) 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 표시한다.
-    const ctaVisible = HOTDEALS_SEASONAL_ENABLED;
-    renderHotdealsCoupangFestaCta(ctaVisible);
+    renderHotdealsCoupangFestaCta(HOTDEALS_SEASONAL_ENABLED);
     renderHotdealsFilterUI();
-    renderHotdealsProducts(hasAnyProductAtAll, ctaVisible);
+    renderHotdealsProducts();
   }
 
   // 홈의 추석 기획전 진입 배너: 시즌이 끝나 HOTDEALS_SEASONAL_ENABLED가 꺼지면 배너 자체를 숨긴다.
