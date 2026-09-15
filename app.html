@@ -1313,8 +1313,9 @@
      시즌 섹션 전체를 켜고 끌 수 있음. 꺼지면 자연스럽게 일반 핫딜 전용 페이지가 됨).
      실제 검증된 상품 데이터(CHUSEOK_SEASONAL_PRODUCTS / GENERAL_HOTDEAL_PRODUCTS)가 들어오기 전까지는
      두 배열 모두 비어 있고, 그 경우 상품 섹션은 렌더링되지 않고 빈 상태 안내만 표시된다.
-     제목·설명 텍스트는 renderHotdealsHero()가, 필터는 renderHotdealsFilterUI()가,
-     상품 영역은 renderHotdealsProducts()가 채운다(switchTab에서 hotdeals 탭 진입 시 호출). -->
+     제목·설명 텍스트는 renderHotdealsHero()가, 쿠팡 추석 페스타 CTA는 renderHotdealsCoupangFestaCta()가,
+     필터는 renderHotdealsFilterUI()가, 상품 영역은 renderHotdealsProducts()가 채운다
+     (switchTab에서 hotdeals 탭 진입 시 호출). -->
 <main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-2">
     <p id="hotdeals-hero-eyebrow" class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);"></p>
@@ -1322,6 +1323,8 @@
     <p id="hotdeals-hero-desc" class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);"></p>
     <p id="hotdeals-hero-sub" class="text-sm leading-[1.5] break-keep mt-2" style="color:var(--muted);"></p>
   </div>
+
+  <div id="hotdeals-coupang-cta-root" class="mb-4"></div>
 
   <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
 
@@ -8010,6 +8013,14 @@
   }
 
   function hotdealsEmptyStateHtml(){
+    if (HOTDEALS_SEASONAL_ENABLED){
+      return `
+        <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
+          <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">주문의고수 추천상품 가격 검증 중</p>
+          <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">쿠팡과 주요 온라인 판매처의 가격을 비교해 가격 경쟁력이 확인된 추석 선물을 준비하고 있습니다.</p>
+          <p class="text-xs leading-relaxed break-keep mt-1" style="color:var(--muted);">검증이 완료된 상품부터 순차적으로 소개합니다.</p>
+        </div>`;
+    }
     return `
       <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 가격비교가 끝난 상품이 없습니다.</p>
@@ -8025,12 +8036,32 @@
   }
 
   // 기존 홈 화면 네이티브 광고 카드(affiliateAdCardHtml)에 이미 쓰이고 있는 문구를 그대로 재사용한다
-  // (새 법적 문구를 임의로 만들지 않기 위함). 실제 제휴 링크가 화면에 있을 때만 보여준다.
+  // (새 법적 문구를 임의로 만들지 않기 위함). 쿠팡 추석 페스타 CTA 또는 실제 상품 중 하나라도
+  // 화면에 노출되어 있으면 반드시 함께 보여준다. 중복 고지를 피하기 위해 renderHotdealsPage()에서
+  // 한 곳에서만 호출되도록 관리한다(CTA가 보이면 CTA 쪽에서, CTA가 없고 상품만 있으면 상품 쪽에서).
   function hotdealsAffiliateDisclosureHtml(){
-    return `<p class="text-[10px] mt-6 leading-relaxed break-keep" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>`;
+    return `<p class="text-[10px] mt-3 leading-relaxed break-keep" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>`;
   }
 
-  function renderHotdealsProducts(){
+  // 쿠팡 2026 추석 페스타 공식 제휴 CTA — 상품 30선 가격검증이 끝나기 전에도 쿠팡 공식 추석
+  // 기획전으로 바로 이동할 수 있게 하는 카드. 반드시 실제 발급받은 쿠팡 파트너스 링크만 사용하고
+  // (일반 기획전 주소로 연결하지 않음) AFID/lptag 값은 절대 가공하지 않는다.
+  const COUPANG_CHUSEOK_FESTA_URL = 'https://link.coupang.com/re/AFPROMO07?lptag=AF3542364';
+
+  function renderHotdealsCoupangFestaCta(showDisclosureHere){
+    const root = document.getElementById('hotdeals-coupang-cta-root');
+    if (!root) return;
+    if (!HOTDEALS_SEASONAL_ENABLED){ root.innerHTML = ''; return; }
+    root.innerHTML = `
+      <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">쿠팡 2026 추석 페스타</p>
+        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">추석 선물부터 명절 준비 상품까지 쿠팡 추석 기획전에서 확인해보세요.</p>
+        <a href="${COUPANG_CHUSEOK_FESTA_URL}" target="_blank" rel="noopener sponsored" class="block text-center py-3 rounded-md text-sm font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡 추석 페스타 바로가기 →</a>
+        ${showDisclosureHere ? hotdealsAffiliateDisclosureHtml() : ''}
+      </div>`;
+  }
+
+  function renderHotdealsProducts(hasAnyProductAtAll, disclosureAlreadyShown){
     const root = document.getElementById('hotdeals-dynamic-root');
     if (!root) return;
 
@@ -8041,8 +8072,6 @@
       .sort((a, b) => (a.bestRank || 99) - (b.bestRank || 99))
       .slice(0, 5);
     const generalFiltered = GENERAL_HOTDEAL_PRODUCTS.filter(hotdealsProductMatchesFilter);
-
-    const hasAnyProductAtAll = seasonalAll.length > 0 || GENERAL_HOTDEAL_PRODUCTS.length > 0;
 
     let html = '';
     html += hotdealsBest5SectionHtml(bestFiltered);
@@ -8055,7 +8084,8 @@
       html += hotdealsNoFilterMatchHtml();
     }
 
-    if (hasAnyProductAtAll){
+    // 위쪽 쿠팡 추석 페스타 CTA에서 이미 고지문을 보여줬다면 여기서 또 보여주지 않는다(중복 고지 방지).
+    if (hasAnyProductAtAll && !disclosureAlreadyShown){
       html += hotdealsAffiliateDisclosureHtml();
     }
 
@@ -8064,8 +8094,15 @@
 
   function renderHotdealsPage(){
     renderHotdealsHero();
+    const hasAnyProductAtAll =
+      (HOTDEALS_SEASONAL_ENABLED && CHUSEOK_SEASONAL_PRODUCTS.length > 0) ||
+      GENERAL_HOTDEAL_PRODUCTS.length > 0;
+    // 쿠팡 파트너스 링크가 페이지에 노출되는 두 지점(추석 페스타 CTA / 상품 카드) 중
+    // CTA가 먼저(위쪽에) 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 표시한다.
+    const ctaVisible = HOTDEALS_SEASONAL_ENABLED;
+    renderHotdealsCoupangFestaCta(ctaVisible);
     renderHotdealsFilterUI();
-    renderHotdealsProducts();
+    renderHotdealsProducts(hasAnyProductAtAll, ctaVisible);
   }
 
   // 홈의 추석 기획전 진입 배너: 시즌이 끝나 HOTDEALS_SEASONAL_ENABLED가 꺼지면 배너 자체를 숨긴다.
