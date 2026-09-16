@@ -371,10 +371,10 @@
 
     <!-- desktop nav -->
     <nav class="hidden sm:flex items-center gap-6 font-medium text-sm">
-      <button id="tab-home" onclick="switchTab('home')" class="nav-link tab-underline active pb-1" style="color:var(--text);">홈</button>
-      <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
-      <!-- '맞춤 쇼핑'/'오늘의 핫딜'을 상단 nav에 개별 항목으로 바로 늘어놓지 않고 '쇼핑' 드롭다운 하나로
-           묶어서, 기존 4개 항목(홈/게시판/로그인/관리자) 폭에 새 브랜드처럼 보이는 항목이 끼어들지 않게 한다. -->
+      <button id="tab-home" onclick="switchTab('home')" class="nav-link tab-underline active pb-1" style="color:var(--text);">배달할인</button>
+      <!-- '쇼핑' 드롭다운 — 미완성인 맞춤쇼핑(/shopping)은 아직 주요 내비게이션에 노출하지 않고,
+           현재 공개하는 쇼핑 페이지인 '쇼핑핫딜'(/hot-deals) 하나만 담는다. 드롭다운 구조/토글
+           동작 자체는 기존 것을 그대로 재사용한다. -->
       <div class="relative">
         <button id="tab-shopping-dropdown-btn" onclick="toggleShoppingNavDropdown(event)"
           class="nav-link pb-1 flex items-center gap-1" style="color:var(--muted);"
@@ -383,10 +383,10 @@
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div id="shopping-nav-dropdown" class="hidden absolute right-0 top-full mt-2 w-40 rounded-lg py-1 z-50" role="menu" aria-label="쇼핑" style="background:var(--surface); border:1px solid var(--line); box-shadow:0 8px 24px rgba(0,0,0,0.35);">
-          <button role="menuitem" onclick="switchTab('shopping'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">맞춤 쇼핑</button>
-          <button role="menuitem" onclick="switchTab('hotdeals'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">오늘의 핫딜</button>
+          <button role="menuitem" onclick="switchTab('hotdeals'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">쇼핑핫딜</button>
         </div>
       </div>
+      <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
       <button id="tab-admin" onclick="handleAdminNavClick()" class="hidden nav-link tab-underline pb-1 px-3 py-1 rounded-full text-xs font-semibold" style="color:var(--bg); background:var(--primary);">관리자 대시보드</button>
