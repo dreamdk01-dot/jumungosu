@@ -401,12 +401,16 @@
   </div>
 
   <!-- 상시 노출 퀵 내비게이션 (모바일 전용) — 햄버거 메뉴를 열지 않아도 핵심 4개 탭에 바로 접근 가능하도록.
-       로그인 여부에 따라 마지막 항목이 '로그인' ↔ '내정보'로 바뀐다 (updateAuthNavUI에서 처리). -->
+       로그인 여부에 따라 마지막 항목이 '로그인' ↔ '내정보'로 바뀐다 (updateAuthNavUI에서 처리).
+       배달할인/쇼핑핫딜/게시판/로그인·내정보 4개를 grid로 균등 배치해 한 줄에 잘리지 않게 한다.
+       쇼핑핫딜(id="quicknav-tab-hotdeals")은 PAGES에 이미 있는 'hotdeals' 탭이라 switchTab()의
+       기존 active-state 로직(quicknav-tab-+탭명 존재 시 자동 강조)이 별도 JS 수정 없이 그대로 적용된다. -->
   <div class="sm:hidden border-t" style="border-color:var(--line);">
-    <div class="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between text-sm font-medium">
-      <button id="quicknav-tab-home" onclick="switchTab('home')" class="nav-link" style="color:var(--text);">홈</button>
-      <button id="quicknav-tab-board" onclick="switchTab('board')" class="nav-link" style="color:var(--text);">게시판</button>
-      <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold" style="color:var(--text);">로그인</button>
+    <div class="max-w-5xl mx-auto px-4 py-2 grid grid-cols-4 gap-1 text-sm font-medium">
+      <button id="quicknav-tab-home" onclick="switchTab('home')" class="nav-link text-center" style="color:var(--text);">배달할인</button>
+      <button id="quicknav-tab-hotdeals" onclick="switchTab('hotdeals')" class="nav-link text-center" style="color:var(--text);">쇼핑핫딜</button>
+      <button id="quicknav-tab-board" onclick="switchTab('board')" class="nav-link text-center" style="color:var(--text);">게시판</button>
+      <button id="quicknav-auth-btn" onclick="switchTab('auth')" class="nav-link font-semibold text-center" style="color:var(--text);">로그인</button>
     </div>
   </div>
 
