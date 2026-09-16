@@ -8298,13 +8298,14 @@
   }
 
   // ============================================================
-  // 쿠팡 파트너스 HTML 표시 테스트 (2026-09-17, /hot-deals 한정)
+  // 쿠팡 파트너스 HTML 상품 영역 (/hot-deals 한정)
   // Excel(주문의고수_추석선물_100개_파트너스입력용)에서 "파트너스URL"과 "파트너스HTML"이
-  // 둘 다 입력된 행만 자동으로 골라 7개를 그대로 옮겼다. 100개 전체 수정/신규 상품 추가가
-  // 아니라 "쿠팡이 만들어주는 이미지+텍스트 iframe을 실제 화면에 써도 되는가"를 확인하는
-  // 테스트이며, 기존 CURATED_HOTDEAL_PRODUCTS(59개) 목록과는 완전히 분리된 별도 영역이다.
-  // partnersHtml(iframe)은 쿠팡이 발급한 원본을 그대로 렌더링하고 src/크기 등을 손대지 않는다.
-  // coupangUrl(일반 쿠팡URL)은 참고용으로만 남겨두고, 화면의 CTA 버튼은 partnersUrl을 쓴다.
+  // 둘 다 입력된 행만 골라 옮겼다. 기존 CURATED_HOTDEAL_PRODUCTS(59개) 목록과는 분리된 영역.
+  // partnersHtml(iframe)은 쿠팡이 발급한 원본을 그대로 렌더링하고 src/크기/내부 버튼 등을
+  // 손대지 않는다. coupangUrl(일반 쿠팡URL)은 데이터에만 남겨두고 화면에는 쓰지 않는다 —
+  // 중복 구매 CTA를 만들지 않기로 해서 iframe 자체의 "쇼핑하기" 버튼이 유일한 구매 동선이다.
+  // renderHotdealsPartnersTest / hotdealsPartnersProductCardHtml은 데이터·카드를 분리해 둬서
+  // 추후 /shopping 맞춤 조건 결과에도 같은 데이터·카드 컴포넌트를 그대로 재사용할 수 있다.
   const HOTDEALS_PARTNERS_TEST_PRODUCTS = [
     { name: "LG생활건강 프리미엄 모던에디션 에센셜 선물세트 + 쇼핑백, 1세트", price: "19,890원", category: "뷰티, 선물세트", rating: 4.5, reviews: 719, coupangUrl: "https://www.coupang.com/vp/products/7505545386?itemId=19655683827&vendorItemId=88354162553&sourceType=gm_crm_sssp", partnersUrl: "https://link.coupang.com/a/g59NTyNGo0", partnersHtml: "<iframe src=\"https://coupa.ng/cpyQlc\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>" },
     { name: "넛츠팜 블랙넛츠 견과 선물세트 1.5kg, 1개", price: "47,430원", category: "식품", rating: 4.5, reviews: 12043, coupangUrl: "", partnersUrl: "https://link.coupang.com/a/g6aOgkswbA", partnersHtml: "<iframe src=\"https://coupa.ng/cpyQHU\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>" },
@@ -8315,31 +8316,36 @@
     { name: "동원참치 선물세트 O-24호, 3세트", price: "107800원", category: "식품", rating: 5, reviews: 1979, coupangUrl: "", partnersUrl: "https://link.coupang.com/a/g6bBVRSlm8", partnersHtml: "<iframe src=\"https://coupa.ng/cpyQ3X\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>" },
   ];
 
+  // 카드 하나를 그린다 — iframe(쿠팡 원본, 미변형) + 주문의고수 쪽 정보(카테고리/상품명/가격/별점/리뷰수).
+  // 별도 구매 버튼은 만들지 않는다(iframe 안의 "쇼핑하기" 버튼이 유일한 구매 동선).
+  function hotdealsPartnersProductCardHtml(p){
+    const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
+    const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
+    return `
+      <div class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
+        <div class="mb-2" style="width:120px; height:240px; overflow:hidden;">${p.partnersHtml}</div>
+        ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
+        <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
+        <p class="text-sm font-bold mb-1" style="color:var(--primary);">${escapeHtml(p.price)}</p>
+        ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
+      </div>`;
+  }
+
   function renderHotdealsPartnersTest(){
     const root = document.getElementById('hotdeals-partners-test-root');
     if (!root) return;
     const items = HOTDEALS_PARTNERS_TEST_PRODUCTS;
     if (!items.length){ root.innerHTML = ''; return; }
 
-    const cards = items.map(p => {
-      const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
-      const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
-      return `
-        <div class="shrink-0 rounded-lg p-3 flex flex-col items-center text-center" style="width:152px; background:var(--card); border:1px solid var(--line);">
-          <div class="mb-2" style="width:120px; height:240px; overflow:hidden;">${p.partnersHtml}</div>
-          ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
-          <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
-          <p class="text-sm font-bold mb-1" style="color:var(--primary);">${escapeHtml(p.price)}</p>
-          ${ratingText ? `<p class="text-[11px] mb-2" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
-          <a href="${escapeHtml(p.partnersUrl)}" target="_blank" rel="noopener sponsored" class="block w-full text-center py-1.5 rounded-md text-[11px] font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡에서 보기 →</a>
-        </div>`;
-    }).join('');
+    // 가로 스크롤 없이 세로 스크롤만으로 전부 보이도록 반응형 grid로 배치한다.
+    // 모바일 2열 기본(iframe 폭 120px 기준 380px 미만에서만 1열로 줄어듦) → sm(≥640px) 3열
+    // → lg(≥1024px) 4열 → xl(≥1280px) 5열.
+    const cards = items.map(hotdealsPartnersProductCardHtml).join('');
 
     root.innerHTML = `
-      <section class="mb-8 rounded-lg p-4" style="background:var(--card-alt); border:1px dashed var(--line);">
-        <p class="text-xs font-semibold mb-1 break-keep" style="color:var(--accent);">🧪 테스트 영역 — 쿠팡 파트너스 HTML 표시 테스트 (${items.length}개)</p>
-        <p class="text-[11px] mb-3 break-keep" style="color:var(--muted);">쿠팡이 발급한 파트너스 iframe 원본을 그대로 표시합니다. 정식 상품 목록과는 별개인 테스트용 영역입니다.</p>
-        <div class="flex gap-3 overflow-x-auto pb-2">${cards}</div>
+      <section class="mb-8">
+        <h3 class="font-display text-lg mb-3 break-keep" style="color:var(--text);">쿠팡 파트너스 추천상품</h3>
+        <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${cards}</div>
         <p class="text-[10px] mt-3 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
       </section>`;
   }
