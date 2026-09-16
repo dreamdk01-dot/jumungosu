@@ -262,6 +262,11 @@
   }
   .chip:active{ transform:scale(0.96); }
 
+  /* 오늘의 핫딜 — 운영자 직접선정 상품 컴팩트 리스트 */
+  .curated-hotdeal-row{ border-bottom:1px solid var(--line); transition:background-color 0.15s; }
+  .curated-hotdeal-row:last-child{ border-bottom:none; }
+  .curated-hotdeal-row:hover{ background:var(--card-alt); }
+
   /* 땡겨요 필터 칩: 비활성 상태에서 hover 시 주황 톤이 살짝 밝아지고, 선택(active) 상태에서는 글로우 효과 */
   .chip-ddangyo:hover:not(.stamp-selected){
     background: rgba(255,82,22,0.14) !important;
@@ -8697,6 +8702,51 @@
     // 시즌과 무관한 상시 핫딜. 위와 동일한 필드 구조. 지금은 비워둔다.
   ];
 
+  // 운영자 직접선정 상품 (Excel 입력 방식) — AI 조사·점수 없이 운영자가 쿠팡에서 직접 고른
+  // 상품을 name/price/url/note 4개 필드만으로 그대로 노출한다. category/target/budget
+  // 등 위 CHUSEOK_SEASONAL_PRODUCTS 필드는 이 데이터에 없으므로 임의로 채우지 않았고,
+  // 그래서 이 목록은 기존 대상/예산/카테고리 필터와 연결하지 않고 항상 전체를 그대로 보여준다.
+  // 행 단위로 추가/수정/삭제만 하면 되는 단순 구조 — 앞으로 운영자가 계속 채워 넣을 부분.
+  const CURATED_HOTDEAL_PRODUCTS = [
+    { name: "LG생활건강 프리미엄 모던에디션 에센셜 선물세트 + 쇼핑백, 1세트", price: "19,890원", url: "https://www.coupang.com/vp/products/7505545386?itemId=19655683827&vendorItemId=88354162553&sourceType=gm_crm_sssp", note: "뷰티, 선물세트" },
+    { name: "넛츠팜 프리미엄 4호 6종 견과세트 1.15kg", price: "28,470원", url: "https://www.coupang.com/vp/products/1650653149?itemId=20923098090&vendorItemId=3025312682&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "홈쇼핑 상품 성분에디터 녹는실 리프팅 실크 펩타이드 앰플 대용량, 1개, 60ml", price: "14,950원", url: "https://www.coupang.com/vp/products/8227687108?itemId=23667894665&vendorItemId=93810644260&sourceType=gm_crm_sssp", note: "뷰티" },
+    { name: "투데이넛 너트한줌 10종 견과세트 1kg", price: "33,150원", url: "https://www.coupang.com/vp/products/7897263788?itemId=21634533462&vendorItemId=70059796775&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "농협안심한우 1+등급 구이세트 900g (등심250g + 채끝 250g + 부채살 200g + 업진살200g) (냉장)", price: "118,000원", url: "https://www.coupang.com/vp/products/6936882535?itemId=16807353773&vendorItemId=83987731545&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "제스프리 썬골드키위 선물세트, 2.1kg(16~27개입), 1박스", price: "24,900원", url: "https://www.coupang.com/vp/products/7520278835?itemId=19722735757&vendorItemId=78138473340&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "맥심 모카골드 마일드 커피믹스 21호 커피세트", price: "29,140원", url: "https://www.coupang.com/vp/products/8328233204?itemId=19873343979&vendorItemId=3001769481&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "코주부 프리미엄 육포 + 쇼핑백 선물세트, 1세트, 250g", price: "35,900원", url: "https://www.coupang.com/vp/products/8244740646?itemId=19847451556&vendorItemId=5191567337&sourceType=gm_crm_sssp", note: "식품" },
+    { name: "LG생활건강 월드트레블 G호 선물세트 + 쇼핑백, 1세트", price: "13,890원", url: "https://www.coupang.com/vp/products/8314083066?itemId=23992714658&vendorItemId=88354162445&sourceType=gm_crm_sssp", note: "뷰티, 선물세트" },
+  ];
+
+  // 위 리스트를 컴팩트한 리스트형 UI로 렌더링(그리드 카드 아님). 이미지 없이 상품명/비고/가격/CTA만
+  // 표시하고, 상품 사이는 뚜렷한 구분선으로 나눈다. 필터/정렬/추천점수는 만들지 않고 Excel 순서 그대로.
+  function curatedHotdealsSectionHtml(title, items){
+    if (!items.length) return '';
+    const rows = items.map(p => {
+      const noteTags = p.note ? p.note.split(',').map(s => s.trim()).filter(Boolean).join(' · ') : '';
+      return `
+        <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener sponsored" class="curated-hotdeal-row flex items-center justify-between gap-3 py-3 px-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold break-keep" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
+            ${noteTags ? `<p class="text-xs mt-1 break-keep" style="color:var(--muted);">${escapeHtml(noteTags)}</p>` : ''}
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-sm font-bold whitespace-nowrap" style="color:var(--primary);">${escapeHtml(p.price)}</p>
+            <p class="text-[11px] mt-1 whitespace-nowrap font-semibold" style="color:var(--accent);">쿠팡에서 현재 가격 확인 →</p>
+          </div>
+        </a>`;
+    }).join('');
+    return `
+      <section class="mb-8">
+        <h3 class="font-display text-lg mb-3 break-keep" style="color:var(--text);">${title}</h3>
+        <div class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);">
+          ${rows}
+        </div>
+        <p class="text-[11px] mt-2 break-keep" style="color:var(--muted);">표시 가격은 확인 시점 기준이며 쿠팡에서 변경될 수 있습니다.</p>
+      </section>`;
+  }
+
   const HOTDEALS_TARGETS = ['전체', '부모님', '가족', '직장·거래처', '지인', '연인'];
   const HOTDEALS_BUDGETS = ['전체', '1~3만원', '3~5만원', '5~10만원', '10만원+'];
   // 쿠팡 2026 추석 페스타의 실제 판매 카테고리 체계(표시명만 모바일에 맞춰 '/'→'·'로 살짝 줄임,
@@ -9010,7 +9060,7 @@
     // "상품이 실제로 존재하는지"도 유효 URL 기준으로 다시 계산한다(전체 데이터 개수가 아니라
     // 실제 노출 가능한 개수 기준 — setHotdealsXFilter()들이 인자 없이 이 함수를 호출하므로
     // 매번 스스로 최신 상태를 판단해야 정확한 빈 상태 문구가 나온다).
-    const hasAnyVisibleProduct = seasonalVisible.length > 0 || generalVisible.length > 0;
+    const hasAnyVisibleProduct = seasonalVisible.length > 0 || generalVisible.length > 0 || CURATED_HOTDEAL_PRODUCTS.length > 0;
     // 쿠팡 파트너스 링크가 노출되는 두 지점(추석 페스타 CTA / 상품 카드) 중 CTA가 위쪽에 항상
     // 먼저 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 보여주고 여기서는 생략한다.
     const disclosureAlreadyShown = HOTDEALS_SEASONAL_ENABLED;
@@ -9018,7 +9068,8 @@
     let html = '';
     html += bestHtml;
     html += hotdealsGridSectionHtml('2026 추석 페스타 선물 모음', seasonalFiltered);
-    html += hotdealsGridSectionHtml('🔥 지금 주목할 핫딜', generalFiltered);
+    html += curatedHotdealsSectionHtml('🔥 지금 주목할 핫딜', CURATED_HOTDEAL_PRODUCTS);
+    html += hotdealsGridSectionHtml('', generalFiltered);
 
     if (!hasAnyVisibleProduct){
       html += hotdealsEmptyStateHtml();
