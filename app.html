@@ -8064,7 +8064,7 @@
       <div class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
         <div class="mb-2" style="width:120px; height:240px; overflow:hidden;">${p.partnersHtml}</div>
         ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
-        <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
+        <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
         <p class="text-sm font-bold mb-1" style="color:var(--primary);">${escapeHtml(p.price)}</p>
         ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
       </div>`;
