@@ -8113,12 +8113,17 @@
   // 리뷰수. 별도 구매 버튼은 만들지 않는다(iframe 안의 "쇼핑하기" 버튼이 유일한 구매 동선).
   // index(i)는 AUTUMN_GIFT_PRODUCTS 안에서의 고정 위치 — 필터가 바뀌어도 이 카드의 DOM은
   // 다시 만들지 않고 id="autumn-gift-item-i"로 찾아서 hidden만 토글한다(iframe 재로드 방지).
+  // iframe 지연 로드(2026-09-19): 카드 생성 시점에 iframe을 바로 넣지 않고 같은 크기(120×240)의
+  // 빈 슬롯(.autumn-gift-iframe-slot)만 만들어 두고, 카드가 화면 근처로 스크롤돼 들어올 때
+  // (IntersectionObserver) 그때 딱 한 번 p.partnersHtml을 원본 그대로 삽입한다. 페이지 진입
+  // 즉시 iframe 98개가 한꺼번에 요청되던 것을 "보이는 만큼만"으로 줄인다. 슬롯 크기를 고정해
+  // 두므로 로드 전후 레이아웃이 밀리지 않는다.
   function autumnGiftCardHtml(p, i){
     const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
     const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
     return `
       <div id="autumn-gift-item-${i}" class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
-        <div class="mb-2" style="width:120px; height:240px; overflow:hidden;">${p.partnersHtml}</div>
+        <div class="mb-2 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
         ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
         <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
         <p class="text-sm font-bold mb-1" style="color:var(--primary);">${escapeHtml(p.price)}</p>
@@ -8148,6 +8153,42 @@
   // ---- 🎁 추석 선물세트 핫딜: DOM 최초 1회 생성 + 필터는 표시/숨김만 (iframe 재로드 방지) ----
   let autumnGiftDomBuilt = false;
 
+  // 슬롯 하나에 쿠팡 iframe을 딱 한 번만 삽입한다. data-agp-loaded 표시로 중복 삽입을 막으므로
+  // (IntersectionObserver가 같은 요소로 여러 번 콜백을 주더라도) iframe이 두 번 만들어지거나
+  // 다시 로드되는 일은 없다. 삽입하는 문자열은 p.partnersHtml 원본 그대로다.
+  function autumnGiftLoadIframeSlot(slot){
+    if (!slot || slot.dataset.agpLoaded === '1') return;
+    const i = parseInt(slot.dataset.agpIndex, 10);
+    const p = AUTUMN_GIFT_PRODUCTS[i];
+    if (!p || !p.partnersHtml) return;
+    slot.dataset.agpLoaded = '1';
+    slot.innerHTML = p.partnersHtml;
+  }
+
+  // 화면 근처에 온 슬롯부터 순서대로 iframe을 넣는다. rootMargin으로 뷰포트 아래 600px까지를
+  // "근처"로 잡아 스크롤할 때 빈 박스가 보이는 순간을 줄인다. 한 번 로드된 슬롯은 unobserve.
+  // IntersectionObserver를 지원하지 않는 옛 브라우저에서는 예전처럼 전부 즉시 삽입해서
+  // 어떤 환경에서도 iframe이 안 보이는 일이 없게 한다(안전한 폴백).
+  // 필터로 hidden(display:none) 된 카드는 레이아웃 박스가 없어 관찰 대상이 되지 않으므로 로드되지
+  // 않고, 나중에 필터가 풀려 화면에 들어오면 그때 로드된다 — 필터로 걸러진 상품의 iframe까지 미리
+  // 불러오지 않는다는 뜻이다.
+  function autumnGiftSetupLazyIframes(){
+    const slots = Array.from(document.querySelectorAll('.autumn-gift-iframe-slot'));
+    if (!slots.length) return;
+    if (typeof window === 'undefined' || typeof window.IntersectionObserver !== 'function'){
+      slots.forEach(autumnGiftLoadIframeSlot);
+      return;
+    }
+    const observer = new window.IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        autumnGiftLoadIframeSlot(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+    slots.forEach((slot) => observer.observe(slot));
+  }
+
   // 페이지 진입 시(또는 새로고침 시) 딱 한 번만 전체 100개 카드/줄을 실제로 그린다. 이후로는
   // 필터가 아무리 바뀌어도 이 함수가 다시 호출되지 않으므로 쿠팡 iframe이 재생성되지 않는다.
   function renderAutumnGiftOnce(){
@@ -8170,6 +8211,8 @@
         <p class="text-[10px] mt-1 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
       </section>`;
     autumnGiftDomBuilt = true;
+    // DOM이 실제로 들어간 뒤에 관찰을 시작해야 슬롯을 찾을 수 있다.
+    autumnGiftSetupLazyIframes();
   }
 
   // 필터가 바뀔 때마다 이 함수만 다시 호출한다 — DOM을 새로 그리지 않고 각 카드/줄의 hidden
