@@ -372,20 +372,11 @@
     <!-- desktop nav -->
     <nav class="hidden sm:flex items-center gap-6 font-medium text-sm">
       <button id="tab-home" onclick="switchTab('home')" class="nav-link tab-underline active pb-1" style="color:var(--text);">배달할인</button>
-      <!-- '쇼핑' 드롭다운 — 미완성인 맞춤쇼핑(/shopping)은 아직 주요 내비게이션에 노출하지 않고,
-           현재 공개하는 쇼핑 페이지인 '쇼핑핫딜'(/hot-deals) 하나만 담는다. 드롭다운 구조/토글
-           동작 자체는 기존 것을 그대로 재사용한다. -->
-      <div class="relative">
-        <button id="tab-shopping-dropdown-btn" onclick="toggleShoppingNavDropdown(event)"
-          class="nav-link pb-1 flex items-center gap-1" style="color:var(--muted);"
-          aria-haspopup="true" aria-expanded="false" aria-controls="shopping-nav-dropdown">
-          쇼핑
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div id="shopping-nav-dropdown" class="hidden absolute right-0 top-full mt-2 w-40 rounded-lg py-1 z-50" role="menu" aria-label="쇼핑" style="background:var(--surface); border:1px solid var(--line); box-shadow:0 8px 24px rgba(0,0,0,0.35);">
-          <button role="menuitem" onclick="switchTab('hotdeals'); closeShoppingNavDropdown();" class="block w-full text-left px-3 py-2 text-sm nav-link" style="color:var(--text);">쇼핑핫딜</button>
-        </div>
-      </div>
+      <!-- '쇼핑' — 맞춤쇼핑(/shopping)이 공개되기 전까지는 공개 쇼핑 페이지가 쇼핑핫딜(/hot-deals)
+           하나뿐이라, 항목이 1개뿐인 드롭다운 대신 /hot-deals 직접 링크로 둔다(2026-09-19).
+           id는 그대로 두어 updateShoppingNavActiveState()의 활성 색상 처리가 그대로 적용된다.
+           맞춤쇼핑 공개 시 다시 드롭다운(toggleShoppingNavDropdown)으로 되돌리면 된다. -->
+      <button id="tab-shopping-dropdown-btn" onclick="switchTab('hotdeals')" class="nav-link tab-underline pb-1" style="color:var(--muted);">쇼핑</button>
       <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">게시판</button>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
@@ -2795,11 +2786,14 @@
   function toggleShoppingNavDropdown(e){
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('shopping-nav-dropdown');
+    if (!dropdown) return; // 2026-09-19: 드롭다운을 직접 링크로 바꿔 요소가 없을 수 있음 — 호출돼도 안전하게
     dropdown.classList.toggle('hidden');
     setShoppingNavDropdownExpanded(!dropdown.classList.contains('hidden'));
   }
   function closeShoppingNavDropdown(){
-    document.getElementById('shopping-nav-dropdown').classList.add('hidden');
+    const dropdown = document.getElementById('shopping-nav-dropdown');
+    if (!dropdown) return;
+    dropdown.classList.add('hidden');
     setShoppingNavDropdownExpanded(false);
   }
   document.addEventListener('click', (e) => {
@@ -7812,7 +7806,11 @@
   function updateShoppingNavActiveState(tab){
     const btn = document.getElementById('tab-shopping-dropdown-btn');
     if (!btn) return;
-    btn.style.color = SHOPPING_TABS.includes(tab) ? 'var(--primary)' : 'var(--muted)';
+    const active = SHOPPING_TABS.includes(tab);
+    btn.style.color = active ? 'var(--primary)' : 'var(--muted)';
+    // 2026-09-19: 드롭다운 → 직접 링크로 바뀌면서 다른 탭(배달할인/게시판)과 같은 tab-underline을
+    // 쓰므로, 활성 시 밑줄(.active::after)도 동일하게 표시되게 클래스를 함께 토글한다.
+    btn.classList.toggle('active', active);
   }
 
   // ===== 페이지 대표 제목(H1) 단일화 =====
@@ -8098,15 +8096,26 @@
   // 없는 축을 결과가 0건이 되는 쪽으로 두는 대신, 이 축은 "아직 걸러내지 않음"으로 바꿔서 대상을
   // 선택해도 최소한 예산·카테고리 조건은 정상 작동하게 한다. 추천대상별 데이터가 Excel에 추가되면
   // 이 함수만 실제 매칭 로직으로 바꾸면 된다.
+  // 상품 하나가 특정 공식 카테고리에 속하는지(전역 필터 상태와 무관하게 판정). 필터 매칭과
+  // "상품이 있는 카테고리만 노출"(renderHotdealsFilterUI) 두 곳에서 같은 규칙을 쓰기 위해 분리.
+  function autumnGiftCategoryMatches(p, categoryName){
+    if (categoryName === '전체') return true;
+    const keywords = HOTDEALS_CATEGORY_KEYWORDS[categoryName] || [categoryName.split('·')[0]];
+    return !!(p.category && keywords.some(k => p.category.includes(k)));
+  }
+
   function autumnGiftMatchesFilter(p){
     const targetOk = true;
     const budgetOk = hotdealsBudgetMatches(p.price, hotdealsBudgetFilter);
-    let categoryOk = true;
-    if (hotdealsCategoryFilter !== '전체'){
-      const keywords = HOTDEALS_CATEGORY_KEYWORDS[hotdealsCategoryFilter] || [hotdealsCategoryFilter.split('·')[0]];
-      categoryOk = !!(p.category && keywords.some(k => p.category.includes(k)));
-    }
+    const categoryOk = autumnGiftCategoryMatches(p, hotdealsCategoryFilter);
     return targetOk && budgetOk && categoryOk;
+  }
+
+  // 가격 표시 — Excel에 가격이 비어 있는 상품(예: 쿠키 세트 1개)은 빈 칸 대신 안내 문구를 보여준다.
+  // 값을 지어내지 않고 "쿠팡에서 확인"으로만 안내한다(2026-09-19 표시 보정).
+  function autumnGiftPriceLabel(p){
+    const raw = (p && p.price !== null && p.price !== undefined) ? String(p.price).trim() : '';
+    return raw ? escapeHtml(raw) : '<span class="text-xs font-semibold" style="color:var(--muted);">가격은 쿠팡에서 확인</span>';
   }
 
   // 파트너스HTML이 있는 상품의 카드 — iframe(쿠팡 원본, 미변형) + 카테고리/상품명/가격/별점/
@@ -8126,7 +8135,7 @@
         <div class="mb-2 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
         ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
         <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
-        <p class="text-sm font-bold mb-1" style="color:var(--primary);">${escapeHtml(p.price)}</p>
+        <p class="text-sm font-bold mb-1" style="color:var(--primary);">${autumnGiftPriceLabel(p)}</p>
         ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
       </div>`;
   }
@@ -8144,7 +8153,7 @@
           <p class="text-sm font-semibold break-keep" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
         </div>
         <div class="shrink-0 text-right">
-          <p class="text-sm font-bold whitespace-nowrap" style="color:var(--primary);">${escapeHtml(p.price)}</p>
+          <p class="text-sm font-bold whitespace-nowrap" style="color:var(--primary);">${autumnGiftPriceLabel(p)}</p>
           <p class="text-[11px] mt-1 whitespace-nowrap font-semibold" style="color:var(--accent);">쿠팡에서 현재 가격 확인 →</p>
         </div>
       </a>`;
@@ -8189,6 +8198,22 @@
     slots.forEach((slot) => observer.observe(slot));
   }
 
+  // 2026-09-19 데이터 품질(표시 단계) 보정 — 상품 배열/Excel은 손대지 않고 화면에서만 처리한다.
+  //  · 완전 중복 행: 상품명과 쿠팡URL이 모두 같은 행(예: "해표 안심특선 S32호" — 파트너스 링크만
+  //    두 번 발급된 경우)은 첫 번째 행만 그리고 뒤의 행은 건너뛴다. 상품명만 같고 URL·가격이 다른
+  //    행(다른 판매 페이지)은 서로 다른 상품으로 보고 그대로 둔다.
+  //  · applyAutumnGiftFilterVisibility()는 DOM이 없는 인덱스를 자연스럽게 건너뛰므로(`if (!el) return`)
+  //    건너뛴 행은 표시 개수에도 들어가지 않는다.
+  function autumnGiftIsRenderDuplicate(i){
+    const p = AUTUMN_GIFT_PRODUCTS[i];
+    if (!p || !p.name || !p.url) return false;
+    for (let j = 0; j < i; j++){
+      const q = AUTUMN_GIFT_PRODUCTS[j];
+      if (q && q.name === p.name && q.url === p.url) return true;
+    }
+    return false;
+  }
+
   // 페이지 진입 시(또는 새로고침 시) 딱 한 번만 전체 100개 카드/줄을 실제로 그린다. 이후로는
   // 필터가 아무리 바뀌어도 이 함수가 다시 호출되지 않으므로 쿠팡 iframe이 재생성되지 않는다.
   function renderAutumnGiftOnce(){
@@ -8197,8 +8222,8 @@
     if (!root) return;
     if (!AUTUMN_GIFT_PRODUCTS.length){ root.innerHTML = ''; return; }
 
-    const cardsHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => p.partnersHtml ? autumnGiftCardHtml(p, i) : '').join('');
-    const listHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => p.partnersHtml ? '' : autumnGiftListRowHtml(p, i)).join('');
+    const cardsHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => (p.partnersHtml && !autumnGiftIsRenderDuplicate(i)) ? autumnGiftCardHtml(p, i) : '').join('');
+    const listHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => (!p.partnersHtml && !autumnGiftIsRenderDuplicate(i)) ? autumnGiftListRowHtml(p, i) : '').join('');
 
     root.innerHTML = `
       <section class="mb-8">
@@ -8312,6 +8337,32 @@
       </div>`;
   }
 
+  // 2026-09-19 "동작하지 않는 필터 노출" 개선 — 필터 버튼을 데이터 기준으로만 노출한다.
+  //  · 추천대상: 어떤 상품 데이터에도 대상(target/targets) 정보가 없으면 줄 자체를 숨긴다(눌러도
+  //    아무 변화가 없는 버튼을 보여주지 않기 위해). Excel에 추천대상 컬럼이 생기면 자동으로 다시 뜬다.
+  //  · 카테고리: 상품이 1개 이상 있는 카테고리만 노출한다('전체'는 항상 노출). 상품 데이터가 바뀌면
+  //    자동으로 따라간다. 상품 0개 카테고리(가전·가구·패션 등)를 골라 "없습니다"만 보는 일을 없앤다.
+  // 데이터 원본(HOTDEALS_TARGETS/HOTDEALS_CATEGORIES 상수, 상품 배열)은 건드리지 않는다.
+  function hotdealsHasAnyTargetData(){
+    const pools = [
+      ...(HOTDEALS_SEASONAL_ENABLED ? CHUSEOK_SEASONAL_PRODUCTS : []),
+      ...GENERAL_HOTDEAL_PRODUCTS,
+      ...AUTUMN_GIFT_PRODUCTS,
+    ];
+    return pools.some(p => (Array.isArray(p.targets) && p.targets.length > 0) || (typeof p.target === 'string' && p.target));
+  }
+  function hotdealsAvailableCategories(){
+    const legacy = [
+      ...(HOTDEALS_SEASONAL_ENABLED ? CHUSEOK_SEASONAL_PRODUCTS : []),
+      ...GENERAL_HOTDEAL_PRODUCTS,
+    ].filter(hasValidCoupangUrl);
+    return HOTDEALS_CATEGORIES.filter(cat => {
+      if (cat === '전체') return true;
+      if (legacy.some(p => p.category === cat)) return true;
+      return AUTUMN_GIFT_PRODUCTS.some(p => autumnGiftCategoryMatches(p, cat));
+    });
+  }
+
   function renderHotdealsFilterUI(){
     const root = document.getElementById('hotdeals-filter-root');
     if (!root) return;
@@ -8320,11 +8371,19 @@
       root.innerHTML = '';
       return;
     }
+    const showTarget = hotdealsHasAnyTargetData();
+    // 대상 줄을 숨기는 동안 상태값이 '전체'가 아니면(과거 선택이 남아 있으면) 보이지 않는 조건이
+    // 결과에 영향을 주지 않도록 '전체'로 되돌린다.
+    if (!showTarget && hotdealsTargetFilter !== '전체') hotdealsTargetFilter = '전체';
+    const categories = hotdealsAvailableCategories();
+    // 현재 선택된 카테고리가 목록에서 사라졌다면(상품이 0개가 됐다면) '전체'로 되돌린다.
+    if (!categories.includes(hotdealsCategoryFilter)) hotdealsCategoryFilter = '전체';
+
     root.innerHTML = `
       <div class="rounded-lg p-4" style="background:var(--surface); border:1px solid var(--line);">
-        ${hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter')}
+        ${showTarget ? hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter') : ''}
         ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
-        ${hotdealsCategoryChipRowHtml('카테고리', HOTDEALS_CATEGORIES, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}
+        ${hotdealsCategoryChipRowHtml('카테고리', categories, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}
       </div>`;
   }
 
