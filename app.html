@@ -1343,7 +1343,16 @@
 
   <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
 
-  <div id="hotdeals-dynamic-root" class="mt-6"></div>
+  <!-- hotdeals-dynamic-root를 top/bottom 둘로 쪼갠 이유(긴급수정, 2026-09-18): 필터 변경마다
+       innerHTML을 통째로 다시 쓰면 그 안에 있던 쿠팡 파트너스 iframe DOM까지 매번 삭제→재생성돼
+       반복 로드되고, 이게 쿠팡 Access Denied의 원인이었다. 그래서 iframe이 들어가는
+       "🎁 추석 선물세트 핫딜" 구간만 별도 루트(hotdeals-autumn-gift-root)로 분리해 최초 1회만
+       생성하고, 필터 변경 시에는 DOM을 다시 쓰지 않고 hidden 클래스만 토글한다
+       (renderAutumnGiftOnce / applyAutumnGiftFilterVisibility 참고). 시각적 순서(추석 페스타
+       기획전 → 추석 선물세트 핫딜 → 일반 핫딜)는 그대로 유지된다. -->
+  <div id="hotdeals-dynamic-root-top" class="mt-6"></div>
+  <div id="hotdeals-autumn-gift-root"></div>
+  <div id="hotdeals-dynamic-root-bottom"></div>
 
   <div class="text-center mt-8">
     <button type="button" onclick="switchTab('shopping')" class="px-6 py-3 rounded-md font-display text-sm break-keep" style="background:var(--primary); color:#1C1A17;">맞춤 쇼핑 시작하기</button>
@@ -7920,12 +7929,12 @@
   // Excel(주문의고수_추석선물_100개_파트너스입력용, 최신본)을 최종 원본으로 삼아 100개 전체를
   // 그대로 옮겼다(2026-09-18 최신화 — 운영자 수동 검수/파트너스 입력분 재동기화, 이전 100개
   // 배열을 전량 교체). partnersHtml 필드가 있으면 iframe 카드로, 없으면 이미지 없는 줄 리스트로
-  // 자동 렌더링된다(아래 autumnGiftSectionHtml 참고) — Excel에 파트너스HTML을 채워 넣기만
+  // 자동 렌더링된다(아래 renderAutumnGiftOnce 참고) — Excel에 파트너스HTML을 채워 넣기만
   // 하면 코드 수정 없이 줄 리스트가 iframe 카드로 자동 전환된다(현재 23/100개에 파트너스HTML 있음).
   // category는 자유 텍스트(Excel 카테고리 원문)이며, HOTDEALS_CATEGORIES(쿠팡 공식 14분류)와
-  // 문자열이 정확히 같지 않아 카테고리 필터에서는 부분 포함으로 연결한다(아래
-  // autumnGiftMatchesFilter). 대상(target)/예산(budget) 데이터는 원본에 없어 임의로 채우지
-  // 않았고, 그래서 대상/예산 필터는 "전체"가 아닌 값이 선택되면 정직하게 매칭 0건으로 처리한다.
+  // 문자열이 정확히 같지 않아 카테고리 필터에서는 HOTDEALS_CATEGORY_KEYWORDS로 연결한다(아래
+  // autumnGiftMatchesFilter). 예산은 현재가격을 실제 숫자로 파싱해 구간 비교한다. 대상(target)
+  // 데이터는 원본에 없어 이 축은 필터링에 관여하지 않는다(2026-09-18 필터 버그 수정 참고).
   // partnersUrl/partnersHtml이 없는 상품은 빈 문자열("")로 둔다. url(일반 쿠팡URL)은 모든
   // 상품에 항상 유지 — partnersHtml이 있어도 삭제하지 않는다. fixNeeded는 Excel의 "수정필요"
   // 컬럼을 그대로 보관만 해 둔 필드로, 현재 화면 렌더링에는 쓰지 않는다(2026-09-18 기준 100개
@@ -7935,8 +7944,10 @@
   // 표시돼 있어 운영자가 나중에 정리할 대상으로 보고, 원본 그대로 별개 행으로 유지했다(임의로
   // 하나를 지우지 않음).
   // /shopping 재사용을 위해 데이터(AUTUMN_GIFT_PRODUCTS)·필터(autumnGiftMatchesFilter)·
-  // 카드 렌더(autumnGiftSectionHtml, autumnGiftCardHtml, autumnGiftListRowHtml)를
-  // /hot-deals 전용 DOM에 하드코딩하지 않고 순수 함수로 분리해 뒀다.
+  // 카드 렌더(renderAutumnGiftOnce, autumnGiftCardHtml, autumnGiftListRowHtml)를
+  // /hot-deals 전용 DOM에 하드코딩하지 않고 순수 함수로 분리해 뒀다. 단, iframe 재로드 방지를
+  // 위해 DOM은 한 번만 만들고 필터는 hidden 토글로 적용하는 구조라(renderAutumnGiftOnce +
+  // applyAutumnGiftFilterVisibility), /shopping에서 재사용할 때도 이 두 함수 쌍으로 가져가야 한다.
   const AUTUMN_GIFT_PRODUCTS = [
     { name: "LG생활건강 프리미엄 모던에디션 에센셜 선물세트 + 쇼핑백, 1세트", price: "19,890원", category: "뷰티", url: "https://www.coupang.com/vp/products/7505545386?itemId=19655683827&vendorItemId=88354162553&sourceType=gm_crm_sssp", isSearchUrl: false, rating: 4.5, reviews: 719, partnersUrl: "https://link.coupang.com/a/g9ggebBPeS", partnersHtml: "<iframe src=\"https://coupa.ng/cpBsDp\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "넛츠팜 블랙넛츠 견과 선물세트 1.5kg, 1개", price: "47,430원", category: "식품", url: "https://www.coupang.com/vp/products/1650653149?itemId=20923098090&vendorItemId=3025312682&sourceType=gm_crm_sssp", isSearchUrl: false, rating: 4.5, reviews: 12043, partnersUrl: "https://link.coupang.com/a/g9gewdXAWq", partnersHtml: "<iframe src=\"https://coupa.ng/cpBsCs\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
@@ -8094,11 +8105,13 @@
 
   // 파트너스HTML이 있는 상품의 카드 — iframe(쿠팡 원본, 미변형) + 카테고리/상품명/가격/별점/
   // 리뷰수. 별도 구매 버튼은 만들지 않는다(iframe 안의 "쇼핑하기" 버튼이 유일한 구매 동선).
-  function autumnGiftCardHtml(p){
+  // index(i)는 AUTUMN_GIFT_PRODUCTS 안에서의 고정 위치 — 필터가 바뀌어도 이 카드의 DOM은
+  // 다시 만들지 않고 id="autumn-gift-item-i"로 찾아서 hidden만 토글한다(iframe 재로드 방지).
+  function autumnGiftCardHtml(p, i){
     const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
     const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
     return `
-      <div class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
+      <div id="autumn-gift-item-${i}" class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
         <div class="mb-2" style="width:120px; height:240px; overflow:hidden;">${p.partnersHtml}</div>
         ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
         <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
@@ -8108,12 +8121,13 @@
   }
 
   // 파트너스HTML이 아직 없는 상품의 줄 — 이미지 없이 행 전체가 링크(쿠팡 현재가 확인).
-  function autumnGiftListRowHtml(p){
+  // 이 줄들도 partnersHtml 카드와 동일하게 DOM을 유지하고 hidden만 토글한다(6번 요구사항).
+  function autumnGiftListRowHtml(p, i){
     const tags = p.category
       ? p.category.split(',').map(s => s.trim()).filter(s => s && !AUTUMN_GIFT_NOTE_EXCLUDE.has(s)).join(' · ')
       : '';
     return `
-      <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener sponsored" class="curated-hotdeal-row flex items-center justify-between gap-3 py-3 px-3">
+      <a id="autumn-gift-item-${i}" href="${escapeHtml(p.url)}" target="_blank" rel="noopener sponsored" class="curated-hotdeal-row flex items-center justify-between gap-3 py-3 px-3">
         <div class="min-w-0 flex-1">
           ${tags ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(tags)}</p>` : ''}
           <p class="text-sm font-semibold break-keep" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
@@ -8125,30 +8139,47 @@
       </a>`;
   }
 
-  // 단일 섹션 렌더 — partnersHtml 있는 상품을 iframe 카드로 먼저, 없는 상품을 줄 리스트로
-  // 그 아래에 보여준다. 가로 스크롤 없이 세로 스크롤만으로 전부 보이도록 반응형 grid를 쓴다
-  // (모바일 2열 기본, 380px 미만 초협소 화면만 1열 → sm 3열 → lg 4열 → xl 5열).
-  function autumnGiftSectionHtml(items){
-    if (!items.length) return '';
-    const cardItems = items.filter(p => p.partnersHtml);
-    const listItems = items.filter(p => !p.partnersHtml);
+  // ---- 🎁 추석 선물세트 핫딜: DOM 최초 1회 생성 + 필터는 표시/숨김만 (iframe 재로드 방지) ----
+  let autumnGiftDomBuilt = false;
 
-    const cardsHtml = cardItems.length
-      ? `<div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">${cardItems.map(autumnGiftCardHtml).join('')}</div>`
-      : '';
-    const listHtml = listItems.length
-      ? `<div class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);">${listItems.map(autumnGiftListRowHtml).join('')}</div>`
-      : '';
+  // 페이지 진입 시(또는 새로고침 시) 딱 한 번만 전체 100개 카드/줄을 실제로 그린다. 이후로는
+  // 필터가 아무리 바뀌어도 이 함수가 다시 호출되지 않으므로 쿠팡 iframe이 재생성되지 않는다.
+  function renderAutumnGiftOnce(){
+    if (autumnGiftDomBuilt) return;
+    const root = document.getElementById('hotdeals-autumn-gift-root');
+    if (!root) return;
+    if (!AUTUMN_GIFT_PRODUCTS.length){ root.innerHTML = ''; return; }
 
-    return `
+    const cardsHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => p.partnersHtml ? autumnGiftCardHtml(p, i) : '').join('');
+    const listHtml = AUTUMN_GIFT_PRODUCTS.map((p, i) => p.partnersHtml ? '' : autumnGiftListRowHtml(p, i)).join('');
+
+    root.innerHTML = `
       <section class="mb-8">
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">🎁 추석 선물세트 핫딜</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">추석 선물세트와 명절 선물용 상품을 한곳에서 확인해보세요.</p>
-        ${cardsHtml}
-        ${listHtml}
+        <div id="autumn-gift-cards-grid" class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">${cardsHtml}</div>
+        <div id="autumn-gift-list-wrap" class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);">${listHtml}</div>
+        <p id="autumn-gift-empty-msg" class="hidden text-sm text-center py-6 break-keep" style="color:var(--muted);">선택한 조건에 맞는 상품이 없습니다.</p>
         <p class="text-[11px] mt-2 break-keep" style="color:var(--muted);">표시 가격은 확인 시점 기준이며 쿠팡에서 변경될 수 있습니다.</p>
         <p class="text-[10px] mt-1 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
       </section>`;
+    autumnGiftDomBuilt = true;
+  }
+
+  // 필터가 바뀔 때마다 이 함수만 다시 호출한다 — DOM을 새로 그리지 않고 각 카드/줄의 hidden
+  // 클래스만 토글하므로 쿠팡 iframe의 src/DOM은 전혀 건드리지 않는다.
+  function applyAutumnGiftFilterVisibility(){
+    let visibleCount = 0;
+    AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
+      const el = document.getElementById('autumn-gift-item-' + i);
+      if (!el) return;
+      const match = autumnGiftMatchesFilter(p);
+      el.classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('autumn-gift-empty-msg');
+    if (emptyMsg) emptyMsg.classList.toggle('hidden', visibleCount > 0);
+    return visibleCount;
   }
 
   const HOTDEALS_TARGETS = ['전체', '부모님', '가족', '직장·거래처', '지인', '연인'];
@@ -8439,8 +8470,9 @@
   }
 
   function renderHotdealsProducts(){
-    const root = document.getElementById('hotdeals-dynamic-root');
-    if (!root) return;
+    const topRoot = document.getElementById('hotdeals-dynamic-root-top');
+    const bottomRoot = document.getElementById('hotdeals-dynamic-root-bottom');
+    if (!topRoot || !bottomRoot) return;
 
     // 1단계: 유효한 쿠팡 URL이 있는 상품만 노출 후보로 만든다(URL 노출 정책 — 최우선 적용).
     // 2단계: 그 다음에 카테고리/대상/예산 필터를 적용한다.
@@ -8461,7 +8493,11 @@
       bestHtml = hotdealsBestSectionHtml(hotdealsCategoryFilter, bestItems);
     }
 
-    const autumnGiftFiltered = AUTUMN_GIFT_PRODUCTS.filter(autumnGiftMatchesFilter);
+    // 🎁 추석 선물세트 핫딜(쿠팡 iframe 포함) — DOM은 최초 1회만 만들고, 필터 적용은 표시/숨김
+    // 토글만 한다(iframe 재로드 방지, 긴급수정 2026-09-18). 여기서는 개수 집계만 한다(순수 계산,
+    // DOM/iframe 영향 없음).
+    renderAutumnGiftOnce();
+    const autumnGiftVisibleCount = applyAutumnGiftFilterVisibility();
 
     // "상품이 실제로 존재하는지"도 유효 URL 기준으로 다시 계산한다(전체 데이터 개수가 아니라
     // 실제 노출 가능한 개수 기준 — setHotdealsXFilter()들이 인자 없이 이 함수를 호출하므로
@@ -8471,23 +8507,25 @@
     // 먼저 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 보여주고 여기서는 생략한다.
     const disclosureAlreadyShown = HOTDEALS_SEASONAL_ENABLED;
 
-    let html = '';
-    html += bestHtml;
-    html += hotdealsGridSectionHtml('2026 추석 페스타 선물 모음', seasonalFiltered);
-    html += autumnGiftSectionHtml(autumnGiftFiltered);
-    html += hotdealsGridSectionHtml('', generalFiltered);
+    let topHtml = '';
+    topHtml += bestHtml;
+    topHtml += hotdealsGridSectionHtml('2026 추석 페스타 선물 모음', seasonalFiltered);
+    topRoot.innerHTML = topHtml;
+
+    let bottomHtml = '';
+    bottomHtml += hotdealsGridSectionHtml('', generalFiltered);
 
     if (!hasAnyVisibleProduct){
-      html += hotdealsEmptyStateHtml();
-    } else if (seasonalFiltered.length === 0 && generalFiltered.length === 0 && autumnGiftFiltered.length === 0){
-      html += hotdealsNoFilterMatchHtml();
+      bottomHtml += hotdealsEmptyStateHtml();
+    } else if (seasonalFiltered.length === 0 && generalFiltered.length === 0 && autumnGiftVisibleCount === 0){
+      bottomHtml += hotdealsNoFilterMatchHtml();
     }
 
     if (hasAnyVisibleProduct && !disclosureAlreadyShown){
-      html += hotdealsAffiliateDisclosureHtml();
+      bottomHtml += hotdealsAffiliateDisclosureHtml();
     }
 
-    root.innerHTML = html;
+    bottomRoot.innerHTML = bottomHtml;
   }
 
   function renderHotdealsPage(){
