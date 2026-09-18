@@ -264,7 +264,8 @@
 
   /* 오늘의 핫딜 — 운영자 직접선정 상품 컴팩트 리스트 */
   .curated-hotdeal-row{ border-bottom:1px solid var(--line); transition:background-color 0.15s; }
-  .curated-hotdeal-row:last-child{ border-bottom:none; }
+  /* 정렬을 CSS order로 하므로 :last-child 대신 JS가 표시상 마지막 줄에 붙이는 .agp-last로 밑줄을 뺀다 */
+  .curated-hotdeal-row.agp-last{ border-bottom:none; }
   .curated-hotdeal-row:hover{ background:var(--card-alt); }
 
   /* 땡겨요 필터 칩: 비활성 상태에서 hover 시 주황 톤이 살짝 밝아지고, 선택(active) 상태에서는 글로우 효과 */
@@ -8049,7 +8050,7 @@
     { name: "아임비타 멀티비타민 이뮨샷7 선물세트, 14회분, 1개", price: "32,900원", category: "건강식품", url: "https://www.coupang.com/vp/products/8785494137?itemId=28245934506", isSearchUrl: false, rating: 5, reviews: 441, partnersUrl: "https://link.coupang.com/a/g9znuEFGY8", partnersHtml: "<iframe src=\"https://coupa.ng/cpBD86\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "해표 안심특선 S32호 선물세트", price: "20,800원", category: "식품, 오일", url: "https://www.coupang.com/vp/products/1958987069?itemId=20103802302", isSearchUrl: false, rating: 5, reviews: 1461, partnersUrl: "https://link.coupang.com/a/g9zrDu51cy", partnersHtml: "<iframe src=\"https://coupa.ng/cpBD9E\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "라운드랩 1025 독도 수분 토너 + 로션 + 크림 5종 선물 세트", price: "26,390원", category: "뷰티", url: "https://www.coupang.com/vp/products/8773685381?itemId=25522471505", isSearchUrl: false, rating: 5, reviews: 772, partnersUrl: "https://link.coupang.com/a/g9zvnloT5E", partnersHtml: "<iframe src=\"https://coupa.ng/cpBEal\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
-    { name: "동원 참치 O-12호 선물세트 + 쇼핑백, 1세트", price: "22,100원", category: "식품", url: "https://www.coupang.com/vp/products/9075589061?itemId=19748050247", isSearchUrl: false, rating: 435, reviews: 8785, partnersUrl: "https://link.coupang.com/a/g9zyJIXNcW", partnersHtml: "<iframe src=\"https://coupa.ng/cpBEbk\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
+    { name: "동원 참치 O-12호 선물세트 + 쇼핑백, 1세트", price: "22,100원", category: "식품", url: "https://www.coupang.com/vp/products/9075589061?itemId=19748050247", isSearchUrl: false, rating: 4.5, reviews: 8785, partnersUrl: "https://link.coupang.com/a/g9zyJIXNcW", partnersHtml: "<iframe src=\"https://coupa.ng/cpBEbk\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "설감 프리미엄 왕 반건시 20개입 선물세트 7호 + 쇼핑백 (냉동), 1kg, 1박스", price: "37,400원", category: "식품, 곶감·건과일", url: "https://www.coupang.com/vp/products/5838530074?itemId=20982249878", isSearchUrl: false, rating: 5, reviews: 4563, partnersUrl: "https://link.coupang.com/a/g9wErFlUnQ", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDLh\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "코주부 프리미엄 육포 + 쇼핑백 선물세트, 1세트, 600g", price: "59,700원", category: "식품, 육포", url: "https://www.coupang.com/vp/products/8244740646?itemId=24400658722", isSearchUrl: false, rating: 5, reviews: 5878, partnersUrl: "https://link.coupang.com/a/g9wApKor7c", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDKy\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "온브릭스 프리미엄 과일바구니 8종 선물세트 중대형 2호 + 고급보자기, 1세트, 5.04kg", price: "109,000원", category: "식품, 과일", url: "https://www.coupang.com/vp/products/8072630583?itemId=22729422140", isSearchUrl: false, rating: 5, reviews: 200, partnersUrl: "https://link.coupang.com/a/g9wvyEfEs0", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDJR\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
@@ -8116,11 +8117,27 @@
     return !!(p.category && keywords.some(k => p.category.includes(k)));
   }
 
+  // 2026-09-19 추가 필터: "⭐ 5.0만" / "리뷰 1,000개↑" 체크박스. 예산·카테고리와 AND로 동작한다.
+  // 상태는 아래 let 변수에만 들고, 변경 시 DOM을 다시 그리지 않고 applyAutumnGiftFilterVisibility()로
+  // hidden만 토글한다(iframe 재로드 방지 구조 유지).
+  let autumnGiftOnlyFiveStar = false;
+  let autumnGiftMinReviews1000 = false;
+  const AUTUMN_GIFT_MIN_REVIEWS = 1000;
+
+  function autumnGiftRatingIsFive(p){
+    return Number(p.rating) === 5;
+  }
+  function autumnGiftHasMinReviews(p){
+    return Number(p.reviews) >= AUTUMN_GIFT_MIN_REVIEWS;
+  }
+
   function autumnGiftMatchesFilter(p){
     const targetOk = true;
     const budgetOk = hotdealsBudgetMatches(p.price, hotdealsBudgetFilter);
     const categoryOk = autumnGiftCategoryMatches(p, hotdealsCategoryFilter);
-    return targetOk && budgetOk && categoryOk;
+    const fiveOk = !autumnGiftOnlyFiveStar || autumnGiftRatingIsFive(p);
+    const reviewsOk = !autumnGiftMinReviews1000 || autumnGiftHasMinReviews(p);
+    return targetOk && budgetOk && categoryOk && fiveOk && reviewsOk;
   }
 
   // 가격 표시 — Excel에 가격이 비어 있는 상품(예: 쿠키 세트 1개)은 빈 칸 대신 안내 문구를 보여준다.
@@ -8228,20 +8245,79 @@
 
   // 페이지 진입 시(또는 새로고침 시) 딱 한 번만 전체 100개 카드/줄을 실제로 그린다. 이후로는
   // 필터가 아무리 바뀌어도 이 함수가 다시 호출되지 않으므로 쿠팡 iframe이 재생성되지 않는다.
-  // 표시 순서(2026-09-19): 'price-desc'면 현재가격이 높은 상품부터 보여준다(추석 목표 매출 달성용 —
-  // 단가 높은 한우·홍삼·굴비 세트가 그리드 맨 위로). 'excel'로 바꾸면 Excel 입력 순서 그대로.
-  // 정렬은 화면에 그리는 순서만 바꾸고 AUTUMN_GIFT_PRODUCTS 배열·인덱스(id=autumn-gift-item-i)는
-  // 건드리지 않으므로 Excel 동기화·필터·iframe 재로드 방지 구조와 충돌하지 않는다.
-  // 가격을 읽을 수 없는 행은 맨 뒤, 같은 가격끼리는 Excel 순서를 유지한다.
-  const AUTUMN_GIFT_SORT = 'price-desc';
-  function autumnGiftRenderOrder(){
+  // 표시 정렬(2026-09-19 개편): 사용자가 고르는 셀렉터 — '리뷰 많은순'(기본) / '가격 높은순' /
+  // '가격 낮은순'. 정렬은 DOM을 옮기지 않고 각 카드/줄에 CSS `order` 값만 부여해서 바꾼다
+  // (iframe이 들어있는 요소를 DOM에서 옮기면 브라우저가 iframe을 다시 로드하므로 절대 DOM 이동으로
+  // 정렬하지 않는다). 배열·인덱스(id=autumn-gift-item-i)는 그대로라 Excel 동기화·필터·재로드 방지
+  // 구조와 충돌하지 않는다. 값이 없는 행은 맨 뒤, 같은 값끼리는 Excel 순서를 유지한다.
+  const AUTUMN_GIFT_SORT_OPTIONS = [
+    { value: 'reviews-desc', label: '리뷰 많은순' },
+    { value: 'price-desc',   label: '가격 높은순' },
+    { value: 'price-asc',    label: '가격 낮은순' },
+  ];
+  let autumnGiftSort = 'reviews-desc';
+
+  function autumnGiftSortKey(i, mode){
+    const p = AUTUMN_GIFT_PRODUCTS[i];
+    if (mode === 'reviews-desc'){
+      const r = Number(p.reviews);
+      return Number.isFinite(r) ? r : -1;
+    }
+    const w = hotdealsParsePriceWon(p.price);
+    return Number.isNaN(w) ? -1 : w;
+  }
+  // 현재 정렬 기준으로 인덱스 배열을 정렬해 돌려준다(렌더 초기 DOM 순서와 CSS order 계산 공용).
+  function autumnGiftRenderOrder(mode){
+    const m = mode || autumnGiftSort;
     const idx = AUTUMN_GIFT_PRODUCTS.map((_, i) => i);
-    if (AUTUMN_GIFT_SORT !== 'price-desc') return idx;
-    const won = (i) => {
-      const w = hotdealsParsePriceWon(AUTUMN_GIFT_PRODUCTS[i].price);
-      return Number.isNaN(w) ? -1 : w;
-    };
-    return idx.sort((a, b) => (won(b) - won(a)) || (a - b));
+    if (m === 'price-asc'){
+      // 가격 낮은순: 가격을 읽을 수 없는 행(-1)은 맨 뒤로
+      return idx.sort((a, b) => {
+        const ka = autumnGiftSortKey(a, m), kb = autumnGiftSortKey(b, m);
+        if (ka < 0 && kb < 0) return a - b;
+        if (ka < 0) return 1;
+        if (kb < 0) return -1;
+        return (ka - kb) || (a - b);
+      });
+    }
+    return idx.sort((a, b) => (autumnGiftSortKey(b, m) - autumnGiftSortKey(a, m)) || (a - b));
+  }
+
+  // 정렬/체크박스 컨트롤 핸들러 — 상태만 바꾸고 표시/숨김·order 재계산만 한다(DOM 재생성 없음).
+  function setAutumnGiftSort(v){
+    if (!AUTUMN_GIFT_SORT_OPTIONS.some(o => o.value === v)) return;
+    autumnGiftSort = v;
+    applyAutumnGiftFilterVisibility();
+  }
+  function setAutumnGiftOnlyFiveStar(checked){
+    autumnGiftOnlyFiveStar = !!checked;
+    applyAutumnGiftFilterVisibility();
+  }
+  function setAutumnGiftMinReviews1000(checked){
+    autumnGiftMinReviews1000 = !!checked;
+    applyAutumnGiftFilterVisibility();
+  }
+
+  // 섹션 상단 컨트롤 바(최초 1회만 그려짐). 상태값을 반영해 초기 selected/checked를 맞춘다.
+  function autumnGiftControlsHtml(){
+    const opts = AUTUMN_GIFT_SORT_OPTIONS.map(o =>
+      `<option value="${o.value}"${o.value === autumnGiftSort ? ' selected' : ''}>${o.label}</option>`
+    ).join('');
+    return `
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3 text-xs" style="color:var(--text);">
+        <label class="flex items-center gap-1.5">
+          <span class="font-semibold" style="color:var(--muted);">정렬</span>
+          <select onchange="setAutumnGiftSort(this.value)" class="rounded-md px-2 py-1.5 text-xs font-semibold" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">${opts}</select>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <input type="checkbox" onchange="setAutumnGiftOnlyFiveStar(this.checked)"${autumnGiftOnlyFiveStar ? ' checked' : ''} style="accent-color:var(--primary);">
+          <span class="font-semibold">⭐ 5.0만</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <input type="checkbox" onchange="setAutumnGiftMinReviews1000(this.checked)"${autumnGiftMinReviews1000 ? ' checked' : ''} style="accent-color:var(--primary);">
+          <span class="font-semibold">리뷰 1,000개↑</span>
+        </label>
+      </div>`;
   }
 
   function renderAutumnGiftOnce(){
@@ -8271,8 +8347,9 @@
       <section class="mb-8">
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
+        ${autumnGiftControlsHtml()}
         <div id="autumn-gift-cards-grid" class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">${cardsHtml}</div>
-        <div id="autumn-gift-list-wrap" class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);">${listHtml}</div>
+        <div id="autumn-gift-list-wrap" class="rounded-lg overflow-hidden flex flex-col" style="background:var(--card); border:1px solid var(--line);">${listHtml}</div>
         <p id="autumn-gift-empty-msg" class="hidden text-sm text-center py-6 break-keep" style="color:var(--muted);">선택한 조건에 맞는 상품이 없습니다.</p>
         <p class="text-[11px] mt-2 break-keep" style="color:var(--muted);">표시 가격은 확인 시점 기준이며 쿠팡에서 변경될 수 있습니다.</p>
         <p class="text-[10px] mt-1 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
@@ -8286,13 +8363,26 @@
   // 클래스만 토글하므로 쿠팡 iframe의 src/DOM은 전혀 건드리지 않는다.
   function applyAutumnGiftFilterVisibility(){
     let visibleCount = 0;
+    // 정렬: 현재 기준으로 순위를 매겨 CSS order로만 반영(DOM 이동 없음 → iframe 재로드 없음).
+    const order = autumnGiftRenderOrder();
+    const rank = new Array(AUTUMN_GIFT_PRODUCTS.length);
+    order.forEach((idx, r) => { rank[idx] = r; });
+    let lastVisibleRow = null;
+    let lastVisibleRowRank = -1;
     AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
       const el = document.getElementById('autumn-gift-item-' + i);
       if (!el) return;
       const match = autumnGiftMatchesFilter(p);
       el.classList.toggle('hidden', !match);
-      if (match) visibleCount++;
+      el.style.order = String(rank[i]);
+      el.classList.remove('agp-last');
+      if (match){
+        visibleCount++;
+        // 줄 리스트(파트너스HTML 없는 상품)의 표시상 마지막 줄을 기억해 밑줄을 뺀다
+        if (!p.partnersHtml && rank[i] > lastVisibleRowRank){ lastVisibleRowRank = rank[i]; lastVisibleRow = el; }
+      }
     });
+    if (lastVisibleRow) lastVisibleRow.classList.add('agp-last');
     const emptyMsg = document.getElementById('autumn-gift-empty-msg');
     if (emptyMsg) emptyMsg.classList.toggle('hidden', visibleCount > 0);
     return visibleCount;
