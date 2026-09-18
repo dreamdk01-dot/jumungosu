@@ -417,11 +417,17 @@
   <!-- mobile menu panel -->
   <div id="mobile-menu" class="hidden sm:hidden menu-in border-t" style="border-color:var(--line); background:var(--surface);">
     <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
-      <button onclick="switchTab('home')" class="text-left py-2 nav-link" style="color:var(--text);">홈</button>
+      <button onclick="switchTab('home')" class="text-left py-2 nav-link" style="color:var(--text);">배달할인</button>
+      <button onclick="switchTab('hotdeals')" class="text-left py-2 nav-link" style="color:var(--text);">쇼핑핫딜</button>
       <button onclick="switchTab('board')" class="text-left py-2 nav-link" style="color:var(--text);">게시판</button>
-      <button onclick="switchTab('shopping')" class="text-left py-2 nav-link" style="color:var(--text);">맞춤 쇼핑</button>
-      <button onclick="switchTab('hotdeals')" class="text-left py-2 nav-link" style="color:var(--text);">오늘의 핫딜</button>
       <button id="tab-auth-mobile" onclick="switchTab('auth')" class="text-left py-2 nav-link" style="color:var(--text);">로그인/회원가입</button>
+      <!-- 로그인 상태에서만 보이는 구분선 — 아래 로그아웃/관리자 전용 항목이 하나도 없으면(비로그인)
+           같이 숨긴다. 표시 여부는 updateAuthNavUI()가 로그아웃 버튼과 함께 토글한다. -->
+      <div id="mobile-menu-divider" class="hidden my-1 border-t" style="border-color:var(--line);"></div>
+      <!-- 맞춤쇼핑(/shopping)은 미완성이라 일반 사용자에게는 완전히 숨기고, 관리자에게만 노출한다.
+           페이지/기능 자체는 그대로 두고 진입 링크만 숨기는 것이라 여기서만 hidden 처리한다.
+           관리자 판별은 기존 tab-admin-mobile과 동일한 isManagerUser() 기준을 그대로 재사용한다. -->
+      <button id="tab-shopping-admin-mobile" onclick="switchTab('shopping')" class="hidden text-left py-2 nav-link" style="color:var(--text);">맞춤쇼핑 (준비중)</button>
       <button id="tab-logout-mobile" onclick="logout()" class="hidden text-left py-2 nav-link text-xs" style="color:var(--muted);">로그아웃</button>
       <button id="tab-admin-mobile" onclick="handleAdminNavClick()" class="hidden text-left py-2 nav-link font-semibold" style="color:var(--primary);">관리자 대시보드</button>
     </div>
@@ -6553,6 +6559,7 @@
       mobileBtn.onclick = openUserInfoModal;
       desktopLogoutBtn.classList.remove('hidden');
       mobileLogoutBtn.classList.remove('hidden');
+      document.getElementById('mobile-menu-divider')?.classList.remove('hidden');
       if (quicknavAuthBtn){
         quicknavAuthBtn.textContent = '내정보';
         quicknavAuthBtn.onclick = openUserInfoModal;
@@ -6564,6 +6571,7 @@
       mobileBtn.onclick = () => switchTab('auth');
       desktopLogoutBtn.classList.add('hidden');
       mobileLogoutBtn.classList.add('hidden');
+      document.getElementById('mobile-menu-divider')?.classList.add('hidden');
       if (quicknavAuthBtn){
         quicknavAuthBtn.textContent = '로그인';
         quicknavAuthBtn.onclick = () => switchTab('auth');
@@ -6574,6 +6582,9 @@
     const showAdminBtn = isManagerUser();
     if (desktopAdminBtn) desktopAdminBtn.classList.toggle('hidden', !showAdminBtn);
     if (mobileAdminBtn) mobileAdminBtn.classList.toggle('hidden', !showAdminBtn);
+    // 맞춤쇼핑(/shopping)은 미완성 기능이라 일반 사용자 햄버거 메뉴에서는 숨기고, 관리자 대시보드와
+    // 동일한 기준(isManagerUser())으로 관리자에게만 진입 링크를 노출한다. 페이지 자체는 안 건드림.
+    document.getElementById('tab-shopping-admin-mobile')?.classList.toggle('hidden', !showAdminBtn);
     // 관리자 UI는 권한이 확인된 시점에만 DOM에 생성한다 (일반 방문자의 HTML/DOM에는 아예 존재하지 않음)
     if (showAdminBtn){
       ensureAdminDashboardRendered();
