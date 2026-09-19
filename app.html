@@ -7938,11 +7938,13 @@
   // ============================================================
   // 🎁 추석 선물세트 핫딜 — 단일 상품 DB (/hot-deals 한정)
   // Excel(주문의고수_추석선물_100개_파트너스입력용, 최신본)을 최종 원본으로 삼아 142개 전체를
-  // 그대로 옮겼다(2026-09-19 추가 최신화 — 신규 16개 추가, 이전 126개 배열을 전량 교체).
+  // 그대로 옮겼다(2026-09-19 추가 최신화 — 신규 16개 추가, 이전 126개 배열을 전량 교체). 이후
+  // 파트너스HTML 미입력 2개(삼시세끼연구소 무농약 표고 버섯 선물 세트, 동원 명절 선물세트
+  // 튜나리챔 O-48호)는 운영자 요청으로 화면 목록에서만 삭제했다(Excel 자체는 건드리지 않음 —
+  // 다음 Excel 동기화 때 그 Excel에 있으면 다시 반영된다). 현재 140개 전부 partnersHtml 있음.
   // partnersHtml 필드가 있으면 iframe 카드로, 없으면 이미지 없는 줄 리스트로 자동 렌더링된다
   // (아래 renderAutumnGiftOnce 참고) — Excel에 파트너스HTML을 채워 넣기만 하면 코드 수정 없이
-  // 줄 리스트가 iframe 카드로 자동 전환된다(현재 140/142개에 파트너스HTML 있음, 직전 버전
-  // 124/126개에서 증가).
+  // 줄 리스트가 iframe 카드로 자동 전환된다.
   // category는 자유 텍스트(Excel 카테고리 원문)이며, HOTDEALS_CATEGORIES(쿠팡 공식 14분류)와
   // 문자열이 정확히 같지 않아 카테고리 필터에서는 HOTDEALS_CATEGORY_KEYWORDS로 연결한다(아래
   // autumnGiftCategoryMatches). 예산은 현재가격을 실제 숫자로 파싱해 구간 비교한다. 대상(target)
@@ -8032,10 +8034,8 @@
     { name: "여섯별 제주 메리골드 꿀꽃차 답례품 선물세트, 브라운띠지, 1세트", price: "12,600원", category: "식품, 차", url: "https://www.coupang.com/vp/products/6271781315", isSearchUrl: false, rating: 5, reviews: 983, partnersUrl: "https://link.coupang.com/a/g9xhxZLpwi", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDRX\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "정과담음 당도선별 나주배 선물세트 + 보자기, 1세트, 5kg(6~8과)", price: "35,990원", category: "식품, 과일", url: "https://www.coupang.com/vp/products/9031925732?itemId=26493614408", isSearchUrl: false, rating: 4.5, reviews: 1923, partnersUrl: "https://link.coupang.com/a/g9xkOfXEdg", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDSs\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "그래인스쿠키 콜렉션 쿠키 50p + 쇼핑백 세트, 13종, 1세트", price: "35,800원", category: "식품, 과자·디저트", url: "https://www.coupang.com/vp/products/7904525470?itemId=2776781809", isSearchUrl: false, rating: 4.5, reviews: 857, partnersUrl: "https://link.coupang.com/a/g9lAkGYLvM", partnersHtml: "<iframe src=\"https://coupa.ng/cpBweu\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
-    { name: "삼시세끼연구소 무농약 표고 버섯 선물 세트", price: "43,900원", category: "버섯", url: "https://www.coupang.com/vp/products/8250094964", isSearchUrl: false, rating: null, reviews: 0, partnersUrl: "", partnersHtml: "", fixNeeded: "필요" },
     { name: "모슬포 옥돔 + 고등어 특선세트 (냉동), 1세트, 970g", price: "68,900원", category: "식품, 수산물", url: "https://www.coupang.com/vp/products/8514911250?itemId=24650014927", isSearchUrl: false, rating: 5, reviews: 11, partnersUrl: "https://link.coupang.com/a/g9lEB5MllQ", partnersHtml: "<iframe src=\"https://coupa.ng/cpBwhz\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "청정원 8호 선물세트", price: "44,960원", category: "식품, 오일,·조미료", url: "https://www.coupang.com/vp/products/8340084130?itemId=24084950803", isSearchUrl: false, rating: 5, reviews: 41, partnersUrl: "https://link.coupang.com/a/g9lLZsprJ6", partnersHtml: "<iframe src=\"https://coupa.ng/cpBwlk\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
-    { name: "동원 명절 선물세트 튜나리챔 O-48호", price: "49,800원", category: "햄·참치·통조림", url: "https://www.coupang.com/vp/products/9285401942", isSearchUrl: false, rating: null, reviews: 3, partnersUrl: "", partnersHtml: "", fixNeeded: "필요" },
     { name: "법성포 영광 오가 굴비 세트 10미 + 부직포 가방 (냉동)", price: "93,900원", category: "식품, 수산물", url: "https://www.coupang.com/vp/products/257738389?itemId=808630330", isSearchUrl: false, rating: 4.5, reviews: 1494, partnersUrl: "https://link.coupang.com/a/g9uXygbCG4", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDqj\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "영진표고숲속애 표고 5종 모둠세트 305g", price: "47,900원", category: "식품, 버섯", url: "https://www.coupang.com/vp/products/6006656895?itemId=10887435711", isSearchUrl: false, rating: 5, reviews: 68, partnersUrl: "https://link.coupang.com/a/g9veqgjjIi", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDt9\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
     { name: "상주 울음뚝곶감 건시 선물세트 (냉동) + 보자기, 900g(24과), 1세트", price: "29,900원", category: "식품", url: "https://www.coupang.com/vp/products/7525432687?itemId=24675247574", isSearchUrl: false, rating: 4.5, reviews: 4171, partnersUrl: "https://link.coupang.com/a/g9xvXTJA60", partnersHtml: "<iframe src=\"https://coupa.ng/cpBDUt\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "필요" },
