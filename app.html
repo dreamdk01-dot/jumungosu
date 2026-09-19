@@ -1331,8 +1331,6 @@
     <p id="hotdeals-hero-sub" class="text-sm leading-[1.5] break-keep mt-2" style="color:var(--muted);"></p>
   </div>
 
-  <div id="hotdeals-coupang-cta-root" class="mb-4"></div>
-
   <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
 
   <!-- hotdeals-dynamic-root를 top/bottom 둘로 쪼갠 이유(긴급수정, 2026-09-18): 필터 변경마다
@@ -1345,6 +1343,11 @@
   <div id="hotdeals-dynamic-root-top" class="mt-6"></div>
   <div id="hotdeals-autumn-gift-root"></div>
   <div id="hotdeals-dynamic-root-bottom"></div>
+  <!-- 쿠팡 추석 페스타 CTA(2026-09-19 이동): 원래 필터 위(페이지 최상단)에 있었는데, 첫 클릭이
+       "쿠팡으로 나가기"가 되어 우리 PICK·프리셋을 볼 기회를 없애서 상품 목록 아래 "대안 출구"로
+       내렸다. 파트너스 링크라 여기서 나간 방문자가 아무 상품을 사도 실적으로 잡히므로 지우지 않고
+       위치만 옮긴 것. 25일 자동 종료 스위치에 그대로 묶여 있다. -->
+  <div id="hotdeals-coupang-cta-root" class="mt-2"></div>
 
   <div class="text-center mt-8">
     <button type="button" onclick="switchTab('shopping')" class="px-6 py-3 rounded-md font-display text-sm break-keep" style="background:var(--primary); color:#1C1A17;">맞춤 쇼핑 시작하기</button>
@@ -8915,12 +8918,13 @@
     const root = document.getElementById('hotdeals-coupang-cta-root');
     if (!root) return;
     if (!HOTDEALS_SEASONAL_ENABLED || !hotdealsChuseokActive()){ root.innerHTML = ''; return; }
+    // 상품 목록 아래 "대안 출구"용 문구. 고지문구는 바로 위 상품 섹션 하단에 같은 문장이 항상 있어
+    // 여기서는 반복하지 않는다(showDisclosureHere는 호환을 위해 인자로만 남김).
     root.innerHTML = `
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
-        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">쿠팡 2026 추석 페스타</p>
-        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">추석 선물부터 명절 준비 상품까지 쿠팡 추석 기획전에서 확인해보세요.</p>
-        <a href="${COUPANG_CHUSEOK_FESTA_URL}" target="_blank" rel="noopener sponsored" class="block text-center py-3 rounded-md text-sm font-semibold break-keep" style="background:var(--primary); color:#1C1A17;">쿠팡 추석 페스타 바로가기 →</a>
-        ${showDisclosureHere ? hotdealsAffiliateDisclosureHtml() : ''}
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">원하는 게 없었나요?</p>
+        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">쿠팡 추석 페스타 기획전에서 다른 상품도 둘러보실 수 있어요.</p>
+        <a href="${COUPANG_CHUSEOK_FESTA_URL}" target="_blank" rel="noopener sponsored" class="block text-center py-3 rounded-md text-sm font-semibold break-keep" style="background:var(--card); color:var(--text); border:1px solid var(--line);">쿠팡 추석 페스타 전체 보기 →</a>
       </div>`;
   }
 
