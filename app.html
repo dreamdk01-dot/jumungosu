@@ -8477,7 +8477,7 @@
       <div id="autumn-gift-picks-wrap" class="mb-6">
         <h4 class="font-display text-base mb-1 break-keep" style="color:var(--text);">먼저 골라본 ${picks.length}개</h4>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">${picks.map(x => autumnGiftPickCardHtml(x.p, x.i)).join('')}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${picks.map(x => autumnGiftPickCardHtml(x.p, x.i)).join('')}</div>
       </div>`;
   }
 
@@ -8607,7 +8607,7 @@
               <p class="text-[11px] break-keep" style="color:var(--muted);">${g.sub}</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${cards}</div>
+          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div>
           <button type="button" id="autumn-gift-more-${g.key}" onclick="toggleAutumnGiftGroup('${g.key}')" class="hidden w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);"></button>
         </div>`;
     }).join('');
