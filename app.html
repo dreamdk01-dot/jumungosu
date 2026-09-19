@@ -7937,21 +7937,21 @@
 
   // ============================================================
   // 🎁 추석 선물세트 핫딜 — 단일 상품 DB (/hot-deals 한정)
-  // Excel(주문의고수_추석선물_100개_파트너스입력용, 최신본)을 최종 원본으로 삼아 111개 전체를
-  // 그대로 옮겼다(2026-09-19 최신화 — 운영자 수동 검수/파트너스 입력분 재동기화 + 신규 11개 추가,
-  // 이전 100개 배열을 전량 교체). partnersHtml 필드가 있으면 iframe 카드로, 없으면 이미지 없는
-  // 줄 리스트로 자동 렌더링된다(아래 renderAutumnGiftOnce 참고) — Excel에 파트너스HTML을 채워
-  // 넣기만 하면 코드 수정 없이 줄 리스트가 iframe 카드로 자동 전환된다(현재 109/111개에
-  // 파트너스HTML 있음, 직전 버전 98/100개에서 증가).
+  // Excel(주문의고수_추석선물_100개_파트너스입력용, 최신본)을 최종 원본으로 삼아 126개 전체를
+  // 그대로 옮겼다(2026-09-19 추가 최신화 — 신규 15개 추가, 이전 111개 배열을 전량 교체).
+  // partnersHtml 필드가 있으면 iframe 카드로, 없으면 이미지 없는 줄 리스트로 자동 렌더링된다
+  // (아래 renderAutumnGiftOnce 참고) — Excel에 파트너스HTML을 채워 넣기만 하면 코드 수정 없이
+  // 줄 리스트가 iframe 카드로 자동 전환된다(현재 124/126개에 파트너스HTML 있음, 직전 버전
+  // 109/111개에서 증가).
   // category는 자유 텍스트(Excel 카테고리 원문)이며, HOTDEALS_CATEGORIES(쿠팡 공식 14분류)와
   // 문자열이 정확히 같지 않아 카테고리 필터에서는 HOTDEALS_CATEGORY_KEYWORDS로 연결한다(아래
   // autumnGiftCategoryMatches). 예산은 현재가격을 실제 숫자로 파싱해 구간 비교한다. 대상(target)
   // 데이터는 원본에 없어 이 축은 필터링에 관여하지 않는다. 표시 정렬(리뷰순/가격순)과 ⭐5.0·리뷰
-  // 1,000개↑ 체크박스는 이 배열의 rating/reviews/price를 그대로 읽어서 계산한다(2026-09-19).
+  // 1,000개↑ 체크박스는 이 배열의 rating/reviews/price를 그대로 읽어서 계산한다.
   // partnersUrl/partnersHtml이 없는 상품은 빈 문자열("")로 둔다. url(일반 쿠팡URL)은 모든
   // 상품에 항상 유지 — partnersHtml이 있어도 삭제하지 않는다. fixNeeded는 Excel의 "수정필요"
-  // 컬럼을 그대로 보관만 해 둔 필드로, 현재 화면 렌더링에는 쓰지 않는다(신규 추가된 11개는
-  // fixNeeded가 비어 있고, 기존 100개는 "필요" — "완료"로 표시된 행은 아직 없음).
+  // 컬럼을 그대로 보관만 해 둔 필드로, 현재 화면 렌더링에는 쓰지 않는다(신규 추가분은 fixNeeded가
+  // 비어 있고, 기존 100개는 "필요" — "완료"로 표시된 행은 아직 없음).
   // 참고: Excel에 상품명(+일부는 URL까지) 같지만 다른 필드가 서로 다른 행이 3쌍 있다("LG생활건강
   // 프리미엄 모던에디션...", "정원삼 6년근 고려홍삼정 365스틱...", "해표 안심특선 S32호 선물세트"
   // 각각 2행) — 특히 "해표"는 상품명·가격·쿠팡URL까지 완전히 같고 파트너스URL/HTML만 서로 달라
@@ -8078,6 +8078,21 @@
     { name: "초록바다 법성포 참굴비 오가세트 + 쇼핑백 (냉동), 2.4kg(10미), 1개", price: "384,000원", category: "식품, 수산물", url: "https://www.coupang.com/vp/products/7751099797?itemId=20878081398", isSearchUrl: false, rating: 4, reviews: 5, partnersUrl: "https://link.coupang.com/a/hadQon9vwW", partnersHtml: "<iframe src=\"https://coupa.ng/cpBUH5\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
     { name: "듀이셀 VVIP 고영양수분광채 프라이빗케어 5주분 + 세라젯 마스크팩 5주분 기획 세트", price: "34,110원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/8814001531?itemId=25680064124", isSearchUrl: false, rating: 4.5, reviews: 107, partnersUrl: "https://link.coupang.com/a/hadV9Mygpg", partnersHtml: "<iframe src=\"https://coupa.ng/cpBUNw\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
     { name: "AHC 리뉴에이지 토탈 4종 + 아이크림 20ml 기프트 세트", price: "40,940원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/6460642556?itemId=14059332783", isSearchUrl: false, rating: 5, reviews: 10685, partnersUrl: "https://link.coupang.com/a/had0hFmPi8", partnersHtml: "<iframe src=\"https://coupa.ng/cpBUQ7\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "AHC 바이탈 골든 콜라겐 유스 토탈 케어 5종 세트", price: "34,030원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/6641056251?itemId=15181053236", isSearchUrl: false, rating: 5, reviews: 18859, partnersUrl: "https://link.coupang.com/a/had7tUT8Oi", partnersHtml: "<iframe src=\"https://coupa.ng/cpBUXs\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "AHC 블랙 캐비어 유스 리츄얼 케어 5종 세트, 1세트", price: "29,880원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/6641200715?itemId=15181806947", isSearchUrl: false, rating: 5, reviews: 2707, partnersUrl: "https://link.coupang.com/a/had9DZ8AYm", partnersHtml: "<iframe src=\"https://coupa.ng/cpBUZb\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "예지후 자명 한방 골드 스킨케어 5종 세트, 1세트", price: "32,400원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/6059210995?itemId=11133864157", isSearchUrl: false, rating: 4.5, reviews: 4027, partnersUrl: "https://link.coupang.com/a/haegLyQJoa", partnersHtml: "<iframe src=\"https://coupa.ng/cpBU3M\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "스킨푸드 바니바니 당근박스 6종 세트 + 쇼핑백, 1세트", price: "26,120원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/9548816739?itemId=28488820456", isSearchUrl: false, rating: 5, reviews: 103, partnersUrl: "https://link.coupang.com/a/haejI8Wf0u", partnersHtml: "<iframe src=\"https://coupa.ng/cpBU5A\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "달바 화이트 트러플 퍼스트 스프레이 세럼 100ml + 바이탈 스프레이 세럼 100ml + 기프트백, 1개", price: "33,910원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/6925525750?itemId=16739442406", isSearchUrl: false, rating: 5, reviews: 1712, partnersUrl: "https://link.coupang.com/a/haemCKcDue", partnersHtml: "<iframe src=\"https://coupa.ng/cpBU7v\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "미샤 타임 레볼루션 나이트리페어 2종 기획세트 5X, 1세트", price: "33,670원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/5789892586?itemId=9895075265", isSearchUrl: false, rating: 5, reviews: 2042, partnersUrl: "https://link.coupang.com/a/haepKN1JVk", partnersHtml: "<iframe src=\"https://coupa.ng/cpBU87\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "헤라 에이지 어웨이 에스테틱 3종 세트, 1세", price: "89,260원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/7920613204?itemId=21759121369", isSearchUrl: false, rating: 5, reviews: 1481, partnersUrl: "https://link.coupang.com/a/haevOC3Cz6", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVcW\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "에스티로더 어드밴스드 나이트 리페어 싱크로나이즈드 멀티 리커버리 콤플렉스 세럼 50ml + 클렌징 폼 30ml + 아이 젤 크림 5ml + 수프림 단단크림 15ml 세트, 1세트", price: "143,270원", category: "뷰티, 스킨케어", url: "https://www.coupang.com/vp/products/8955630833?itemId=26200181213", isSearchUrl: false, rating: 5, reviews: 375, partnersUrl: "https://link.coupang.com/a/haeFo1W0U8", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVjB\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "진세노사이드 57.2mg 고려홍삼면역 57 홍삼스틱, 100개, 10ml", price: "112,420원", category: "식품, 건강, 홍삼", url: "https://www.coupang.com/vp/products/7950190701?itemId=21938493563", isSearchUrl: false, rating: 5, reviews: 3376, partnersUrl: "https://link.coupang.com/a/haeRCq8qwm", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVtk\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "한삼인 산삼배양근 골드, 1L, 3세트", price: "38,190원", category: "식품, 건강, 홍삼", url: "https://www.coupang.com/vp/products/6598014505?itemId=18764160616", isSearchUrl: false, rating: 5, reviews: 1955, partnersUrl: "https://link.coupang.com/a/haeX53yhTU", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVzh\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "락토핏 당케어 선물세트 90p + 쇼핑백, 180g, 1세트", price: "32,560원", category: "식품, 건강", url: "https://www.coupang.com/vp/products/9385453898?itemId=27867049071", isSearchUrl: false, rating: 5, reviews: 140, partnersUrl: "https://link.coupang.com/a/hae1asHyEe", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVCf\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "김오곤 프리미엄 침향단 100p + 쇼핑백, 450g, 1박스", price: "50,910원", category: "식품, 건강", url: "https://www.coupang.com/vp/products/7566482282?itemId=22744379494", isSearchUrl: false, rating: 4.5, reviews: 785, partnersUrl: "https://link.coupang.com/a/hae79mYkNw", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVJb\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "하루활력 목 넘김이 부드러운 흑마늘즙, 70ml, 30개", price: "21,640원", category: "식품, 건강", url: "https://www.coupang.com/vp/products/91846827?itemId=20515057894", isSearchUrl: false, rating: 5, reviews: 2954, partnersUrl: "https://link.coupang.com/a/hafaYMllBc", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVLu\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "종근당건강 홍삼녹용 프리미엄, 1.5L, 2개", price: "24,780원", category: "식품, 건강, 홍삼", url: "https://www.coupang.com/vp/products/6294435?itemId=20155905443", isSearchUrl: false, rating: 5, reviews: 7067, partnersUrl: "https://link.coupang.com/a/hafgbQ1fau", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVQh\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
+    { name: "뉴케어 정품 고칼슘 영양갱 셀렉션 선물세트, 720g, 1세트", price: "29,470원", category: "식품, 건강", url: "https://www.coupang.com/vp/products/7538739317?itemId=19812435683", isSearchUrl: false, rating: 5, reviews: 2352, partnersUrl: "https://link.coupang.com/a/haflqf6bYG", partnersHtml: "<iframe src=\"https://coupa.ng/cpBVTD\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "" },
   ];
 
   const AUTUMN_GIFT_NOTE_EXCLUDE = new Set(['검색URL', '로켓배송 확인']);
