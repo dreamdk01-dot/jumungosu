@@ -23,7 +23,8 @@
 <link id="meta-canonical" rel="canonical" href="https://www.jumungosu.com/">
 
 <!-- 구조화 데이터 (Schema.org) — 주문의고수는 소비자의 상황과 필요에 맞는 주문·구매 선택을 돕는
-     정보 서비스이며, 현재는 배달앱 할인 비교를 제공하고 맞춤 쇼핑은 준비 중이다.
+     정보 서비스이며, 현재 배달앱 할인 비교와 쇼핑 상품 탐색(추천대상·예산·카테고리로 조건에 맞는
+     상품 찾기)을 함께 제공한다. 개인화된 '맞춤쇼핑' 추천 기능만 별도로 준비 중이다.
      "주문의 고수"라는 동일한 이름을 쓰는 다른 서비스가 존재하므로 혼동 방지를 위해 명시한다. -->
 <script type="application/ld+json">
 {
@@ -34,7 +35,7 @@
       "name": "주문의고수",
       "alternateName": ["jumungosu", "주문의 고수"],
       "url": "https://www.jumungosu.com/",
-      "description": "소비자의 상황과 필요에 맞는 주문·구매 선택을 돕는 정보 서비스로, 현재 배달앱 할인 비교를 제공하고 맞춤 쇼핑 서비스를 준비하고 있습니다.",
+      "description": "소비자의 상황과 필요에 맞는 주문·구매 선택을 돕는 정보 서비스로, 배달앱 할인 비교와 쇼핑 상품 탐색을 제공합니다.",
       "inLanguage": "ko-KR",
       "publisher": { "@id": "https://www.jumungosu.com/#organization" }
     },
@@ -45,7 +46,7 @@
       "alternateName": "문라잇",
       "url": "https://www.jumungosu.com/",
       "logo": "https://www.jumungosu.com/favicon.png",
-      "description": "배달앱 할인 비교를 제공하고 맞춤 쇼핑을 준비하며, 소비자의 상황과 필요에 맞는 주문·구매 선택을 돕는 정보 서비스",
+      "description": "배달앱 할인 비교와 쇼핑 상품 탐색을 제공하며, 소비자의 상황과 필요에 맞는 주문·구매 선택을 돕는 정보 서비스",
       "areaServed": "KR",
       "sameAs": [
         "https://www.instagram.com/jumungosu"
@@ -57,12 +58,12 @@
         {
           "@type": "Question",
           "name": "주문의고수는 어떤 서비스인가요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "배민·요기요·쿠팡이츠·땡겨요의 정액 할인 정보를 한 화면에서 비교해주는 서비스입니다." }
+          "acceptedAnswer": { "@type": "Answer", "text": "배민·요기요·쿠팡이츠·땡겨요의 정액 할인 정보를 한 화면에서 비교하고, 조건에 맞는 쇼핑 상품을 탐색할 수 있는 서비스입니다." }
         },
         {
           "@type": "Question",
           "name": "회원가입이 필요한가요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "아니요. 할인정보는 회원가입 없이 바로 확인할 수 있습니다." }
+          "acceptedAnswer": { "@type": "Answer", "text": "아니요. 할인정보와 쇼핑 상품 탐색은 회원가입 없이 바로 확인할 수 있습니다." }
         },
         {
           "@type": "Question",
@@ -72,7 +73,12 @@
         {
           "@type": "Question",
           "name": "주문의고수에서 직접 주문하나요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "아니요. 주문의고수는 할인정보를 제공하며 실제 주문과 결제는 각 배달 플랫폼에서 진행됩니다." }
+          "acceptedAnswer": { "@type": "Answer", "text": "아니요. 주문의고수는 할인·상품 정보를 제공하며 실제 주문과 결제는 각 배달 플랫폼 또는 쿠팡 등 외부 판매처에서 진행됩니다." }
+        },
+        {
+          "@type": "Question",
+          "name": "쇼핑에서는 무엇을 할 수 있나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "추천대상, 예산, 카테고리 조건으로 상품을 좁혀보며 쿠팡 상품을 탐색할 수 있습니다. 상황을 입력하면 자동으로 추천해주는 맞춤쇼핑 기능은 준비 중입니다." }
         }
       ]
     }
@@ -862,7 +868,7 @@
   <div class="pt-8 pb-4">
     <h2 id="page-about-title" class="font-display text-3xl mb-2 break-keep" style="color:var(--primary);">주문의고수 소개</h2>
     <p class="text-[15px] leading-[1.5] break-keep mb-2" style="color:var(--muted);">주문의고수는 소비자의 상황과 필요에 맞는 주문·구매 정보를 비교·분석해 더 나은 소비 선택을 돕는 서비스입니다.</p>
-    <p class="text-[15px] leading-[1.5] break-keep mb-2" style="color:var(--muted);">현재는 여러 배달 플랫폼의 할인 정보를 한곳에서 비교할 수 있는 서비스를 제공하고 있으며, 앞으로는 선물 대상, 예산, 수량과 우선순위 등을 바탕으로 적합한 상품과 주문안을 찾을 수 있는 맞춤 쇼핑 서비스를 준비하고 있습니다.</p>
+    <p class="text-[15px] leading-[1.5] break-keep mb-2" style="color:var(--muted);">현재는 여러 배달 플랫폼의 할인 정보를 한곳에서 비교할 수 있고, 추천대상·예산·카테고리 조건으로 쇼핑 상품을 탐색할 수 있는 서비스를 제공하고 있습니다. 상황을 입력하면 선물을 찾아주는 맞춤 쇼핑 기능은 준비하고 있습니다.</p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);">단순히 많은 상품과 할인 정보를 나열하는 것이 아니라, 이용자에게 지금 필요한 조건을 먼저 파악하고 그에 맞는 선택지를 찾기 쉽게 만드는 것이 주문의고수가 지향하는 방향입니다.</p>
   </div>
 
@@ -875,7 +881,7 @@
       현재 운영 중인 배달 할인 비교에서는 배달의민족·요기요·쿠팡이츠·땡겨요 4개 배달앱에서 진행되는 정액 할인 정보를 한 화면에 모아 보여드립니다.
     </p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">
-      맞춤 쇼핑에서는 이용자의 목적과 조건을 먼저 확인한 뒤, 그에 적합한 상품과 주문안을 찾을 수 있도록 준비하고 있습니다. 맞춤 쇼핑의 상품 추천 결과와 외부 판매처 연결은 관련 기능과 데이터 준비가 완료된 이후 제공할 예정입니다.
+      쇼핑에서는 추천대상·예산·카테고리 조건으로 상품을 좁혀보며 쿠팡 상품을 탐색할 수 있습니다. 상황을 입력하면 맞는 선물을 찾아주는 맞춤 쇼핑 기능은 관련 데이터와 기능 준비가 완료된 이후 제공할 예정입니다.
     </p>
   </section>
 
@@ -895,12 +901,25 @@
   </section>
 
   <section class="mb-10">
+    <h2 class="font-display text-xl mb-3 break-keep" style="color:var(--text);">쇼핑 상품 탐색</h2>
+    <ul class="text-[15px] leading-[1.5] break-keep space-y-2 mb-3" style="color:var(--text);">
+      <li>✔ 추천대상·예산·카테고리 조건으로 상품 좁혀보기</li>
+      <li>✔ 리뷰와 가격을 직접 비교해 고른 상품 소개</li>
+      <li>✔ 상품별 확인 시점 가격, 평점, 리뷰수 안내</li>
+      <li>✔ 쿠팡 상품 페이지로 바로 연결</li>
+    </ul>
+    <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">
+      상품을 무작정 나열하기보다, 조건에 맞게 좁혀볼 수 있도록 하는 데 중점을 둡니다. 쇼핑핫딜 메뉴에서 바로 이용하실 수 있습니다.
+    </p>
+  </section>
+
+  <section class="mb-10">
     <h2 class="font-display text-xl mb-3 break-keep" style="color:var(--text);">준비 중인 맞춤 쇼핑</h2>
     <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
-      맞춤 쇼핑은 상품을 무조건 많이 나열하기보다, 선물 대상, 예산, 수량과 우선순위 등 이용자의 필요를 먼저 확인한 뒤 상황에 적합한 상품과 주문안을 찾기 쉽게 제공하는 방식으로 준비하고 있습니다.
+      맞춤 쇼핑은 선물 대상, 예산, 수량과 우선순위 등 이용자의 상황을 먼저 입력받아, 그에 맞는 상품을 자동으로 찾아주는 기능으로 준비하고 있습니다.
     </p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">
-      현재는 맞춤 쇼핑 이용 흐름을 확인할 수 있으며, 실제 상품 정보와 추천 결과는 관련 기능과 데이터 준비가 완료된 이후 제공할 예정입니다.
+      현재는 맞춤 쇼핑의 상황 입력 흐름을 확인할 수 있으며, 실제 상품 추천 결과는 관련 기능과 데이터 준비가 완료된 이후 제공할 예정입니다. 지금 바로 상품을 둘러보고 싶다면 위 쇼핑 상품 탐색(쇼핑핫딜)을 이용해주세요.
     </p>
   </section>
 
@@ -912,6 +931,9 @@
     <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
       사이트에 표시된 정보는 비교와 선택을 돕기 위한 참고 정보입니다. 실제 주문이나 구매 전에는 해당 배달앱 또는 외부 판매처에서 최종 가격과 적용 조건을 다시 확인해주세요.
     </p>
+    <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
+      쇼핑 상품의 가격·평점·리뷰수는 확인 시점 기준이며, 판매처인 쿠팡에서 이후 변경될 수 있습니다.
+    </p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">
       혹시 놓친 배달 할인이 보인다면 게시판의 '실시간 할인 제보'에 남겨주세요. 확인되는 대로 반영하고 있습니다.
     </p>
@@ -922,11 +944,27 @@
     <div class="space-y-5">
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 주문의고수에서는 무엇을 비교할 수 있나요?</p>
-        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">현재는 배민·요기요·쿠팡이츠·땡겨요의 배달 할인 정보를 비교할 수 있습니다. 이용자의 상황과 조건에 맞는 상품을 찾는 맞춤 쇼핑 서비스도 준비하고 있습니다.</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">배민·요기요·쿠팡이츠·땡겨요의 배달 할인 정보를 비교할 수 있고, 추천대상·예산·카테고리 조건으로 쇼핑 상품도 탐색할 수 있습니다.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 쇼핑에서는 무엇을 할 수 있나요?</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">쇼핑핫딜 메뉴에서 추천대상·예산·카테고리 조건으로 쿠팡 상품을 좁혀볼 수 있습니다. 리뷰와 가격을 직접 비교해 고른 상품도 함께 소개합니다.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 표시된 상품 가격은 현재 가격인가요?</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">표시된 가격은 확인 시점 기준입니다. 실제 가격은 판매처인 쿠팡에서 변경될 수 있어, 구매 전 쿠팡에서 최종 가격을 다시 확인해주세요.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 상품 구매는 어디에서 하나요?</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">주문의고수는 상품을 직접 판매하지 않습니다. 상품 페이지에서 쿠팡으로 연결되며, 실제 주문·결제·배송은 쿠팡에서 이루어집니다.</p>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 맞춤쇼핑은 무엇인가요?</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">선물 대상·예산 등 상황을 입력하면 맞는 상품을 찾아주는 기능으로, 현재 준비 중입니다. 지금은 쇼핑핫딜에서 조건별로 상품을 직접 둘러보실 수 있습니다.</p>
       </div>
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 이용료가 있나요?</p>
-        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">현재 제공되는 할인 정보 확인과 게시판 이용은 무료입니다. 사이트 운영은 광고와 일부 제휴 수수료로 유지하고 있습니다.</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">현재 제공되는 할인·상품 정보 확인과 게시판 이용은 무료입니다. 사이트 운영은 광고와 일부 제휴 수수료로 유지하고 있습니다.</p>
       </div>
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 표시된 할인이 실제와 다를 수도 있나요?</p>
@@ -934,7 +972,7 @@
       </div>
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 회원가입을 꼭 해야 하나요?</p>
-        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">아니요. 할인 정보는 가입 없이 바로 확인할 수 있습니다. 게시판에 글을 작성할 때만 회원가입이 필요합니다.</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">아니요. 할인·쇼핑 정보는 가입 없이 바로 확인할 수 있습니다. 게시판에 글을 작성할 때만 회원가입이 필요합니다.</p>
       </div>
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 다른 주문·구매 분야도 추가될 수 있나요?</p>
@@ -1273,9 +1311,9 @@
   <div id="shopping-view-intro">
    <div class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
     <div class="pt-10 pb-8 text-center">
-      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑</p>
+      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑 (준비 중)</p>
       <h2 id="page-shopping-intro-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h2>
-      <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">상황에 맞는 선물과 수량을 분석해<br class="sm:hidden"> 가장 적합한 주문안을 찾아드려요.</p>
+      <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">대상과 예산 등 상황을 입력하면<br class="sm:hidden"> 맞는 선물을 찾아주는 기능을 준비하고 있어요.</p>
       <button type="button" onclick="enterShoppingChuseok()" class="px-8 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">추석 선물 찾기</button>
 
       <!-- 320px처럼 좁은 화면에서 점(·) 구분 한 줄 표기가 가로로 넘치지 않도록, 모바일에서는 세로로 쌓고
@@ -1300,25 +1338,25 @@
       </div>
       <div class="text-center">
         <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">2</div>
-        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 분석</p>
+        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 확인</p>
         <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">우선순위와 제외조건 반영</p>
       </div>
       <div class="text-center">
         <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">3</div>
-        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">최적 주문안 확인</p>
-        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">가장 적합한 주문 결론 제공</p>
+        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 요약 확인</p>
+        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">실제 상품 추천은 준비 중</p>
       </div>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-3 mt-4">
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🎁 맞춤 쇼핑</p>
-        <p class="text-xs break-keep" style="color:var(--muted);">내 상황을 분석해 최적 주문안과 대안을 추천해요.</p>
+        <p class="text-xs break-keep" style="color:var(--muted);">입력한 상황에 맞춰 선물을 추천하는 기능을 준비하고 있어요.</p>
       </div>
       <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
-        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 오늘의 핫딜</p>
-        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">현재 가격이 매력적인 상품을 자동으로 선별해요.</p>
-        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">오늘의 핫딜 보러가기</button>
+        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 쇼핑핫딜</p>
+        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">지금 바로 조건별로 쇼핑 상품을 둘러볼 수 있어요.</p>
+        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">쇼핑핫딜 보러가기</button>
       </div>
     </div>
    </div>
@@ -6101,7 +6139,7 @@
 
   const TERMS_CONTENT = `
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제1조 (목적)</p>
-    <p class="${ARTICLE_BODY}" style="color:var(--text);">이 약관은 문라잇(이하 “회사”)이 운영하는 배달 앱 할인 정보 통합 제공 서비스 ‘주문의고수’(이하 “서비스”)의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
+    <p class="${ARTICLE_BODY}" style="color:var(--text);">이 약관은 문라잇(이하 “회사”)이 운영하는 주문·구매 정보 서비스 ‘주문의고수’(이하 “서비스”)의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제2조 (용어의 정의)</p>
     <p class="${ARTICLE_BODY}" style="color:var(--text);">
@@ -6283,7 +6321,8 @@
       ① 회사가 직접 구현한 서비스 코드는 쿠키(cookie)를 직접 설치·사용하지 않습니다. 다만 로그인 세션 유지, 로그인 시 이메일 저장 등 일부 기능은 브라우저의 localStorage(로컬 저장소)를 사용합니다. localStorage는 쿠키와는 다른 기술로, 이용자의 브라우저에만 저장되고 서버로 자동 전송되지 않으며, 브라우저 설정을 통해 언제든지 직접 삭제할 수 있습니다.<br>
       ② 서비스에 연동된 Google Analytics(이용 통계 분석), Google AdSense·Kakao 애드핏(광고 게재)은 각 서비스 자체적으로 쿠키 또는 이와 유사한 기술을 사용할 수 있습니다. 이는 방문 빈도, 이용 형태 등을 분석하여 맞춤형 서비스·광고를 제공하기 위한 목적입니다.<br>
       ③ 이용자는 웹브라우저 설정을 통해 쿠키 저장을 거부하거나 삭제할 수 있습니다. 쿠키 저장을 거부할 경우 로그인 상태 유지 등 일부 서비스 이용에 어려움이 발생할 수 있으며, 광고·분석 관련 기능이 개인화되지 않을 수 있습니다.<br>
-      &nbsp;&nbsp;(설정 방법 예시: 크롬 브라우저 → 설정 → 개인정보 및 보안 → 쿠키 및 기타 사이트 데이터)
+      &nbsp;&nbsp;(설정 방법 예시: 크롬 브라우저 → 설정 → 개인정보 및 보안 → 쿠키 및 기타 사이트 데이터)<br>
+      ④ 서비스 내 쇼핑 상품의 쿠팡 파트너스 링크를 통해 쿠팡 등 외부 사이트로 이동하는 경우, 해당 사이트에서 발생하는 정보 수집·처리는 이동한 사이트의 정책에 따르며 회사가 직접 수집·보관하지 않습니다.
     </p>
 
     <p class="${ARTICLE_HEAD}" style="color:var(--primary);">제8조 (정보주체의 권리 및 행사 방법)</p>
@@ -7232,7 +7271,7 @@
     },
     about: {
       title: '서비스 소개 | 주문의고수',
-      description: '배달앱 할인 비교 서비스 주문의고수를 소개합니다. 배민·요기요·쿠팡이츠·땡겨요 실시간 할인 정보를 한눈에 비교하세요.',
+      description: '배달앱 할인 비교와 쇼핑 상품 탐색 서비스 주문의고수를 소개합니다. 배민·요기요·쿠팡이츠·땡겨요 할인 정보와 조건별 쇼핑 상품을 한눈에 확인하세요.',
       ogTitle: '서비스 소개 | 주문의고수',
       indexable: true,
     },
@@ -7256,7 +7295,7 @@
     },
     partner: {
       title: 'B2B 제휴 문의 | 주문의고수',
-      description: '배달 할인 비교 서비스 주문의고수의 프랜차이즈, 브랜드 프로모션, 광고 및 사업 제휴 문의 페이지입니다.',
+      description: '주문·구매 정보 서비스 주문의고수의 프랜차이즈, 브랜드 프로모션, 광고 및 사업 제휴 문의 페이지입니다.',
       ogTitle: 'B2B 제휴 문의 | 주문의고수',
       indexable: true,
     },
@@ -7273,15 +7312,15 @@
       indexable: false,
     },
     shopping: {
-      title: '맞춤 쇼핑 - 상황에 맞는 최적 주문 추천 | 주문의고수',
-      description: '대상, 예산, 수량과 우선순위를 분석해 상황에 맞는 최적 주문안을 추천합니다.',
-      ogTitle: '맞춤 쇼핑 | 주문의고수',
+      title: '맞춤 쇼핑 (준비 중) - 조건에 맞는 선물 찾기 | 주문의고수',
+      description: '대상, 예산 등 상황에 맞는 선물을 쉽게 찾을 수 있는 맞춤쇼핑을 준비하고 있습니다. 지금은 쇼핑핫딜에서 조건별로 상품을 바로 둘러보실 수 있어요.',
+      ogTitle: '맞춤 쇼핑 (준비 중) | 주문의고수',
       indexable: true,
     },
     hotdeals: {
-      title: '오늘의 핫딜 - 주문할 만한 상품 선별 | 주문의고수',
-      description: '현재 가격과 상품 구성을 분석해 주문할 만한 핫딜을 선별합니다.',
-      ogTitle: '오늘의 핫딜 | 주문의고수',
+      title: '쇼핑핫딜 - 조건별 쇼핑 상품 탐색 | 주문의고수',
+      description: '추천대상·예산·카테고리로 조건에 맞는 쿠팡 상품을 찾아보세요. 리뷰와 가격을 직접 비교해 고른 상품도 함께 소개합니다.',
+      ogTitle: '쇼핑핫딜 | 주문의고수',
       indexable: true,
     },
   };
@@ -7289,9 +7328,9 @@
   // /shopping 탭 안에서 URL이 /shopping 인지 /shopping/chuseok 인지에 따라 SEO 태그를 다시 덮어쓴다.
   // (PAGE_SEO는 탭 단위 매핑이라 같은 'shopping' 탭 안의 두 URL을 구분하지 못하므로 별도 처리)
   const SHOPPING_CHUSEOK_SEO = {
-    title: '추석 선물 추천 - 예산과 대상별 맞춤 선물 찾기 | 주문의고수',
-    description: '선물 대상, 전체 예산, 수량과 우선순위를 입력하고 상황에 맞는 추석 선물 주문안을 찾아보세요.',
-    ogTitle: '추석 선물 추천 | 주문의고수',
+    title: '추석 선물 추천 - 예산과 대상별 맞춤 선물 찾기 (준비 중) | 주문의고수',
+    description: '선물 대상, 예산 등 조건을 입력해 맞춤 추석 선물을 찾는 기능을 준비하고 있습니다. 지금은 쇼핑핫딜에서 조건별로 추석 선물세트를 바로 둘러보실 수 있어요.',
+    ogTitle: '추석 선물 추천 (준비 중) | 주문의고수',
   };
   function applyShoppingSeoVariant(){
     const isChuseok = location.pathname === '/shopping/chuseok';
@@ -8941,7 +8980,7 @@
       // 시즌 종료 후(또는 시즌 플래그 off): 상단 내비게이션과 같은 이름 "쇼핑핫딜"로 통일
       eyebrow.textContent = '';
       title.textContent = '쇼핑핫딜';
-      desc.textContent = '현재 가격과 구성 조건을 분석해 주문할 만한 상품만 보여드립니다.';
+      desc.textContent = '리뷰와 가격을 직접 비교해 고른 상품과 조건별 상품 탐색을 함께 제공합니다.';
       sub.textContent = '';
     }
   }
