@@ -1401,7 +1401,7 @@
          기존엔 20개를 구분 없이 한 줄에 나열했는데, 주제별로 묶어서 사람 눈에도 스캔하기 쉽고
          같은 주제 링크끼리 앵커텍스트 맥락이 더 뚜렷해지도록 재구성했습니다. 링크 자체(href)는
          하나도 빠짐없이 그대로입니다. -->
-    <div class="dashed-divider pt-6 pb-6 mb-2">
+    <div id="footer-seo-delivery" class="dashed-divider pt-6 pb-6 mb-2">
       <p class="text-xs font-semibold mb-3" style="color:var(--muted);">오늘의 할인 비교</p>
       <div class="space-y-4 text-xs">
         <div class="flex flex-wrap gap-x-3 gap-y-1.5">
@@ -1469,6 +1469,37 @@
             <a href="/coupangeats-discount" class="footer-link" style="color:var(--muted);">쿠팡이츠 쿠폰·할인</a>
             <a href="/ddangyo-discount" class="footer-link" style="color:var(--muted);">땡겨요 쿠폰·할인</a>
           </div>
+        </div>
+
+        <div class="pt-1">
+          <a href="/chuseok-gift" class="footer-link font-semibold inline-block" style="color:var(--primary);">추석 선물·쇼핑 정보 전체보기 →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- /hot-deals(쇼핑) 전용 하단 SEO 링크(2026-09-19). 배달 링크 블록과 마찬가지로 실제 <a href>
+         정적 링크 — 자바스크립트 없이도 크롤러가 발견 가능. 기본은 숨김 상태이고, switchTab()의
+         updateFooterSeoRegion()이 tab==='hotdeals'일 때만 이 블록을 보이고 위 배달 블록을 숨긴다
+         (그 외 모든 페이지는 기존 그대로 배달 블록만 보임 — 이번 작업 범위가 배달할인/쇼핑핫딜
+         두 화면으로 한정되어 있어 다른 탭의 기본 동작은 건드리지 않음). -->
+    <div id="footer-seo-shopping" class="hidden dashed-divider pt-6 pb-6 mb-2">
+      <p class="text-xs font-semibold mb-3" style="color:var(--muted);">추석 선물 조건별로 찾아보기</p>
+      <div class="space-y-4 text-xs">
+        <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+          <a href="/chuseok-gift" class="footer-link font-semibold" style="color:var(--primary);">2026 추석 선물세트</a>
+          <a href="/chuseok-gift-for-parents" class="footer-link" style="color:var(--muted);">부모님 추석 선물</a>
+          <a href="/chuseok-gift-for-business" class="footer-link" style="color:var(--muted);">직장·거래처 추석 선물</a>
+          <a href="/chuseok-gift-under-30000" class="footer-link" style="color:var(--muted);">3만원 이하</a>
+          <a href="/chuseok-gift-30000-50000" class="footer-link" style="color:var(--muted);">3~5만원</a>
+          <a href="/chuseok-gift-50000-100000" class="footer-link" style="color:var(--muted);">5~10만원</a>
+          <a href="/chuseok-hanwoo-gift" class="footer-link" style="color:var(--muted);">한우 선물세트</a>
+          <a href="/chuseok-gulbi-gift" class="footer-link" style="color:var(--muted);">굴비 선물세트</a>
+          <a href="/chuseok-fruit-gift" class="footer-link" style="color:var(--muted);">과일 선물세트</a>
+          <a href="/chuseok-health-gift" class="footer-link" style="color:var(--muted);">건강식품 선물세트</a>
+        </div>
+
+        <div class="pt-1">
+          <a href="/today-delivery-discount" class="footer-link font-semibold inline-block" style="color:var(--primary);">배달할인 정보 전체보기 →</a>
         </div>
       </div>
     </div>
@@ -7823,6 +7854,20 @@
     wrap.classList.toggle('hidden', SHOPPING_TABS.includes(tab));
   }
 
+  // 하단 SEO 내부링크 영역 전환(2026-09-19): /hot-deals에서만 쇼핑 SEO 10개 링크 블록을 보여주고
+  // 배달 SEO 링크 블록은 숨긴다. 그 외 모든 탭(홈 포함)은 기존 그대로 배달 SEO 블록만 보인다
+  // (이번 작업 범위가 배달할인/쇼핑핫딜 두 화면으로 한정되어 있어 다른 탭은 손대지 않음).
+  // 두 블록 모두 실제 <a href> 정적 링크라 이 토글은 hidden 클래스만 바꿀 뿐 링크 자체는 항상
+  // DOM에 존재한다(JS 없이도 크롤러가 두 블록 다 읽을 수 있음).
+  function updateFooterSeoRegion(tab){
+    const deliveryBlock = document.getElementById('footer-seo-delivery');
+    const shoppingBlock = document.getElementById('footer-seo-shopping');
+    if (!deliveryBlock || !shoppingBlock) return;
+    const onHotdeals = (tab === 'hotdeals');
+    deliveryBlock.classList.toggle('hidden', onHotdeals);
+    shoppingBlock.classList.toggle('hidden', !onHotdeals);
+  }
+
   // '쇼핑' 드롭다운 버튼은 PAGES.forEach의 'tab-' + p 규칙에 걸리지 않는 별도 UI라,
   // /shopping·/shopping/chuseok·/hot-deals 중 어디에 있든 활성 색상으로 표시되도록 별도 동기화한다.
   function updateShoppingNavActiveState(tab){
@@ -9153,6 +9198,7 @@
 
     updateSeoTags(tab);
     syncShoppingAdVisibility(tab);
+    updateFooterSeoRegion(tab);
     updateShoppingNavActiveState(tab);
     // 대표 제목(H1) 승격: shopping 탭은 /shopping과 /shopping/chuseok 중 무엇을 보여줄지
     // 아래 syncShoppingSubViewFromPath()가 결정하므로, 여기서는 이전 탭의 h1만 내리고
