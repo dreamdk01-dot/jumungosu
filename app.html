@@ -8474,7 +8474,7 @@
       .sort((a, b) => Number(a.p.pick) - Number(b.p.pick));
     if (!picks.length) return '';
     return `
-      <div class="mb-6">
+      <div id="autumn-gift-picks-wrap" class="mb-6">
         <h4 class="font-display text-base mb-1 break-keep" style="color:var(--text);">먼저 골라본 ${picks.length}개</h4>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">${picks.map(x => autumnGiftPickCardHtml(x.p, x.i)).join('')}</div>
@@ -8529,11 +8529,11 @@
   }
   function setAutumnGiftOnlyFiveStar(checked){
     autumnGiftOnlyFiveStar = !!checked;
-    applyAutumnGiftFilterVisibility();
+    hotdealsApplyFilterChange();
   }
   function setAutumnGiftMinReviews1000(checked){
     autumnGiftMinReviews1000 = !!checked;
-    applyAutumnGiftFilterVisibility();
+    hotdealsApplyFilterChange();
   }
 
   // 섹션 상단 컨트롤 바(최초 1회만 그려짐). 상태값을 반영해 초기 selected/checked를 맞춘다.
@@ -8601,7 +8601,7 @@
       }).join('');
       return `
         <div id="autumn-gift-group-${g.key}" class="agp-group mb-6">
-          <div class="flex items-end justify-between gap-3 mb-2">
+          <div id="autumn-gift-group-header-${g.key}" class="flex items-end justify-between gap-3 mb-2">
             <div>
               <h4 class="font-display text-base break-keep" style="color:var(--text);">${g.title} <span id="autumn-gift-group-count-${g.key}" class="text-xs font-normal" style="color:var(--muted);"></span></h4>
               <p class="text-[11px] break-keep" style="color:var(--muted);">${g.sub}</p>
@@ -8624,12 +8624,30 @@
       : '지금 주목할 만한 쿠팡 상품을 한곳에서 확인해보세요.';
 
     root.innerHTML = `
-      <section class="mb-8">
+      <section class="mb-8" style="position:relative;">
+        <!-- ④ 스크롤 고정 요약바 — 기본 숨김. 사이트 상단 sticky 헤더 바로 아래에 붙도록 top을
+             JS(autumnGiftUpdateStickyBar)가 헤더 실측 높이로 매번 맞춘다. -->
+        <div id="autumn-gift-sticky-bar" class="hidden" style="position:fixed; left:0; right:0; z-index:30; background:var(--card); border-bottom:1px solid var(--primary); padding:8px 16px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+          <div class="max-w-3xl mx-auto flex items-center justify-between gap-2 flex-wrap text-xs">
+            <p class="font-bold break-keep" style="color:var(--text);"><span id="autumn-gift-sticky-summary"></span> · <span id="autumn-gift-sticky-count" style="color:var(--primary);"></span></p>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="autumnGiftScrollToFilterCard()" class="font-semibold px-2.5 py-1 rounded-full" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">조건 변경</button>
+              <button type="button" onclick="resetAutumnGiftFilters()" class="font-semibold px-2.5 py-1 rounded-full" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">전체 보기</button>
+            </div>
+          </div>
+        </div>
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
         ${autumnGiftDeadlineStripHtml()}
         <div class="agp-light rounded-xl p-3 sm:p-4">
         ${autumnGiftPicksSectionHtml()}
+        <!-- ① 조건이 걸리면 PICK 대신 여기에 "부모님 · 3~5만원 · 33개"를 크게 보여준다. 기본은 숨김. -->
+        <div id="autumn-gift-result-header" class="hidden rounded-lg p-3 mb-4" style="background:var(--card); border:1px solid var(--primary);">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <p class="text-base font-extrabold break-keep" style="color:var(--text);"><span id="autumn-gift-result-summary"></span> · <span id="autumn-gift-result-count" style="color:var(--primary);"></span></p>
+            <button type="button" onclick="resetAutumnGiftFilters()" class="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style="background:var(--card-alt); color:var(--text); border:1px solid var(--line);">전체 보기 ✕</button>
+          </div>
+        </div>
         <p id="autumn-gift-count" class="text-xs font-semibold mb-2" style="color:var(--text);" aria-live="polite"></p>
         ${autumnGiftControlsHtml()}
         <div id="autumn-gift-cards-grid">${groupsHtml}</div>
@@ -8642,12 +8660,45 @@
     autumnGiftDomBuilt = true;
     // DOM이 실제로 들어간 뒤에 관찰을 시작해야 슬롯을 찾을 수 있다.
     autumnGiftSetupLazyIframes();
+    // ④ 스크롤 고정 요약바 리스너는 이 함수가 평생 한 번만 실행되므로(autumnGiftDomBuilt 가드)
+    // 여기서 등록해도 중복 등록될 일이 없다.
+    if (!autumnGiftStickyListenerBound){
+      window.addEventListener('scroll', autumnGiftUpdateStickyBar, { passive: true });
+      autumnGiftStickyListenerBound = true;
+    }
+  }
+
+  // ④ 스크롤 위치를 보고 고정 요약바를 보일지 정한다. /hot-deals가 아니거나(다른 탭) 조건이
+  // 없거나 필터 카드가 아직 화면에 있으면 숨긴다. background:var(--card)라 사이트 헤더와
+  // 겹치면 안 되므로 top을 헤더 실측 높이로 매번 맞춘다(모바일 퀵내비 포함해 헤더 안에 있음).
+  function autumnGiftUpdateStickyBar(){
+    const bar = document.getElementById('autumn-gift-sticky-bar');
+    if (!bar) return;
+    const pageEl = document.getElementById('page-hotdeals');
+    if (!pageEl || pageEl.classList.contains('hidden') || !hotdealsHasActiveFilter()){
+      bar.classList.add('hidden');
+      return;
+    }
+    const filterRoot = document.getElementById('hotdeals-filter-root');
+    if (!filterRoot){ bar.classList.add('hidden'); return; }
+    const rect = filterRoot.getBoundingClientRect();
+    const scrolledPast = rect.bottom < 0;
+    bar.classList.toggle('hidden', !scrolledPast);
+    if (scrolledPast){
+      const headerEl = document.querySelector('header.sticky');
+      bar.style.top = (headerEl ? headerEl.offsetHeight : 0) + 'px';
+      const summaryEl = document.getElementById('autumn-gift-sticky-summary');
+      const countEl = document.getElementById('autumn-gift-sticky-count');
+      if (summaryEl) summaryEl.textContent = autumnGiftFilterSummaryText();
+      if (countEl) countEl.textContent = `${Number(autumnGiftCountMatches()).toLocaleString('ko-KR')}개`;
+    }
   }
 
   // 필터가 바뀔 때마다 이 함수만 다시 호출한다 — DOM을 새로 그리지 않고 각 카드/줄의 hidden
   // 클래스만 토글하므로 쿠팡 iframe의 src/DOM은 전혀 건드리지 않는다.
   function applyAutumnGiftFilterVisibility(){
     let visibleCount = 0;
+    const hasFilter = hotdealsHasActiveFilter();
     // 정렬: 현재 기준으로 순위를 매겨 CSS order로만 반영(DOM 이동 없음 → iframe 재로드 없음).
     const order = autumnGiftRenderOrder();
     const rank = new Array(AUTUMN_GIFT_PRODUCTS.length);
@@ -8655,6 +8706,8 @@
     let lastVisibleRow = null;
     let lastVisibleRowRank = -1;
     // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(AUTUMN_GIFT_GROUP_LIMIT) 넘는 건 숨긴다.
+    // 단, 조건이 걸려 있으면(①) 한도를 적용하지 않고 매칭된 걸 전부 보여준다 — "33개라며 왜 13개만
+    // 보이냐"는 혼란을 없애기 위함(2026-09-19).
     const groupMatched = {};
     AUTUMN_GIFT_GROUPS.forEach(g => { groupMatched[g.key] = []; });
     AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
@@ -8676,16 +8729,24 @@
     });
     AUTUMN_GIFT_GROUPS.forEach((g) => {
       const items = groupMatched[g.key].sort((a, b) => a.r - b.r);
-      const expanded = autumnGiftExpandedGroups.has(g.key);
+      const expanded = hasFilter || autumnGiftExpandedGroups.has(g.key);
       items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= AUTUMN_GIFT_GROUP_LIMIT); });
       const wrap = document.getElementById('autumn-gift-group-' + g.key);
-      if (wrap) wrap.classList.toggle('hidden', items.length === 0);
+      if (wrap){
+        wrap.classList.toggle('hidden', items.length === 0);
+        // 조건이 걸린 동안은 묶음 제목/소개(가족 실속 등)를 숨기고 여백도 줄여서 하나의 결과
+        // 그리드처럼 이어 보이게 한다(묶음 이름이 지금 고른 조건과 안 맞아 보이는 걸 방지).
+        wrap.classList.toggle('mb-6', !hasFilter);
+        wrap.classList.toggle('mb-2', hasFilter);
+      }
+      const header = document.getElementById('autumn-gift-group-header-' + g.key);
+      if (header) header.classList.toggle('hidden', hasFilter);
       const cnt = document.getElementById('autumn-gift-group-count-' + g.key);
       if (cnt) cnt.textContent = items.length ? `${items.length}개` : '';
       const more = document.getElementById('autumn-gift-more-' + g.key);
       if (more){
         const rest = items.length - AUTUMN_GIFT_GROUP_LIMIT;
-        if (rest > 0){
+        if (!hasFilter && rest > 0){
           more.classList.remove('hidden');
           more.textContent = expanded ? '접기 ▲' : `더보기 ${rest}개 ▼`;
         } else {
@@ -8696,17 +8757,36 @@
     if (lastVisibleRow) lastVisibleRow.classList.add('agp-last');
     const emptyMsg = document.getElementById('autumn-gift-empty-msg');
     if (emptyMsg) emptyMsg.classList.toggle('hidden', visibleCount > 0);
+
+    // ① 조건이 걸리면 PICK을 숨기고, 그 자리에 결과 헤더("부모님 · 3~5만원 · 33개")를 보여준다.
+    const picksWrap = document.getElementById('autumn-gift-picks-wrap');
+    if (picksWrap) picksWrap.classList.toggle('hidden', hasFilter);
+    const resultHeader = document.getElementById('autumn-gift-result-header');
+    if (resultHeader){
+      resultHeader.classList.toggle('hidden', !hasFilter);
+      if (hasFilter){
+        const summaryEl = document.getElementById('autumn-gift-result-summary');
+        const countEl = document.getElementById('autumn-gift-result-count');
+        if (summaryEl) summaryEl.textContent = autumnGiftFilterSummaryText();
+        if (countEl) countEl.textContent = `${Number(visibleCount).toLocaleString('ko-KR')}개`;
+      }
+    }
+
     // 상품 가짓수 표시(2026-09-19): 화면에 실제 그려진 상품 수(완전 중복 행 제외)를 전체로 두고,
     // 필터가 걸려 있으면 "n개 / 전체 N개", 없으면 "전체 N개"로 보여준다. 필터·정렬·체크박스가
-    // 바뀔 때마다 이 함수가 호출되므로 항상 최신 숫자다.
+    // 바뀔 때마다 이 함수가 호출되므로 항상 최신 숫자다. 조건이 걸린 동안은 위 결과 헤더가 같은
+    // 역할을 더 크게 보여주므로 이 작은 줄은 숨긴다(중복 표시 방지).
     const countEl = document.getElementById('autumn-gift-count');
     if (countEl){
+      countEl.classList.toggle('hidden', hasFilter);
       const totalRendered = document.querySelectorAll('#hotdeals-autumn-gift-root [id^="autumn-gift-item-"]').length;
       const fmt = (n) => Number(n).toLocaleString('ko-KR');
       countEl.textContent = (visibleCount === totalRendered)
         ? `전체 ${fmt(totalRendered)}개`
         : `${fmt(visibleCount)}개 표시 / 전체 ${fmt(totalRendered)}개`;
     }
+    // ④ 스크롤 고정 요약바도 조건/개수가 바뀔 때마다 같이 최신화한다.
+    autumnGiftUpdateStickyBar();
     return visibleCount;
   }
 
@@ -8719,6 +8799,81 @@
   let hotdealsTargetFilter = '전체';
   let hotdealsBudgetFilter = '전체';
   let hotdealsCategoryFilter = '전체';
+  // ①②③④ 필터 UX 개편(2026-09-19)용 상태.
+  //  · hotdealsDetailFiltersOpen: "직접 조건 고르기" 상세 칩(대상/예산/카테고리)을 펼쳐 보여줄지.
+  //    기본은 접힘(프리셋만 먼저 보이게) — 단, 조건이 하나라도 걸려 있으면 강제로 펼쳐서 보여준다
+  //    (사용자가 지금 뭘 골랐는지 보이고 바꿀 수 있어야 하므로, 아래 hotdealsHasActiveFilter()와 OR).
+  //  · autumnGiftStickyListenerBound: ④ 스크롤 고정 요약바용 scroll 리스너를 한 번만 등록하기 위한 가드.
+  let hotdealsDetailFiltersOpen = false;
+  let autumnGiftStickyListenerBound = false;
+
+  // 대상/예산/카테고리 중 하나라도 '전체'가 아니거나, 체크박스(⭐5.0만/리뷰1,000개↑) 중 하나라도
+  // 켜져 있으면 "조건이 걸린 상태"로 본다. ①(PICK·묶음 접힘 숨기고 결과만 보여주기), ②(자동 스크롤),
+  // ③(상세 칩 강제 펼침), ④(스크롤 고정 요약바 노출) 네 가지가 전부 이 판정 하나를 공유한다.
+  function hotdealsHasActiveFilter(){
+    return hotdealsTargetFilter !== '전체' || hotdealsBudgetFilter !== '전체' || hotdealsCategoryFilter !== '전체'
+      || autumnGiftOnlyFiveStar || autumnGiftMinReviews1000;
+  }
+  // "부모님 · 3~5만원 · ⭐5.0" 같은 사람이 읽는 조건 요약 문구. 결과 헤더(①)와 스크롤 고정
+  // 요약바(④)가 이 문구를 그대로 공유한다.
+  function autumnGiftFilterSummaryText(){
+    const parts = [];
+    if (hotdealsTargetFilter !== '전체') parts.push(hotdealsTargetFilter);
+    if (hotdealsBudgetFilter !== '전체') parts.push(hotdealsBudgetFilter);
+    if (hotdealsCategoryFilter !== '전체') parts.push(hotdealsCategoryFilter);
+    if (autumnGiftOnlyFiveStar) parts.push('⭐5.0');
+    if (autumnGiftMinReviews1000) parts.push('리뷰 1,000+');
+    return parts.join(' · ');
+  }
+  // DOM을 건드리지 않는 순수 계산 — 필터를 바꾼 "직후"(아직 화면을 다시 그리기 전) 상세 칩 패널의
+  // "조건에 맞는 상품 N개 보기" 버튼에 쓸 개수를 미리 구할 때 쓴다. applyAutumnGiftFilterVisibility()가
+  // DOM을 실제로 갱신하면서 계산하는 값과 항상 같은 결과가 나온다(같은 매칭·중복제거 규칙 재사용).
+  function autumnGiftCountMatches(){
+    let n = 0;
+    AUTUMN_GIFT_PRODUCTS.forEach((p, i) => { if (!autumnGiftIsRenderDuplicate(i) && autumnGiftMatchesFilter(p)) n++; });
+    return n;
+  }
+  function toggleHotdealsDetailFilters(){
+    hotdealsDetailFiltersOpen = !hotdealsDetailFiltersOpen;
+    renderHotdealsFilterUI();
+  }
+  // "전체 보기 ✕" — 결과 헤더(①)와 스크롤 고정 요약바(④)에서 공용으로 쓰는 초기화.
+  function resetAutumnGiftFilters(){
+    hotdealsTargetFilter = '전체';
+    hotdealsBudgetFilter = '전체';
+    hotdealsCategoryFilter = '전체';
+    autumnGiftOnlyFiveStar = false;
+    autumnGiftMinReviews1000 = false;
+    hotdealsApplyFilterChange();
+  }
+  // ② 필터가 바뀔 때마다 부르는 공용 진입점 — 화면을 다시 그린 뒤 결과가 보이지 않으면 그쪽으로
+  // 부드럽게 스크롤한다. 기존에 각 setter가 renderHotdealsFilterUI()+renderHotdealsProducts()를
+  // 따로 호출하던 것을 이 함수 하나로 통일했다(동작은 동일, 스크롤 한 줄만 추가).
+  function hotdealsApplyFilterChange(){
+    renderHotdealsFilterUI();
+    renderHotdealsProducts();
+    autumnGiftScrollToResultIfNeeded(false);
+  }
+  // force=true면(하단 "결과 N개 보기" 버튼을 직접 눌렀을 때) 이미 보이는 상태여도 무조건 스크롤한다.
+  // force=false(필터를 바꿨을 때 자동 호출)면 결과 영역이 이미 화면 안에 있으면 스크롤하지 않는다
+  // (사용자가 스크롤해서 결과를 보고 있는 도중에 갑자기 위치가 튀는 걸 막기 위함).
+  function autumnGiftScrollToResultIfNeeded(force){
+    if (!hotdealsHasActiveFilter()) return;
+    const header = document.getElementById('autumn-gift-result-header');
+    if (!header || typeof header.getBoundingClientRect !== 'function') return;
+    if (!force){
+      const rect = header.getBoundingClientRect();
+      const headerEl = document.querySelector('header.sticky');
+      const topOffset = headerEl ? headerEl.offsetHeight : 0;
+      const inView = rect.top >= topOffset && rect.top < window.innerHeight * 0.6;
+      if (inView) return;
+    }
+    if (typeof header.scrollIntoView === 'function') header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function autumnGiftScrollToFilterCard(){
+    const filterRoot = document.getElementById('hotdeals-filter-root');
+    if (filterRoot && typeof filterRoot.scrollIntoView === 'function') filterRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function hotdealsProductMatchesFilter(p){
     // targets(정규화 배열)가 있으면 그것을 우선 사용하고, 없으면 기존 target 필드(문자열 또는
@@ -8738,9 +8893,9 @@
     return targetOk && budgetOk && categoryOk;
   }
 
-  function setHotdealsTargetFilter(v){ hotdealsTargetFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
-  function setHotdealsBudgetFilter(v){ hotdealsBudgetFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
-  function setHotdealsCategoryFilter(v){ hotdealsCategoryFilter = v; renderHotdealsFilterUI(); renderHotdealsProducts(); }
+  function setHotdealsTargetFilter(v){ hotdealsTargetFilter = v; hotdealsApplyFilterChange(); }
+  function setHotdealsBudgetFilter(v){ hotdealsBudgetFilter = v; hotdealsApplyFilterChange(); }
+  function setHotdealsCategoryFilter(v){ hotdealsCategoryFilter = v; hotdealsApplyFilterChange(); }
 
   // ---- 히어로 문구 (텍스트만 갈아끼움 — #page-hotdeals-title 요소 자체는 H1↔H2 승격 시스템이
   //      쓰고 있는 노드라서, 새로 만들지 않고 innerText만 바꾼다) ----
@@ -8842,8 +8997,7 @@
     } else {
       hotdealsTargetFilter = pr.target; hotdealsBudgetFilter = pr.budget; hotdealsCategoryFilter = pr.category;
     }
-    renderHotdealsFilterUI();
-    renderHotdealsProducts();
+    hotdealsApplyFilterChange();
   }
   function hotdealsPresetRowHtml(){
     if (!hotdealsHasAnyTargetData()) return '';
@@ -8878,12 +9032,31 @@
     // 현재 선택된 카테고리가 목록에서 사라졌다면(상품이 0개가 됐다면) '전체'로 되돌린다.
     if (!categories.includes(hotdealsCategoryFilter)) hotdealsCategoryFilter = '전체';
 
+    // ③ 상세 칩(대상/예산/카테고리)은 기본 접힘 — 프리셋만 먼저 보여서 첫 화면을 짧게 만든다.
+    // 단, 조건이 이미 걸려 있으면(프리셋으로 걸렸든 이전에 직접 골랐든) 강제로 펼쳐서 지금 뭐가
+    // 선택돼 있는지 보이고 바꿀 수 있게 한다.
+    const hasFilter = hotdealsHasActiveFilter();
+    const detailOpen = hotdealsDetailFiltersOpen || hasFilter;
+    const detailHtml = `
+        ${showTarget ? hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter') : ''}
+        ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
+        ${hotdealsCategoryChipRowHtml('카테고리', categories, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}`;
+
+    // ② 상세 칩이 접혀 있어도, 조건이 걸려 있으면(=상세가 강제로 펼쳐진 상태) 필터 카드 맨 아래에
+    // "조건에 맞는 상품 N개 보기" 버튼을 둬서 누른 자리에서 바로 결과로 이동할 수 있게 한다.
+    const jumpCount = hasFilter ? autumnGiftCountMatches() : 0;
+    const jumpHtml = hasFilter
+      ? `<button type="button" onclick="autumnGiftScrollToResultIfNeeded(true)" class="w-full mt-3 py-3 rounded-md text-sm font-bold" style="background:var(--primary); color:#1C1A17;">조건에 맞는 상품 ${Number(jumpCount).toLocaleString('ko-KR')}개 보기 ↓</button>`
+      : '';
+
     root.innerHTML = `
       <div class="rounded-lg p-4" style="background:var(--surface); border:1px solid var(--line);">
         ${presetsHtml}
-        ${showTarget ? hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter') : ''}
-        ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
-        ${hotdealsCategoryChipRowHtml('카테고리', categories, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}
+        <button type="button" onclick="toggleHotdealsDetailFilters()" class="flex items-center gap-1 text-xs font-semibold mb-2" style="color:var(--muted);">
+          직접 조건 고르기 <span>${detailOpen ? '▲' : '▼'}</span>
+        </button>
+        <div class="${detailOpen ? '' : 'hidden'}">${detailHtml}</div>
+        ${jumpHtml}
       </div>`;
   }
 
