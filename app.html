@@ -266,6 +266,21 @@
   .curated-hotdeal-row{ border-bottom:1px solid var(--line); transition:background-color 0.15s; }
   /* 정렬을 CSS order로 하므로 :last-child 대신 JS가 표시상 마지막 줄에 붙이는 .agp-last로 밑줄을 뺀다 */
   .curated-hotdeal-row.agp-last{ border-bottom:none; }
+
+  /* 쇼핑핫딜 상품 패널만 밝은 배경(2026-09-19): 사이트 전체 다크는 유지하고, 흰색 쿠팡 iframe이
+     체스판처럼 튀지 않도록 이 구간에서만 디자인 토큰을 라이트 값으로 재정의한다(푸터와 같은 방식).
+     안쪽 카드·텍스트·컨트롤은 전부 var(--card)/var(--text)/... 를 쓰므로 자동으로 따라온다.
+     --primary는 노란색(#FFB800)이 흰 배경에서 안 보여 진한 앰버로 바꾸고, 가격 전용 색을 따로 둔다. */
+  .agp-light{
+    --bg:#F5F6F8; --surface:#FFFFFF; --card:#FFFFFF; --card-alt:#EEF0F3;
+    --text:#171717; --muted:#5F6B7A; --line:#E1E4E9; --primary:#A86E00; --accent:#D8320A;
+    --agp-price:#C2410C;
+    background:var(--bg); color:var(--text);
+  }
+  .agp-price{ color:var(--agp-price); }
+  /* 카드 본문(텍스트 영역) 링크: 밑줄 없이 카드처럼 보이되 hover 시 살짝 강조 */
+  .agp-card-link{ text-decoration:none; color:inherit; display:block; }
+  .agp-card-link:hover .agp-name{ text-decoration:underline; }
   .curated-hotdeal-row:hover{ background:var(--card-alt); }
 
   /* 땡겨요 필터 칩: 비활성 상태에서 hover 시 주황 톤이 살짝 밝아지고, 선택(active) 상태에서는 글로우 효과 */
@@ -8256,15 +8271,32 @@
     const raw = (p && p.price !== null && p.price !== undefined) ? String(p.price).trim() : '';
     return raw ? escapeHtml(raw) : '<span class="text-xs font-semibold" style="color:var(--muted);">가격은 쿠팡에서 확인</span>';
   }
-  // iframe이 있는 카드용 가격 표기(2026-09-19 신뢰 보정): 쿠팡 iframe 안에 실시간 가격이 이미 보이는데
-  // 우리 쪽 입력 시점 가격을 같은 크기·노란색으로 한 번 더 쓰면 두 값이 어긋날 때 "가격이 두 개"로
-  // 보여 신뢰를 깎는다. 그래서 iframe 카드에서는 실시간 가격(iframe)을 주인공으로 두고 우리 값은
-  // 작은 회색 "확인 시점 ○○원"으로만 남긴다(예산 필터·정렬은 이 값을 그대로 쓰므로 데이터는 유지).
-  // iframe이 없는 줄 리스트는 우리 가격이 유일한 가격이라 기존 노란색 표기를 그대로 둔다.
+  // 가격 표기(2026-09-19 재수정): 실제 렌더 캡처로 확인해 보니 쿠팡 파트너스 iframe에는 가격이
+  // 표시되지 않는다(로고·이미지·잘린 상품명·로켓 배지·쇼핑하기 버튼만). 그래서 우리 가격이 이 카드의
+  // 유일한 가격이며 크고 잘 보여야 한다. "확인 시점" 안내는 그 옆에 작게만 붙인다.
   function autumnGiftSnapshotPriceHtml(p){
     const raw = (p && p.price !== null && p.price !== undefined) ? String(p.price).trim() : '';
-    if (!raw) return '';
-    return `<p class="text-[11px] mb-1" style="color:var(--muted);">확인 시점 ${escapeHtml(raw)} · 현재가는 위 쿠팡 정보 기준</p>`;
+    if (!raw) return `<p class="text-sm font-bold mb-1 agp-price">가격은 쿠팡에서 확인</p>`;
+    return `<p class="mb-1"><span class="text-base font-extrabold agp-price">${escapeHtml(raw)}</span><span class="text-[10px] ml-1" style="color:var(--muted);">확인 시점</span></p>`;
+  }
+
+  // 카드 클릭 추적(⑤, 2026-09-19): iframe 바깥 텍스트 영역을 파트너스URL 링크로 만들고, 클릭 시
+  // GA 이벤트를 남긴다. iframe 안(쿠팡 "쇼핑하기") 클릭은 크로스오리진이라 잡을 수 없으므로 이게
+  // 유일한 클릭 지표다. gtag가 없어도 오류 없이 넘어간다. 링크 이동은 막지 않는다(새 탭).
+  function autumnGiftTrackClick(i, placement){
+    try {
+      const p = AUTUMN_GIFT_PRODUCTS[i];
+      if (typeof gtag === 'function' && p){
+        gtag('event', 'partner_click', {
+          item_name: p.name, item_id: String(i), placement: placement || 'grid',
+          price_snapshot: p.price || '', targets: (p.targets || []).join(','),
+        });
+      }
+    } catch (e) { /* 추적 실패가 클릭을 막으면 안 됨 */ }
+    return true;
+  }
+  function autumnGiftClickHref(p){
+    return p.partnersUrl || p.url || '';
   }
 
   // 파트너스HTML이 있는 상품의 카드 — iframe(쿠팡 원본, 미변형) + 카테고리/상품명/가격/별점/
@@ -8282,10 +8314,12 @@
     return `
       <div id="autumn-gift-item-${i}" class="rounded-lg p-3 flex flex-col items-center text-center" style="background:var(--card); border:1px solid var(--line);">
         <div class="mb-2 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
-        ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
-        <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
-        ${autumnGiftSnapshotPriceHtml(p)}
-        ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
+        <a class="agp-card-link w-full" href="${escapeHtml(autumnGiftClickHref(p))}" target="_blank" rel="noopener sponsored" onclick="autumnGiftTrackClick(${i}, 'grid')">
+          ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
+          <p class="agp-name text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
+          ${autumnGiftSnapshotPriceHtml(p)}
+          ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
+        </a>
       </div>`;
   }
 
@@ -8296,13 +8330,13 @@
       ? p.category.split(',').map(s => s.trim()).filter(s => s && !AUTUMN_GIFT_NOTE_EXCLUDE.has(s)).join(' · ')
       : '';
     return `
-      <a id="autumn-gift-item-${i}" href="${escapeHtml(p.url)}" target="_blank" rel="noopener sponsored" class="curated-hotdeal-row flex items-center justify-between gap-3 py-3 px-3">
+      <a id="autumn-gift-item-${i}" href="${escapeHtml(autumnGiftClickHref(p))}" target="_blank" rel="noopener sponsored" class="curated-hotdeal-row flex items-center justify-between gap-3 py-3 px-3" onclick="autumnGiftTrackClick(${i}, 'list')">
         <div class="min-w-0 flex-1">
           ${tags ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(tags)}</p>` : ''}
           <p class="text-sm font-semibold break-keep" style="color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(p.name)}</p>
         </div>
         <div class="shrink-0 text-right">
-          <p class="text-sm font-bold whitespace-nowrap" style="color:var(--primary);">${autumnGiftPriceLabel(p)}</p>
+          <p class="text-sm font-bold whitespace-nowrap agp-price">${autumnGiftPriceLabel(p)}</p>
           <p class="text-[11px] mt-1 whitespace-nowrap font-semibold" style="color:var(--accent);">쿠팡에서 현재 가격 확인 →</p>
         </div>
       </a>`;
@@ -8375,16 +8409,16 @@
     return `
       <div id="autumn-gift-pick-${p.pick}" class="rounded-lg p-3 flex gap-3" style="background:var(--card); border:1px solid var(--line);">
         <div class="shrink-0 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
-        <div class="min-w-0 flex-1 flex flex-col">
+        <a class="agp-card-link min-w-0 flex-1 flex flex-col" href="${escapeHtml(autumnGiftClickHref(p))}" target="_blank" rel="noopener sponsored" onclick="autumnGiftTrackClick(${i}, 'pick')">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#1C1A17;">PICK ${p.pick}</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary); color:#FFFFFF;">PICK ${p.pick}</span>
             ${p.pickLabel ? `<span class="text-[11px] font-semibold" style="color:var(--muted);">${escapeHtml(p.pickLabel)}</span>` : ''}
           </div>
-          <p class="text-sm font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
+          <p class="agp-name text-sm font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
           ${autumnGiftSnapshotPriceHtml(p)}
           ${ratingText ? `<p class="text-[11px] mb-2" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
           ${p.pickReason ? `<p class="text-xs leading-relaxed break-keep mt-auto" style="color:var(--text);">${escapeHtml(p.pickReason)}</p>` : ''}
-        </div>
+        </a>
       </div>`;
   }
   function autumnGiftPicksSectionHtml(){
@@ -8478,6 +8512,34 @@
       </div>`;
   }
 
+  // ⑥ 묶음 표시(2026-09-19): 160개 한 덩어리 대신 4개 묶음으로 보여준다. 각 상품은 정확히 한 묶음에만
+  // 들어간다(iframe 중복 생성 방지). 묶음 배정 규칙은 targets/가격을 보고 정한 고정 규칙이며 데이터는
+  // 바꾸지 않는다: 부모님께 = 부모님 태그 & 5만원 이상 / 가족 실속 = 가족 태그(연인 제외) /
+  // 연인·지인 = 연인 태그 또는 (지인 & 직장 아님) / 직장·거래처 = 나머지 직장 태그.
+  // 각 묶음은 정렬 기준 상위 AUTUMN_GIFT_GROUP_LIMIT개만 펼치고 나머지는 "더보기"로 연다(펼침 상태는
+  // 세션 동안 유지, DOM은 그대로이고 hidden/표시만 바뀌므로 iframe 재로드 없음).
+  const AUTUMN_GIFT_GROUPS = [
+    { key: 'parents', title: '부모님께', sub: '5만원 이상, 제대로 챙기고 싶을 때' },
+    { key: 'family',  title: '가족 실속', sub: '같이 먹고 같이 쓰는 것들' },
+    { key: 'work',    title: '직장·거래처 답례', sub: '부담 없는 가격대로 돌리기 좋은 것' },
+    { key: 'friends', title: '연인·지인', sub: '뷰티와 간식 위주' },
+  ];
+  const AUTUMN_GIFT_GROUP_LIMIT = 6;
+  const autumnGiftExpandedGroups = new Set();
+  function autumnGiftGroupOf(p){
+    const has = (t) => Array.isArray(p.targets) && p.targets.includes(t);
+    const w = hotdealsParsePriceWon(p.price);
+    if (has('부모님') && !Number.isNaN(w) && w >= 50000) return 'parents';
+    if (has('가족') && !has('연인')) return 'family';
+    if (has('연인') || (has('지인') && !has('직장·거래처'))) return 'friends';
+    if (has('직장·거래처')) return 'work';
+    return 'parents';
+  }
+  function toggleAutumnGiftGroup(key){
+    if (autumnGiftExpandedGroups.has(key)) autumnGiftExpandedGroups.delete(key); else autumnGiftExpandedGroups.add(key);
+    applyAutumnGiftFilterVisibility();
+  }
+
   function renderAutumnGiftOnce(){
     if (autumnGiftDomBuilt) return;
     const root = document.getElementById('hotdeals-autumn-gift-root');
@@ -8485,9 +8547,23 @@
     if (!AUTUMN_GIFT_PRODUCTS.length){ root.innerHTML = ''; return; }
 
     const order = autumnGiftRenderOrder();
-    const cardsHtml = order.map((i) => {
-      const p = AUTUMN_GIFT_PRODUCTS[i];
-      return (p.partnersHtml && !autumnGiftIsRenderDuplicate(i)) ? autumnGiftCardHtml(p, i) : '';
+    const groupsHtml = AUTUMN_GIFT_GROUPS.map((g) => {
+      const cards = order.map((i) => {
+        const p = AUTUMN_GIFT_PRODUCTS[i];
+        if (!p.partnersHtml || autumnGiftIsRenderDuplicate(i) || autumnGiftGroupOf(p) !== g.key) return '';
+        return autumnGiftCardHtml(p, i);
+      }).join('');
+      return `
+        <div id="autumn-gift-group-${g.key}" class="agp-group mb-6">
+          <div class="flex items-end justify-between gap-3 mb-2">
+            <div>
+              <h4 class="font-display text-base break-keep" style="color:var(--text);">${g.title} <span id="autumn-gift-group-count-${g.key}" class="text-xs font-normal" style="color:var(--muted);"></span></h4>
+              <p class="text-[11px] break-keep" style="color:var(--muted);">${g.sub}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${cards}</div>
+          <button type="button" id="autumn-gift-more-${g.key}" onclick="toggleAutumnGiftGroup('${g.key}')" class="hidden w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);"></button>
+        </div>`;
     }).join('');
     const listHtml = order.map((i) => {
       const p = AUTUMN_GIFT_PRODUCTS[i];
@@ -8506,14 +8582,16 @@
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
         ${autumnGiftDeadlineStripHtml()}
+        <div class="agp-light rounded-xl p-3 sm:p-4">
         ${autumnGiftPicksSectionHtml()}
         <p id="autumn-gift-count" class="text-xs font-semibold mb-2" style="color:var(--text);" aria-live="polite"></p>
         ${autumnGiftControlsHtml()}
-        <div id="autumn-gift-cards-grid" class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">${cardsHtml}</div>
+        <div id="autumn-gift-cards-grid">${groupsHtml}</div>
         <div id="autumn-gift-list-wrap" class="rounded-lg overflow-hidden flex flex-col" style="background:var(--card); border:1px solid var(--line);">${listHtml}</div>
         <p id="autumn-gift-empty-msg" class="hidden text-sm text-center py-6 break-keep" style="color:var(--muted);">선택한 조건에 맞는 상품이 없습니다.</p>
         <p class="text-[11px] mt-2 break-keep" style="color:var(--muted);">표시 가격은 확인 시점 기준이며 쿠팡에서 변경될 수 있습니다.</p>
         <p class="text-[10px] mt-1 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
+        </div>
       </section>`;
     autumnGiftDomBuilt = true;
     // DOM이 실제로 들어간 뒤에 관찰을 시작해야 슬롯을 찾을 수 있다.
@@ -8530,17 +8608,43 @@
     order.forEach((idx, r) => { rank[idx] = r; });
     let lastVisibleRow = null;
     let lastVisibleRowRank = -1;
+    // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(AUTUMN_GIFT_GROUP_LIMIT) 넘는 건 숨긴다.
+    const groupMatched = {};
+    AUTUMN_GIFT_GROUPS.forEach(g => { groupMatched[g.key] = []; });
     AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
       const el = document.getElementById('autumn-gift-item-' + i);
       if (!el) return;
       const match = autumnGiftMatchesFilter(p);
-      el.classList.toggle('hidden', !match);
       el.style.order = String(rank[i]);
       el.classList.remove('agp-last');
-      if (match){
-        visibleCount++;
+      if (!match){ el.classList.add('hidden'); return; }
+      visibleCount++;
+      if (p.partnersHtml){
+        const key = autumnGiftGroupOf(p);
+        if (groupMatched[key]) groupMatched[key].push({ el, r: rank[i] }); else el.classList.remove('hidden');
+      } else {
+        el.classList.remove('hidden');
         // 줄 리스트(파트너스HTML 없는 상품)의 표시상 마지막 줄을 기억해 밑줄을 뺀다
-        if (!p.partnersHtml && rank[i] > lastVisibleRowRank){ lastVisibleRowRank = rank[i]; lastVisibleRow = el; }
+        if (rank[i] > lastVisibleRowRank){ lastVisibleRowRank = rank[i]; lastVisibleRow = el; }
+      }
+    });
+    AUTUMN_GIFT_GROUPS.forEach((g) => {
+      const items = groupMatched[g.key].sort((a, b) => a.r - b.r);
+      const expanded = autumnGiftExpandedGroups.has(g.key);
+      items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= AUTUMN_GIFT_GROUP_LIMIT); });
+      const wrap = document.getElementById('autumn-gift-group-' + g.key);
+      if (wrap) wrap.classList.toggle('hidden', items.length === 0);
+      const cnt = document.getElementById('autumn-gift-group-count-' + g.key);
+      if (cnt) cnt.textContent = items.length ? `${items.length}개` : '';
+      const more = document.getElementById('autumn-gift-more-' + g.key);
+      if (more){
+        const rest = items.length - AUTUMN_GIFT_GROUP_LIMIT;
+        if (rest > 0){
+          more.classList.remove('hidden');
+          more.textContent = expanded ? '접기 ▲' : `더보기 ${rest}개 ▼`;
+        } else {
+          more.classList.add('hidden');
+        }
       }
     });
     if (lastVisibleRow) lastVisibleRow.classList.add('agp-last');
