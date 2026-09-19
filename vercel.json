@@ -2,6 +2,9 @@
   "functions": {
     "api/home.js": {
       "includeFiles": "app.html"
+    },
+    "api/seo-shopping.js": {
+      "includeFiles": "app.html"
     }
   },
   "rewrites": [
@@ -176,6 +179,46 @@
     {
       "source": "/event/",
       "destination": "/api/event-gone"
+    },
+    {
+      "source": "/chuseok-gift",
+      "destination": "/api/seo-shopping?page=chuseok-gift"
+    },
+    {
+      "source": "/chuseok-gift-for-parents",
+      "destination": "/api/seo-shopping?page=chuseok-gift-for-parents"
+    },
+    {
+      "source": "/chuseok-gift-for-business",
+      "destination": "/api/seo-shopping?page=chuseok-gift-for-business"
+    },
+    {
+      "source": "/chuseok-gift-under-30000",
+      "destination": "/api/seo-shopping?page=chuseok-gift-under-30000"
+    },
+    {
+      "source": "/chuseok-gift-30000-50000",
+      "destination": "/api/seo-shopping?page=chuseok-gift-30000-50000"
+    },
+    {
+      "source": "/chuseok-gift-50000-100000",
+      "destination": "/api/seo-shopping?page=chuseok-gift-50000-100000"
+    },
+    {
+      "source": "/chuseok-hanwoo-gift",
+      "destination": "/api/seo-shopping?page=chuseok-hanwoo-gift"
+    },
+    {
+      "source": "/chuseok-gulbi-gift",
+      "destination": "/api/seo-shopping?page=chuseok-gulbi-gift"
+    },
+    {
+      "source": "/chuseok-fruit-gift",
+      "destination": "/api/seo-shopping?page=chuseok-fruit-gift"
+    },
+    {
+      "source": "/chuseok-health-gift",
+      "destination": "/api/seo-shopping?page=chuseok-health-gift"
     },
     {
       "source": "/((?!api/).*)",

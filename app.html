@@ -1344,6 +1344,9 @@
     <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);"></h2>
     <p id="hotdeals-hero-desc" class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);"></p>
     <p id="hotdeals-hero-sub" class="text-sm leading-[1.5] break-keep mt-2" style="color:var(--muted);"></p>
+    <!-- 쇼핑 SEO 허브 페이지 연결(2026-09-19) — 정적 <a> 링크라 JS 없이도 크롤러가 그대로 읽는다.
+         renderHotdealsHero()가 채우는 텍스트와 무관하게 항상 보이며, 필터/iframe 로직은 건드리지 않는다. -->
+    <a href="/chuseok-gift" class="inline-block text-xs font-semibold mt-2 break-keep" style="color:var(--primary);">추석 선물세트 조건별로 찾아보기 →</a>
   </div>
 
   <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
