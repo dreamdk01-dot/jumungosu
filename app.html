@@ -8425,6 +8425,7 @@
       <section class="mb-8">
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
+        <p id="autumn-gift-count" class="text-xs font-semibold mb-2" style="color:var(--text);" aria-live="polite"></p>
         ${autumnGiftControlsHtml()}
         <div id="autumn-gift-cards-grid" class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">${cardsHtml}</div>
         <div id="autumn-gift-list-wrap" class="rounded-lg overflow-hidden flex flex-col" style="background:var(--card); border:1px solid var(--line);">${listHtml}</div>
@@ -8463,6 +8464,17 @@
     if (lastVisibleRow) lastVisibleRow.classList.add('agp-last');
     const emptyMsg = document.getElementById('autumn-gift-empty-msg');
     if (emptyMsg) emptyMsg.classList.toggle('hidden', visibleCount > 0);
+    // 상품 가짓수 표시(2026-09-19): 화면에 실제 그려진 상품 수(완전 중복 행 제외)를 전체로 두고,
+    // 필터가 걸려 있으면 "n개 / 전체 N개", 없으면 "전체 N개"로 보여준다. 필터·정렬·체크박스가
+    // 바뀔 때마다 이 함수가 호출되므로 항상 최신 숫자다.
+    const countEl = document.getElementById('autumn-gift-count');
+    if (countEl){
+      const totalRendered = document.querySelectorAll('#hotdeals-autumn-gift-root [id^="autumn-gift-item-"]').length;
+      const fmt = (n) => Number(n).toLocaleString('ko-KR');
+      countEl.textContent = (visibleCount === totalRendered)
+        ? `전체 ${fmt(totalRendered)}개`
+        : `${fmt(visibleCount)}개 표시 / 전체 ${fmt(totalRendered)}개`;
+    }
     return visibleCount;
   }
 
