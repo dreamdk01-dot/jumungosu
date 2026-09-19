@@ -7895,6 +7895,33 @@
   function hotdealsChuseokActive(){
     return getTodayKST() < HOTDEALS_CHUSEOK_END_DATE;
   }
+  // 배송 마감 안내(2026-09-19): 추석 당일(9/25)을 기준으로 D-day를 계산해 보여준다. 쿠팡이 공지한
+  // 정확한 주문 마감일을 알게 되면 아래 문자열에 'YYYY-MM-DD'로 넣으면 "○월 ○일까지 주문"이 함께
+  // 표시된다(비워 두면 D-day와 일반 안내만). 추석이 지나면(hotdealsChuseokActive=false) 통째로 숨긴다.
+  const HOTDEALS_CHUSEOK_DAY = '2026-09-25';
+  const HOTDEALS_CHUSEOK_ORDER_DEADLINE = '';
+  function hotdealsChuseokDday(){
+    const today = getTodayKST();
+    const ms = new Date(HOTDEALS_CHUSEOK_DAY + 'T00:00:00+09:00').getTime() - new Date(today + 'T00:00:00+09:00').getTime();
+    return Math.round(ms / 86400000);
+  }
+  function hotdealsFmtMonthDay(iso){
+    const [y, m, d] = String(iso).split('-');
+    return `${parseInt(m, 10)}월 ${parseInt(d, 10)}일`;
+  }
+  function autumnGiftDeadlineStripHtml(){
+    if (!(HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive())) return '';
+    const dday = hotdealsChuseokDday();
+    const ddayText = dday > 0 ? `D-${dday}` : (dday === 0 ? 'D-DAY' : '');
+    const deadline = HOTDEALS_CHUSEOK_ORDER_DEADLINE
+      ? `추석 전 도착은 <b>${hotdealsFmtMonthDay(HOTDEALS_CHUSEOK_ORDER_DEADLINE)}까지 주문</b>이 안전해요.`
+      : '명절 직전엔 로켓배송도 도착이 늦어질 수 있어요. 선물은 이번 주 안에 주문하는 게 안전해요.';
+    return `
+      <div class="rounded-lg px-4 py-3 mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" style="background:rgba(255,184,0,0.10); border:1px solid var(--primary);">
+        <span class="font-bold" style="color:var(--primary);">🗓 추석 ${hotdealsFmtMonthDay(HOTDEALS_CHUSEOK_DAY)} ${ddayText}</span>
+        <span class="break-keep" style="color:var(--text);">${deadline}</span>
+      </div>`;
+  }
 
   // 상품 1개당 필드 (기본 스키마):
   //   id, name, brand, category, subCategory, target, targetLabel, targets, budget, image,
@@ -8226,6 +8253,16 @@
     const raw = (p && p.price !== null && p.price !== undefined) ? String(p.price).trim() : '';
     return raw ? escapeHtml(raw) : '<span class="text-xs font-semibold" style="color:var(--muted);">가격은 쿠팡에서 확인</span>';
   }
+  // iframe이 있는 카드용 가격 표기(2026-09-19 신뢰 보정): 쿠팡 iframe 안에 실시간 가격이 이미 보이는데
+  // 우리 쪽 입력 시점 가격을 같은 크기·노란색으로 한 번 더 쓰면 두 값이 어긋날 때 "가격이 두 개"로
+  // 보여 신뢰를 깎는다. 그래서 iframe 카드에서는 실시간 가격(iframe)을 주인공으로 두고 우리 값은
+  // 작은 회색 "확인 시점 ○○원"으로만 남긴다(예산 필터·정렬은 이 값을 그대로 쓰므로 데이터는 유지).
+  // iframe이 없는 줄 리스트는 우리 가격이 유일한 가격이라 기존 노란색 표기를 그대로 둔다.
+  function autumnGiftSnapshotPriceHtml(p){
+    const raw = (p && p.price !== null && p.price !== undefined) ? String(p.price).trim() : '';
+    if (!raw) return '';
+    return `<p class="text-[11px] mb-1" style="color:var(--muted);">확인 시점 ${escapeHtml(raw)} · 현재가는 위 쿠팡 정보 기준</p>`;
+  }
 
   // 파트너스HTML이 있는 상품의 카드 — iframe(쿠팡 원본, 미변형) + 카테고리/상품명/가격/별점/
   // 리뷰수. 별도 구매 버튼은 만들지 않는다(iframe 안의 "쇼핑하기" 버튼이 유일한 구매 동선).
@@ -8244,7 +8281,7 @@
         <div class="mb-2 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
         ${p.category ? `<p class="text-[11px] font-semibold mb-1 break-keep" style="color:var(--muted);">${escapeHtml(p.category)}</p>` : ''}
         <p class="text-xs font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
-        <p class="text-sm font-bold mb-1" style="color:var(--primary);">${autumnGiftPriceLabel(p)}</p>
+        ${autumnGiftSnapshotPriceHtml(p)}
         ${ratingText ? `<p class="text-[11px]" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
       </div>`;
   }
@@ -8341,7 +8378,7 @@
             ${p.pickLabel ? `<span class="text-[11px] font-semibold" style="color:var(--muted);">${escapeHtml(p.pickLabel)}</span>` : ''}
           </div>
           <p class="text-sm font-semibold break-keep mb-1" style="color:var(--text);">${escapeHtml(p.name)}</p>
-          <p class="text-sm font-bold mb-1" style="color:var(--primary);">${autumnGiftPriceLabel(p)}</p>
+          ${autumnGiftSnapshotPriceHtml(p)}
           ${ratingText ? `<p class="text-[11px] mb-2" style="color:var(--muted);">${ratingText}${reviewsText}</p>` : ''}
           ${p.pickReason ? `<p class="text-xs leading-relaxed break-keep mt-auto" style="color:var(--text);">${escapeHtml(p.pickReason)}</p>` : ''}
         </div>
@@ -8465,6 +8502,7 @@
       <section class="mb-8">
         <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
+        ${autumnGiftDeadlineStripHtml()}
         ${autumnGiftPicksSectionHtml()}
         <p id="autumn-gift-count" class="text-xs font-semibold mb-2" style="color:var(--text);" aria-live="polite"></p>
         ${autumnGiftControlsHtml()}
@@ -8627,6 +8665,49 @@
     });
   }
 
+  // 장면 프리셋(2026-09-19): 방문자는 "부모님께 3~5만원" 같은 장면으로 생각하지 필터 3개를 조합하지
+  // 않는다. 그래서 필터 카드 맨 위에 한 번 누르면 대상+예산(+카테고리)이 한꺼번에 설정되는 버튼을
+  // 둔다. 기존 필터·상태값·렌더 흐름을 그대로 쓰고(setHotdealsXFilter와 같은 경로), 새 상태를 만들지
+  // 않는다. 현재 필터 상태가 프리셋과 정확히 같으면 그 버튼을 활성 색으로 표시한다.
+  const HOTDEALS_PRESETS = [
+    { label: '부모님께 3~5만원',   target: '부모님',      budget: '3~5만원', category: '전체' },
+    { label: '부모님께 5~10만원',  target: '부모님',      budget: '5~10만원', category: '전체' },
+    { label: '제대로 한 번 10만원↑', target: '부모님',    budget: '10만원+',  category: '전체' },
+    { label: '직장 답례 1~3만원',  target: '직장·거래처', budget: '1~3만원', category: '전체' },
+    { label: '가족 실속 1~3만원',  target: '가족',        budget: '1~3만원', category: '전체' },
+    { label: '지인·연인 뷰티',     target: '연인',        budget: '전체',    category: '뷰티·뷰티선물' },
+  ];
+  function hotdealsPresetIsActive(pr){
+    return hotdealsTargetFilter === pr.target && hotdealsBudgetFilter === pr.budget && hotdealsCategoryFilter === pr.category;
+  }
+  function applyHotdealsPreset(idx){
+    const pr = HOTDEALS_PRESETS[idx];
+    if (!pr) return;
+    if (hotdealsPresetIsActive(pr)){
+      // 같은 프리셋을 다시 누르면 해제(전체로)
+      hotdealsTargetFilter = '전체'; hotdealsBudgetFilter = '전체'; hotdealsCategoryFilter = '전체';
+    } else {
+      hotdealsTargetFilter = pr.target; hotdealsBudgetFilter = pr.budget; hotdealsCategoryFilter = pr.category;
+    }
+    renderHotdealsFilterUI();
+    renderHotdealsProducts();
+  }
+  function hotdealsPresetRowHtml(){
+    if (!hotdealsHasAnyTargetData()) return '';
+    const chips = HOTDEALS_PRESETS.map((pr, i) => {
+      const active = hotdealsPresetIsActive(pr);
+      const style = active
+        ? 'background:var(--primary); color:#1C1A17; border:1px solid var(--primary);'
+        : 'background:var(--card); color:var(--text); border:1px solid var(--line);';
+      return `<button type="button" onclick="applyHotdealsPreset(${i})" class="chip px-3 py-1.5 rounded-full text-xs font-semibold" style="${style}" aria-pressed="${active ? 'true' : 'false'}">${escapeHtml(pr.label)}</button>`;
+    }).join('');
+    return `
+      <div class="mb-3 pb-3" style="border-bottom:1px dashed var(--line);">
+        <p class="text-xs font-semibold mb-2" style="color:var(--muted);">빠른 선택 <span class="font-normal">— 누르면 아래 조건이 한 번에 맞춰져요</span></p>
+        <div class="flex flex-wrap gap-2">${chips}</div>
+      </div>`;
+  }
+
   function renderHotdealsFilterUI(){
     const root = document.getElementById('hotdeals-filter-root');
     if (!root) return;
@@ -8635,6 +8716,7 @@
       root.innerHTML = '';
       return;
     }
+    const presetsHtml = hotdealsPresetRowHtml();
     const showTarget = hotdealsHasAnyTargetData();
     // 대상 줄을 숨기는 동안 상태값이 '전체'가 아니면(과거 선택이 남아 있으면) 보이지 않는 조건이
     // 결과에 영향을 주지 않도록 '전체'로 되돌린다.
@@ -8645,6 +8727,7 @@
 
     root.innerHTML = `
       <div class="rounded-lg p-4" style="background:var(--surface); border:1px solid var(--line);">
+        ${presetsHtml}
         ${showTarget ? hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter') : ''}
         ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
         ${hotdealsCategoryChipRowHtml('카테고리', categories, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}
