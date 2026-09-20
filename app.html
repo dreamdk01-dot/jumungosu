@@ -8911,12 +8911,57 @@
   // 없는 축을 결과가 0건이 되는 쪽으로 두는 대신, 이 축은 "아직 걸러내지 않음"으로 바꿔서 대상을
   // 선택해도 최소한 예산·카테고리 조건은 정상 작동하게 한다. 추천대상별 데이터가 Excel에 추가되면
   // 이 함수만 실제 매칭 로직으로 바꾸면 된다.
-  // 상품 하나가 특정 공식 카테고리에 속하는지(전역 필터 상태와 무관하게 판정). 필터 매칭과
-  // "상품이 있는 카테고리만 노출"(renderHotdealsFilterUI) 두 곳에서 같은 규칙을 쓰기 위해 분리.
+  // ===== 사용자용 통합 분류 (2026-09-20) =====
+  // 상품 DB의 category 원본값(47종, "식품, 건강, 홍삼"처럼 쉼표로 세분화)은 그대로 두고,
+  // 화면 탐색용 분류만 여기서 파생 계산한다. 상품 객체에 필드를 추가하지 않는다.
+  // 주의: /hot-deals 사용자 탐색 전용이며, api/seo-shopping.js의 SEO 10개 페이지 필터와는
+  // 완전히 분리되어 있다(SEO 결과가 이 분류 때문에 달라지지 않는다).
+  const AUTUMN_GIFT_DISPLAY_CATEGORIES = [
+    '🥩 한우·육류', '🐟 수산물', '🍎 과일·건과', '🌰 견과·버섯', '💪 건강식품',
+    '🍪 한과·디저트', '☕ 커피·차', '🥫 햄·참치', '🫒 오일·조미료',
+    '🧴 뷰티', '🧺 생활용품', '🍳 주방용품', '🔌 가전·디지털',
+  ];
+  // 통합 카테고리 판정 규칙 — 구체적인 분류를 먼저, 넓은 분류를 나중에 본다(첫 일치로 확정).
+  // [라벨, category 원본값에 대한 정규식, 상품명에 대한 정규식]
+  const AUTUMN_GIFT_CATEGORY_RULES = [
+    ['🍳 주방용품',  /주방용품/,                       /전기그릴|잔치팬|전기프라이팬|프라이팬|블렌더|믹서|다지기/],
+    ['🧴 뷰티',      /스킨케어/,                       /앰플|세럼|토너|에센스|마스크팩|콜라겐|스킨케어/],
+    ['🧺 생활용품',  /생활용품/,                       /샴푸|바디워시|치약/],
+    ['🧴 뷰티',      /뷰티/,                           /(?!)/],
+    ['💪 건강식품',  /건강|홍삼|녹용|잡곡/,            /홍삼|녹용|침향|산삼|배양근|도라지청|약도라지|흑도라지|흑마늘|유산균|락토핏|쌍화차|황칠|장어진액|영양갱|이뮨|비타민|벌집꿀|곡물/],
+    ['🐟 수산물',    /수산|건어물/,                    /굴비|전복|멸치|캔김|광천김|대천김|재래김|조미김|김 혼합|감태김|들기름김|명품김|도시락김|옥돔|건어물/],
+    ['🥩 한우·육류', /한우|육류|축산|소고기/,          /한우|한돈|갈비|불고기|등심|채끝|육포|소고기|양념육/],
+    ['🍪 한과·디저트', /한과|과자|화과자|전병|디저트/,  /한과|약과|화과자|양갱|전병|유과|도라지정과|쿠키|마카롱|디저트|만월/],
+    ['🌰 견과·버섯', /견과|버섯/,                      /견과|넛츠|너트|버섯|표고|송이/],
+    ['🍎 과일·건과', /과일|곶감|건과일|신선식품/,      /과일|사과|샤인머스켓|곶감|반건시|건시|키위|나주배|제철과일/],
+    ['🥫 햄·참치',   /참치|통조림|햄/,                 /참치|스팸|튜나|리챔|동원 스페셜/],
+    ['☕ 커피·차',   /커피|^식품, 차$|식품, 차,|커피·차/, /커피|녹차|홍차|보이차|드립백|티백|액상차|한라봉차|오미자차|시즌티|꽃차/],
+    ['🫒 오일·조미료', /오일|조미료|소금/,             /참기름|들기름|올리브|카놀라|현미유|소금|조미료|오일|해표/],
+  ];
+  // 상품 → 사용자용 통합 카테고리 (없으면 null)
+  function autumnGiftDisplayCategory(p){
+    const cat = (p && p.category) || '';
+    const name = (p && p.name) || '';
+    for (let i = 0; i < AUTUMN_GIFT_CATEGORY_RULES.length; i++){
+      const r = AUTUMN_GIFT_CATEGORY_RULES[i];
+      if (r[1].test(cat) || r[2].test(name)) return r[0];
+    }
+    return null;
+  }
+  // 상품 → 용도. '명절 준비'는 조리·손질 목적이 명확한 주방 가전/도구만으로 좁게 잡는다.
+  // 한우·굴비·홍삼·과일처럼 명절에 쓰일 수 있는 식품은 기본적으로 '선물'로 둔다.
+  function autumnGiftPurpose(p){
+    return /주방용품/.test((p && p.category) || '') ? 'holiday-prep' : 'gift';
+  }
+  function autumnGiftPurposeMatches(p, purpose){
+    if (purpose === '전체') return true;
+    if (purpose === '🎁 선물') return autumnGiftPurpose(p) === 'gift';
+    if (purpose === '🍳 명절 준비') return autumnGiftPurpose(p) === 'holiday-prep';
+    return true;
+  }
   function autumnGiftCategoryMatches(p, categoryName){
     if (categoryName === '전체') return true;
-    const keywords = HOTDEALS_CATEGORY_KEYWORDS[categoryName] || [categoryName.split('·')[0]];
-    return !!(p.category && keywords.some(k => p.category.includes(k)));
+    return autumnGiftDisplayCategory(p) === categoryName;
   }
 
   // 2026-09-19 추가 필터: "⭐ 5.0만" / "리뷰 1,000개↑" 체크박스. 예산·카테고리와 AND로 동작한다.
@@ -8941,12 +8986,13 @@
   }
 
   function autumnGiftMatchesFilter(p){
+    const purposeOk = autumnGiftPurposeMatches(p, hotdealsPurposeFilter);
     const targetOk = autumnGiftTargetMatches(p, hotdealsTargetFilter);
     const budgetOk = hotdealsBudgetMatches(p.price, hotdealsBudgetFilter);
     const categoryOk = autumnGiftCategoryMatches(p, hotdealsCategoryFilter);
     const fiveOk = !autumnGiftOnlyFiveStar || autumnGiftRatingIsFive(p);
     const reviewsOk = !autumnGiftMinReviews1000 || autumnGiftHasMinReviews(p);
-    return targetOk && budgetOk && categoryOk && fiveOk && reviewsOk;
+    return purposeOk && targetOk && budgetOk && categoryOk && fiveOk && reviewsOk;
   }
 
   // 가격 표시 — Excel에 가격이 비어 있는 상품(예: 쿠키 세트 1개)은 빈 칸 대신 안내 문구를 보여준다.
@@ -9461,6 +9507,9 @@
   let hotdealsTargetFilter = '전체';
   let hotdealsBudgetFilter = '전체';
   let hotdealsCategoryFilter = '전체';
+  // 용도 필터(2026-09-20): '전체' | '🎁 선물' | '🍳 명절 준비'
+  const HOTDEALS_PURPOSES = ['전체', '🎁 선물', '🍳 명절 준비'];
+  let hotdealsPurposeFilter = '전체';
   // ①②③④ 필터 UX 개편(2026-09-19)용 상태.
   //  · hotdealsDetailFiltersOpen: "직접 조건 고르기" 상세 칩(대상/예산/카테고리)을 펼쳐 보여줄지.
   //    기본은 접힘(프리셋만 먼저 보이게) — 단, 조건이 하나라도 걸려 있으면 강제로 펼쳐서 보여준다
@@ -9473,13 +9522,14 @@
   // 켜져 있으면 "조건이 걸린 상태"로 본다. ①(PICK·묶음 접힘 숨기고 결과만 보여주기), ②(자동 스크롤),
   // ③(상세 칩 강제 펼침), ④(스크롤 고정 요약바 노출) 네 가지가 전부 이 판정 하나를 공유한다.
   function hotdealsHasActiveFilter(){
-    return hotdealsTargetFilter !== '전체' || hotdealsBudgetFilter !== '전체' || hotdealsCategoryFilter !== '전체'
-      || autumnGiftOnlyFiveStar || autumnGiftMinReviews1000;
+    return hotdealsPurposeFilter !== '전체' || hotdealsTargetFilter !== '전체' || hotdealsBudgetFilter !== '전체'
+      || hotdealsCategoryFilter !== '전체' || autumnGiftOnlyFiveStar || autumnGiftMinReviews1000;
   }
   // "부모님 · 3~5만원 · ⭐5.0" 같은 사람이 읽는 조건 요약 문구. 결과 헤더(①)와 스크롤 고정
   // 요약바(④)가 이 문구를 그대로 공유한다.
   function autumnGiftFilterSummaryText(){
     const parts = [];
+    if (hotdealsPurposeFilter !== '전체') parts.push(hotdealsPurposeFilter);
     if (hotdealsTargetFilter !== '전체') parts.push(hotdealsTargetFilter);
     if (hotdealsBudgetFilter !== '전체') parts.push(hotdealsBudgetFilter);
     if (hotdealsCategoryFilter !== '전체') parts.push(hotdealsCategoryFilter);
@@ -9501,6 +9551,7 @@
   }
   // "전체 보기 ✕" — 결과 헤더(①)와 스크롤 고정 요약바(④)에서 공용으로 쓰는 초기화.
   function resetAutumnGiftFilters(){
+    hotdealsPurposeFilter = '전체';
     hotdealsTargetFilter = '전체';
     hotdealsBudgetFilter = '전체';
     hotdealsCategoryFilter = '전체';
@@ -9558,6 +9609,12 @@
     return targetOk && budgetOk && categoryOk;
   }
 
+  function setHotdealsPurposeFilter(v){
+    hotdealsPurposeFilter = v;
+    // 용도를 바꾸면 그 용도에 없는 카테고리는 남겨둘 수 없으므로 '전체'로 되돌린다.
+    if (!hotdealsAvailableCategories().includes(hotdealsCategoryFilter)) hotdealsCategoryFilter = '전체';
+    hotdealsApplyFilterChange();
+  }
   function setHotdealsTargetFilter(v){ hotdealsTargetFilter = v; hotdealsApplyFilterChange(); }
   function setHotdealsBudgetFilter(v){ hotdealsBudgetFilter = v; hotdealsApplyFilterChange(); }
   function setHotdealsCategoryFilter(v){ hotdealsCategoryFilter = v; hotdealsApplyFilterChange(); }
@@ -9626,41 +9683,48 @@
     ];
     return pools.some(p => (Array.isArray(p.targets) && p.targets.length > 0) || (typeof p.target === 'string' && p.target));
   }
+  // 사용자용 통합 카테고리 중 "지금 실제로 상품이 있는 것"만 칩으로 노출한다.
+  // (상품 0개인 분류를 눌러 빈 결과를 보는 일이 없도록. 예: 가전·디지털은 현재 0개 → 자동 숨김)
+  // 용도 필터가 걸려 있으면 그 용도 안에서 상품이 있는 카테고리만 남긴다.
   function hotdealsAvailableCategories(){
-    const legacy = [
-      ...(HOTDEALS_SEASONAL_ENABLED ? CHUSEOK_SEASONAL_PRODUCTS : []),
-      ...GENERAL_HOTDEAL_PRODUCTS,
-    ].filter(hasValidCoupangUrl);
-    return HOTDEALS_CATEGORIES.filter(cat => {
-      if (cat === '전체') return true;
-      if (legacy.some(p => p.category === cat)) return true;
-      return AUTUMN_GIFT_PRODUCTS.some(p => autumnGiftCategoryMatches(p, cat));
-    });
+    return ['전체'].concat(
+      AUTUMN_GIFT_DISPLAY_CATEGORIES.filter(cat =>
+        AUTUMN_GIFT_PRODUCTS.some(p =>
+          autumnGiftPurposeMatches(p, hotdealsPurposeFilter) && autumnGiftDisplayCategory(p) === cat))
+    );
   }
 
   // 장면 프리셋(2026-09-19): 방문자는 "부모님께 3~5만원" 같은 장면으로 생각하지 필터 3개를 조합하지
   // 않는다. 그래서 필터 카드 맨 위에 한 번 누르면 대상+예산(+카테고리)이 한꺼번에 설정되는 버튼을
   // 둔다. 기존 필터·상태값·렌더 흐름을 그대로 쓰고(setHotdealsXFilter와 같은 경로), 새 상태를 만들지
   // 않는다. 현재 필터 상태가 프리셋과 정확히 같으면 그 버튼을 활성 색으로 표시한다.
+  // 빠른 선택(2026-09-20 재설계): 상품이 188개까지 늘면서 "대상+가격" 조합만으로는 다양성을
+  // 보여줄 수 없어, 대표적인 탐색 목적 7개로 바꿨다. 순위를 매기는 기능이 아니라 조건을 한 번에
+  // 적용하는 지름길일 뿐이며, 아래 '직접 조건 고르기'와 완전히 같은 필터 상태를 공유한다.
+  // 각 프리셋은 용도/대상/예산/카테고리 4개 축의 조합으로만 표현된다(별도 필터 시스템 없음).
   const HOTDEALS_PRESETS = [
-    { label: '부모님께 3~5만원',   target: '부모님',      budget: '3~5만원', category: '전체' },
-    { label: '부모님께 5~10만원',  target: '부모님',      budget: '5~10만원', category: '전체' },
-    { label: '제대로 한 번 10만원↑', target: '부모님',    budget: '10만원+',  category: '전체' },
-    { label: '직장 답례 1~3만원',  target: '직장·거래처', budget: '1~3만원', category: '전체' },
-    { label: '가족 실속 1~3만원',  target: '가족',        budget: '1~3만원', category: '전체' },
-    { label: '지인·연인 뷰티',     target: '연인',        budget: '전체',    category: '뷰티·뷰티선물' },
+    { label: '🎁 부모님 건강선물',  purpose: '전체',        target: '부모님',      budget: '전체',    category: '💪 건강식품' },
+    { label: '🥩 고급 선물',       purpose: '🎁 선물',      target: '전체',        budget: '10만원+', category: '전체' },
+    { label: '🏢 직장·거래처 선물', purpose: '🎁 선물',      target: '직장·거래처', budget: '전체',    category: '전체' },
+    { label: '💰 3만원 이하 실속',  purpose: '🎁 선물',      target: '전체',        budget: '1~3만원', category: '전체' },
+    { label: '🐟 수산물 선물',     purpose: '전체',         target: '전체',        budget: '전체',    category: '🐟 수산물' },
+    { label: '🍪 한과·디저트',     purpose: '전체',         target: '전체',        budget: '전체',    category: '🍪 한과·디저트' },
+    { label: '🍳 명절 준비용품',   purpose: '🍳 명절 준비', target: '전체',        budget: '전체',    category: '전체' },
   ];
   function hotdealsPresetIsActive(pr){
-    return hotdealsTargetFilter === pr.target && hotdealsBudgetFilter === pr.budget && hotdealsCategoryFilter === pr.category;
+    return hotdealsPurposeFilter === pr.purpose && hotdealsTargetFilter === pr.target
+      && hotdealsBudgetFilter === pr.budget && hotdealsCategoryFilter === pr.category;
   }
   function applyHotdealsPreset(idx){
     const pr = HOTDEALS_PRESETS[idx];
     if (!pr) return;
     if (hotdealsPresetIsActive(pr)){
       // 같은 프리셋을 다시 누르면 해제(전체로)
-      hotdealsTargetFilter = '전체'; hotdealsBudgetFilter = '전체'; hotdealsCategoryFilter = '전체';
+      hotdealsPurposeFilter = '전체'; hotdealsTargetFilter = '전체';
+      hotdealsBudgetFilter = '전체'; hotdealsCategoryFilter = '전체';
     } else {
-      hotdealsTargetFilter = pr.target; hotdealsBudgetFilter = pr.budget; hotdealsCategoryFilter = pr.category;
+      hotdealsPurposeFilter = pr.purpose; hotdealsTargetFilter = pr.target;
+      hotdealsBudgetFilter = pr.budget; hotdealsCategoryFilter = pr.category;
     }
     hotdealsApplyFilterChange();
   }
@@ -9671,7 +9735,7 @@
       const style = active
         ? 'background:var(--primary); color:#1C1A17; border:1px solid var(--primary);'
         : 'background:var(--card); color:var(--text); border:1px solid var(--line);';
-      return `<button type="button" onclick="applyHotdealsPreset(${i})" class="chip px-3 py-1.5 rounded-full text-xs font-semibold" style="${style}" aria-pressed="${active ? 'true' : 'false'}">${escapeHtml(pr.label)}</button>`;
+      return `<button type="button" onclick="applyHotdealsPreset(${i})" class="chip px-3 py-1.5 rounded-full text-xs font-semibold break-keep" style="${style}" aria-pressed="${active ? 'true' : 'false'}">${escapeHtml(pr.label)}</button>`;
     }).join('');
     return `
       <div class="mb-3 pb-3" style="border-bottom:1px dashed var(--line);">
@@ -9694,7 +9758,7 @@
     // 결과에 영향을 주지 않도록 '전체'로 되돌린다.
     if (!showTarget && hotdealsTargetFilter !== '전체') hotdealsTargetFilter = '전체';
     const categories = hotdealsAvailableCategories();
-    // 현재 선택된 카테고리가 목록에서 사라졌다면(상품이 0개가 됐다면) '전체'로 되돌린다.
+    // 현재 선택된 카테고리가 목록에서 사라졌다면(용도 변경 등으로 상품이 0개가 됐다면) '전체'로.
     if (!categories.includes(hotdealsCategoryFilter)) hotdealsCategoryFilter = '전체';
 
     // ③ 상세 칩(대상/예산/카테고리)은 기본 접힘 — 프리셋만 먼저 보여서 첫 화면을 짧게 만든다.
@@ -9703,6 +9767,7 @@
     const hasFilter = hotdealsHasActiveFilter();
     const detailOpen = hotdealsDetailFiltersOpen || hasFilter;
     const detailHtml = `
+        ${hotdealsFilterChipRowHtml('용도', HOTDEALS_PURPOSES, hotdealsPurposeFilter, 'setHotdealsPurposeFilter')}
         ${showTarget ? hotdealsFilterChipRowHtml('추천대상', HOTDEALS_TARGETS, hotdealsTargetFilter, 'setHotdealsTargetFilter') : ''}
         ${hotdealsFilterChipRowHtml('예산', HOTDEALS_BUDGETS, hotdealsBudgetFilter, 'setHotdealsBudgetFilter')}
         ${hotdealsCategoryChipRowHtml('카테고리', categories, hotdealsCategoryFilter, 'setHotdealsCategoryFilter')}`;
