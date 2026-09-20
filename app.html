@@ -4121,12 +4121,20 @@
   }
 
   // 글쓰기 모달의 카테고리 드롭다운 옵션을 채운다
+  // 글쓰기 카테고리 드롭다운을 "지금 로그인한 계정 기준"으로 다시 만든다.
+  // 이 함수는 페이지 로드 시 한 번만 호출되는데, 그 시점엔 Supabase 세션 복원이 끝나기 전이라
+  // 운영 계정이어도 canWriteBoardNews()가 false여서 '소식'이 빠진 목록이 만들어졌다.
+  // 그래서 글쓰기를 여는 시점(openBoardCompose / editPost)마다 반드시 다시 호출한다(2026-09-20 수정).
+  // 로그아웃·계정 전환 후에도 매번 새로 만들어지므로 이전 계정의 '소식' 선택지가 남지 않는다.
   function renderBoardComposeCategorySelect(){
     const el = document.getElementById('board-compose-category');
     if (!el) return;
+    const prev = el.value;
     el.innerHTML = BOARD_CATEGORIES
       .filter(c => !c.hidden && (!c.managerOnly || canWriteBoardNews()))
       .map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+    // 다시 그린 뒤에도 고를 수 있는 값이면 이전 선택을 유지한다(권한이 없어진 값은 자동으로 버려짐).
+    if (prev && [...el.options].some(o => o.value === prev)) el.value = prev;
   }
 
   // 선택된 카테고리의 formType에 따라 할인 입력폼/자유 글쓰기폼 중 하나만 보여준다
@@ -4223,6 +4231,8 @@
       renderBoardComposeImageThumbs();
       document.getElementById('board-compose-submit-btn').textContent = '등록하기';
 
+      // 현재 로그인 상태 기준으로 선택지를 매번 새로 구성한 뒤에 기본값을 정한다.
+      renderBoardComposeCategorySelect();
       const categorySelect = document.getElementById('board-compose-category');
       // 소식 탭에서 운영자가 글쓰기를 열면 '소식', 그 외에는 항상 '제보·질문'이 기본 선택.
       categorySelect.value = (activeBoardTab === 'news' && canWriteBoardNews()) ? 'news' : 'report';
@@ -5328,6 +5338,8 @@
 
     editingPostId = id;
     const isDiscount = isDiscountFormCategory(p.board);
+    // 수정 화면도 현재 로그인 계정 기준으로 선택지를 새로 구성한다(초기 렌더 시점의 낡은 목록 방지).
+    renderBoardComposeCategorySelect();
     const categorySelect = document.getElementById('board-compose-category');
     // 카테고리 삭제(예: 레시피) 이후에도 과거 글은 정상적으로 수정할 수 있도록,
     // 드롭다운에 없는 값이면 임시 옵션을 하나 만들어 끼워 넣는다.
