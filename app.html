@@ -731,10 +731,6 @@
               <input id="board-report-delivery-amount" type="text" inputmode="numeric" oninput="updateReportTitlePreview()" placeholder="예) 5000" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             </div>
             <div>
-              <label class="text-xs font-medium block mb-1" style="color:var(--muted);">최소주문금액 (선택)</label>
-              <input id="board-report-delivery-minorder" type="text" inputmode="numeric" placeholder="예) 15000" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-            </div>
-            <div>
               <label class="text-xs font-medium block mb-1" style="color:var(--muted);">쿠폰·중복할인·결제 조건 (선택)</label>
               <input id="board-report-delivery-condition" type="text" placeholder="예) 신규 5천원 + 카드사 2천원 중복" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
             </div>
@@ -4260,7 +4256,7 @@
     boardReportDeliveryApp = '';
     boardReportShop = '';
     [
-      'board-report-delivery-brand','board-report-delivery-amount','board-report-delivery-minorder',
+      'board-report-delivery-brand','board-report-delivery-amount',
       'board-report-delivery-condition','board-report-delivery-detail',
       'board-report-shopping-product','board-report-shopping-price','board-report-shopping-listprice',
       'board-report-shopping-condition','board-report-shopping-url','board-report-shopping-detail',
@@ -5025,7 +5021,9 @@
           const app = isDel ? boardReportDeliveryApp : boardReportShop;
           const name = isDel ? v('board-report-delivery-brand') : v('board-report-shopping-product');
           const amount = reportParseWon(isDel ? v('board-report-delivery-amount') : v('board-report-shopping-price'));
-          const sub = reportParseWon(isDel ? v('board-report-delivery-minorder') : v('board-report-shopping-listprice'));
+          // 배달 제보에는 보조 금액 입력이 없다(최소주문금액 항목 제거, 2026-09-20).
+          // 쇼핑 제보의 '정상가'만 보조 금액으로 쓴다.
+          const sub = isDel ? NaN : reportParseWon(v('board-report-shopping-listprice'));
           const condition = isDel ? v('board-report-delivery-condition') : v('board-report-shopping-condition');
           const detail = isDel ? v('board-report-delivery-detail') : v('board-report-shopping-detail');
           const url = isDel ? '' : v('board-report-shopping-url');
@@ -5043,9 +5041,9 @@
           }
           errEl.classList.add('hidden');
 
-          // combo_detail: 보조 금액(최소주문/정상가)과 조건 문구를 사람이 읽기 좋게 합친다.
+          // combo_detail — 배달: 할인 조건만 저장. 쇼핑: 정상가 + 조건.
           const comboParts = [];
-          if (!isNaN(sub)) comboParts.push((isDel ? '최소주문 ' : '정상가 ') + reportFmtWon(sub) + '원');
+          if (!isDel && !isNaN(sub)) comboParts.push('정상가 ' + reportFmtWon(sub) + '원');
           if (condition) comboParts.push(condition);
           // content: 쇼핑은 상품 URL을 첫 줄에 두고 그 아래 설명 (표시 단계에서 안전하게 링크화)
           const contentParts = [];
@@ -5362,10 +5360,12 @@
       if (kind === 'delivery' || kind === 'shopping'){
         const isDel = (kind === 'delivery');
         if (isDel) boardReportDeliveryApp = p.app; else boardReportShop = p.app;
-        // combo_detail 형식: "최소주문 15,000원 · 조건" / "정상가 39,900원 · 조건"
-        const prefix = isDel ? '최소주문 ' : '정상가 ';
+        // 쇼핑 combo_detail 형식: "정상가 39,900원 · 조건" → 정상가와 조건으로 분리해 복원.
+        // 배달은 최소주문금액 입력을 없앴으므로(2026-09-20) combo_detail을 쪼개지 않고 조건칸에
+        // 원문 그대로 넣는다. 과거 글에 남아 있는 "최소주문 15,000원 · …" 문구도 이렇게 해야
+        // 수정·재저장 과정에서 사라지지 않는다.
         let subAmount = '', condition = combo;
-        if (combo.indexOf(prefix) === 0){
+        if (!isDel && combo.indexOf('정상가 ') === 0){
           const sepIdx = combo.indexOf(' · ');
           const head = sepIdx > -1 ? combo.slice(0, sepIdx) : combo;
           condition = sepIdx > -1 ? combo.slice(sepIdx + 3) : '';
@@ -5381,7 +5381,6 @@
         if (isDel){
           setV('board-report-delivery-brand', p.brandMenu || '');
           setV('board-report-delivery-amount', p.totalDiscount != null ? String(p.totalDiscount) : '');
-          setV('board-report-delivery-minorder', subAmount);
           setV('board-report-delivery-condition', condition);
           setV('board-report-delivery-detail', detail);
         } else {
