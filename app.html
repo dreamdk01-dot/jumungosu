@@ -515,11 +515,14 @@
        #1C1A17(주문의고수가 노란 버튼 텍스트 등에 이미 쓰는 고정 다크톤)을 그대로 재사용했다.
        모바일도 PC와 동일하게 가로 배치(왼쪽 카피 + 오른쪽 CTA, 세로 중앙 정렬)로 통일하고,
        320px 폭에서도 "3초면 똭!"/CTA가 줄바꿈되지 않도록 모바일 전용 폰트 크기만 축소했다.
+       "쇼핑도, 주문의고수"는 브랜드를 살짝 환기시키는 가장 작은 보조문구(muted, 600) — 배너
+       높이가 늘어나지 않도록 leading-tight + 최소 여백(mb-0.5)만 두고 "추석선물?" 위에 배치.
        sm: 접두사가 붙은 값은 기존 PC 디자인과 완전히 동일(픽셀 단위로 불변).
        기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
     <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-3 sm:gap-4" style="background:#1C1A17; border:1px solid rgba(255,184,0,.35);">
       <span class="min-w-0">
+        <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:#AFA597; font-weight:600;">쇼핑도, 주문의고수</span>
         <span class="block leading-tight break-keep text-[18px] sm:text-[24px]" style="color:#F5F0E8; font-weight:700;">추석선물?</span>
         <span class="block leading-tight break-keep whitespace-nowrap text-[30px] sm:text-[40px]" style="color:#FFB800; font-weight:900;">3초면 똭!</span>
       </span>
