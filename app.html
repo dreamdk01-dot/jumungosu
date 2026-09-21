@@ -511,7 +511,7 @@
        시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
        syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <button type="button" onclick="switchTab('hotdeals')" class="w-full text-left rounded-lg p-4 flex items-center justify-between gap-3" style="background:var(--card-alt); border:1px solid var(--line);">
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 flex items-center justify-between gap-3" style="background:var(--card-alt); border:1px solid var(--line);">
       <span class="min-w-0">
         <span class="block text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">🎁 추석선물·명절 준비, 한곳에서 골라보세요</span>
         <span class="block text-xs break-keep" style="color:var(--muted);">쿠팡 추석 행사상품 중 선물과 명절 준비에 유용한 상품을 엄선했어요</span>
@@ -3293,6 +3293,41 @@
     </div>
   </section>
 
+  <!-- 쇼핑 전환 퍼널: 배달광고 유입 → 홈 → 쇼핑핫딜 → 쿠팡 파트너스 클릭 추적. 기존 방문자/회원
+       통계는 그대로 두고 별도 섹션으로만 추가한다. 오늘 기준, 고유 세션(COUNT DISTINCT session_id)
+       이 메인 숫자이며 쿠팡 클릭만 총 클릭 수를 작게 함께 보여준다. -->
+  <section class="mb-12">
+    <h3 class="font-display text-xl mb-1" style="color:var(--text);">쇼핑 전환 퍼널 (오늘)</h3>
+    <p class="text-xs mb-4" style="color:var(--muted);">배달할인 광고로 들어온 방문자가 쇼핑핫딜·쿠팡 상품까지 이동하는 흐름입니다. 숫자는 고유 방문자(세션) 기준입니다.</p>
+
+    <div class="flex gap-2 mb-4">
+      <button type="button" id="funnel-scope-all" onclick="setFunnelScope('all')" class="px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:var(--primary);">전체 유입</button>
+      <button type="button" id="funnel-scope-ad" onclick="setFunnelScope('ad')" class="px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">광고 유입</button>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">홈 방문</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="funnel-home-view">-</span>명</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">추석 배너 클릭</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="funnel-cta-click">-</span>명</p>
+        <p class="font-mono text-[11px] mt-1" style="color:var(--muted);">홈→클릭 <span id="funnel-rate-home-cta">-</span></p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">쇼핑핫딜 방문</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--text);"><span id="funnel-hotdeals-view">-</span>명</p>
+      </div>
+      <div class="rounded-lg p-4" style="background:var(--card);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">쿠팡 상품 클릭</p>
+        <p class="font-mono text-2xl font-bold" style="color:var(--primary);"><span id="funnel-partner-click">-</span>명</p>
+        <p class="font-mono text-[11px] mt-1" style="color:var(--muted);">쇼핑→쿠팡 <span id="funnel-rate-hotdeals-partner">-</span> · 홈→쿠팡 <span id="funnel-rate-home-partner">-</span></p>
+        <p class="font-mono text-[10px] mt-1" style="color:var(--muted);">총 클릭 수 <span id="funnel-partner-click-total">-</span>회</p>
+      </div>
+    </div>
+  </section>
+
   <!-- 신고된 게시글 관리 -->
   <section class="mb-12">
     <h3 class="font-display text-xl mb-4" style="color:var(--text);">신고된 게시글 관리</h3>
@@ -3416,6 +3451,7 @@
     // 스킵됐던) 통계 등 기존 렌더링·조회 함수를 여기서 다시 실행해준다.
     // 새로운 조회 로직이 아니라 기존 함수를 그대로 재호출하는 것뿐이다.
     renderDashboardStats();       // 통계 대시보드(방문자/회원 수)
+    renderFunnelStats();          // 쇼핑 전환 퍼널(오늘)
     renderAdminBannerPostSelect();  // 홈 배너 관리 입력값(문구/뱃지/연결 게시글)
     renderReportedPosts();        // 신고된 게시글 목록
     renderAdminOpsSummary();      // 오늘 운영 현황 / 오늘 선착순 할인
@@ -7689,6 +7725,69 @@
     }
   }
 
+  // ---------- 쇼핑 전환 퍼널 대시보드 (오늘 기준, 고유 세션 수) ----------
+  // 기존 방문자/회원 통계 조회·렌더 방식을 그대로 따른다(불러오는 중 → 값 또는 조회 실패).
+  const FUNNEL_STAT_IDS = ['funnel-home-view', 'funnel-cta-click', 'funnel-hotdeals-view', 'funnel-partner-click', 'funnel-partner-click-total'];
+  let funnelScope = 'all'; // 'all' | 'ad'
+
+  // 0으로 나누는 경우 NaN/Infinity 대신 항상 "0.0%"를 반환한다.
+  function formatFunnelRate(numerator, denominator){
+    if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return '0.0%';
+    return `${((numerator / denominator) * 100).toFixed(1)}%`;
+  }
+
+  function setFunnelScope(scope){
+    funnelScope = scope === 'ad' ? 'ad' : 'all';
+    const allBtn = document.getElementById('funnel-scope-all');
+    const adBtn = document.getElementById('funnel-scope-ad');
+    if (allBtn){
+      allBtn.style.color = funnelScope === 'all' ? 'var(--primary)' : 'var(--muted)';
+      allBtn.style.borderColor = funnelScope === 'all' ? 'var(--primary)' : 'var(--line)';
+    }
+    if (adBtn){
+      adBtn.style.color = funnelScope === 'ad' ? 'var(--primary)' : 'var(--muted)';
+      adBtn.style.borderColor = funnelScope === 'ad' ? 'var(--primary)' : 'var(--line)';
+    }
+    renderFunnelStats();
+  }
+
+  async function renderFunnelStats(){
+    if (!document.getElementById('funnel-home-view')) return; // 관리자 DOM 미생성 시 조용히 종료 (기존 패턴과 동일)
+
+    setStatCardsText(FUNNEL_STAT_IDS, '불러오는 중');
+    try {
+      const { data, error } = await supabaseClient.rpc('get_funnel_stats_today', { p_ad_only: funnelScope === 'ad' });
+      if (error) throw error;
+      const stats = Array.isArray(data) ? data[0] : data;
+
+      const homeView = Number(stats?.home_view_sessions);
+      const ctaClick = Number(stats?.home_shopping_cta_click_sessions);
+      const hotdealsView = Number(stats?.hotdeals_view_sessions);
+      const partnerClickSessions = Number(stats?.partner_click_sessions);
+      const partnerClickTotal = Number(stats?.partner_click_total);
+
+      document.getElementById('funnel-home-view').textContent = Number.isFinite(homeView) ? homeView.toLocaleString('ko-KR') : '조회 실패';
+      document.getElementById('funnel-cta-click').textContent = Number.isFinite(ctaClick) ? ctaClick.toLocaleString('ko-KR') : '조회 실패';
+      document.getElementById('funnel-hotdeals-view').textContent = Number.isFinite(hotdealsView) ? hotdealsView.toLocaleString('ko-KR') : '조회 실패';
+      document.getElementById('funnel-partner-click').textContent = Number.isFinite(partnerClickSessions) ? partnerClickSessions.toLocaleString('ko-KR') : '조회 실패';
+      document.getElementById('funnel-partner-click-total').textContent = Number.isFinite(partnerClickTotal) ? partnerClickTotal.toLocaleString('ko-KR') : '조회 실패';
+
+      const rateHomeCta = document.getElementById('funnel-rate-home-cta');
+      const rateHotdealsPartner = document.getElementById('funnel-rate-hotdeals-partner');
+      const rateHomePartner = document.getElementById('funnel-rate-home-partner');
+      if (rateHomeCta) rateHomeCta.textContent = formatFunnelRate(ctaClick, homeView);
+      if (rateHotdealsPartner) rateHotdealsPartner.textContent = formatFunnelRate(partnerClickSessions, hotdealsView);
+      if (rateHomePartner) rateHomePartner.textContent = formatFunnelRate(partnerClickSessions, homeView);
+    } catch (e){
+      console.warn('[주문의 고수] 쇼핑 전환 퍼널 조회 실패 (funnel_events/get_funnel_stats_today RPC 확인 필요)', e);
+      setStatCardsText(FUNNEL_STAT_IDS, '조회 실패');
+      ['funnel-rate-home-cta', 'funnel-rate-hotdeals-partner', 'funnel-rate-home-partner'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+    }
+  }
+
   // 브라우저 탭(세션)마다 고유한 방문자 세션 ID를 sessionStorage에 만들어 재사용합니다.
   // 로그인 여부와 무관하게(비로그인 anon 방문자 포함) 모든 방문자를 식별할 수 있어야 하므로
   // Supabase 로그인 세션이 아니라 순수 브라우저 sessionStorage 기반으로 생성합니다.
@@ -7715,6 +7814,97 @@
     }
   }
 
+  // ---------- 쇼핑 전환 퍼널 추적 (배달광고 → 홈 → 쇼핑핫딜 → 쿠팡 파트너스) ----------
+  // 부가 기능이다. Supabase/네트워크/GA 오류가 나더라도 홈/할인/쇼핑핫딜/쿠팡 링크 이용에는
+  // 절대 영향을 주지 않는다(모든 추적 함수는 실패 시 console.warn만 남기고 진행을 막지 않음).
+  // 세션 ID는 새로 만들지 않고 위의 getOrCreateVisitSessionId()/VISIT_SESSION_KEY를 그대로 재사용해
+  // 기존 방문자 집계(site_visits)와 같은 브라우저 세션 기준을 공유한다.
+
+  const FUNNEL_UTM_KEY = 'jumungosu_funnel_utm';
+  const FUNNEL_HOME_VIEW_SENT_KEY = 'jumungosu_funnel_home_view_sent';
+  const FUNNEL_HOTDEALS_VIEW_SENT_KEY = 'jumungosu_funnel_hotdeals_view_sent';
+
+  // 인스타 광고 등에서 유입된 utm_source/medium/campaign/content를 최초 방문 시 세션에 저장해,
+  // 홈 → 쇼핑핫딜 → 쿠팡으로 SPA 내부 이동을 해도 같은 값을 계속 재사용할 수 있게 한다.
+  // 기존 URL 구조/SEO/라우팅(TAB_TO_PATH, PATH_TO_TAB 등)은 전혀 건드리지 않는다.
+  function captureFunnelUtm(){
+    try {
+      const params = new URLSearchParams(location.search);
+      const utm = {
+        utm_source: params.get('utm_source') || '',
+        utm_medium: params.get('utm_medium') || '',
+        utm_campaign: params.get('utm_campaign') || '',
+        utm_content: params.get('utm_content') || '',
+      };
+      if (utm.utm_source || utm.utm_medium || utm.utm_campaign || utm.utm_content){
+        sessionStorage.setItem(FUNNEL_UTM_KEY, JSON.stringify(utm));
+      }
+    } catch (e){ /* UTM 저장 실패는 조용히 무시 — 일반 방문/기존 기능에는 영향 없음 */ }
+  }
+
+  function getFunnelUtm(){
+    try {
+      const raw = sessionStorage.getItem(FUNNEL_UTM_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e){ return null; }
+  }
+
+  // 퍼널 이벤트 기록 본체. track_funnel_event RPC를 await하지 않고 fire-and-forget으로 호출해
+  // Supabase 오류/지연이 호출부의 화면 전환·쿠팡 링크 이동을 절대 지연/차단하지 않게 한다.
+  function trackFunnelEvent(eventName, extra){
+    try {
+      const sessionId = getOrCreateVisitSessionId();
+      const utm = getFunnelUtm() || {};
+      const metadata = Object.assign({}, extra || {});
+      if (utm.utm_content) metadata.utm_content = utm.utm_content;
+      if (utm.utm_medium) metadata.utm_medium = utm.utm_medium;
+
+      supabaseClient.rpc('track_funnel_event', {
+        p_session_id: sessionId,
+        p_event_name: eventName,
+        p_source: utm.utm_source || null,
+        p_campaign: utm.utm_campaign || null,
+        p_placement: (extra && extra.placement) || null,
+        p_metadata: metadata,
+      }).then(({ error }) => {
+        if (error) console.warn('[주문의 고수] 퍼널 이벤트 기록 실패 (funnel_events/track_funnel_event RPC 확인 필요)', eventName, error);
+      }).catch(e => {
+        console.warn('[주문의 고수] 퍼널 이벤트 기록 실패', eventName, e);
+      });
+    } catch (e){
+      console.warn('[주문의 고수] 퍼널 이벤트 기록 실패', eventName, e);
+    }
+  }
+
+  // 홈 화면 실제 진입(세션당 1회) — switchTab(tab === 'home')에서 호출한다.
+  function trackHomeViewOnce(){
+    try {
+      if (sessionStorage.getItem(FUNNEL_HOME_VIEW_SENT_KEY)) return;
+      sessionStorage.setItem(FUNNEL_HOME_VIEW_SENT_KEY, '1');
+    } catch (e){ /* sessionStorage 불가 환경이어도 아래에서 기록은 시도한다 */ }
+    trackFunnelEvent('home_view');
+  }
+
+  // 쇼핑핫딜(/hot-deals) 실제 진입(세션당 1회) — renderHotdealsPage()에서 호출한다.
+  function trackHotdealsViewOnce(){
+    try {
+      if (sessionStorage.getItem(FUNNEL_HOTDEALS_VIEW_SENT_KEY)) return;
+      sessionStorage.setItem(FUNNEL_HOTDEALS_VIEW_SENT_KEY, '1');
+    } catch (e){ /* sessionStorage 불가 환경이어도 아래에서 기록은 시도한다 */ }
+    trackFunnelEvent('hotdeals_view');
+    try { if (typeof gtag === 'function') gtag('event', 'hotdeals_view'); } catch (e){ /* GA 실패는 무시 */ }
+  }
+
+  // 홈 추석 배너 클릭: 추적 후 이동. 추적이 실패하거나 느려도 탭 이동 자체는 항상 실행된다.
+  function goToHotdealsFromHomeSeasonal(){
+    try {
+      trackFunnelEvent('home_shopping_cta_click', { placement: 'home_seasonal_banner' });
+      if (typeof gtag === 'function'){
+        gtag('event', 'home_shopping_cta_click', { placement: 'home_seasonal_banner' });
+      }
+    } catch (e){ /* 추적 실패해도 이동은 계속 */ }
+    switchTab('hotdeals');
+  }
 
   // ---------- TOAST ----------
   let toastTimer;
@@ -9022,6 +9212,16 @@
           price_snapshot: p.price || '', targets: (p.targets || []).join(','),
         });
       }
+      // 쇼핑 전환 퍼널: 기존 GA partner_click은 그대로 유지하고, Supabase 퍼널 기록만 추가한다.
+      if (p){
+        trackFunnelEvent('partner_click', {
+          placement: placement || 'grid',
+          product_name: p.name,
+          product_index: i,
+          price_snapshot: p.price || '',
+          targets: (p.targets || []).join(','),
+        });
+      }
     } catch (e) { /* 추적 실패가 클릭을 막으면 안 됨 */ }
     return true;
   }
@@ -10047,6 +10247,7 @@
     renderHotdealsCoupangFestaCta(HOTDEALS_SEASONAL_ENABLED);
     renderHotdealsFilterUI();
     renderHotdealsProducts();
+    trackHotdealsViewOnce(); // 쇼핑 전환 퍼널: /hot-deals 실제 진입(세션당 1회)
   }
 
   // 홈의 추석 기획전 진입 배너: 시즌 플래그가 꺼지거나 추석 종료일(HOTDEALS_CHUSEOK_END_DATE)이
@@ -10130,6 +10331,11 @@
     if (tab === 'hotdeals' && typeof renderHotdealsPage === 'function'){
       renderHotdealsPage();
     }
+
+    // 쇼핑 전환 퍼널: 홈 실제 진입은 세션당 1회만 기록한다(trackHomeViewOnce 내부에서 중복 방지).
+    if (tab === 'home'){
+      trackHomeViewOnce();
+    }
   }
 
   // 브라우저 뒤로가기/앞으로가기: 주소창의 경로를 보고 해당 탭으로만 전환한다.
@@ -10140,6 +10346,10 @@
   });
 
   // ---------- INIT ----------
+  // 광고 유입 UTM은 라우팅/홈 진입(trackHomeViewOnce)보다 먼저 세션에 저장해둬야
+  // 최초 home_view부터 source/campaign이 함께 기록된다.
+  captureFunnelUtm();
+
   // 새로고침/직접 접속 시 주소(경로)에 맞는 탭을 먼저 보여준다.
   // (관리자 페이지는 아직 로그인 세션이 확인되기 전이라 권한이 없으면 홈으로 대체)
   (function initRouteFromPath(){
@@ -10177,6 +10387,7 @@
   renderBoardComposeCategorySelect();
   loadBoardPostsFromDB(); // posts/comments 테이블에서 불러온 뒤 내부적으로 renderBoardList()/renderReportedPosts()까지 호출함
   renderDashboardStats();
+  renderFunnelStats(); // 관리자 DOM이 아직 없으면 내부에서 조용히 종료(기존 renderDashboardStats와 동일 패턴)
 
   // 할인 목록(BEST3 + 전체 리스트)은 Airtable에서 최신 데이터를 먼저 받아온 뒤에 그립니다.
   // 예전처럼 코드에 내장된 기본 데이터를 먼저 그렸다가 Airtable 데이터로 다시 덮어쓰면,
