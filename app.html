@@ -509,14 +509,18 @@
 
   <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, BEST3보다 작고 담백한
        시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
-       syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다. -->
+       syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다.
+       디자인: 인스타 카드뉴스 후킹 톤에 맞춰 검은 배경 + 흰색/노란색 2단 카피로 구성. 배경/글자
+       색은 테마(라이트/다크) 전환과 무관하게 항상 짙은 배경으로 고정해서 시선을 끌도록
+       #1C1A17(주문의고수가 노란 버튼 텍스트 등에 이미 쓰는 고정 다크톤)을 그대로 재사용했다.
+       기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 flex items-center justify-between gap-3" style="background:var(--card-alt); border:1px solid var(--line);">
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4" style="background:#1C1A17; border:1px solid rgba(255,184,0,.35);">
       <span class="min-w-0">
-        <span class="block text-sm font-semibold mb-0.5 break-keep" style="color:var(--text);">🎁 추석선물·명절 준비, 한곳에서 골라보세요</span>
-        <span class="block text-xs break-keep" style="color:var(--muted);">쿠팡 추석 행사상품 중 선물과 명절 준비에 유용한 상품을 엄선했어요</span>
+        <span class="block leading-tight break-keep" style="color:#F5F0E8; font-size:24px; font-weight:700;">추석선물?</span>
+        <span class="block leading-tight break-keep whitespace-nowrap" style="color:#FFB800; font-size:40px; font-weight:900;">3초면 똭!</span>
       </span>
-      <span class="shrink-0 text-xs font-semibold px-3 py-2 rounded-md break-keep" style="background:var(--primary); color:#1C1A17;">2026 추석 기프트 보기</span>
+      <span class="shrink-0 self-start sm:self-center text-sm font-bold px-4 py-2.5 rounded-md break-keep whitespace-nowrap" style="background:#FFB800; color:#1C1A17;">선물 찾기 →</span>
     </button>
   </section>
 
