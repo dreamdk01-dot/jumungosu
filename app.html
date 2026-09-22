@@ -229,6 +229,16 @@
   h1.font-display{ font-weight:800; }
   h2.font-display, h3.font-display{ font-weight:700; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
+  /* 헤더 메인 로고 텍스트("주문의고수") 전용 — 기존 Black Han Sans(과도하게 두꺼운 디스플레이
+     서체)를 걷어내고 사이트 본문과 같은 Pretendard Variable 700으로 통일한다. .font-display는
+     다른 제목·버튼 등 수십 곳에서 그대로 쓰이므로 전역 정의는 건드리지 않고, 이 요소에만 적용되는
+     별도 클래스로 분리했다. line-height는 일부러 지정하지 않는다 — text-2xl/text-3xl(Tailwind
+     기본 line-height, 고정 rem 값)에 맡겨야 헤더 높이가 수정 전과 완전히 같게 유지된다(실측 확인:
+     line-height:1을 넣었더니 1366px에서 헤더가 6.5px 줄어드는 회귀가 있어 제거했다). */
+  .brand-logo-text{
+    font-family:'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight:700;
+  }
 
 
   .dashed-divider{
@@ -423,7 +433,7 @@
         <path d="M18 29 L26 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
         <path d="M23 29 L31 4" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span class="font-display text-2xl sm:text-3xl tracking-wide" style="color:var(--primary); font-family:'Black Han Sans', sans-serif; letter-spacing:0.5px;">주문의고수</span>
+      <span class="brand-logo-text text-2xl sm:text-3xl tracking-wide" style="color:var(--primary); letter-spacing:0.5px;">주문의고수</span>
     </button>
 
     <!-- desktop nav -->
