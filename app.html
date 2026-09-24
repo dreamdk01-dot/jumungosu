@@ -173,8 +173,7 @@
     --accent-hover:#FF8B74;
     --warning:#FF7657;
     --success:#65C69A;
-    --shopping-accent-border: rgba(167,139,250,.45); /* 쇼핑 유도 배너(추석선물 등) 전용 — 배달 영역과 구분되는 차분한 보라 테두리 */
-    --shopping-accent-bg: rgba(167,139,250,.07); /* 위 배너에만 쓰는 아주 옅은 보라 배경 톤 */
+    --shopping-accent-border: rgba(56,189,248,.4); /* 쇼핑 유도 배너(추석선물 등) 전용 — 배달 영역과 구분되는 은은한 하늘색 테두리 */
     --tag-baemin:#34C9B0;
     --tag-yogiyo:#FF3D71;
     --tag-coupang:#5B8DEF;
@@ -609,9 +608,10 @@
        sm: 접두사가 붙은 값은 PC에서 충분히 크게 보이도록 새로 키운 값(이전 CTA보다 확실히 큼).
        기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <!-- 테두리/배경만 보라 계열로(--shopping-accent-*, :root에 정의) 바꿔 배달 할인 영역과 시각적으로
-         구분한다. 노란 CTA(3초면 똭!)와 onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
-    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:linear-gradient(var(--shopping-accent-bg), var(--shopping-accent-bg)), var(--card-alt); border:1px solid var(--shopping-accent-border);">
+    <!-- 테두리만 하늘색 계열로(--shopping-accent-border, :root에 정의) 바꿔 배달 할인 영역과
+         시각적으로 구분한다. 배경은 다시 주변 카드와 같은 --card-alt(어두운 카드색)로 되돌려
+         보라 배경 워시를 제거했다. 노란 CTA(3초면 똭!)와 onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--card-alt); border:1px solid var(--shopping-accent-border);">
       <span class="min-w-0">
         <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:var(--muted); font-weight:600;">쇼핑도 주문의고수</span>
         <span class="block leading-tight break-keep whitespace-nowrap text-[18px] sm:text-[30px]" style="color:var(--text); font-weight:800;">추석선물?</span>
