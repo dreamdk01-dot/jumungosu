@@ -582,13 +582,13 @@
 
   <!-- ===== [실험판 v1] 지금 볼 만한 할인 =====
        선정 기준: 카테고리 무관, 오늘 라이브(isDiscountLive)인 할인을 기존 groupDiscountsByBrand()로
-       브랜드 통합한 뒤 groupMaxValue(브랜드 내 최고 할인액) 내림차순 정렬 → 상위 6개.
+       브랜드 통합한 뒤 groupMaxValue(브랜드 내 최고 할인액) 내림차순 정렬 → 상위 4개.
        "상세 보기"는 새 모달을 만들지 않고 기존 goToBrandInDiscountList()를 재사용해 아래
        실제 할인 리스트의 해당 브랜드 카드로 스크롤 이동 + 하이라이트한다. -->
   <section id="home-spotlight-section" class="hidden mb-10 sm:mb-12">
     <h2 class="font-display text-lg sm:text-xl mb-3" style="color:var(--text);">지금 볼 만한 할인</h2>
-    <div id="home-spotlight-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-    <!-- 카드 6개 바로 아래 전체 목록 진입 버튼. 기존 showAllBrandDiscounts()
+    <div id="home-spotlight-list" class="grid grid-cols-2 gap-3"></div>
+    <!-- 카드 4개 바로 아래 전체 목록 진입 버튼. 기존 showAllBrandDiscounts()
          (필터 초기화 + revealDiscountList + 목록 렌더 + 스크롤)를 그대로 재사용한다. -->
     <button type="button" onclick="showAllBrandDiscounts()" class="mt-4 sm:mt-5 mx-auto block px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달 할인 보기 ↓</button>
   </section>
@@ -3117,7 +3117,7 @@
   }
 
   // 지금 볼 만한 할인: 오늘 라이브 할인을 브랜드로 통합(groupDiscountsByBrand, 기존과 동일한
-  // 브랜드 병합 규칙 재사용)한 뒤, 브랜드 내 최고 할인액(groupMaxValue) 기준 내림차순 상위 6개.
+  // 브랜드 병합 규칙 재사용)한 뒤, 브랜드 내 최고 할인액(groupMaxValue) 기준 내림차순 상위 4개.
   // 카드의 "상세 보기"는 새로 상세 화면을 만들지 않고 기존 goToBrandInDiscountList()를 호출해
   // 아래 실제 할인 리스트의 해당 브랜드 카드로 스크롤+하이라이트한다(요건: "카드를 누르면 기존
   // 할인 상세 정보가 나타나야 한다"를 새 UI 없이 충족).
@@ -3136,7 +3136,7 @@
     const groups = groupDiscountsByBrand(live)
       .slice()
       .sort((a, b) => groupMaxValue(b) - groupMaxValue(a))
-      .slice(0, 6);
+      .slice(0, 4);
 
     section.classList.remove('hidden');
     el.innerHTML = groups.map(g => {
