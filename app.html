@@ -377,7 +377,7 @@
   #hero_search_brand::placeholder{ font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 Hero placeholder만 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
   #hero_search_brand::-webkit-search-cancel-button,
   #search_brand::-webkit-search-cancel-button{ filter:grayscale(1) brightness(0.55); }
-  .hero-search-icon{ color:#4B5563; filter:grayscale(1) brightness(0.5); }
+  .hero-search-icon{ color:#4B5563; } /* 하단 #search_brand 돋보기와 동일한 크기(text-sm)/색상 처리 — filter 없음(하단과 동일) */
   #brand-search-section .relative.max-w-\[320px\] > span{ color:#4B5563 !important; } /* 하단 검색 아이콘도 흰 배경에서 보이도록 짙은 회색으로 */
   #brand-search-clear{ color:#6B7280 !important; } /* × 삭제 버튼도 흰 배경에 맞춰 회색으로 */
 
@@ -540,7 +540,7 @@
         oninput="handleHeroSearchInput(this.value)"
         onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
         class="form-input w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none">
-      <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-lg" aria-hidden="true">🔍</span>
+      <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
     </div>
 
     <!-- 인기 브랜드 칩: renderTodayBrandLinks()가 이미 존재했지만(기존 코드에 정의만 되어 있고
