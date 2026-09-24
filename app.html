@@ -9670,13 +9670,21 @@
   // (id가 autumn-gift-pick-N이라 applyAutumnGiftFilterVisibility가 건드리지 않음), iframe은 아래
   // 그리드와 같은 지연 로드 슬롯(.autumn-gift-iframe-slot, data-agp-index=원본 인덱스)을 쓴다.
   // 같은 상품이 PICK과 그리드에 각각 한 번씩 나오는 건 의도한 것(PICK은 추천, 그리드는 전체 목록).
-  function autumnGiftPickCardHtml(p, i, extra){
+  function autumnGiftPickCardHtml(p, i, tier){
     const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
     const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
-    // extra=true면 "더보기"로만 펼쳐지는 나머지 픽 — 기본은 숨겨두되 DOM 자체는 항상 만들어 둔다
-    // (다른 곳과 마찬가지로 hidden 토글만으로 여닫아야 iframe이 다시 로드되지 않는다).
+    // tier 0 = 항상 노출. tier 1 = PC(1024px+)에서는 기본 노출, 그보다 좁으면(모바일/태블릿)
+    // "더보기"로만 열림 — agp-pick-extra(더보기 토글 대상) + hidden(기본 숨김) + lg:block(1024px+
+    // 에서는 hidden을 무시하고 무조건 보이게 하는 정적 CSS 오버라이드)을 함께 준다. 이 조합은
+    // 이 파일에서 이미 검증된 방식이다(Tailwind CDN 스타일시트에서 반응형 유틸리티가 .hidden보다
+    // 뒤에 위치해 해당 breakpoint에서 항상 이긴다 — 쇼핑 인트로 화면 sm:flex 관련 주석 참고).
+    // tier 2 = 기존과 동일, 모든 화면에서 "더보기"로만 열림. DOM 자체는 항상 만들어 두고 hidden
+    // 토글만으로 여닫아야 iframe이 다시 로드되지 않는다.
+    const extraClass = tier === 1 ? 'agp-pick-extra hidden lg:block '
+                      : tier === 2 ? 'agp-pick-extra hidden '
+                      : '';
     return `
-      <div id="autumn-gift-pick-${p.pick}" class="${extra ? 'agp-pick-extra hidden ' : ''}rounded-lg p-3 flex gap-3" style="background:var(--card); border:1px solid var(--line);">
+      <div id="autumn-gift-pick-${p.pick}" class="${extraClass}rounded-lg p-3 flex gap-3" style="background:var(--card); border:1px solid var(--line);">
         <div class="shrink-0 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
         <a class="agp-card-link min-w-0 flex-1 flex flex-col" href="${escapeHtml(autumnGiftClickHref(p))}" target="_blank" rel="noopener sponsored" onclick="autumnGiftTrackClick(${i}, 'pick')">
           <div class="flex items-center gap-2 mb-1">
@@ -9690,17 +9698,25 @@
         </a>
       </div>`;
   }
-  // 처음엔 몇 개만 보여줄지 — 8개 중 4개(모바일 2열×2줄/PC 2열×2줄 기준 한 화면에 자연스럽게
-  // 들어오는 수). 신뢰 신호(고수PICK)는 남기되 첫 화면 부담은 줄이자는 절충안(2026-09-19).
-  const AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT = 4;
+  // [PC 초기 노출 최적화] 모바일/태블릿(1024px 미만, 2열까지)은 4개가 정확히 2줄로 맞아떨어져
+  // 이미 빈칸이 없었으므로 그대로 두고(요건: 모바일 현재 그대로 유지), PC(1024px+, 3열)에서만
+  // 6개(3열×2줄)로 늘려 빈칸을 없앤다 — grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 와 짝을 맞춘 값.
+  const AUTUMN_GIFT_PICKS_MOBILE_DEFAULT = 4;
+  const AUTUMN_GIFT_PICKS_PC_DEFAULT = 6;
   let autumnGiftPicksExpanded = false;
   function toggleAutumnGiftPicksExpanded(){
     autumnGiftPicksExpanded = !autumnGiftPicksExpanded;
     document.querySelectorAll('.agp-pick-extra').forEach(el => el.classList.toggle('hidden', !autumnGiftPicksExpanded));
     const btn = document.getElementById('autumn-gift-picks-more');
-    if (btn){
-      const extraCount = document.querySelectorAll('.agp-pick-extra').length;
-      btn.textContent = autumnGiftPicksExpanded ? '접기 ▲' : `고수PICK ${extraCount}개 더 보기 ▼`;
+    if (!btn) return;
+    const mobileLabel = btn.querySelector('[data-role="mobile-label"]');
+    const pcLabel = btn.querySelector('[data-role="pc-label"]');
+    if (autumnGiftPicksExpanded){
+      if (mobileLabel) mobileLabel.textContent = '접기 ▲';
+      if (pcLabel) pcLabel.textContent = '접기 ▲';
+    } else {
+      if (mobileLabel) mobileLabel.textContent = `고수PICK ${btn.dataset.mobileExtra}개 더 보기 ▼`;
+      if (pcLabel) pcLabel.textContent = `고수PICK ${btn.dataset.pcExtra}개 더 보기 ▼`;
     }
   }
   function autumnGiftPicksSectionHtml(){
@@ -9709,8 +9725,24 @@
       .filter(x => Number(x.p.pick) > 0 && x.p.partnersHtml)
       .sort((a, b) => Number(a.p.pick) - Number(b.p.pick));
     if (!picks.length) return '';
-    const cardsHtml = picks.map((x, idx) => autumnGiftPickCardHtml(x.p, x.i, idx >= AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT)).join('');
-    const extraCount = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT);
+    const cardsHtml = picks.map((x, idx) => {
+      const tier = idx < AUTUMN_GIFT_PICKS_MOBILE_DEFAULT ? 0 : (idx < AUTUMN_GIFT_PICKS_PC_DEFAULT ? 1 : 2);
+      return autumnGiftPickCardHtml(x.p, x.i, tier);
+    }).join('');
+    // [PC 초기 노출 최적화] "더보기" 남은 개수가 breakpoint마다 다르다(모바일: 4개 기준,
+    // PC: 6개 기준) — 버튼 하나 안에 두 라벨을 넣고 CSS로 하나만 보이게 한다. 6개 이하면
+    // PC에는 더 보여줄 게 없으므로 버튼 자체를 PC에서 숨긴다(lg:hidden).
+    const mobileExtra = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_MOBILE_DEFAULT);
+    const pcExtra = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_PC_DEFAULT);
+    let moreButtonHtml = '';
+    if (mobileExtra > 0){
+      const pcHasMore = pcExtra > 0;
+      moreButtonHtml = `
+        <button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" data-mobile-extra="${mobileExtra}" data-pc-extra="${pcExtra}" class="${pcHasMore ? '' : 'lg:hidden '}w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">
+          <span data-role="mobile-label" class="lg:hidden">고수PICK ${mobileExtra}개 더 보기 ▼</span>
+          <span data-role="pc-label" class="hidden lg:inline">고수PICK ${pcExtra}개 더 보기 ▼</span>
+        </button>`;
+    }
     // 테두리로 "이건 운영자가 직접 고른 구역"임을 시각적으로 딱 구분한다(2026-09-19) — 아래
     // 필터 결과 구역과 배경이 같아서 헷갈린다는 피드백 반영. 노란(브랜드 --primary) 테두리 +
     // 옅은 배경 틴트로 하나의 "박스"처럼 보이게 한다.
@@ -9722,7 +9754,7 @@
         </div>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${cardsHtml}</div>
-        ${extraCount > 0 ? `<button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" class="w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">고수PICK ${extraCount}개 더 보기 ▼</button>` : ''}
+        ${moreButtonHtml}
       </div>`;
   }
 
@@ -9807,7 +9839,7 @@
   // 들어간다(iframe 중복 생성 방지). 묶음 배정 규칙은 targets/가격을 보고 정한 고정 규칙이며 데이터는
   // 바꾸지 않는다: 부모님께 = 부모님 태그 & 5만원 이상 / 가족 실속 = 가족 태그(연인 제외) /
   // 연인·지인 = 연인 태그 또는 (지인 & 직장 아님) / 직장·거래처 = 나머지 직장 태그.
-  // 각 묶음은 정렬 기준 상위 AUTUMN_GIFT_GROUP_LIMIT개만 펼치고 나머지는 "더보기"로 연다(펼침 상태는
+  // 각 묶음은 정렬 기준 상위 autumnGiftGroupLimit()개만 펼치고 나머지는 "더보기"로 연다(펼침 상태는
   // 세션 동안 유지, DOM은 그대로이고 hidden/표시만 바뀌므로 iframe 재로드 없음).
   const AUTUMN_GIFT_GROUPS = [
     { key: 'parents', title: '부모님께', sub: '5만원 이상, 제대로 챙기고 싶을 때' },
@@ -9815,7 +9847,19 @@
     { key: 'work',    title: '직장·거래처 답례', sub: '부담 없는 가격대로 돌리기 좋은 것' },
     { key: 'friends', title: '연인·지인', sub: '뷰티와 간식 위주' },
   ];
-  const AUTUMN_GIFT_GROUP_LIMIT = 6;
+  // [PC 초기 노출 최적화] 예전엔 고정 6개였는데, 이 grid는 breakpoint마다 열 수가 다르다
+  // (기본 2열, sm 3열, lg 4열, xl 5열 — grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3
+  // lg:grid-cols-4 xl:grid-cols-5). 6은 2열·3열에서는 이미 딱 맞아떨어져(3줄/2줄) 빈칸이 없었고
+  // 실제 문제가 보고된 건 4열·5열(PC 컨테이너 확대 이후 추가된 breakpoint)뿐이므로, 그 두 구간만
+  // 열 수의 배수(4열→8, 5열→10)로 바꾸고 나머지(모바일 포함)는 기존 6을 그대로 둔다 — "모바일은
+  // 현재 그대로 유지" 요건과 실제 깨졌던 구간만 고치는 최소 수정 원칙을 함께 만족한다.
+  function autumnGiftGroupLimit(){
+    const w = window.innerWidth;
+    if (w >= 1280) return 10; // xl: 5열 × 2줄
+    if (w >= 1024) return 8;  // lg: 4열 × 2줄
+    return 6;                 // 그 이하(모바일 포함, 기존 sm 3열도 포함) — 기존 값 그대로, 이미 빈칸 없음
+  }
+
   const autumnGiftExpandedGroups = new Set();
   function autumnGiftGroupOf(p){
     const has = (t) => Array.isArray(p.targets) && p.targets.includes(t);
@@ -9911,6 +9955,20 @@
       window.addEventListener('scroll', autumnGiftUpdateStickyBar, { passive: true });
       autumnGiftStickyListenerBound = true;
     }
+    // [PC 초기 노출 최적화] 창 크기를 바꿔 breakpoint(1024/1280)를 넘나들 때도 autumnGiftGroupLimit()
+    // 값이 CSS grid의 실제 열 수와 계속 맞아야 한다. applyAutumnGiftFilterVisibility()는 hidden
+    // 클래스만 토글하므로(위 주석 참고) 몇 번을 다시 불러도 iframe이 재로드되지 않아 안전하다 —
+    // 다만 매 resize 이벤트마다 부르지 않고, 실제로 한도 값이 달라졌을 때만 다시 계산한다.
+    if (!autumnGiftResizeListenerBound){
+      let lastLimit = autumnGiftGroupLimit();
+      window.addEventListener('resize', () => {
+        const nextLimit = autumnGiftGroupLimit();
+        if (nextLimit === lastLimit) return;
+        lastLimit = nextLimit;
+        applyAutumnGiftFilterVisibility();
+      });
+      autumnGiftResizeListenerBound = true;
+    }
   }
 
   // ④ 스크롤 위치를 보고 고정 요약바를 보일지 정한다. /hot-deals가 아니거나(다른 탭) 조건이
@@ -9950,9 +10008,10 @@
     order.forEach((idx, r) => { rank[idx] = r; });
     let lastVisibleRow = null;
     let lastVisibleRowRank = -1;
-    // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(AUTUMN_GIFT_GROUP_LIMIT) 넘는 건 숨긴다.
+    // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(autumnGiftGroupLimit()) 넘는 건 숨긴다.
     // 단, 조건이 걸려 있으면(①) 한도를 적용하지 않고 매칭된 걸 전부 보여준다 — "33개라며 왜 13개만
     // 보이냐"는 혼란을 없애기 위함(2026-09-19).
+    const groupLimit = autumnGiftGroupLimit();
     const groupMatched = {};
     AUTUMN_GIFT_GROUPS.forEach(g => { groupMatched[g.key] = []; });
     AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
@@ -9975,7 +10034,7 @@
     AUTUMN_GIFT_GROUPS.forEach((g) => {
       const items = groupMatched[g.key].sort((a, b) => a.r - b.r);
       const expanded = hasFilter || autumnGiftExpandedGroups.has(g.key);
-      items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= AUTUMN_GIFT_GROUP_LIMIT); });
+      items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= groupLimit); });
       const wrap = document.getElementById('autumn-gift-group-' + g.key);
       if (wrap){
         wrap.classList.toggle('hidden', items.length === 0);
@@ -9990,7 +10049,7 @@
       if (cnt) cnt.textContent = items.length ? `${items.length}개` : '';
       const more = document.getElementById('autumn-gift-more-' + g.key);
       if (more){
-        const rest = items.length - AUTUMN_GIFT_GROUP_LIMIT;
+        const rest = items.length - groupLimit;
         if (!hasFilter && rest > 0){
           more.classList.remove('hidden');
           more.textContent = expanded ? '접기 ▲' : `더보기 ${rest}개 ▼`;
@@ -10054,6 +10113,7 @@
   //  · autumnGiftStickyListenerBound: ④ 스크롤 고정 요약바용 scroll 리스너를 한 번만 등록하기 위한 가드.
   let hotdealsDetailFiltersOpen = false;
   let autumnGiftStickyListenerBound = false;
+  let autumnGiftResizeListenerBound = false; // [PC 초기 노출 최적화] resize 리스너 중복 등록 방지 가드
 
   // 대상/예산/카테고리 중 하나라도 '전체'가 아니거나, 체크박스(⭐5.0만/리뷰1,000개↑) 중 하나라도
   // 켜져 있으면 "조건이 걸린 상태"로 본다. ①(PICK·묶음 접힘 숨기고 결과만 보여주기), ②(자동 스크롤),
