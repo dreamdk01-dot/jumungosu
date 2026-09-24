@@ -1508,7 +1508,7 @@
      같은 탭 안에서 인트로(shopping-view-intro)와 질문 플로우(shopping-view-chuseok)를
      JS로 토글하며, 실제 주소도 각각 /shopping, /shopping/chuseok로 유지한다.
      이번 단계는 화면 골격만 구현하며 실제 상품/추천 데이터는 다음 단계에서 연결된다. ===== -->
-<main id="page-shopping" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+<main id="page-shopping" class="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-20 hidden">
 
   <!-- ---- 인트로 화면 (/shopping) ---- -->
   <!-- 바깥 div는 display 관련 유틸리티를 전혀 갖지 않는다(순수하게 JS의 hidden 토글 대상 역할만).
@@ -1584,7 +1584,7 @@
      제목·설명 텍스트는 renderHotdealsHero()가, 쿠팡 추석 페스타 CTA는 renderHotdealsCoupangFestaCta()가,
      필터는 renderHotdealsFilterUI()가, 상품 영역은 renderHotdealsProducts()가 채운다
      (switchTab에서 hotdeals 탭 진입 시 호출). -->
-<main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+<main id="page-hotdeals" class="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-2">
     <p id="hotdeals-hero-eyebrow" class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);"></p>
     <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);"></h2>
@@ -9721,7 +9721,7 @@
           <h4 class="font-display text-base break-keep" style="color:var(--text);">먼저 골라본 ${picks.length}개</h4>
         </div>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${cardsHtml}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${cardsHtml}</div>
         ${extraCount > 0 ? `<button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" class="w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">고수PICK ${extraCount}개 더 보기 ▼</button>` : ''}
       </div>`;
   }
@@ -9852,7 +9852,7 @@
               <p class="text-[11px] break-keep" style="color:var(--muted);">${g.sub}</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div>
+          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${cards}</div>
           <button type="button" id="autumn-gift-more-${g.key}" onclick="toggleAutumnGiftGroup('${g.key}')" class="hidden w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);"></button>
         </div>`;
     }).join('');
@@ -10446,7 +10446,7 @@
   }
 
   function hotdealsProductGridHtml(items){
-    return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${items.map(hotdealsProductCardHtml).join('')}</div>`;
+    return `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${items.map(hotdealsProductCardHtml).join('')}</div>`;
   }
 
   function hotdealsBestSectionHtml(categoryLabel, items){
