@@ -587,6 +587,15 @@
     </div>
   </section>
 
+  <!-- [전체 배달할인 펼치기] 검색영역(코랄 wrapper) 바깥, 바로 아래의 독립 컨트롤. 코랄 박스
+       내부에 넣지 않는다. 클릭 핸들러(toggleDiscountListSection)는 기존 #discount-list-section의
+       hidden 토글과 revealDiscountList()/scrollToDiscountListSection()을 그대로 재사용한다
+       (정의부는 revealDiscountList() 근처 참고). 기본 상태는 접힘이라 HTML에도 "펼치기 ↓"를
+       그대로 하드코딩해뒀다(#discount-list-section의 기존 기본 hidden 상태와 일치). -->
+  <div class="mb-8 sm:mb-10 text-center">
+    <button type="button" id="discount-list-toggle-btn" onclick="toggleDiscountListSection()" aria-expanded="false" aria-controls="discount-list-section" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 펼치기 ↓</button>
+  </div>
+
   <!-- ===== [실험판 v1] 오늘의 할인 요약 =====
        숫자는 하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서
        매번 다시 계산한다 — 초기 Airtable 로딩 완료 시 + 5분 폴링마다 자동 갱신. -->
@@ -594,6 +603,16 @@
     <div id="home-summary-panel" class="rounded-lg p-5 sm:p-6" style="background:var(--card); border:1px solid var(--line);">
       <p class="text-sm" style="color:var(--text-secondary);">오늘 할인 정보를 불러오는 중이에요…</p>
     </div>
+  </section>
+
+  <!-- ⏰ 오늘 선착순 쿠폰: 전체 할인 리스트(기본 접힘)와 달리 페이지 최초 진입부터 항상 노출.
+       renderLimitedTimeCoupons()가 매번 discounts 배열에서 다시 계산한다(하드코딩 없음) —
+       isDiscountLive()로 오늘 유효한 것만, 그중 limitedTime(선착순 시간) 필드가 있는 것만,
+       parseLimitedTimeHour()(관리자 화면에서 이미 쓰던 시간 파싱 함수 재사용)로 뽑은 시(0~23)
+       오름차순 정렬. 새 추천 알고리즘이나 카드형 UI는 만들지 않고 컴팩트한 리스트로만 표시한다. -->
+  <section id="limited-time-coupons-section" class="hidden mb-8 sm:mb-10">
+    <h2 class="font-display text-lg sm:text-xl mb-3" style="color:var(--text);">⏰ 오늘 선착순 쿠폰</h2>
+    <div id="limited-time-coupons-list" class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);"></div>
   </section>
 
   <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, 작고 담백한
@@ -2858,6 +2877,8 @@
       // [실험판 v1] 홈 요약 패널: discounts가 갱신될 때마다 함께 다시 계산
       // (위에서 discountUpdatedAtValue까지 갱신된 뒤이므로 '최근 업데이트'도 이 한 번의 렌더로 최신값이 된다)
       if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
+      // ⏰ 오늘 선착순 쿠폰도 discounts가 갱신될 때마다(5분 폴링 포함) 함께 다시 계산
+      if (typeof renderLimitedTimeCoupons === 'function') renderLimitedTimeCoupons();
       renderAdminOpsSummary();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
@@ -2899,21 +2920,51 @@
   }
 
   // ===== [v4] 전체 할인 목록 단계적 노출 =====
-  // 최초 진입 시 #discount-list-section(할인 리스트 제목/정렬/카드/광고/안내문구 전부)을 숨긴다.
-  // renderDiscountList()는 숨겨진 동안에도 평소처럼 계속 호출되어 내부를 최신 상태로 채워두므로
-  // (5분 폴링 포함), 목록을 여는 시점에 광고/데이터를 별도로 다시 로드하거나 광고 정책을 새로
-  // 고민할 필요가 없다 — 순수하게 "보이는지"만 이 상태로 제어한다. 한 번 열리면 검색어를 지워도
-  // 다시 닫지 않는다(닫는 UI 없음).
+  // [전체 배달할인 펼치기] 검색영역 바로 아래 새 토글 버튼(#discount-list-toggle-btn)이 생기면서
+  // "펼치기/접기"가 가능해졌다. revealDiscountList()는 검색·필터·인기검색·브랜드 이동 등 여러
+  // 경로에서 호출되므로(요건 5: 검색/필터 결과가 있으면 자동으로 펼쳐져야 함), 몇 번을 호출해도
+  // 안전하게 매번 hidden을 해제하고 버튼 문구를 동기화한다 — 토글로 접었다가(hidden 다시 추가)
+  // 다른 경로로 재오픈되는 경우도 정상 동작해야 하기 때문이다. discountListRevealed는 트래킹
+  // 이벤트를 최초 1회만 남기기 위한 것으로, DOM 표시 여부와는 별개로 둔다.
   let discountListRevealed = false;
 
   function revealDiscountList(){
-    if (discountListRevealed) return;
-    discountListRevealed = true;
     const section = document.getElementById('discount-list-section');
     if (section) section.classList.remove('hidden');
+    syncDiscountListToggleLabel();
+    if (discountListRevealed) return;
+    discountListRevealed = true;
     // 새 외부 추적 시스템을 추가하지 않고, 기존 퍼널 추적 구조(trackFunnelEvent)에 이벤트만
-    // 하나 더 기록한다. revealDiscountList() 자체가 최초 1회만 실행되므로 중복 기록 걱정이 없다.
+    // 하나 더 기록한다. discountListRevealed 덕분에 최초 1회만 기록된다.
     if (typeof trackFunnelEvent === 'function') trackFunnelEvent('discount_list_expand');
+  }
+
+  // [전체 배달할인 펼치기] 버튼(#discount-list-toggle-btn) 문구/aria-expanded를 실제 hidden
+  // 상태에 맞춘다. revealDiscountList()가 호출되는 모든 경로에서 공통으로 호출되므로, 검색으로
+  // 자동 펼쳐지든 버튼을 직접 눌러 펼치든 문구가 항상 맞게 유지된다.
+  function syncDiscountListToggleLabel(){
+    const section = document.getElementById('discount-list-section');
+    const btn = document.getElementById('discount-list-toggle-btn');
+    if (!section || !btn) return;
+    const hidden = section.classList.contains('hidden');
+    btn.textContent = hidden ? '전체 배달할인 펼치기 ↓' : '전체 배달할인 접기 ↑';
+    btn.setAttribute('aria-expanded', String(!hidden));
+  }
+
+  // [전체 배달할인 펼치기] 버튼 클릭 핸들러. 펼칠 때는 기존 revealDiscountList()를 그대로
+  // 재사용하고(검색/필터가 여는 것과 동일한 경로), 필터를 초기화하지는 않는다 — 이 버튼은 순수
+  // 표시/숨김 토글이지 "전체 초기화" 기능이 아니다. 펼친 뒤에는 기존 scrollToDiscountListSection()
+  // 으로 결과 시작 지점까지만 이동한다(새 애니메이션 없음). 접을 때는 hidden만 다시 추가한다.
+  function toggleDiscountListSection(){
+    const section = document.getElementById('discount-list-section');
+    if (!section) return;
+    if (section.classList.contains('hidden')){
+      revealDiscountList();
+      scrollToDiscountListSection();
+    } else {
+      section.classList.add('hidden');
+      syncDiscountListToggleLabel();
+    }
   }
 
   // "할인 리스트" 섹션 상단으로 스크롤(요건 4/13: 목록을 연 뒤 "목록 상단으로 이동"). 헤더 높이를
@@ -3088,6 +3139,57 @@
           <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
         </div>
       </div>`;
+  }
+
+  // ⏰ 오늘 선착순 쿠폰: 통계 아래 항상 노출되는 컴팩트 리스트(카드형 아님). 새 추천 로직 없이
+  // 기존 discounts/isDiscountLive()를 그대로 쓰고, 정렬 기준은 오직 하나 — limitedTime(선착순
+  // 시간, 자유 텍스트) 필드를 parseLimitedTimeHour()(관리자 "오늘 선착순 할인" 화면에서 이미
+  // 쓰던 함수, 새로 안 만듦)로 파싱한 시(0~23) 오름차순이다. 할인금액 순 정렬은 절대 쓰지 않는다.
+  // 시간을 못 읽은 항목(예: 형식이 다른 자유 텍스트)은 정렬만 맨 뒤로 보내고, 화면엔 원본
+  // limitedTime 문자열을 그대로 보여줘 정보를 잃지 않는다. 동일 시(hour) 안에서는 Array.sort가
+  // 안정 정렬이므로 discounts 배열 순서가 그대로 유지된다(요건: "기존 데이터 순서" 허용).
+  // 실시간 소진 여부를 판단할 데이터가 없으므로 그 부분은 추정하지 않고, 나머지 목록과 동일하게
+  // isDiscountLive()(시작일/종료일 기준)만으로 "오늘 유효한지"를 판단한다.
+  function renderLimitedTimeCoupons(){
+    const section = document.getElementById('limited-time-coupons-section');
+    const el = document.getElementById('limited-time-coupons-list');
+    if (!section || !el) return;
+
+    const live = discounts.filter(isDiscountLive);
+    const items = live
+      .filter(d => d.limitedTime)
+      .map(d => ({ d, hour: parseLimitedTimeHour(d.limitedTime) }))
+      .sort((a, b) => (a.hour === null ? 24 : a.hour) - (b.hour === null ? 24 : b.hour));
+
+    section.classList.remove('hidden');
+
+    if (!items.length){
+      el.innerHTML = `<p class="text-sm px-3 sm:px-4 py-4" style="color:var(--muted);">오늘 예정된 선착순 쿠폰이 없습니다.</p>`;
+      return;
+    }
+
+    el.innerHTML = items.map(({ d, hour }, i) => {
+      const timeLabel = hour !== null ? `${String(hour).padStart(2, '0')}:00` : escapeHtml(d.limitedTime);
+      const appLabel = APP_LABEL[d.app[0]] || d.app[0];
+      const discountText = formatDiscount(d);
+      const borderStyle = i < items.length - 1 ? 'border-bottom:1px solid var(--line);' : '';
+      return `
+        <div class="px-3 sm:px-4 py-2.5" style="${borderStyle}">
+          <div class="sm:hidden">
+            <div class="flex items-baseline gap-2">
+              <span class="font-mono text-sm font-bold shrink-0" style="color:var(--primary);">${timeLabel}</span>
+              <span class="font-semibold text-sm truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
+            </div>
+            <p class="text-xs mt-0.5" style="color:var(--text-secondary);">${escapeHtml(appLabel)} · <span style="color:var(--primary); font-weight:600;">${discountText}</span></p>
+          </div>
+          <div class="hidden sm:flex items-center gap-4">
+            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary);">${timeLabel}</span>
+            <span class="font-semibold text-base flex-1 min-w-0 truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
+            <span class="text-sm shrink-0" style="color:var(--text-secondary);">${escapeHtml(appLabel)}</span>
+            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary);">${discountText}</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   // [지금 볼 만한 할인 제거] renderHomeSpotlight()는 #home-spotlight-section/#home-spotlight-list
@@ -10623,6 +10725,7 @@
     if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
     // [실험판 v1] 안전장치 경로에서도 요약을 함께 채운다
     if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
+    if (typeof renderLimitedTimeCoupons === 'function') renderLimitedTimeCoupons();
     startAirtablePolling();
   })();
   syncHomeSeasonalBanner();
