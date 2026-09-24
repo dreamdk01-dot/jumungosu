@@ -588,13 +588,78 @@
   </section>
 
   <!-- [전체 배달할인 펼치기] 검색영역(코랄 wrapper) 바깥, 바로 아래의 독립 컨트롤. 코랄 박스
-       내부에 넣지 않는다. 클릭 핸들러(toggleDiscountListSection)는 기존 #discount-list-section의
-       hidden 토글과 revealDiscountList()/scrollToDiscountListSection()을 그대로 재사용한다
-       (정의부는 revealDiscountList() 근처 참고). 기본 상태는 접힘이라 HTML에도 "펼치기 ↓"를
-       그대로 하드코딩해뒀다(#discount-list-section의 기존 기본 hidden 상태와 일치). -->
+       내부에 넣지 않는다. #discount-list-section 자체가 이 바로 다음(통계보다 앞)으로 옮겨져
+       있어(HTML 아래 참고), hidden만 풀면 스크롤 없이 이 자리에서 그대로 펼쳐진다. 클릭 핸들러
+       (toggleDiscountListSection)는 기존 revealDiscountList()를 재사용한다(정의부는 근처 참고).
+       기본 상태는 접힘이라 HTML에도 "펼치기 ↓"를 그대로 하드코딩해뒀다. -->
   <div class="mb-8 sm:mb-10 text-center">
     <button type="button" id="discount-list-toggle-btn" onclick="toggleDiscountListSection()" aria-expanded="false" aria-controls="discount-list-section" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 펼치기 ↓</button>
   </div>
+
+  <!-- DISCOUNT LIST — [v4] discountListRevealed가 true가 되기 전까지 hidden. 안에서 그려지는
+       내용(renderDiscountList 등)은 항상 정상 동작하고 데이터도 계속 최신으로 유지되며(5분 폴링
+       포함), 여기서는 오직 "보이는지"만 막는다 — 광고 카드 로딩 방식/정책을 건드리지 않기 위한
+       선택이며 결과 보고에도 명시했다.
+       [펼치기 위치 변경] 이 섹션 전체를 검색영역 바로 아래(통계/선착순/배너보다 앞)로 물리적으로
+       옮겼다 — DOM에 같은 id로 두 번 존재하는 게 아니라 원래 있던 그 노드를 그대로 이동한 것이다.
+       이렇게 해야 펼쳤을 때 브라우저가 자동으로 "그 자리에서 아래로 밀어내며" 통계/선착순/배너를
+       내려보내고, 우리가 스크롤 계산을 할 필요가 전혀 없어진다(요건: 자동 스크롤 금지). -->
+  <section id="discount-list-section" class="hidden">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-3 mb-1 sm:justify-between">
+      <h3 class="font-display text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
+      <p id="discount-list-updated" class="font-mono text-[12px] whitespace-nowrap shrink-0 ml-auto sm:ml-0 text-right sm:text-left sm:order-3 sm:basis-full" style="color:var(--muted);"></p>
+      <div class="flex items-center justify-end sm:justify-start gap-2 flex-wrap basis-full sm:basis-auto sm:order-2">
+        <button id="limited-time-filter-btn" onclick="toggleLimitedTimeFilter()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted); background:transparent;">
+          ⏰ 선착순
+        </button>
+        <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
+          <span id="sort-toggle-label">할인 최대</span> <span>↕</span>
+        </button>
+        <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
+      </div>
+    </div>
+    <p class="text-[12px] leading-relaxed break-keep max-sm:mb-5 sm:mb-4" style="color:var(--text-secondary);">※ 표기된 금액은 <span style="color:var(--accent); font-weight:600;">멤버십 최대 할인</span> 기준일 수 있으며, <span style="color:var(--accent); font-weight:600;">랜덤/선착순 쿠폰</span>은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
+
+    <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
+
+    <div class="mt-4 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="background:var(--card); border:1px solid var(--line);">
+      <div class="flex-1 min-w-0">
+        <p class="font-display text-base sm:text-lg mb-1 break-keep" style="color:var(--primary);">💡 숨은 할인 정보를 알고 계신가요?</p>
+        <p class="text-xs sm:text-sm break-keep" style="color:var(--text-secondary);">소식·제보의 '제보·질문'에 글을 남겨주시면 확인 후 바로 반영해 드립니다!</p>
+        <p id="realtime-report-stats" class="text-xs font-semibold mt-2 break-keep" style="color:var(--primary);"></p>
+        <div id="realtime-report-recent" class="mt-1.5 space-y-1"></div>
+      </div>
+      <button type="button" onclick="goToRealtimeReportBoard()" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:var(--primary); color:#181B23;">할인·쇼핑 정보 제보하기 🚨</button>
+    </div>
+
+    <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4 mb-8 sm:mb-10"></div>
+
+  <!-- 오늘의 선착순 쿠폰 배너 — 할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가.
+       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
+  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
+    style="background:linear-gradient(90deg, rgba(244,200,74,0.14), rgba(255,115,89,0.14)); border:1px dashed var(--primary);">
+    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--text-secondary); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
+    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
+  </button>
+
+  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
+  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
+    style="background:linear-gradient(90deg, rgba(255,115,89,0.14), rgba(244,200,74,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,115,89,0.22);">
+    <div class="flex-1 min-w-0">
+      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
+      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
+    </div>
+    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
+  </button>
+  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
+
+    <!-- [펼치기 위치 변경] 목록의 가장 마지막 컨트롤. 펼쳐졌을 때만(hidden 아닐 때만) 보이고,
+         누르면 이 섹션 전체를 다시 숨긴다. 위쪽 펼치기 버튼은 그 순간 다시 나타난다(같은
+         toggleDiscountListSection()이 두 버튼의 표시 여부를 함께 맞춘다). -->
+    <div class="hidden text-center" id="discount-list-toggle-btn-bottom-wrap">
+      <button type="button" id="discount-list-toggle-btn-bottom" onclick="toggleDiscountListSection()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 접기 ↑</button>
+    </div>
+  </section>
 
   <!-- ===== [실험판 v1] 오늘의 할인 요약 =====
        숫자는 하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서
@@ -645,59 +710,6 @@
     </button>
   </section>
 
-  <!-- DISCOUNT LIST — [v4] discountListRevealed가 true가 되기 전까지 hidden. 안에서 그려지는
-       내용(renderDiscountList 등)은 항상 정상 동작하고 데이터도 계속 최신으로 유지되며(5분 폴링
-       포함), 여기서는 오직 "보이는지"만 막는다 — 광고 카드 로딩 방식/정책을 건드리지 않기 위한
-       선택이며 결과 보고에도 명시했다. -->
-  <section id="discount-list-section" class="hidden">
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-3 mb-1 sm:justify-between">
-      <h3 class="font-display text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
-      <p id="discount-list-updated" class="font-mono text-[12px] whitespace-nowrap shrink-0 ml-auto sm:ml-0 text-right sm:text-left sm:order-3 sm:basis-full" style="color:var(--muted);"></p>
-      <div class="flex items-center justify-end sm:justify-start gap-2 flex-wrap basis-full sm:basis-auto sm:order-2">
-        <button id="limited-time-filter-btn" onclick="toggleLimitedTimeFilter()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted); background:transparent;">
-          ⏰ 선착순
-        </button>
-        <button id="sort-toggle-btn" onclick="toggleSort()" class="chip flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--primary); color:#1C1A17; background:var(--primary);">
-          <span id="sort-toggle-label">할인 최대</span> <span>↕</span>
-        </button>
-        <span class="font-mono text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:var(--card); color:var(--primary); border:1px solid var(--line);"><span id="result-count">0</span>건</span>
-      </div>
-    </div>
-    <p class="text-[12px] leading-relaxed break-keep max-sm:mb-5 sm:mb-4" style="color:var(--text-secondary);">※ 표기된 금액은 <span style="color:var(--accent); font-weight:600;">멤버십 최대 할인</span> 기준일 수 있으며, <span style="color:var(--accent); font-weight:600;">랜덤/선착순 쿠폰</span>은 이벤트 상황 및 플랫폼 사정에 따라 실제 지급 금액이 다르거나 조기 소진될 수 있습니다.</p>
-
-    <div id="discount-list" class="grid sm:grid-cols-2 gap-4"></div>
-
-    <div class="mt-4 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="background:var(--card); border:1px solid var(--line);">
-      <div class="flex-1 min-w-0">
-        <p class="font-display text-base sm:text-lg mb-1 break-keep" style="color:var(--primary);">💡 숨은 할인 정보를 알고 계신가요?</p>
-        <p class="text-xs sm:text-sm break-keep" style="color:var(--text-secondary);">소식·제보의 '제보·질문'에 글을 남겨주시면 확인 후 바로 반영해 드립니다!</p>
-        <p id="realtime-report-stats" class="text-xs font-semibold mt-2 break-keep" style="color:var(--primary);"></p>
-        <div id="realtime-report-recent" class="mt-1.5 space-y-1"></div>
-      </div>
-      <button type="button" onclick="goToRealtimeReportBoard()" class="shrink-0 text-center px-4 py-2.5 rounded-md font-semibold text-sm transition hover:brightness-105" style="background:var(--primary); color:#181B23;">할인·쇼핑 정보 제보하기 🚨</button>
-    </div>
-
-    <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4 mb-8 sm:mb-10"></div>
-
-  <!-- 오늘의 선착순 쿠폰 배너 — 할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가.
-       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
-    style="background:linear-gradient(90deg, rgba(244,200,74,0.14), rgba(255,115,89,0.14)); border:1px dashed var(--primary);">
-    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--text-secondary); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
-  </button>
-
-  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
-  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
-    style="background:linear-gradient(90deg, rgba(255,115,89,0.14), rgba(244,200,74,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,115,89,0.22);">
-    <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
-      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
-    </div>
-    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
-  </button>
-  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
-  </section>
   <!-- [v4] FAQ/SEO 본문과 북마크 팁 배너는 여기서부터 #discount-list-section 밖으로 옮겨
        항상 보이게 했다 — section 4가 숨기라고 명시한 목록("할인 리스트" 제목/정렬/카드/광고/
        업데이트 문구)에 FAQ·북마크 배너는 포함되지 않고, section 5도 "FAQ 및 SEO 본문은
@@ -2909,29 +2921,28 @@
     return true;
   }
 
-  // "전체 할인 N개 보기 →" / 할인 추천 배너 클릭 / 메인 검색창 Enter 시 공용으로 쓰는 스크롤 함수.
-  // [검색/필터 통합] 원래 스크롤 대상이던 하단 "할인 찾기" 박스(#brand-search-section)를
-  // 제거하면서, 이 이름의 함수를 계속 쓰는 호출부들(Enter 키, 오늘의 선착순 쿠폰 배너)이 이제
-  // 찾을 목적지가 없어졌다. 별도 로직을 새로 만들지 않고, 정확히 같은 스크롤 계산(헤더 높이
-  // 보정 포함)을 이미 하는 scrollToDiscountListSection()에 위임한다 — 검색 결과가 실제로
-  // 나타나는 지점(할인 리스트)으로 스크롤하는 편이 지금 구조에서 더 자연스럽다.
+  // [펼치기 위치 변경] 메인 검색창 Enter 시 호출되던 스크롤 함수. 이제 아무 스크롤도 하지 않는다
+  // (아래 함수 정의부 주석 참고) — 요건 9: 검색으로 결과가 자동 펼쳐질 때도 화면을 강제 이동시키지
+  // 않는다. 이름은 다른 코드가 호출하는 그대로 유지했다(Enter 키 핸들러 변경 없음).
   function scrollToBrandSearch(){
-    scrollToDiscountListSection();
+    // [펼치기 위치 변경] 예전엔 여기서 목록 위치로 스크롤했지만, 이제 목록이 검색영역 바로
+    // 아래에서 펼쳐지므로(요건 9: 검색/필터로 자동 열려도 화면을 강제 이동시키지 않는다) 더 이상
+    // 스크롤하지 않는다. 함수 자체는 Hero 검색창 Enter 핸들러가 참조하고 있어 이름 그대로 남겨둔다.
   }
 
   // ===== [v4] 전체 할인 목록 단계적 노출 =====
-  // [전체 배달할인 펼치기] 검색영역 바로 아래 새 토글 버튼(#discount-list-toggle-btn)이 생기면서
-  // "펼치기/접기"가 가능해졌다. revealDiscountList()는 검색·필터·인기검색·브랜드 이동 등 여러
-  // 경로에서 호출되므로(요건 5: 검색/필터 결과가 있으면 자동으로 펼쳐져야 함), 몇 번을 호출해도
-  // 안전하게 매번 hidden을 해제하고 버튼 문구를 동기화한다 — 토글로 접었다가(hidden 다시 추가)
-  // 다른 경로로 재오픈되는 경우도 정상 동작해야 하기 때문이다. discountListRevealed는 트래킹
-  // 이벤트를 최초 1회만 남기기 위한 것으로, DOM 표시 여부와는 별개로 둔다.
+  // [펼치기 위치 변경] "펼치기"(검색영역 바로 아래)와 "접기"(목록 맨 끝) 버튼이 서로 다른 위치의
+  // 별개 요소다. revealDiscountList()는 검색·필터·인기검색·브랜드 이동 등 여러 경로에서
+  // 호출되므로(요건 5/9: 검색/필터 결과가 있으면 자동으로 펼쳐져야 하고, 이때도 화면을 강제
+  // 이동시키지 않는다), 몇 번을 호출해도 안전하게 매번 hidden을 해제하고 두 버튼의 표시 여부를
+  // 동기화할 뿐 스크롤은 절대 하지 않는다. discountListRevealed는 트래킹 이벤트를 최초 1회만
+  // 남기기 위한 것으로, DOM 표시 여부와는 별개로 둔다.
   let discountListRevealed = false;
 
   function revealDiscountList(){
     const section = document.getElementById('discount-list-section');
     if (section) section.classList.remove('hidden');
-    syncDiscountListToggleLabel();
+    syncDiscountListToggleVisibility();
     if (discountListRevealed) return;
     discountListRevealed = true;
     // 새 외부 추적 시스템을 추가하지 않고, 기존 퍼널 추적 구조(trackFunnelEvent)에 이벤트만
@@ -2939,36 +2950,55 @@
     if (typeof trackFunnelEvent === 'function') trackFunnelEvent('discount_list_expand');
   }
 
-  // [전체 배달할인 펼치기] 버튼(#discount-list-toggle-btn) 문구/aria-expanded를 실제 hidden
-  // 상태에 맞춘다. revealDiscountList()가 호출되는 모든 경로에서 공통으로 호출되므로, 검색으로
-  // 자동 펼쳐지든 버튼을 직접 눌러 펼치든 문구가 항상 맞게 유지된다.
-  function syncDiscountListToggleLabel(){
+  // [펼치기 위치 변경] 위쪽 "펼치기 ↓" 버튼과 아래쪽(#discount-list-section 맨 끝) "접기 ↑" 버튼을
+  // 실제 hidden 상태에 맞춰 서로 반대로 표시한다 — 접혀 있으면 위 버튼만, 펼쳐져 있으면 아래 버튼만
+  // 보인다. revealDiscountList()가 호출되는 모든 경로에서 공통으로 호출되므로, 검색으로 자동
+  // 펼쳐지든 버튼을 직접 눌러 펼치든 항상 맞게 유지된다.
+  function syncDiscountListToggleVisibility(){
     const section = document.getElementById('discount-list-section');
-    const btn = document.getElementById('discount-list-toggle-btn');
-    if (!section || !btn) return;
+    const topBtn = document.getElementById('discount-list-toggle-btn');
+    const bottomWrap = document.getElementById('discount-list-toggle-btn-bottom-wrap');
+    if (!section) return;
     const hidden = section.classList.contains('hidden');
-    btn.textContent = hidden ? '전체 배달할인 펼치기 ↓' : '전체 배달할인 접기 ↑';
-    btn.setAttribute('aria-expanded', String(!hidden));
+    if (topBtn){
+      topBtn.classList.toggle('hidden', !hidden);
+      topBtn.setAttribute('aria-expanded', String(!hidden));
+    }
+    if (bottomWrap) bottomWrap.classList.toggle('hidden', hidden);
   }
 
-  // [전체 배달할인 펼치기] 버튼 클릭 핸들러. 펼칠 때는 기존 revealDiscountList()를 그대로
-  // 재사용하고(검색/필터가 여는 것과 동일한 경로), 필터를 초기화하지는 않는다 — 이 버튼은 순수
-  // 표시/숨김 토글이지 "전체 초기화" 기능이 아니다. 펼친 뒤에는 기존 scrollToDiscountListSection()
-  // 으로 결과 시작 지점까지만 이동한다(새 애니메이션 없음). 접을 때는 hidden만 다시 추가한다.
+  // [전체 배달할인 펼치기/접기] 버튼 클릭 핸들러(위/아래 버튼이 공유). 펼칠 때는 기존
+  // revealDiscountList()를 그대로 재사용하고(검색/필터가 여는 것과 동일한 경로), 필터를
+  // 초기화하지는 않는다 — 이 버튼은 순수 표시/숨김 토글이지 "전체 초기화" 기능이 아니다.
+  // 요건 5: 펼치기에는 스크롤을 절대 넣지 않는다 — #discount-list-section이 물리적으로 검색영역
+  // 바로 아래에 있어(HTML 참고) hidden만 풀면 그 자리에서 자연스럽게 통계/선착순/배너를 아래로
+  // 밀어내며 나타난다. 접을 때도 hidden만 다시 추가할 뿐 스크롤하지 않는다.
   function toggleDiscountListSection(){
     const section = document.getElementById('discount-list-section');
     if (!section) return;
     if (section.classList.contains('hidden')){
       revealDiscountList();
-      scrollToDiscountListSection();
     } else {
       section.classList.add('hidden');
-      syncDiscountListToggleLabel();
+      syncDiscountListToggleVisibility();
+      // 요건 8(선택 사항): 접기 버튼까지 스크롤해서 내려와 있던 사용자가 그대로 남으면, 목록이
+      // 사라진 만큼 문서 높이가 줄어들어 브라우저가 스크롤 위치를 페이지 맨 위(헤더 근처)로
+      // 되돌려버리는 것을 실측으로 확인했다 — 검색영역과 한참 떨어진 엉뚱한 위치다. 새 애니메이션
+      // 없이 기존 헤더 높이 보정 스크롤(scrollToDiscountListSection()과 동일한 계산)을 펼치기
+      // 버튼 위치로만 재사용한다. 펼치기(expand) 쪽에는 이 스크롤을 절대 넣지 않는다(요건 5).
+      const topBtn = document.getElementById('discount-list-toggle-btn');
+      if (topBtn){
+        const header = document.querySelector('header');
+        const headerH = header ? header.offsetHeight : 0;
+        const targetY = topBtn.getBoundingClientRect().top + window.pageYOffset - headerH - 12;
+        window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+      }
     }
   }
 
-  // "할인 리스트" 섹션 상단으로 스크롤(요건 4/13: 목록을 연 뒤 "목록 상단으로 이동"). 헤더 높이를
-  // 매번 재서 보정하는 방식은 기존 scrollToBrandSearch()와 동일하다.
+  // [펼치기 위치 변경] 더 이상 이 함수를 호출해 목록 위치로 스크롤하는 곳이 없다(toggleDiscountListSection
+  // 도 더 이상 부르지 않음) — 하지만 정의 자체는 다른 곳에서 참조할 수 있어 그대로 남겨둔다
+  // (goToLimitedTimeCoupons 등 "목록으로 이동"이 실제로 의미 있는 다른 진입점은 계속 동작해야 함).
   function scrollToDiscountListSection(){
     const target = document.getElementById('discount-list-section');
     if (!target) return;
