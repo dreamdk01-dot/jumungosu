@@ -3197,6 +3197,14 @@
   // 안정 정렬이므로 discounts 배열 순서가 그대로 유지된다(요건: "기존 데이터 순서" 허용).
   // 실시간 소진 여부를 판단할 데이터가 없으므로 그 부분은 추정하지 않고, 나머지 목록과 동일하게
   // isDiscountLive()(시작일/종료일 기준)만으로 "오늘 유효한지"를 판단한다.
+  // [시간 그룹 표시] 같은 시간(연속된 행)이면 첫 행에만 시간을 보여주고, 나머지 행은 시간
+  // 텍스트만 비운다 — 데이터/정렬/필터링 로직은 전혀 건드리지 않고 오직 "표시" 단계에서만
+  // 바로 이전 행과 timeLabel을 비교한다(요건: 하드코딩 없이 자동 판별). 시간 칸은 항상
+  // min-width:5ch(모노스페이스 폰트라 "09:00" 5글자와 정확히 일치)로 폭을 고정해, 비어 있는
+  // 행에서도 브랜드 시작 위치가 전혀 흔들리지 않는다. 그룹의 첫 행(맨 위 제외)에는 기존
+  // border-bottom(매 행에 그대로 유지)에 더해 border-top(--line-strong, 기존 칩 테두리에도
+  // 쓰는 톤 재사용)을 얹어, 두 선이 맞닿으며 살짝 더 또렷한 경계로 보이게 한다 — 새 카드나
+  // 배지를 추가하지 않고 기존 톤 안에서만 구분한다.
   function renderLimitedTimeCoupons(){
     const section = document.getElementById('limited-time-coupons-section');
     const el = document.getElementById('limited-time-coupons-list');
@@ -3206,7 +3214,8 @@
     const items = live
       .filter(d => d.limitedTime)
       .map(d => ({ d, hour: parseLimitedTimeHour(d.limitedTime) }))
-      .sort((a, b) => (a.hour === null ? 24 : a.hour) - (b.hour === null ? 24 : b.hour));
+      .sort((a, b) => (a.hour === null ? 24 : a.hour) - (b.hour === null ? 24 : b.hour))
+      .map(({ d, hour }) => ({ d, timeLabel: hour !== null ? `${String(hour).padStart(2, '0')}:00` : d.limitedTime }));
 
     section.classList.remove('hidden');
 
@@ -3215,22 +3224,24 @@
       return;
     }
 
-    el.innerHTML = items.map(({ d, hour }, i) => {
-      const timeLabel = hour !== null ? `${String(hour).padStart(2, '0')}:00` : escapeHtml(d.limitedTime);
+    el.innerHTML = items.map(({ d, timeLabel }, i) => {
+      const isNewGroup = i === 0 || timeLabel !== items[i - 1].timeLabel;
+      const timeText = isNewGroup ? escapeHtml(timeLabel) : '';
       const appLabel = APP_LABEL[d.app[0]] || d.app[0];
       const discountText = formatDiscount(d);
       const borderStyle = i < items.length - 1 ? 'border-bottom:1px solid var(--line);' : '';
+      const groupTopBorder = (isNewGroup && i > 0) ? 'border-top:1px solid var(--line-strong);' : '';
       return `
-        <div class="px-3 sm:px-4 py-2.5" style="${borderStyle}">
+        <div class="px-3 sm:px-4 py-2.5" style="${borderStyle}${groupTopBorder}">
           <div class="sm:hidden">
             <div class="flex items-baseline gap-2">
-              <span class="font-mono text-sm font-bold shrink-0" style="color:var(--primary);">${timeLabel}</span>
+              <span class="font-mono text-sm font-bold shrink-0" style="color:var(--primary); min-width:5ch; display:inline-block;">${timeText}</span>
               <span class="font-semibold text-sm truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
             </div>
             <p class="text-xs mt-0.5" style="color:var(--text-secondary);">${escapeHtml(appLabel)} · <span style="color:var(--primary); font-weight:600;">${discountText}</span></p>
           </div>
           <div class="hidden sm:flex items-center gap-4">
-            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary);">${timeLabel}</span>
+            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary); min-width:5ch; display:inline-block;">${timeText}</span>
             <span class="font-semibold text-base flex-1 min-w-0 truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
             <span class="text-sm shrink-0" style="color:var(--text-secondary);">${escapeHtml(appLabel)}</span>
             <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary);">${discountText}</span>
