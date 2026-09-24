@@ -378,6 +378,17 @@
   .hero-search-icon{ color:#4B5563; }
   #brand-search-clear{ color:#6B7280 !important; } /* 하단 검색창에서 옮겨온 × 삭제 버튼 — 흰 배경에 맞춘 회색 그대로 재사용 */
 
+  /* [모바일 Sticky 검색 — 입력 글자색 수정] #hero_search_brand_sticky는 배경이 흰색인데 입력 글자색이
+     다크 테마 기본값(거의 흰색)을 그대로 물려받아 타이핑한 글자가 안 보이는 문제가 있었다. 배경/
+     테두리/크기/위치는 전혀 건드리지 않고, 위 #hero_search_brand와 동일한 방식(진한 텍스트색 +
+     -webkit-text-fill-color로 iOS Safari의 자체 글자색 강제 방지)만 이 입력에도 적용한다.
+     placeholder는 기존과 동일한 회색(#9CA3AF)으로 실제 입력값과 확실히 구분되게 유지한다. */
+  #hero_search_brand_sticky{
+    color:#111827;
+    -webkit-text-fill-color:#111827;
+  }
+  #hero_search_brand_sticky::placeholder{ color:#9CA3AF; opacity:1; }
+
   .scrollbar-none::-webkit-scrollbar{ display:none; }
   .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
 
