@@ -362,6 +362,19 @@
   }
   .form-input:disabled{ cursor: not-allowed; }
 
+  /* Hero 검색창(#hero_search_brand) 전용 — 다크 Hero 배경과 구분되도록 이 입력 하나만 흰색.
+     전역 .form-input(로그인/회원가입/게시판/관리자 입력)은 건드리지 않는다.
+     포커스 링은 위 .form-input:focus(골드 border + 옅은 골드 그림자)를 그대로 물려받는다. */
+  #hero_search_brand{
+    background:#FFFFFF;
+    color:#171717;
+    border:1px solid #D9DDE3;
+    -webkit-text-fill-color:#171717; /* iOS Safari가 type=search에 자체 글자색을 입히는 것 방지 */
+  }
+  #hero_search_brand::placeholder{ color:#6B7280; opacity:1; font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 placeholder만 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
+  #hero_search_brand::-webkit-search-cancel-button{ filter:grayscale(1) brightness(0.55); }
+  .hero-search-icon{ color:#4B5563; filter:grayscale(1) brightness(0.5); }
+
   .scrollbar-none::-webkit-scrollbar{ display:none; }
   .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
 
@@ -492,16 +505,6 @@
   </div>
 </header>
 
-<!-- ===== 카카오 애드핏 배너 (320x50) — id는 /shopping, /hot-deals에서만 숨기기 위한 것으로,
-     광고 자체의 스크립트/ID/정책 문구는 그대로 둔다 ===== -->
-<div id="top-ad-banner-wrap" class="max-w-5xl mx-auto px-4 pt-3 flex justify-center">
-  <ins class="kakao_ad_area" style="display:none;"
-    data-ad-unit = "DAN-dW2bG0VTBIhfCcOV"
-    data-ad-width = "320"
-    data-ad-height = "50"></ins>
-</div>
-<script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
-
 <!-- ===== HOME PAGE ===== -->
 <main id="page-home" class="max-w-5xl mx-auto px-4 pb-20">
 
@@ -513,8 +516,8 @@
        교체 — 프로모트 로직은 id 참조라 영향 없음). -->
   <section class="mt-6 mb-8 sm:mt-12 sm:mb-12">
     <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);">배민 · 요기요 · 쿠팡이츠 · 땡겨요 할인 비교</p>
-    <h2 id="page-home-title" class="font-display text-[28px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
-      먹고 싶은 브랜드, <span style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
+    <h2 id="page-home-title" class="font-display text-[24px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
+      먹고 싶은 브랜드,<br class="sm:hidden"> <span class="whitespace-nowrap" style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
     </h2>
     <p class="text-sm sm:text-base leading-relaxed break-keep mb-6" style="color:var(--text-secondary);">
       여러 배달앱을 하나씩 열어보지 않아도 원하는 브랜드의 할인을 한곳에서 비교할 수 있어요.
@@ -527,11 +530,11 @@
          결과는 화면 아래(기존 할인 리스트)에 그려지므로 Enter를 누르면 그 지점으로
          스크롤한다(기존 scrollToBrandSearch() 재사용). -->
     <div class="relative mb-4">
-      <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛처럼 브랜드를 검색하세요" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
+      <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
         oninput="handleHeroSearchInput(this.value)"
         onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
-        class="form-input w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none" style="background:var(--card-alt); border:1px solid var(--line-strong); color:var(--text);">
-      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg" style="color:var(--muted);">🔍</span>
+        class="form-input w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none">
+      <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-lg" aria-hidden="true">🔍</span>
     </div>
 
     <!-- 인기 브랜드 칩: renderTodayBrandLinks()가 이미 존재했지만(기존 코드에 정의만 되어 있고
@@ -762,11 +765,6 @@
   <section class="mt-8">
     <h2 id="page-board-title" class="font-display text-2xl mb-1 break-keep" style="color:var(--primary);">주문의고수 소식·제보</h2>
     <p class="text-sm mb-4 break-keep" style="color:var(--muted);">주문의고수 업데이트 소식과 할인·쇼핑 정보 제보, 추천 질문을 확인해보세요.</p>
-    <!-- 상단 광고(#top-ad-banner-wrap)는 원래 모든 <main> 위에 있어 이 페이지에선 제목보다 먼저
-         보였다. 광고 코드·링크·추적은 그대로 두고, 소식·제보 탭에 있을 때만 syncBoardAdPlacement()가
-         그 DOM 노드를 이 슬롯으로 옮겨 "제목 → 설명 → 광고 → 목록" 순서가 되게 한다. -->
-    <div id="board-ad-slot" class="mb-4"></div>
-
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
       <!-- 좌측 사이드바: 카테고리 메뉴 (전체 / 소식 / 제보·질문) -->
       <aside class="sm:col-span-1">
@@ -8938,36 +8936,8 @@
 
 
   // 맞춤 쇼핑/핫딜 전용 처리들이 공통으로 쓰는 "지금 쇼핑 관련 탭인가" 판정.
-  // (광고 숨김·쇼핑 메뉴 활성 표시·라이트 테마 세 곳에서 동일한 조건이라 하나로 통일)
+  // (쇼핑 메뉴 활성 표시·라이트 테마에서 동일한 조건이라 하나로 통일)
   const SHOPPING_TABS = ['shopping', 'hotdeals'];
-
-  // 맞춤 쇼핑/핫딜에서는 헤더 바로 아래 카카오 애드핏 배너를 숨긴다(쿠팡 제휴 전환이 핵심 수익모델이라
-  // 질문 시작 전 외부 광고로 이탈하는 것을 막기 위함). 광고 스크립트·ID·정책 문구는 건드리지 않고
-  // 레이아웃용 래퍼(#top-ad-banner-wrap)의 표시 여부만 탭 단위로 토글한다.
-  function syncShoppingAdVisibility(tab){
-    const wrap = document.getElementById('top-ad-banner-wrap');
-    if (!wrap) return;
-    wrap.classList.toggle('hidden', SHOPPING_TABS.includes(tab));
-  }
-
-  // 소식·제보 페이지에서만 상단 광고를 "제목 → 설명 → 광고 → 목록" 순서가 되도록 제목 아래의
-  // #board-ad-slot 안으로 옮기고, 다른 탭으로 나가면 원래 자리(모든 <main> 위)로 되돌린다.
-  // 광고 코드·단위·링크·추적은 건드리지 않고 같은 DOM 노드의 위치만 바꾼다(2026-09-20).
-  let topAdOriginalParent = null;
-  let topAdOriginalNext = null;
-  function syncBoardAdPlacement(tab){
-    const wrap = document.getElementById('top-ad-banner-wrap');
-    const slot = document.getElementById('board-ad-slot');
-    if (!wrap || !slot) return;
-    if (tab === 'board'){
-      if (wrap.parentNode !== slot){
-        if (!topAdOriginalParent){ topAdOriginalParent = wrap.parentNode; topAdOriginalNext = wrap.nextSibling; }
-        slot.appendChild(wrap);
-      }
-    } else if (topAdOriginalParent && wrap.parentNode === slot){
-      topAdOriginalParent.insertBefore(wrap, topAdOriginalNext);
-    }
-  }
 
   // 하단 SEO 내부링크 영역 전환(2026-09-19): /hot-deals에서만 쇼핑 SEO 10개 링크 블록을 보여주고
   // 배달 SEO 링크 블록은 숨긴다. 그 외 모든 탭(홈 포함)은 기존 그대로 배달 SEO 블록만 보인다
@@ -10617,8 +10587,6 @@
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     updateSeoTags(tab);
-    syncShoppingAdVisibility(tab);
-    syncBoardAdPlacement(tab);
     updateFooterSeoRegion(tab);
     updateShoppingNavActiveState(tab);
     // 대표 제목(H1) 승격: shopping 탭은 /shopping과 /shopping/chuseok 중 무엇을 보여줄지
