@@ -677,7 +677,7 @@
        parseLimitedTimeHour()(관리자 화면에서 이미 쓰던 시간 파싱 함수 재사용)로 뽑은 시(0~23)
        오름차순 정렬. 새 추천 알고리즘이나 카드형 UI는 만들지 않고 컴팩트한 리스트로만 표시한다. -->
   <section id="limited-time-coupons-section" class="hidden mb-8 sm:mb-10">
-    <h2 class="font-display text-lg sm:text-xl mb-3" style="color:var(--text);">⏰ 오늘 선착순 쿠폰</h2>
+    <h2 class="font-display text-lg sm:text-2xl sm:text-center sm:font-extrabold mb-3" style="color:var(--text);">⏰ 오늘 선착순 쿠폰</h2>
     <div id="limited-time-coupons-list" class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);"></div>
   </section>
 
@@ -3205,6 +3205,13 @@
   // border-bottom(매 행에 그대로 유지)에 더해 border-top(--line-strong, 기존 칩 테두리에도
   // 쓰는 톤 재사용)을 얹어, 두 선이 맞닿으며 살짝 더 또렷한 경계로 보이게 한다 — 새 카드나
   // 배지를 추가하지 않고 기존 톤 안에서만 구분한다.
+  // [PC 레이아웃 개선] PC(sm 이상)에서만 행 내부를 flex(브랜드가 flex-1로 남는 공간을 전부
+  // 먹어치워 화면이 넓을수록 앱/금액이 오른쪽 끝으로 밀려나던 문제)에서 CSS Grid로 바꿨다.
+  // grid-template-columns를 모든 행에 동일하게(5ch/1fr/100px/180px) 고정해 시간·브랜드·앱·
+  // 금액 네 열의 시작점이 행마다 정확히 일치하게 하고, 그 grid 자체에 max-width+mx-auto를 줘서
+  // "정보 덩어리"만 카드 중앙에 모이게 했다(카드 바깥 폭/테두리는 그대로, sm:hidden 모바일
+  // 블록도 전혀 손대지 않았다). 시간 그룹 숨김(timeText)/그룹 경계선(groupTopBorder) 로직은
+  // 위에서 그대로 재사용 — 이번 변경은 순수하게 PC 표시 레이아웃뿐이다.
   function renderLimitedTimeCoupons(){
     const section = document.getElementById('limited-time-coupons-section');
     const el = document.getElementById('limited-time-coupons-list');
@@ -3240,11 +3247,11 @@
             </div>
             <p class="text-xs mt-0.5" style="color:var(--text-secondary);">${escapeHtml(appLabel)} · <span style="color:var(--primary); font-weight:600;">${discountText}</span></p>
           </div>
-          <div class="hidden sm:flex items-center gap-4">
-            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary); min-width:5ch; display:inline-block;">${timeText}</span>
-            <span class="font-semibold text-base flex-1 min-w-0 truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
-            <span class="text-sm shrink-0" style="color:var(--text-secondary);">${escapeHtml(appLabel)}</span>
-            <span class="font-mono text-base font-bold shrink-0" style="color:var(--primary);">${discountText}</span>
+          <div class="hidden sm:grid sm:mx-auto" style="max-width:760px; grid-template-columns:5ch minmax(0,1fr) 100px 180px; column-gap:1rem; align-items:center;">
+            <span class="font-mono text-base font-bold" style="color:var(--primary); min-width:5ch;">${timeText}</span>
+            <span class="font-semibold text-base truncate" style="color:var(--text); min-width:0;">${escapeHtml(d.name)}</span>
+            <span class="text-sm" style="color:var(--text-secondary);">${escapeHtml(appLabel)}</span>
+            <span class="font-mono text-base font-bold" style="color:var(--primary);">${discountText}</span>
           </div>
         </div>`;
     }).join('');
