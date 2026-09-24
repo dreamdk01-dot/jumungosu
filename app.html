@@ -8120,7 +8120,13 @@
 
   // 퍼널 이벤트 기록 본체. track_funnel_event RPC를 await하지 않고 fire-and-forget으로 호출해
   // Supabase 오류/지연이 호출부의 화면 전환·쿠팡 링크 이동을 절대 지연/차단하지 않게 한다.
-  function trackFunnelEvent(eventName, extra){
+  // options.keepalive === true 이면 같은 RPC(track_funnel_event)·같은 파라미터를 supabase-js 대신
+  // fetch(keepalive:true)로 보낸다. 새 탭 탐색(target="_blank")과 같은 태스크에서 발생하는 클릭
+  // 이벤트(partner_click)는 원 탭이 곧바로 백그라운드로 내려가면서 일반 fetch가 취소될 수 있어
+  // (모바일 재현: 쿠팡은 열리는데 DB 기록만 누락) keepalive가 필요하다. supabase-js의 rpc()는
+  // 호출 단위로 keepalive를 줄 수 없어서 전송 계층만 갈라 두고, 페이로드 구성은 한 곳에서만 한다.
+  // 그 외 이벤트(home_view/hotdeals_view 등)는 options 없이 기존 rpc() 경로 그대로다.
+  function trackFunnelEvent(eventName, extra, options){
     try {
       const sessionId = getOrCreateVisitSessionId();
       const utm = getFunnelUtm() || {};
@@ -8128,14 +8134,35 @@
       if (utm.utm_content) metadata.utm_content = utm.utm_content;
       if (utm.utm_medium) metadata.utm_medium = utm.utm_medium;
 
-      supabaseClient.rpc('track_funnel_event', {
+      const params = {
         p_session_id: sessionId,
         p_event_name: eventName,
         p_source: utm.utm_source || null,
         p_campaign: utm.utm_campaign || null,
         p_placement: (extra && extra.placement) || null,
         p_metadata: metadata,
-      }).then(({ error }) => {
+      };
+
+      if (options && options.keepalive && typeof fetch === 'function'){
+        // supabase-js가 rpc()에 붙이는 것과 같은 헤더(apikey + anon Bearer)로 같은 엔드포인트를 호출.
+        fetch(`${SUPABASE_URL}/rest/v1/rpc/track_funnel_event`, {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify(params),
+        }).then(res => {
+          if (!res.ok) console.warn('[주문의 고수] 퍼널 이벤트 기록 실패 (keepalive, HTTP ' + res.status + ')', eventName);
+        }).catch(e => {
+          console.warn('[주문의 고수] 퍼널 이벤트 기록 실패 (keepalive)', eventName, e);
+        });
+        return;
+      }
+
+      supabaseClient.rpc('track_funnel_event', params).then(({ error }) => {
         if (error) console.warn('[주문의 고수] 퍼널 이벤트 기록 실패 (funnel_events/track_funnel_event RPC 확인 필요)', eventName, error);
       }).catch(e => {
         console.warn('[주문의 고수] 퍼널 이벤트 기록 실패', eventName, e);
@@ -9483,13 +9510,14 @@
       }
       // 쇼핑 전환 퍼널: 기존 GA partner_click은 그대로 유지하고, Supabase 퍼널 기록만 추가한다.
       if (p){
+        // 클릭 직후 새 탭이 열려 원 탭이 백그라운드로 가므로 keepalive로 전송(요청이 취소되지 않게).
         trackFunnelEvent('partner_click', {
           placement: placement || 'grid',
           product_name: p.name,
           product_index: i,
           price_snapshot: p.price || '',
           targets: (p.targets || []).join(','),
-        });
+        }, { keepalive: true });
       }
     } catch (e) { /* 추적 실패가 클릭을 막으면 안 됨 */ }
     return true;
