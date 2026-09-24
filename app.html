@@ -539,7 +539,12 @@
        찾아 <h1>로 승격/복원하는 데 쓰는 값이라 절대 바꾸지 않고 그대로 유지했다(텍스트/스타일만
        교체 — 프로모트 로직은 id 참조라 영향 없음). -->
   <section class="mt-6 mb-8 sm:mt-12 sm:mb-12">
-    <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);">배민 · 요기요 · 쿠팡이츠 · 땡겨요 할인 비교</p>
+    <!-- [최상단 앱명 브랜드 컬러] 앱 이름 4개에만 하단 "상세조건 > 배달 앱" 필터 버튼이 이미 쓰는
+         고유색(--tag-baemin/--tag-yogiyo/--tag-coupang/--tag-ddangyo)을 그대로 재사용한다 —
+         새 색상 값을 만들지 않았다. 구분자 「·」와 "할인 비교"는 기존 --text-secondary 그대로.
+         font-size/weight/letter-spacing/줄바꿈 등은 부모 <p>의 기존 클래스를 그대로 물려받으므로
+         span에는 color만 추가했다. -->
+    <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);"><span style="color:var(--tag-baemin);">배민</span> · <span style="color:var(--tag-yogiyo);">요기요</span> · <span style="color:var(--tag-coupang);">쿠팡이츠</span> · <span style="color:var(--tag-ddangyo);">땡겨요</span> 할인 비교</p>
     <h2 id="page-home-title" class="font-display text-[24px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
       먹고 싶은 브랜드,<br class="sm:hidden"> <span class="whitespace-nowrap" style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
     </h2>
