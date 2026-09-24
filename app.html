@@ -528,6 +528,16 @@
       여러 배달앱을 하나씩 열어보지 않아도 원하는 브랜드의 할인을 한곳에서 비교할 수 있어요.
     </p>
 
+    <!-- [현황판 위치 이동] 설명문 바로 아래, 검색영역(코랄 wrapper)보다 위로 옮겼다. 숫자는
+         하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서 매번 다시
+         계산한다 — 초기 Airtable 로딩 완료 시 + 5분 폴링마다 자동 갱신(로직 무변경). 래퍼
+         자체는 더 이상 PC 카드 스타일을 직접 갖지 않는다 — renderHomeSummaryPanel()이 PC용
+         4칸 카드(hidden sm:block, 기존 스타일 그대로)와 모바일용 컴팩트 요약바(sm:hidden, 새로
+         추가)를 각각 자기 스타일과 함께 렌더링해 같은 데이터를 다르게 표현한다(정의부 참고). -->
+    <div id="home-summary-panel" class="mb-8 sm:mb-10">
+      <p class="text-sm" style="color:var(--text-secondary);">오늘 할인 정보를 불러오는 중이에요…</p>
+    </div>
+
     <!-- [검색 영역 통합] 브랜드 검색창 + 인기검색 + 상세조건을 하나의 wrapper로 묶어 "여기가
          검색/탐색 영역"임을 한 눈에 보이게 한다. 테두리는 쇼핑 배너와 같은 --shopping-accent-border
          (코랄핑크, 옅은 opacity)를 재사용해 새 색상 토큰을 만들지 않았고, 배경은 --bg(페이지
@@ -658,15 +668,6 @@
          toggleDiscountListSection()이 두 버튼의 표시 여부를 함께 맞춘다). -->
     <div class="hidden text-center" id="discount-list-toggle-btn-bottom-wrap">
       <button type="button" id="discount-list-toggle-btn-bottom" onclick="toggleDiscountListSection()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 접기 ↑</button>
-    </div>
-  </section>
-
-  <!-- ===== [실험판 v1] 오늘의 할인 요약 =====
-       숫자는 하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서
-       매번 다시 계산한다 — 초기 Airtable 로딩 완료 시 + 5분 폴링마다 자동 갱신. -->
-  <section class="mb-8 sm:mb-10">
-    <div id="home-summary-panel" class="rounded-lg p-5 sm:p-6" style="background:var(--card); border:1px solid var(--line);">
-      <p class="text-sm" style="color:var(--text-secondary);">오늘 할인 정보를 불러오는 중이에요…</p>
     </div>
   </section>
 
@@ -3131,11 +3132,18 @@
     scrollToDiscountListSection();
   }
 
-  // 오늘의 할인 요약 패널: 숫자는 매번 discounts 배열에서 다시 계산한다(하드코딩 없음).
+  // 오늘의 할인 요약: 숫자는 매번 discounts 배열에서 다시 계산한다(하드코딩 없음).
   // - 오늘 확인된 할인 수: isDiscountLive를 통과한 개별 할인 항목 수
   // - 비교 가능한 브랜드 수: 위 항목을 groupDiscountsByBrand()로 묶은 그룹 수
   // - 현재 가장 큰 할인: 위 항목 중 getSortValue() 최댓값 1건(브랜드명 + formatDiscount 그대로 사용)
   // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용, 앞에 고정 녹색 점 표시
+  // [모바일 현황바] PC용 4칸 카드(hidden sm:block)와 모바일용 컴팩트 요약바(sm:hidden)를 같은 값
+  // (live/groups/maxItem/updatedBadge)으로 함께 렌더링한다 — 계산은 한 번만, 표현만 둘로 나눈다.
+  // 모바일 문구는 최대 할인을 빼고 "N개 할인 · M개 브랜드 비교"만 보여주고, 업데이트 시각은
+  // PC와 같은 데이터(discountUpdatedAtValue)에서 이미 계산된 updatedBadge("MM/DD HH:mm")의
+  // 시간 부분만 뽑아 "오늘 HH:MM 업데이트"로 표시한다(날짜는 항상 "오늘" 고정 문구, 시간은
+  // 실제 값). 시간 정보가 아직 없는 극히 드문 경우(첫 동기화 전 날짜만 있는 상태)에는 시간 없이
+  // "오늘 업데이트"로 자연스럽게 줄어든다.
   function renderHomeSummaryPanel(){
     const panel = document.getElementById('home-summary-panel');
     if (!panel) return;
@@ -3149,25 +3157,34 @@
     const groups = groupDiscountsByBrand(live);
     const maxItem = live.reduce((m, d) => getSortValue(d) > getSortValue(m) ? d : m, live[0]);
     const updatedBadge = formatUpdatedBadge(discountUpdatedAtValue).replace('🟢 UPDATED ', '');
+    const updatedTimeOnly = updatedBadge.split(' ')[1] || ''; // "MM/DD HH:mm" → "HH:mm"만(없으면 '')
+    const mobileUpdateText = updatedTimeOnly ? `오늘 ${updatedTimeOnly} 업데이트` : '오늘 업데이트';
+    const greenDot = `<span aria-hidden="true" style="display:inline-block; width:6px; height:6px; border-radius:9999px; background:var(--success); flex:none;"></span>`;
 
     panel.innerHTML = `
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-        <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${live.length.toLocaleString('ko-KR')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">오늘 확인된 할인</p>
+      <div class="hidden sm:block rounded-lg p-5 sm:p-6" style="background:var(--card); border:1px solid var(--line);">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div>
+            <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${live.length.toLocaleString('ko-KR')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">오늘 확인된 할인</p>
+          </div>
+          <div>
+            <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${groups.length.toLocaleString('ko-KR')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">비교 가능한 브랜드</p>
+          </div>
+          <div class="min-w-0">
+            <p class="font-mono text-base sm:text-2xl font-bold break-keep leading-tight" style="color:var(--primary);">${formatDiscount(maxItem)}</p>
+            <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--muted);">${escapeHtml(brandDisplayName(maxItem.name))} · 오늘 최대 할인</p>
+          </div>
+          <div>
+            <p class="font-mono text-base sm:text-lg font-bold flex items-center gap-1.5" style="color:var(--text);">${greenDot}${escapeHtml(updatedBadge || '-')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
+          </div>
         </div>
-        <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${groups.length.toLocaleString('ko-KR')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">비교 가능한 브랜드</p>
-        </div>
-        <div class="min-w-0">
-          <p class="font-mono text-base sm:text-2xl font-bold break-keep leading-tight" style="color:var(--primary);">${formatDiscount(maxItem)}</p>
-          <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--muted);">${escapeHtml(brandDisplayName(maxItem.name))} · 오늘 최대 할인</p>
-        </div>
-        <div>
-          <p class="font-mono text-base sm:text-lg font-bold flex items-center gap-1.5" style="color:var(--text);"><span aria-hidden="true" style="display:inline-block; width:6px; height:6px; border-radius:9999px; background:var(--success); flex:none;"></span>${escapeHtml(updatedBadge || '-')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
-        </div>
+      </div>
+      <div class="sm:hidden flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2" style="background:var(--card); border:1px solid var(--line);">
+        <p class="font-mono text-xs" style="color:var(--text);"><span class="font-bold">${live.length.toLocaleString('ko-KR')}</span>개 할인 · <span class="font-bold">${groups.length.toLocaleString('ko-KR')}</span>개 브랜드 비교</p>
+        <p class="font-mono text-xs flex items-center gap-1.5 shrink-0" style="color:var(--muted);">${greenDot}${escapeHtml(mobileUpdateText)}</p>
       </div>`;
   }
 
