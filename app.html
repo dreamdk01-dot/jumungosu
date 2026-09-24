@@ -363,24 +363,20 @@
   }
   .form-input:disabled{ cursor: not-allowed; }
 
-  /* Hero 검색창(#hero_search_brand) 전용 — 다크 Hero 배경과 구분되도록 이 입력 하나만 흰색.
-     전역 .form-input(로그인/회원가입/게시판/관리자 입력)은 건드리지 않는다.
+  /* 메인 검색창(#hero_search_brand) 전용 — 다크 Hero 배경과 구분되도록 이 입력 하나만 흰색.
+     [검색/필터 통합] 기존엔 이 위에 별도의 하단 브랜드 검색창(#search_brand)이 하나 더 있어
+     동일 셀렉터를 공유했지만, 그 입력을 완전히 제거하고 이 검색창 하나만 남기면서 셀렉터도
+     여기 하나로 정리했다. 전역 .form-input(로그인/회원가입/게시판/관리자 입력)은 건드리지 않는다.
      포커스 링은 위 .form-input:focus(골드 border + 옅은 골드 그림자)를 그대로 물려받는다. */
-  #hero_search_brand,
-  #search_brand{
+  #hero_search_brand{
     background:#FFFFFF;
     color:#171717;
     border:1px solid #D9DDE3;
     -webkit-text-fill-color:#171717; /* iOS Safari가 type=search에 자체 글자색을 입히는 것 방지 */
   }
-  #hero_search_brand::placeholder,
-  #search_brand::placeholder{ color:#9CA3AF; opacity:1; }
-  #hero_search_brand::placeholder{ font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 Hero placeholder만 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
-  #hero_search_brand::-webkit-search-cancel-button,
-  #search_brand::-webkit-search-cancel-button{ filter:grayscale(1) brightness(0.55); }
-  .hero-search-icon{ color:#4B5563; } /* 하단 #search_brand 돋보기와 동일한 크기(text-sm)/색상 처리 — filter 없음(하단과 동일) */
-  #brand-search-section .relative.max-w-\[320px\] > span{ color:#4B5563 !important; } /* 하단 검색 아이콘도 흰 배경에서 보이도록 짙은 회색으로 */
-  #brand-search-clear{ color:#6B7280 !important; } /* × 삭제 버튼도 흰 배경에 맞춰 회색으로 */
+  #hero_search_brand::placeholder{ color:#9CA3AF; opacity:1; font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
+  .hero-search-icon{ color:#4B5563; }
+  #brand-search-clear{ color:#6B7280 !important; } /* 하단 검색창에서 옮겨온 × 삭제 버튼 — 흰 배경에 맞춘 회색 그대로 재사용 */
 
   .scrollbar-none::-webkit-scrollbar{ display:none; }
   .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
@@ -432,9 +428,11 @@
     padding-top: max(32px, calc(env(safe-area-inset-top, 0px) + 16px));
   }
 
-  /* type="search" 사용 시 브라우저 기본 취소(x) 버튼이 커스텀 × 버튼과 겹치지 않도록 숨김 */
-  #search_brand::-webkit-search-cancel-button,
-  #search_brand::-webkit-search-decoration{
+  /* type="search" 사용 시 브라우저 기본 취소(x) 버튼이 커스텀 × 버튼(#brand-search-clear)과
+     겹치지 않도록 숨김. 원래 하단 검색창(#search_brand) 전용 규칙이었는데, 그 입력이 메인
+     검색창(#hero_search_brand) 하나로 통합되면서 셀렉터도 그대로 옮겨왔다. */
+  #hero_search_brand::-webkit-search-cancel-button,
+  #hero_search_brand::-webkit-search-decoration{
     -webkit-appearance: none;
     appearance: none;
   }
@@ -530,18 +528,21 @@
       여러 배달앱을 하나씩 열어보지 않아도 원하는 브랜드의 할인을 한곳에서 비교할 수 있어요.
     </p>
 
-    <!-- Hero 검색창: 별도의 새 입력(#hero_search_brand)이지만 기존 브랜드 검색 로직
-         (brandSearchQuery/handleBrandSearchInput/renderDiscountList)을 그대로 재사용한다.
-         handleHeroSearchInput()은 값을 아래 STEP 섹션의 실제 입력(#search_brand)에도
-         동기화한 뒤 handleBrandSearchInput()을 호출하므로, 필터링 로직은 완전히 동일하다.
+    <!-- [검색/필터 통합] 메인 검색창 — 기존엔 이 입력(#hero_search_brand)이 아래 "할인 찾기" 박스의
+         #search_brand로 값을 동기화하는 보조 입력이었지만, 이제 브랜드 검색을 담당하는 유일한
+         입력이다. 기존 brandSearchQuery/handleBrandSearchInput()/renderDiscountList()를 그대로
+         재사용하며(필터링 로직 변경 없음), 오직 #search_brand로의 동기화 코드만 걷어냈다.
          결과는 화면 아래(기존 할인 리스트)에 그려지므로 Enter를 누르면 그 지점으로
-         스크롤한다(기존 scrollToBrandSearch() 재사용). -->
+         스크롤한다(scrollToBrandSearch() — 대상이 사라진 옛 #brand-search-section 대신 이제
+         #discount-list-section으로 스크롤하도록 재사용, 아래 함수 정의부 주석 참고).
+         우측 × 버튼(#brand-search-clear)은 기존 하단 검색창에 있던 것을 그대로 옮겨왔다. -->
     <div class="relative mb-4" style="max-width:720px;">
       <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
-        oninput="handleHeroSearchInput(this.value)"
+        oninput="handleBrandSearchInput(this.value)"
         onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
-        class="form-input w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none">
+        class="form-input w-full pl-12 pr-9 py-4 rounded-xl text-base outline-none">
       <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
+      <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
     </div>
 
     <!-- 인기 브랜드 칩: renderTodayBrandLinks()가 이미 존재했지만(기존 코드에 정의만 되어 있고
@@ -552,6 +553,29 @@
     <div id="today-brand-links-section" class="hidden flex items-start gap-2 flex-wrap">
       <span class="text-xs shrink-0 mt-1.5" style="color:var(--text-secondary);">인기 검색:</span>
       <div id="today-brand-links" class="flex items-center gap-2 flex-wrap"></div>
+    </div>
+
+    <!-- [검색/필터 통합] 상세조건 — 기존 "🔎 할인 찾기" 박스(별도 섹션, STEP1/STEP2 표현)를
+         걷어내고, 그 안의 배달앱/카테고리 필터만 여기 접이식 패널로 옮겼다. 브랜드 검색(위 입력)과
+         분리해 "검색을 보조하는 부가 기능"이라는 인상을 주도록 작은 텍스트 컨트롤로만 두고,
+         기본은 닫힘. activeAppFilters/activeCategoryFilters/toggleAppFilter/toggleCategoryFilter/
+         renderCategoryChips/updateChipStyles/renderDiscountList는 전부 기존 함수 그대로이며,
+         #app-filters・#category-filters도 같은 id를 유지해 그 함수들이 손 하나 안 대고 그대로
+         동작한다. 접고 펼치는 것은 이 패널의 hidden 클래스만 토글할 뿐 activeAppFilters/
+         activeCategoryFilters는 전혀 건드리지 않으므로, 접었다 다시 펴도 선택 상태가 유지된다. -->
+    <button type="button" id="advanced-filter-toggle" onclick="toggleAdvancedFilter()" aria-expanded="false" aria-controls="advanced-filter-panel" class="mt-4 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold" style="color:var(--text-secondary);">
+      상세조건 <span id="advanced-filter-toggle-icon" aria-hidden="true">▾</span>
+    </button>
+    <div id="advanced-filter-panel" class="hidden mt-3 pt-4" style="border-top:1px solid var(--line);">
+      <p class="font-mono text-xs mb-2" style="color:var(--muted);">배달 앱</p>
+      <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
+        <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
+        <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
+        <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
+        <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
+      </div>
+      <p class="font-mono text-xs mb-2" style="color:var(--muted);">메뉴 카테고리</p>
+      <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
     </div>
   </section>
 
@@ -628,32 +652,6 @@
       </span>
       <span class="shrink-0 self-center text-[20px] sm:text-[34px] px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-md break-keep whitespace-nowrap" style="background:var(--primary); color:#181B23; font-weight:900;">3초면 똭! →</span>
     </button>
-  </section>
-
-  <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
-       "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
-       id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
-  <section id="brand-search-section" class="max-sm:mb-7 sm:mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
-    <p class="font-display text-base sm:text-lg mb-0.5" style="color:var(--text);">🔎 할인 찾기</p>
-    <p class="text-xs sm:text-sm mb-4" style="color:var(--text-secondary);">조건을 선택하면 아래 할인 리스트가 바로 바뀌어요</p>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
-    <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
-      <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
-      <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
-      <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
-      <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
-    </div>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
-    <div class="flex gap-2 flex-wrap scrollbar-none pb-4 mb-4" id="category-filters" style="border-bottom:1px solid var(--line);"></div>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
-    <div class="relative max-w-[320px]">
-      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🔍</span>
-      <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
-    </div>
   </section>
 
   <!-- DISCOUNT LIST — [v4] discountListRevealed가 true가 되기 전까지 hidden. 안에서 그려지는
@@ -2919,20 +2917,14 @@
     return true;
   }
 
-  // "전체 할인 N개 보기 →" / 할인 추천 배너 클릭 시 공용으로 쓰는 스크롤 함수.
-  // scrollIntoView(block:'start')만 쓰면 sticky 헤더(모바일은 퀵내비 줄까지 2단)가
-  // 목적지 상단을 가려서 "브랜드 검색"이 안 보이는 문제가 생길 수 있어, 헤더의 실제 높이를
-  // 매번 직접 측정해 그만큼 보정한 좌표로 window.scrollTo를 호출한다.
-  // (헤더 높이를 하드코딩하지 않고 offsetHeight로 매번 재는 이유: 모바일/PC 헤더 높이가
-  //  다르고, 로그인 여부에 따라 표시되는 버튼이 달라져 높이가 살짝 바뀔 수 있기 때문)
+  // "전체 할인 N개 보기 →" / 할인 추천 배너 클릭 / 메인 검색창 Enter 시 공용으로 쓰는 스크롤 함수.
+  // [검색/필터 통합] 원래 스크롤 대상이던 하단 "할인 찾기" 박스(#brand-search-section)를
+  // 제거하면서, 이 이름의 함수를 계속 쓰는 호출부들(Enter 키, 오늘의 선착순 쿠폰 배너)이 이제
+  // 찾을 목적지가 없어졌다. 별도 로직을 새로 만들지 않고, 정확히 같은 스크롤 계산(헤더 높이
+  // 보정 포함)을 이미 하는 scrollToDiscountListSection()에 위임한다 — 검색 결과가 실제로
+  // 나타나는 지점(할인 리스트)으로 스크롤하는 편이 지금 구조에서 더 자연스럽다.
   function scrollToBrandSearch(){
-    const target = document.getElementById('brand-search-section');
-    if (!target) return;
-    const header = document.querySelector('header');
-    const headerH = header ? header.offsetHeight : 0;
-    const extraGap = 12; // 헤더 바로 아래 딱 붙지 않도록 약간의 여백
-    const targetY = target.getBoundingClientRect().top + window.pageYOffset - headerH - extraGap;
-    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+    scrollToDiscountListSection();
   }
 
   // ===== [v4] 전체 할인 목록 단계적 노출 =====
@@ -3022,16 +3014,9 @@
   // brandSearchQuery/sortDirection/onlyLimitedTimeFilter 같은 전역 상태와 updateChipStyles/
   // renderDiscountList/scrollToBrandSearch/goToBrandInDiscountList 등 기존 함수를 그대로
   // 호출만 할 뿐, 새로운 필터 시스템이나 데이터 구조를 만들지 않는다.
-
-  // Hero 검색창 입력 → 아래 STEP 섹션의 실제 검색 입력(#search_brand)에도 값을 동기화한 뒤
-  // 기존 handleBrandSearchInput()을 그대로 호출한다(필터링 로직 완전히 동일). 값이 있으면
-  // 전체 목록을 연다(요건: Hero 검색이 목록 오픈 트리거).
-  function handleHeroSearchInput(value){
-    const lowerInput = document.getElementById('search_brand');
-    if (lowerInput) lowerInput.value = value;
-    if (value) revealDiscountList();
-    handleBrandSearchInput(value);
-  }
+  // [검색/필터 통합] 이 입력이 값을 동기화하던 하단 #search_brand가 제거되면서, 그 동기화만
+  // 하던 handleHeroSearchInput() 래퍼는 더 이상 필요 없어 삭제했다 — 아래 handleBrandSearchInput()을
+  // 메인 검색창 oninput에서 바로 호출한다(HTML 참고).
 
   // 카테고리 빠른 선택 버튼 줄(#quick-filter-scroll) 아래의 얇은 모바일 전용 스크롤 위치 표시.
   // 기존 가로 스크롤 자체는 전혀 건드리지 않고, 그 컨테이너의 실제 scrollLeft/scrollWidth/
@@ -3109,8 +3094,6 @@
     expandedDiscountBrands.clear();
     lastAutoExpandedBrandKey = null;
 
-    const searchInput = document.getElementById('search_brand');
-    if (searchInput) searchInput.value = '';
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
     const searchClearBtn = document.getElementById('brand-search-clear');
@@ -3953,28 +3936,42 @@
     renderDiscountList();
   }
 
-  // 브랜드(프랜차이즈) 이름 실시간 검색 — 대소문자 구분 없이 부분 일치. Hero 검색창(#hero_search_brand)과
-  // 값을 항상 동기화하고(요건: 두 입력이 같은 값을 유지), 검색어가 있으면 전체 목록을 연다.
+  // 브랜드(프랜차이즈) 이름 실시간 검색 — 대소문자 구분 없이 부분 일치. 검색어가 있으면 전체
+  // 목록을 연다. [검색/필터 통합] 예전엔 상단 Hero와 하단 #search_brand 두 입력의 값을
+  // 서로 동기화하는 코드가 있었지만, 입력이 메인 검색창(#hero_search_brand) 하나로 통합되면서
+  // 그 동기화 로직은 삭제했다 — 필터링 로직(brandSearchQuery/renderDiscountList)은 그대로다.
   function handleBrandSearchInput(value){
     brandSearchQuery = (value || '').trim();
-    document.getElementById('brand-search-clear').classList.toggle('hidden', brandSearchQuery.length === 0);
-    const heroInput = document.getElementById('hero_search_brand');
-    if (heroInput && heroInput.value !== value) heroInput.value = value;
+    const clearBtn = document.getElementById('brand-search-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', brandSearchQuery.length === 0);
     if (brandSearchQuery) revealDiscountList();
     renderDiscountList();
   }
 
+  // [검색/필터 통합] × 버튼은 하단 #search_brand에서 메인 검색창으로 그대로 옮겨왔고, 동작도
+  // 동일하다(검색어만 비우고, 이미 열린 전체 목록은 닫지 않는다 — discountListRevealed 불변).
   function clearBrandSearch(){
     brandSearchQuery = '';
-    document.getElementById('search_brand').value = '';
-    // [실험판 v1] Hero 검색창(#hero_search_brand)도 함께 비운다 — 존재할 때만(원본 파일에는 없는
-    // 요소이므로 존재 체크 후 처리). 기존 동작(아래 클리어 버튼)은 그대로.
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
-    document.getElementById('brand-search-clear').classList.add('hidden');
-    // [v4] 검색어를 지웠다는 이유만으로 전체 목록을 다시 닫지 않는다 — discountListRevealed는
-    // 여기서 건드리지 않고 그대로 열린 상태를 유지한다.
+    const clearBtn = document.getElementById('brand-search-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
     renderDiscountList();
+  }
+
+  // [검색/필터 통합] "상세조건" 접기/펼치기 — 새로 추가된 유일한 토글로, activeAppFilters/
+  // activeCategoryFilters 등 필터 상태는 전혀 건드리지 않고 #advanced-filter-panel의 hidden
+  // 클래스와 버튼의 aria-expanded만 맞바꾼다. 그래서 필터를 선택한 채로 접었다 다시 펼쳐도
+  // 선택 상태가 그대로 유지된다.
+  function toggleAdvancedFilter(){
+    const btn = document.getElementById('advanced-filter-toggle');
+    const panel = document.getElementById('advanced-filter-panel');
+    const icon = document.getElementById('advanced-filter-toggle-icon');
+    if (!btn || !panel) return;
+    const nowExpanded = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(nowExpanded));
+    panel.classList.toggle('hidden', !nowExpanded);
+    if (icon) icon.textContent = nowExpanded ? '▴' : '▾';
   }
 
   function updateChipStyles(selector, attr, activeList, colorMap){
@@ -4191,8 +4188,6 @@
     onlyLimitedTimeFilter = false;
     sortDirection = 'desc';
 
-    const searchInput = document.getElementById('search_brand');
-    if (searchInput) searchInput.value = '';
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
     const searchClearBtn = document.getElementById('brand-search-clear');
