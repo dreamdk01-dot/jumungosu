@@ -510,6 +510,25 @@
   </div>
 </header>
 
+<!-- [모바일 Sticky 검색] 원본 검색창(#hero_search_brand)이 스크롤로 고정 헤더 아래로 사라지면
+     JS(setupMobileStickySearchObserver, IntersectionObserver 기반)가 이 bar를 보여준다.
+     헤더/네비게이션 자체는 그대로 두고(기존 sticky 동작 무변경), 이 bar만 헤더 바로 아래에
+     별도로 고정한다(top은 JS가 헤더 실측 높이로 매번 맞춤 — autumnGiftUpdateStickyBar()와 동일한
+     기존 패턴 재사용). 검색 로직은 새로 만들지 않고 기존 handleBrandSearchInput()/brandSearchQuery를
+     그대로 공유하며, 이 input은 그 값을 미러링만 한다(handleBrandSearchInputSynced(), 정의부는
+     clearBrandSearch() 근처 참고). class="hidden sm:hidden"은 중복이 아니라 안전장치다 —
+     JS가 모바일에서만 앞의 hidden을 떼어 보여주고, sm:hidden은 PC 폭에서 항상 이겨 어떤 경우에도
+     PC에는 노출되지 않게 한다. -->
+<div id="mobile-sticky-search" class="hidden sm:hidden fixed left-0 right-0 z-40 px-4 py-2" style="top:0; background:rgba(24,27,35,0.96); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-bottom:1px solid var(--line);">
+  <div class="relative">
+    <input id="hero_search_brand_sticky" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
+      oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand_sticky')"
+      class="form-input w-full pl-11 pr-9 py-3 rounded-xl text-sm outline-none">
+    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
+    <button id="brand-search-clear-sticky" onclick="clearBrandSearch()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
+  </div>
+</div>
+
 <!-- ===== HOME PAGE ===== -->
 <main id="page-home" class="max-w-5xl mx-auto px-4 pb-20">
 
@@ -555,7 +574,7 @@
            우측 × 버튼(#brand-search-clear)은 기존 하단 검색창에 있던 것을 그대로 옮겨왔다. -->
       <div class="relative mb-4">
         <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
-          oninput="handleBrandSearchInput(this.value)"
+          oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand')"
           onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
           class="form-input w-full pl-12 pr-9 py-4 rounded-xl text-base outline-none">
         <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
@@ -4028,15 +4047,74 @@
     renderDiscountList();
   }
 
+  // [모바일 Sticky 검색] 원본(#hero_search_brand)과 sticky(#hero_search_brand_sticky) 두 입력이
+  // 검색 state(brandSearchQuery) 하나를 공유하도록 감싸는 얇은 래퍼 — 검색 로직 자체
+  // (handleBrandSearchInput)는 그대로 재사용하고, 여기서는 "입력하지 않은 쪽 input의 값"과
+  // sticky 쪽 지우기(×) 버튼만 맞춰준다(원본 쪽 × 버튼은 handleBrandSearchInput이 이미 처리).
+  function handleBrandSearchInputSynced(value, sourceId){
+    const otherId = sourceId === 'hero_search_brand' ? 'hero_search_brand_sticky' : 'hero_search_brand';
+    const otherInput = document.getElementById(otherId);
+    if (otherInput && otherInput.value !== value) otherInput.value = value;
+    handleBrandSearchInput(value);
+    const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
+    if (stickyClearBtn) stickyClearBtn.classList.toggle('hidden', !value || !value.trim());
+  }
+
   // [검색/필터 통합] × 버튼은 하단 #search_brand에서 메인 검색창으로 그대로 옮겨왔고, 동작도
   // 동일하다(검색어만 비우고, 이미 열린 전체 목록은 닫지 않는다 — discountListRevealed 불변).
+  // [모바일 Sticky 검색] sticky 입력/× 버튼도 원본과 함께 비운다(두 UI, 하나의 검색 state).
   function clearBrandSearch(){
     brandSearchQuery = '';
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
+    const stickyInput = document.getElementById('hero_search_brand_sticky');
+    if (stickyInput) stickyInput.value = '';
     const clearBtn = document.getElementById('brand-search-clear');
     if (clearBtn) clearBtn.classList.add('hidden');
+    const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
+    if (stickyClearBtn) stickyClearBtn.classList.add('hidden');
     renderDiscountList();
+  }
+
+  // [모바일 Sticky 검색] 원본 검색창(#hero_search_brand)이 고정 헤더 아래로 사라지는 순간에만
+  // #mobile-sticky-search를 보여준다. scroll 이벤트를 직접 구독하지 않고 IntersectionObserver로
+  // "원본 입력창이 보이는지"만 관찰한다(성능 요건: 매 프레임 layout 측정/scroll 이벤트 남발 방지).
+  // rootMargin을 헤더의 실측 높이만큼 위로 당겨서, 원본 입력창이 물리적 뷰포트를 벗어나는 시점이
+  // 아니라 "고정 헤더에 가려지는" 시점을 기준으로 삼는다 — 헤더 높이(햄버거 메뉴 열림 등으로)가
+  // 바뀌면 ResizeObserver가 감지해 관찰을 그 높이로 다시 만든다. PC(sm 이상)에서는 관찰 결과와
+  // 무관하게 항상 숨긴다(요건 10) — 이 JS 체크는 정적 CSS 안전장치(sm:hidden, 마크업 주석 참고)에
+  // 더해진 이중 방어일 뿐, 핵심 방어는 CSS 쪽이다.
+  let mobileStickySearchIO = null;
+  function setupMobileStickySearchObserver(){
+    const originalInput = document.getElementById('hero_search_brand');
+    const stickyBar = document.getElementById('mobile-sticky-search');
+    const header = document.querySelector('header.sticky');
+    if (!originalInput || !stickyBar) return;
+
+    function currentHeaderHeight(){ return header ? header.offsetHeight : 0; }
+    function updateStickyBarTop(){ stickyBar.style.top = currentHeaderHeight() + 'px'; }
+
+    function rebuildObserver(){
+      if (mobileStickySearchIO) mobileStickySearchIO.disconnect();
+      mobileStickySearchIO = new IntersectionObserver((entries) => {
+        if (window.innerWidth >= 640){ stickyBar.classList.add('hidden'); return; }
+        stickyBar.classList.toggle('hidden', entries[0].isIntersecting);
+      }, { rootMargin: `-${currentHeaderHeight()}px 0px 0px 0px`, threshold: 0 });
+      mobileStickySearchIO.observe(originalInput);
+    }
+
+    updateStickyBarTop();
+    rebuildObserver();
+
+    if (header && typeof ResizeObserver !== 'undefined'){
+      new ResizeObserver(() => { updateStickyBarTop(); rebuildObserver(); }).observe(header);
+    } else {
+      window.addEventListener('resize', () => { updateStickyBarTop(); rebuildObserver(); });
+    }
+    // 창 폭이 모바일↔PC 경계를 넘나드는 순간(리사이즈)에도 즉시 반영하는 안전망.
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 640) stickyBar.classList.add('hidden');
+    });
   }
 
   // [검색/필터 통합] "상세조건" 접기/펼치기 — 새로 추가된 유일한 토글로, activeAppFilters/
@@ -10766,6 +10844,7 @@
   })();
 
   trackSiteVisit();
+  setupMobileStickySearchObserver(); // [모바일 Sticky 검색]
   applySavedLoginEmail();
   // /privacy, /terms 독립 페이지 본문을 회원가입 모달과 완전히 동일한 콘텐츠로 채운다
   // (TERMS_CONTENT/PRIVACY_CONTENT를 두 곳이 그대로 공유하므로 내용이 서로 달라질 수 없음).
