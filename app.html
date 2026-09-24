@@ -644,25 +644,6 @@
 
     <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4 mb-8 sm:mb-10"></div>
 
-  <!-- 오늘의 선착순 쿠폰 배너 — 할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가.
-       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
-    style="background:linear-gradient(90deg, rgba(244,200,74,0.14), rgba(255,115,89,0.14)); border:1px dashed var(--primary);">
-    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--text-secondary); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
-  </button>
-
-  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
-  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
-    style="background:linear-gradient(90deg, rgba(255,115,89,0.14), rgba(244,200,74,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,115,89,0.22);">
-    <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
-      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
-    </div>
-    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
-  </button>
-  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
-
     <!-- [펼치기 위치 변경] 목록의 가장 마지막 컨트롤. 펼쳐졌을 때만(hidden 아닐 때만) 보이고,
          누르면 이 섹션 전체를 다시 숨긴다. 위쪽 펼치기 버튼은 그 순간 다시 나타난다(같은
          toggleDiscountListSection()이 두 버튼의 표시 여부를 함께 맞춘다). -->
@@ -2998,8 +2979,7 @@
   }
 
   // [펼치기 위치 변경] 더 이상 이 함수를 호출해 목록 위치로 스크롤하는 곳이 없다(toggleDiscountListSection
-  // 도 더 이상 부르지 않음) — 하지만 정의 자체는 다른 곳에서 참조할 수 있어 그대로 남겨둔다
-  // (goToLimitedTimeCoupons 등 "목록으로 이동"이 실제로 의미 있는 다른 진입점은 계속 동작해야 함).
+  // 도 더 이상 부르지 않음) — 하지만 정의 자체는 다른 곳에서 참조할 수 있어 그대로 남겨둔다.
   function scrollToDiscountListSection(){
     const target = document.getElementById('discount-list-section');
     if (!target) return;
@@ -4453,15 +4433,6 @@
       }
     }
     renderDiscountList();
-  }
-
-  // 홈의 "오늘의 선착순 쿠폰" 배너 클릭 시 호출. 새 필터 로직을 만들지 않고 기존
-  // toggleLimitedTimeFilter()/onlyLimitedTimeFilter를 그대로 재사용한다. toggleLimitedTimeFilter()는
-  // '토글'이라 이미 켜진 상태에서 또 부르면 꺼지므로, 꺼져있을 때만 호출해 항상 "켜짐"으로 만든다.
-  // 스크롤은 기존 scrollToBrandSearch()(전체 할인 보기 버튼과 동일한 함수)를 그대로 재사용한다.
-  function goToLimitedTimeCoupons(){
-    if (!onlyLimitedTimeFilter) toggleLimitedTimeFilter();
-    scrollToBrandSearch();
   }
 
   function emptyState(){
@@ -6727,35 +6698,16 @@
     if (listEl) listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // 메인 화면의 '실시간 1위 할인 자랑글' 배너 클릭 시:
-  // 게시판 탭 → 🔥 할인의 고수 카테고리 자동 선택 → 해당 글로 스무스 스크롤 + 하이라이트 반짝임
   // 관리자가 설정한 홈 배너 내용 (Supabase app_config에서 불러옴). promoPostId가 없거나
   // 실제로 존재하지 않는 글이면, 식품 게시판에서 할인액이 가장 큰 글로 자동 대체된다.
+  // [선착순/실시간 배너 제거] 이 값을 화면에 그리던 renderHomeBanners()는 홈에서 배너 2개가
+  // 사라지며 삭제했지만, homeBannerConfig 자체와 관리자 설정 화면(renderAdminBannerPostSelect/
+  // saveHomeBannerConfig)은 그대로 둔다 — 게시판 관리자 기능이라 이번 작업 범위 밖이다.
   const homeBannerConfig = {
     promoBadge: '🔥 실시간 할인 1위 노하우 대공개',
     promoTitle: 'BBQ 12,000원 할인! 도대체 어떻게 받았을까?',
     promoPostId: null,
   };
-
-  function renderHomeBanners(loadedSuccessfully){
-    const promoBanner = document.getElementById('home-promo-banner');
-    const promoSkeleton = document.getElementById('home-promo-banner-skeleton');
-    const badgeEl = document.getElementById('home-promo-banner-badge');
-    const titleEl = document.getElementById('home-promo-banner-title');
-
-    if (!loadedSuccessfully){
-      // 네트워크/서버 문제로 실제 배너 문구를 못 가져온 경우: 예전 테스트 문구가 그대로
-      // 남아있는 것보다는, 스켈레톤을 걷어내고 배너 자체를 아예 안 보여주는 쪽이 안전하다.
-      if (promoSkeleton) promoSkeleton.classList.add('hidden');
-      return;
-    }
-
-    if (badgeEl) badgeEl.textContent = homeBannerConfig.promoBadge;
-    if (titleEl) titleEl.textContent = homeBannerConfig.promoTitle;
-
-    if (promoSkeleton) promoSkeleton.classList.add('hidden');
-    if (promoBanner) promoBanner.classList.remove('hidden');
-  }
 
   // 페이지 로드 시 Supabase에서 홈 배너 설정값을 불러온다. (누구나 조회 가능, 값이 없으면 위 기본값 유지)
   //
@@ -6781,7 +6733,6 @@
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_app_config_value 확인 필요)', e);
     }
-    renderHomeBanners(loadedSuccessfully);
     renderAdminBannerPostSelect();
   }
 
@@ -6831,49 +6782,11 @@
       homeBannerConfig.promoBadge = promoBadge;
       homeBannerConfig.promoTitle = promoTitle;
       homeBannerConfig.promoPostId = promoPostId || null;
-      renderHomeBanners(true);
       showToast('홈 배너가 저장되었습니다 ✅');
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 저장 실패 (set_home_banner_config RPC 확인 필요)', e);
       showToast('배너 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
-  }
-
-  function goToTopDiscountPost(){
-    // 관리자가 지정한 글이 있으면 카테고리 상관없이 전체 게시글에서 찾고,
-    // 지정된 게 없거나 그 글이 삭제됐으면 할인액이 가장 큰 할인 게시글로 자동 이동
-    let target = null;
-    if (homeBannerConfig.promoPostId){
-      target = boardPosts.find(p => String(p.id) === String(homeBannerConfig.promoPostId)) || null;
-    }
-    if (!target){
-      const discountPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
-      if (discountPosts.length){
-        target = discountPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0];
-      }
-    }
-
-    switchTab('board');
-    switchBoardTab(target ? boardTabOfPost(target) : 'report');
-
-    if (!target) return;
-
-    // 화면 목록과 같은 필터·정렬(getBoardListOrder)로 페이지를 계산한다 — 예전처럼 DB 카테고리(board)
-    // 기준으로 세면 소식/제보·질문 탭의 실제 순서와 어긋난다(2026-09-20 수정).
-    const page = getBoardPageForPost(target.id);
-    if (page){
-      boardPage = page;
-      expandedPostIds.add(target.id); // 애니메이션 효과가 꺼진 기기에서도 이동했는지 눈으로 바로 확인되도록 펼친 상태로 이동
-      renderBoardList();
-    }
-
-    setTimeout(() => {
-      const el = document.getElementById(`board-post-${target.id}`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('post-highlight-flash');
-      setTimeout(() => el.classList.remove('post-highlight-flash'), 2200);
-    }, 150);
   }
 
   // ---------- 관리자 페이지 진입 게이트 (이메일 기반) ----------
