@@ -173,7 +173,7 @@
     --accent-hover:#FF8B74;
     --warning:#FF7657;
     --success:#65C69A;
-    --shopping-accent-border: rgba(56,189,248,.4); /* 쇼핑 유도 배너(추석선물 등) 전용 — 배달 영역과 구분되는 은은한 하늘색 테두리 */
+    --shopping-accent-border: rgba(255,107,107,.35); /* 쇼핑 유도 배너(추석선물 등) 전용 — 노란 CTA보다는 약하게, 코랄핑크(#FF6B6B) 테두리 */
     --tag-baemin:#34C9B0;
     --tag-yogiyo:#FF3D71;
     --tag-coupang:#5B8DEF;
@@ -608,12 +608,15 @@
        sm: 접두사가 붙은 값은 PC에서 충분히 크게 보이도록 새로 키운 값(이전 CTA보다 확실히 큼).
        기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <!-- 테두리만 하늘색 계열로(--shopping-accent-border, :root에 정의) 바꿔 배달 할인 영역과
-         시각적으로 구분한다. 배경은 다시 주변 카드와 같은 --card-alt(어두운 카드색)로 되돌려
-         보라 배경 워시를 제거했다. 노란 CTA(3초면 똭!)와 onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
-    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--card-alt); border:1px solid var(--shopping-accent-border);">
+    <!-- 테두리를 코랄핑크 계열로(--shopping-accent-border, :root에 정의) 바꿔 배달 할인 영역과
+         시각적으로 구분한다. 배경은 --card-alt가 아니라 var(--bg) — 이 배너를 감싸는
+         <main id="page-home">엔 별도 background가 없어 실제로는 body{background:var(--bg)}가
+         그대로 비쳐 보이므로, 주변과 완전히 같은 색으로 맞추려면 --card-alt가 아닌 --bg를 써야
+         한다(이전엔 --card-alt를 써서 주변보다 밝은 회색 박스처럼 보였음). 노란 CTA(3초면 똭!)와
+         onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--bg); border:1px solid var(--shopping-accent-border);">
       <span class="min-w-0">
-        <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:var(--muted); font-weight:600;">쇼핑도 주문의고수</span>
+        <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:#FF6B6B; font-weight:600;">쇼핑도 주문의고수</span>
         <span class="block leading-tight break-keep whitespace-nowrap text-[18px] sm:text-[30px]" style="color:var(--text); font-weight:800;">추석선물?</span>
       </span>
       <span class="shrink-0 self-center text-[20px] sm:text-[34px] px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-md break-keep whitespace-nowrap" style="background:var(--primary); color:#181B23; font-weight:900;">3초면 똭! →</span>
