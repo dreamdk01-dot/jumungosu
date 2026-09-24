@@ -9921,13 +9921,17 @@
     const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
     const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
     // tier 0 = 항상 노출. tier 1 = PC(1024px+)에서는 기본 노출, 그보다 좁으면(모바일/태블릿)
-    // "더보기"로만 열림 — agp-pick-extra(더보기 토글 대상) + hidden(기본 숨김) + lg:block(1024px+
-    // 에서는 hidden을 무시하고 무조건 보이게 하는 정적 CSS 오버라이드)을 함께 준다. 이 조합은
-    // 이 파일에서 이미 검증된 방식이다(Tailwind CDN 스타일시트에서 반응형 유틸리티가 .hidden보다
-    // 뒤에 위치해 해당 breakpoint에서 항상 이긴다 — 쇼핑 인트로 화면 sm:flex 관련 주석 참고).
+    // "더보기"로만 열림 — agp-pick-extra(더보기 토글 대상) + hidden(기본 숨김) + lg:flex(1024px+
+    // 에서는 hidden을 무시하고 무조건 보이게 하는 정적 CSS 오버라이드)을 함께 준다.
+    // [PC 고수PICK 레이아웃 수정] 이전엔 lg:block을 썼는데, 카드 자체가 display:flex(이미지 좌측+
+    // 정보 우측 2열 구성)라 lg:block이 그 flex를 덮어써 1024px+에서만 정보가 이미지 아래로
+    // 통째로 떨어지는(스택형으로 깨지는) 문제가 있었다(Tailwind 반응형 유틸리티가 .hidden보다
+    // 뒤에 있어 이기는 것까지는 의도대로였지만, block이 아니라 flex로 이겨야 했다). 카드의
+    // 실제 display 값(flex)과 맞춰 lg:flex로 바꿔 "숨김 해제"와 "레이아웃 유지"를 동시에
+    // 만족시킨다 — 쇼핑 인트로 화면의 sm:flex와 같은 원리.
     // tier 2 = 기존과 동일, 모든 화면에서 "더보기"로만 열림. DOM 자체는 항상 만들어 두고 hidden
     // 토글만으로 여닫아야 iframe이 다시 로드되지 않는다.
-    const extraClass = tier === 1 ? 'agp-pick-extra hidden lg:block '
+    const extraClass = tier === 1 ? 'agp-pick-extra hidden lg:flex '
                       : tier === 2 ? 'agp-pick-extra hidden '
                       : '';
     return `
