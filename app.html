@@ -533,7 +533,7 @@
 <div id="mobile-sticky-search" class="hidden sm:hidden fixed left-0 right-0 z-40 px-4 py-2" style="top:0; background:rgba(24,27,35,0.96); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-bottom:1px solid var(--line);">
   <div class="relative">
     <input id="hero_search_brand_sticky" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
-      oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand_sticky'); if (!stickyAutocompleteComposing) renderStickyAutocomplete();"
+      oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand_sticky')"
       class="form-input w-full pl-11 pr-9 py-3 rounded-xl text-sm outline-none">
     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
     <button id="brand-search-clear-sticky" onclick="clearBrandSearch()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
@@ -4084,6 +4084,14 @@
     handleBrandSearchInput(value);
     const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
     if (stickyClearBtn) stickyClearBtn.classList.toggle('hidden', !value || !value.trim());
+    // [버그1 수정] 예전엔 sticky 입력 자신의 oninput에만 자동완성 렌더 호출이 붙어 있어서,
+    // 원본 검색창(#hero_search_brand)에서 입력해 값이 sticky로 "동기화"만 되는 경우에는
+    // 자동완성이 전혀 그려지지 않았다. 두 입력 모두 결국 이 함수를 거치므로, 렌더 호출을
+    // 여기 한 곳으로 옮기면 어느 쪽에서 입력하든 항상 같이 갱신된다(sticky 쪽 oninput에 있던
+    // 중복 호출은 제거). renderStickyAutocomplete()는 sticky bar가 아직 안 보여도(스크롤 전)
+    // box의 내용/hidden 상태만 미리 갱신해두므로, 나중에 IntersectionObserver가 bar를 보여주는
+    // 순간에는 이미 최신 자동완성이 채워져 있다 — 별도의 "sticky 등장 시 복원" 로직이 필요 없다.
+    if (!stickyAutocompleteComposing) renderStickyAutocomplete();
   }
 
   // [모바일 Sticky 자동완성] 한글 IME 조합 중(ㅂ→비→비ㅂ→비비→...)에는 자동완성 목록을 다시
