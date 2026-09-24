@@ -596,20 +596,6 @@
     </div>
   </section>
 
-  <!-- ===== [실험판 v1] 지금 볼 만한 할인 =====
-       선정 기준: 카테고리 무관, 오늘 라이브(isDiscountLive)인 할인을 기존 groupDiscountsByBrand()로
-       브랜드 통합한 뒤 groupMaxValue(브랜드 내 최고 할인액) 내림차순 정렬 → 상위 4개.
-       "상세 보기"는 새 모달을 만들지 않고 기존 goToBrandInDiscountList()를 재사용해 아래
-       실제 할인 리스트의 해당 브랜드 카드로 스크롤 이동 + 하이라이트한다. -->
-  <section id="home-spotlight-section" class="hidden mb-10 sm:mb-12">
-    <h2 class="font-display text-lg sm:text-xl mb-3" style="color:var(--text);">지금 볼 만한 할인</h2>
-    <div id="home-spotlight-list" class="grid grid-cols-2 gap-3"></div>
-    <!-- 카드 4개 바로 아래 전체 목록 진입 버튼. 기존 showAllBrandDiscounts()
-         (필터 초기화 + revealDiscountList + 목록 렌더 + 스크롤)를 그대로 재사용한다. -->
-    <button type="button" onclick="showAllBrandDiscounts()" class="mt-4 sm:mt-5 mx-auto block px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달 할인 보기 ↓</button>
-  </section>
-
-
   <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, 작고 담백한
        시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
        syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다.
@@ -2869,10 +2855,9 @@
       if (typeof renderDiscountList === 'function') renderDiscountList();
       if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
       if (opts.refreshUpdatedAt) renderUpdatedBadges(); // 할인 리스트 제목의 UPDATED 배지도 같은 주기로 갱신
-      // [실험판 v1] 홈 요약 패널 + 지금 볼 만한 할인: discounts가 갱신될 때마다 함께 다시 계산
+      // [실험판 v1] 홈 요약 패널: discounts가 갱신될 때마다 함께 다시 계산
       // (위에서 discountUpdatedAtValue까지 갱신된 뒤이므로 '최근 업데이트'도 이 한 번의 렌더로 최신값이 된다)
       if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
-      if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
       renderAdminOpsSummary();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
@@ -3105,52 +3090,9 @@
       </div>`;
   }
 
-  // 지금 볼 만한 할인: 오늘 라이브 할인을 브랜드로 통합(groupDiscountsByBrand, 기존과 동일한
-  // 브랜드 병합 규칙 재사용)한 뒤, 브랜드 내 최고 할인액(groupMaxValue) 기준 내림차순 상위 4개.
-  // 카드의 "상세 보기"는 새로 상세 화면을 만들지 않고 기존 goToBrandInDiscountList()를 호출해
-  // 아래 실제 할인 리스트의 해당 브랜드 카드로 스크롤+하이라이트한다(요건: "카드를 누르면 기존
-  // 할인 상세 정보가 나타나야 한다"를 새 UI 없이 충족).
-  function renderHomeSpotlight(){
-    const section = document.getElementById('home-spotlight-section');
-    const el = document.getElementById('home-spotlight-list');
-    if (!section || !el) return;
-
-    const live = discounts.filter(isDiscountLive);
-    if (!live.length){
-      section.classList.add('hidden');
-      el.innerHTML = '';
-      return;
-    }
-
-    const groups = groupDiscountsByBrand(live)
-      .slice()
-      .sort((a, b) => groupMaxValue(b) - groupMaxValue(a))
-      .slice(0, 4);
-
-    section.classList.remove('hidden');
-    el.innerHTML = groups.map(g => {
-      const sortedBadges = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
-      const top = sortedBadges[0];
-      const appCount = new Set(g.badges.map(b => b.app)).size;
-      const soonest = groupMinDaysLeft(g);
-      const soonBadge = (soonest !== null && soonest <= 3)
-        ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style="background:var(--warning); color:#1C1A17;">종료임박</span>`
-        : '';
-      const safeName = g.displayName.replace(/'/g, "\\'");
-      return `
-        <div class="rounded-lg p-3 sm:p-4 flex flex-col justify-between" style="background:var(--card); border:1px solid var(--line);">
-          <div class="min-w-0">
-            <div class="flex items-start justify-between gap-1.5 mb-2">
-              <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(g.displayName)}</p>
-              ${soonBadge}
-            </div>
-            <p class="font-mono text-base sm:text-xl font-extrabold leading-tight mb-1" style="color:var(--primary);">${top.discountText}</p>
-            <p class="text-[11px] sm:text-xs" style="color:var(--muted);">${appCount}개 앱에서 비교 가능</p>
-          </div>
-          <button type="button" onclick="goToBrandInDiscountList('${safeName}')" class="mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold self-start" style="color:var(--primary);">상세 보기 →</button>
-        </div>`;
-    }).join('');
-  }
+  // [지금 볼 만한 할인 제거] renderHomeSpotlight()는 #home-spotlight-section/#home-spotlight-list
+  // 대상 DOM이 사라져 삭제했다. getDiscountDaysLeft()(할인 리스트 카드에서 계속 씀)는 그대로
+  // 남겨뒀고, 이 함수 전용이던 groupMinDaysLeft()만 함께 정리했다(정의부 참고).
 
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
   function getDiscountDaysLeft(d){
@@ -4006,12 +3948,6 @@
 
   function groupMaxValue(group){
     return Math.max(...group.badges.map(b => b.sortValue));
-  }
-
-  // 그룹(브랜드) 안에서 가장 임박한(가장 적게 남은) 종료일 기준 잔여일. 기한이 하나도 없으면 null(맨 뒤로 정렬됨)
-  function groupMinDaysLeft(group){
-    const values = group.badges.map(b => b.daysLeft).filter(v => v !== null && v !== undefined);
-    return values.length ? Math.min(...values) : null;
   }
 
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
@@ -10685,9 +10621,8 @@
     renderCategoryChips();
     renderDiscountList();
     if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
-    // [실험판 v1] 안전장치 경로에서도 요약/지금 볼 만한 할인을 함께 채운다
+    // [실험판 v1] 안전장치 경로에서도 요약을 함께 채운다
     if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
-    if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
     startAirtablePolling();
   })();
   syncHomeSeasonalBanner();
