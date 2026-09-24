@@ -288,10 +288,11 @@ export default async function handler(req, res) {
           '<span class="font-mono text-xs" id="best3-updated-badge" style="color:var(--muted);"></span>',
           updatedBadge
         );
-        html = injectIntoEmptyTag(
-          html,
-          '<p id="discount-list-updated" class="font-mono text-[12px] mb-2 whitespace-nowrap" style="color:var(--muted);"></p>',
-          updatedBadge
+        // 예전엔 <p ...> 전체 문자열로 찾았는데, app.html 쪽 class가 바뀔 때마다 매칭이 조용히 깨졌다.
+        // id="discount-list-updated" 기준으로 "빈 <p> 태그"만 찾아 채우도록 바꿔 class 변경에 영향받지 않게 한다.
+        html = html.replace(
+          /(<p\b[^>]*\bid="discount-list-updated"[^>]*>)(<\/p>)/,
+          `$1${updatedBadge}$2`
         );
       }
 
