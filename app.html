@@ -365,15 +365,21 @@
   /* Hero 검색창(#hero_search_brand) 전용 — 다크 Hero 배경과 구분되도록 이 입력 하나만 흰색.
      전역 .form-input(로그인/회원가입/게시판/관리자 입력)은 건드리지 않는다.
      포커스 링은 위 .form-input:focus(골드 border + 옅은 골드 그림자)를 그대로 물려받는다. */
-  #hero_search_brand{
+  #hero_search_brand,
+  #search_brand{
     background:#FFFFFF;
     color:#171717;
     border:1px solid #D9DDE3;
     -webkit-text-fill-color:#171717; /* iOS Safari가 type=search에 자체 글자색을 입히는 것 방지 */
   }
-  #hero_search_brand::placeholder{ color:#6B7280; opacity:1; font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 placeholder만 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
-  #hero_search_brand::-webkit-search-cancel-button{ filter:grayscale(1) brightness(0.55); }
+  #hero_search_brand::placeholder,
+  #search_brand::placeholder{ color:#9CA3AF; opacity:1; }
+  #hero_search_brand::placeholder{ font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 Hero placeholder만 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
+  #hero_search_brand::-webkit-search-cancel-button,
+  #search_brand::-webkit-search-cancel-button{ filter:grayscale(1) brightness(0.55); }
   .hero-search-icon{ color:#4B5563; filter:grayscale(1) brightness(0.5); }
+  #brand-search-section .relative.max-w-\[320px\] > span{ color:#4B5563 !important; } /* 하단 검색 아이콘도 흰 배경에서 보이도록 짙은 회색으로 */
+  #brand-search-clear{ color:#6B7280 !important; } /* × 삭제 버튼도 흰 배경에 맞춰 회색으로 */
 
   .scrollbar-none::-webkit-scrollbar{ display:none; }
   .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
@@ -529,7 +535,7 @@
          동기화한 뒤 handleBrandSearchInput()을 호출하므로, 필터링 로직은 완전히 동일하다.
          결과는 화면 아래(기존 할인 리스트)에 그려지므로 Enter를 누르면 그 지점으로
          스크롤한다(기존 scrollToBrandSearch() 재사용). -->
-    <div class="relative mb-4">
+    <div class="relative mb-4" style="max-width:720px;">
       <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
         oninput="handleHeroSearchInput(this.value)"
         onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
@@ -642,8 +648,8 @@
 
     <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
     <div class="relative max-w-[320px]">
-      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line-strong); color:var(--text);">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
+      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🔍</span>
       <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
     </div>
   </section>
