@@ -173,6 +173,8 @@
     --accent-hover:#FF8B74;
     --warning:#FF7657;
     --success:#65C69A;
+    --shopping-accent-border: rgba(167,139,250,.45); /* 쇼핑 유도 배너(추석선물 등) 전용 — 배달 영역과 구분되는 차분한 보라 테두리 */
+    --shopping-accent-bg: rgba(167,139,250,.07); /* 위 배너에만 쓰는 아주 옅은 보라 배경 톤 */
     --tag-baemin:#34C9B0;
     --tag-yogiyo:#FF3D71;
     --tag-coupang:#5B8DEF;
@@ -607,7 +609,9 @@
        sm: 접두사가 붙은 값은 PC에서 충분히 크게 보이도록 새로 키운 값(이전 CTA보다 확실히 큼).
        기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
   <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--card-alt); border:1px solid var(--line-strong);">
+    <!-- 테두리/배경만 보라 계열로(--shopping-accent-*, :root에 정의) 바꿔 배달 할인 영역과 시각적으로
+         구분한다. 노란 CTA(3초면 똭!)와 onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:linear-gradient(var(--shopping-accent-bg), var(--shopping-accent-bg)), var(--card-alt); border:1px solid var(--shopping-accent-border);">
       <span class="min-w-0">
         <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:var(--muted); font-weight:600;">쇼핑도 주문의고수</span>
         <span class="block leading-tight break-keep whitespace-nowrap text-[18px] sm:text-[30px]" style="color:var(--text); font-weight:800;">추석선물?</span>
@@ -625,7 +629,11 @@
   <section id="discount-list-guide" class="max-sm:mb-7 sm:mb-8 text-center py-6 sm:py-8">
     <p class="font-display text-base sm:text-lg mb-1.5" style="color:var(--text);">원하는 브랜드만 골라보세요</p>
     <p class="text-xs sm:text-sm mb-4 break-keep" style="color:var(--text-secondary);">검색이나 메뉴 선택으로 관련 할인만 볼 수 있고, 원한다면 전체 브랜드도 바로 확인할 수 있어요.</p>
-    <button type="button" onclick="showAllBrandDiscounts()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 브랜드 할인 보기</button>
+    <!-- 브랜드 미리보기 3개: renderBrandPreview()가 discounts 갱신마다 다시 그린다(하드코딩 없음).
+         "지금 볼 만한 할인"(renderHomeSpotlight)과 동일하게 groupDiscountsByBrand/isDiscountLive를
+         재사용하되 카드가 아닌 한 줄짜리 행으로, 최대 3개만 보여준다. -->
+    <div id="brand-preview-list" class="hidden mb-4 flex flex-col gap-2 max-w-sm mx-auto text-left"></div>
+    <button type="button" id="discount-list-toggle-btn" onclick="toggleFullBrandList()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달 할인 보기 ↓</button>
   </section>
 
   <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
@@ -2887,6 +2895,7 @@
       // (위에서 discountUpdatedAtValue까지 갱신된 뒤이므로 '최근 업데이트'도 이 한 번의 렌더로 최신값이 된다)
       if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
       if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
+      if (typeof renderBrandPreview === 'function') renderBrandPreview();
       renderAdminOpsSummary();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
@@ -2942,15 +2951,43 @@
   let discountListRevealed = false;
 
   function revealDiscountList(){
+    // [접기/펼치기 추가] 안내 패널(#discount-list-guide)은 브랜드 미리보기 3개 + 토글 버튼을
+    // 담고 있어 이제 항상 보여야 하므로 더 이상 숨기지 않는다. section의 hidden 해제는 매번
+    // 실행해, 토글로 접었다가(hidden 다시 추가) 검색/브랜드 이동 등 다른 경로로 재오픈해도
+    // 정상적으로 다시 열리게 한다.
+    const section = document.getElementById('discount-list-section');
+    if (section) section.classList.remove('hidden');
+    syncDiscountListToggleLabel();
     if (discountListRevealed) return;
     discountListRevealed = true;
-    const guide = document.getElementById('discount-list-guide');
-    const section = document.getElementById('discount-list-section');
-    if (guide) guide.classList.add('hidden');
-    if (section) section.classList.remove('hidden');
     // 새 외부 추적 시스템을 추가하지 않고, 기존 퍼널 추적 구조(trackFunnelEvent)에 이벤트만
-    // 하나 더 기록한다. revealDiscountList() 자체가 최초 1회만 실행되므로 중복 기록 걱정이 없다.
+    // 하나 더 기록한다. discountListRevealed 덕분에 최초 1회만 기록된다.
     if (typeof trackFunnelEvent === 'function') trackFunnelEvent('discount_list_expand');
+  }
+
+  // 토글 버튼(#discount-list-toggle-btn) 글자를 현재 목록이 열려있는지에 맞춰 동기화.
+  // revealDiscountList()가 호출되는 모든 경로(검색, 빠른 필터, 브랜드 이동, 토글 버튼)에서
+  // 공통으로 호출되므로 어느 경로로 목록이 열리든 버튼 문구가 항상 맞게 유지된다.
+  function syncDiscountListToggleLabel(){
+    const section = document.getElementById('discount-list-section');
+    const btn = document.getElementById('discount-list-toggle-btn');
+    if (!section || !btn) return;
+    btn.textContent = section.classList.contains('hidden') ? '전체 배달 할인 보기 ↓' : '접기 ↑';
+  }
+
+  // "전체 배달 할인 보기 ↓" / "접기 ↑" 토글. 펼칠 때는 기존 showAllBrandDiscounts()(필터 초기화 +
+  // revealDiscountList + 목록 렌더 + 스크롤)를 그대로 재사용한다. 접을 때는 필터/검색 상태는
+  // 그대로 두고 목록 섹션만 다시 숨긴다 — 브랜드 미리보기 3개와 이 버튼은 #discount-list-guide
+  // 안에 있어 계속 보인다.
+  function toggleFullBrandList(){
+    const section = document.getElementById('discount-list-section');
+    if (!section) return;
+    if (section.classList.contains('hidden')){
+      showAllBrandDiscounts();
+    } else {
+      section.classList.add('hidden');
+      syncDiscountListToggleLabel();
+    }
   }
 
   // "할인 리스트" 섹션 상단으로 스크롤(요건 4/13: 목록을 연 뒤 "목록 상단으로 이동"). 헤더 높이를
@@ -3170,6 +3207,43 @@
           </div>
           <button type="button" onclick="goToBrandInDiscountList('${safeName}')" class="mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold self-start" style="color:var(--primary);">상세 보기 →</button>
         </div>`;
+    }).join('');
+  }
+
+  // 전체 브랜드 할인 목록 안내 패널(#discount-list-guide)에 넣는 브랜드 미리보기 3개.
+  // renderHomeSpotlight()와 동일하게 isDiscountLive/groupDiscountsByBrand/groupMaxValue를
+  // 그대로 재사용해 "오늘 유효한 할인 중 브랜드별 최대 할인" 상위 3개만 뽑는다(신규 하드코딩 없음).
+  // groupDiscountsByBrand는 Map 삽입 순서(= discounts 배열 순서)를 유지하고 Array.sort는 안정
+  // 정렬이므로, 동률 브랜드는 항상 기존 데이터 순서 그대로 유지된다.
+  function renderBrandPreview(){
+    const wrap = document.getElementById('brand-preview-list');
+    if (!wrap) return;
+
+    const live = discounts.filter(isDiscountLive);
+    const groups = groupDiscountsByBrand(live)
+      .slice()
+      .sort((a, b) => groupMaxValue(b) - groupMaxValue(a))
+      .slice(0, 3);
+
+    if (!groups.length){
+      wrap.classList.add('hidden');
+      wrap.innerHTML = '';
+      return;
+    }
+
+    wrap.classList.remove('hidden');
+    wrap.innerHTML = groups.map(g => {
+      const top = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue)[0];
+      const minOrderText = typeof top.minOrder === 'number' ? `최소주문 ${top.minOrder.toLocaleString('ko-KR')}원` : '';
+      const safeName = g.displayName.replace(/'/g, "\\'");
+      return `
+        <button type="button" onclick="goToBrandInDiscountList('${safeName}')" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left transition hover:brightness-110" style="background:var(--card); border:1px solid var(--line);">
+          <span class="min-w-0">
+            <span class="block font-semibold text-sm truncate" style="color:var(--text);">${escapeHtml(g.displayName)}</span>
+            ${minOrderText ? `<span class="block text-[11px] mt-0.5" style="color:var(--muted);">${minOrderText}</span>` : ''}
+          </span>
+          <span class="font-mono text-sm font-extrabold shrink-0" style="color:var(--primary);">${top.discountText}</span>
+        </button>`;
     }).join('');
   }
 
@@ -10695,6 +10769,7 @@
     // [실험판 v1] 안전장치 경로에서도 요약/지금 볼 만한 할인을 함께 채운다
     if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
     if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
+    if (typeof renderBrandPreview === 'function') renderBrandPreview();
     startAirtablePolling();
   })();
   syncHomeSeasonalBanner();
