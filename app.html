@@ -3139,7 +3139,7 @@
   // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용, 앞에 고정 녹색 점 표시
   // [모바일 현황바] PC용 4칸 카드(hidden sm:block)와 모바일용 컴팩트 요약바(sm:hidden)를 같은 값
   // (live/groups/maxItem/updatedBadge)으로 함께 렌더링한다 — 계산은 한 번만, 표현만 둘로 나눈다.
-  // 모바일 문구는 최대 할인을 빼고 "N개 할인 · M개 브랜드 비교"만 보여주고, 업데이트 시각은
+  // 모바일 문구는 최대 할인을 빼고 "총 N개 할인 → M개 브랜드로 정리"만 보여주고, 업데이트 시각은
   // PC와 같은 데이터(discountUpdatedAtValue)에서 이미 계산된 updatedBadge("MM/DD HH:mm")의
   // 시간 부분만 뽑아 "오늘 HH:MM 업데이트"로 표시한다(날짜는 항상 "오늘" 고정 문구, 시간은
   // 실제 값). 시간 정보가 아직 없는 극히 드문 경우(첫 동기화 전 날짜만 있는 상태)에는 시간 없이
@@ -3183,7 +3183,7 @@
         </div>
       </div>
       <div class="sm:hidden flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2" style="background:var(--card); border:1px solid var(--line);">
-        <p class="font-mono text-xs" style="color:var(--text);"><span class="font-bold">${live.length.toLocaleString('ko-KR')}</span>개 할인 · <span class="font-bold">${groups.length.toLocaleString('ko-KR')}</span>개 브랜드 비교</p>
+        <p class="font-mono text-xs" style="color:var(--text);">총 <span class="font-bold">${live.length.toLocaleString('ko-KR')}</span>개 할인 → <span class="font-bold">${groups.length.toLocaleString('ko-KR')}</span>개 브랜드로 정리</p>
         <p class="font-mono text-xs flex items-center gap-1.5 shrink-0" style="color:var(--muted);">${greenDot}${escapeHtml(mobileUpdateText)}</p>
       </div>`;
   }
