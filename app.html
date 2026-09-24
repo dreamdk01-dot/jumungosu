@@ -552,14 +552,13 @@
         <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
       </div>
 
-      <!-- 인기 브랜드 칩: renderTodayBrandLinks()가 이미 존재했지만(기존 코드에 정의만 되어 있고
-           대상 DOM이 없어 실제로는 한 번도 그려지지 않던 미사용 함수) 실제 요청 요건과
-           정확히 일치해 그대로 재사용했다 — BRAND_LINKS(브랜드 SEO 페이지 10개) 중 "오늘"
-           실제로 라이브 할인이 있는 브랜드만 금액 큰 순 최대 5개, 하드코딩 없이 실데이터 기준.
-           템플릿(칩 스타일)만 새로 입혔고 데이터 로직/함수명은 전혀 손대지 않았다. -->
-      <div id="today-brand-links-section" class="hidden flex items-start gap-2 flex-wrap">
-        <span class="text-xs shrink-0 mt-1.5" style="color:var(--text-secondary);">인기 검색:</span>
-        <div id="today-brand-links" class="flex items-center gap-2 flex-wrap"></div>
+      <!-- [인기검색 정리] renderTodayBrandLinks()가 그린다 — 가격 없이 브랜드명만, 한 줄에
+           들어가는 만큼만 노출한다(정확한 로직은 함수 정의부 주석 참고). 라벨+칩을 한 flex row로
+           합쳐 flex-nowrap + overflow-hidden으로 무조건 한 줄만 허용하고, 넘치는 칩은 JS가 렌더
+           전에 미리 개수를 줄여서 잘라내지(...) 않는다. -->
+      <div id="today-brand-links-section" class="hidden flex items-center gap-2 flex-nowrap overflow-hidden">
+        <span class="text-xs shrink-0" style="color:var(--text-secondary);">인기 검색:</span>
+        <div id="today-brand-links" class="flex items-center gap-2 flex-nowrap overflow-hidden"></div>
       </div>
 
       <!-- [검색/필터 통합] 상세조건 — 기존 "🔎 할인 찾기" 박스(별도 섹션, STEP1/STEP2 표현)를
@@ -2945,40 +2944,42 @@
 
   // 브랜드 SEO 페이지(seo.js의 singleBrand 10개)와 정확히 매칭되도록, 그쪽과 동일한 브랜드
   // 판정 키워드를 그대로 씁니다 (seo.js normBrand(d.name).includes(key) 로직과 동일한 규칙).
+  // [인기검색 정리] 배열 순서 자체가 노출 우선순위다(할인금액 정렬 없음) — 카테고리가 앞쪽에
+  // 몰리지 않도록 치킨/피자/버거를 번갈아 배치했다(원래는 치킨 5개가 먼저 나열돼 있었음).
   const BRAND_LINKS = [
     { slug: 'bbq-discount', label: 'BBQ', key: 'bbq' },
-    { slug: 'bhc-discount', label: 'BHC', key: 'bhc' },
-    { slug: 'gyochon-discount', label: '교촌치킨', key: '교촌' },
-    { slug: 'gubne-discount', label: '굽네치킨', key: '굽네' },
-    { slug: 'chegatjip-discount', label: '처갓집', key: '처갓집' },
     { slug: 'dominopizza-discount', label: '도미노피자', key: '도미노' },
+    { slug: 'mcdonald-discount', label: '맥도날드', key: '맥도날드' },
+    { slug: 'bhc-discount', label: 'BHC', key: 'bhc' },
     { slug: 'pizzahut-discount', label: '피자헛', key: '피자헛' },
     { slug: 'lotteria-discount', label: '롯데리아', key: '롯데리아' },
-    { slug: 'mcdonald-discount', label: '맥도날드', key: '맥도날드' },
+    { slug: 'gyochon-discount', label: '교촌치킨', key: '교촌' },
     { slug: 'momstouch-discount', label: '맘스터치', key: '맘스터치' },
+    { slug: 'gubne-discount', label: '굽네치킨', key: '굽네' },
+    { slug: 'chegatjip-discount', label: '처갓집', key: '처갓집' },
   ];
   function normalizeBrandNameForLink(s){
     return String(s || '').replace(/\s+/g, '').toLowerCase();
   }
 
 
-  // "오늘 할인 브랜드" 섹션: 브랜드 SEO 페이지가 있는 10개 브랜드 중, 오늘 실제로 라이브인
-  // 할인이 있는 브랜드만 금액 큰 순서로 최대 5개 보여주고 각 브랜드 페이지로 링크합니다.
-  // 오늘 하나도 없으면(운영 초기 등) 섹션 자체를 숨겨서 빈 껍데기가 노출되지 않게 합니다.
+  // "인기 검색" 칩: 브랜드 SEO 페이지가 있는 10개 브랜드(BRAND_LINKS, 카테고리를 번갈아 배치한
+  // 고정 순서) 중 오늘 실제로 라이브인 할인이 있는 브랜드만, 그 순서 그대로 노출한다.
+  // [인기검색 정리] 이전엔 할인금액 큰 순으로 정렬해 최대 5개를 보여줬지만, 인기검색과 최대할인은
+  // 다른 개념이라는 요건에 따라 금액 정렬을 없앴다 — 대신 BRAND_LINKS 배열 순서(카테고리가 골고루
+  // 섞이도록 미리 배치해둔 순서)를 그대로 우선순위로 쓴다. 몇 개를 보여줄지도 더 이상 고정값(5)이
+  // 아니라, 실제로 한 줄에 들어가는 만큼만 보이도록 전부 그려본 뒤 넘치면 뒤에서부터 하나씩
+  // 줄여 다시 측정한다 — PC/모바일이 같은 DOM과 같은 로직을 쓰고, 다만 화면이 좁을수록
+  // 자연스럽게 적은 개수만 남는다. 오늘 하나도 없으면(운영 초기 등) 섹션 자체를 숨긴다.
   function renderTodayBrandLinks(){
     const sectionEl = document.getElementById('today-brand-links-section');
     const el = document.getElementById('today-brand-links');
     if (!sectionEl || !el) return;
 
     const live = discounts.filter(isDiscountLive);
-    const matched = BRAND_LINKS.map(b => {
-      const rows = live.filter(d => normalizeBrandNameForLink(d.name).includes(b.key));
-      if (!rows.length) return null;
-      const maxAmount = Math.max(...rows.map(d => d.amount));
-      return { ...b, amount: maxAmount };
-    }).filter(Boolean).sort((a, b) => b.amount - a.amount).slice(0, 5);
+    const candidates = BRAND_LINKS.filter(b => live.some(d => normalizeBrandNameForLink(d.name).includes(b.key)));
 
-    if (!matched.length){
+    if (!candidates.length){
       sectionEl.classList.add('hidden');
       el.innerHTML = '';
       return;
@@ -2990,11 +2991,35 @@
     // 맞지 않는다. 그래서 <button>으로 바꾸고 기존 goToBrandInDiscountList()를 그대로
     // 재사용한다(새 검색·스크롤 로직을 만들지 않음) — 대신 브랜드 SEO 페이지로의 내부 링크는
     // 이 칩에서는 더 이상 제공되지 않는다는 점을 결과 보고에 명시했다.
-    el.innerHTML = matched.map(b => `
-      <button type="button" onclick="goToBrandInDiscountList('${b.label.replace(/'/g, "\\'")}')" class="chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition hover:brightness-110" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-        ${escapeHtml(b.label)} <span style="color:var(--primary);">${b.amount.toLocaleString('ko-KR')}원</span>
-      </button>`).join('');
+    const chipHtml = b => `<button type="button" onclick="goToBrandInDiscountList('${b.label.replace(/'/g, "\\'")}')" class="chip shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition hover:brightness-110" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">${escapeHtml(b.label)}</button>`;
+
+    let count = candidates.length;
+    el.innerHTML = candidates.map(chipHtml).join('');
+    // overflow 판정은 바깥 sectionEl이 아니라 칩을 담는 el(#today-brand-links) 자신을 기준으로
+    // 한다 — sectionEl에도 overflow-hidden이 걸려 있는데, overflow가 hidden인 flex 아이템은
+    // 자동 최소폭이 0이 되어(스펙상 동작) 아무리 넘쳐도 스스로 줄어들어 버려 sectionEl.scrollWidth가
+    // 절대 clientWidth를 넘지 않는다(그래서 처음엔 감지가 안 됐다). el 자신은 "라벨을 제외하고
+    // 실제로 배정된 폭"을 clientWidth로 가지므로 이 폭 기준으로 재는 것이 정확하다.
+    while (count > 1 && el.scrollWidth > el.clientWidth){
+      count -= 1;
+      el.innerHTML = candidates.slice(0, count).map(chipHtml).join('');
+    }
   }
+
+  // 창 크기 변경/회전 시 인기검색 줄을 다시 맞춘다 — renderTodayBrandLinks() 자체가 매번
+  // 전체를 다시 그려보고 넘치는 만큼만 줄이므로, 여기서는 단순히 다시 호출하기만 하면 된다.
+  // resize 이벤트가 짧은 시간에 여러 번 발생할 수 있어 requestAnimationFrame으로 한 번만 묶는다.
+  let todayBrandLinksResizeQueued = false;
+  function scheduleRenderTodayBrandLinks(){
+    if (todayBrandLinksResizeQueued) return;
+    todayBrandLinksResizeQueued = true;
+    requestAnimationFrame(() => {
+      todayBrandLinksResizeQueued = false;
+      if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
+    });
+  }
+  window.addEventListener('resize', scheduleRenderTodayBrandLinks);
+  window.addEventListener('orientationchange', scheduleRenderTodayBrandLinks);
 
   // ===== [실험판 v1] 홈 Hero — 검색/빠른 선택/요약/지금 볼 만한 할인 =====
   // 아래 함수들은 모두 새로 추가된 것으로, 기존 activeAppFilters/activeCategoryFilters/
