@@ -2872,6 +2872,10 @@
         if (discounts[i].source !== 'admin') discounts.splice(i, 1);
       }
       discounts.push(...mapped);
+      // [통계 카운트업] discounts가 seed(코드 내장 기본값)가 아니라 실제 Airtable 데이터로
+      // 채워졌음을 표시한다. renderHomeSummaryPanel()의 카운트업 애니메이션이 이 플래그를 보고,
+      // "최종값이 실제로 확정된" 첫 렌더에서만 0→값으로 올라가도록 한다(아래 정의부 주석 참고).
+      discountsLoadedFromAirtable = true;
 
       console.log(`[주문의 고수] Airtable에서 할인 정보 ${mapped.length}건을 불러왔습니다. (전체 ${records.length}건 중 필수값 누락 제외)`);
       if (mapped.length === 0 && records.length > 0){
@@ -3110,11 +3114,42 @@
     scrollToDiscountListSection();
   }
 
+  // [통계 카운트업] 최초 1회만 0→실제값으로 애니메이션하기 위한 상태. discounts가 계속
+  // 갱신돼도(5분 폴링 등) 이 값이 true가 되고 나면 다시 0부터 세지 않는다 — switchTab()은
+  // #page-home의 hidden 클래스만 토글할 뿐 renderHomeSummaryPanel()을 다시 부르지 않으므로,
+  // 홈을 벗어났다가 재진입해도 이 함수 자체가 호출되지 않아 별도 처리 없이도 재실행되지 않는다.
+  let homeSummaryCounted = false;
+  // [통계 카운트업] discounts 배열이 seed(코드 내장 기본값)가 아니라 실제 Airtable 데이터로
+  // 한 번이라도 채워졌는지. loadDiscountsFromAirtable() 성공 시 true가 된다. 페이지 로드
+  // 초반엔 loadDiscountUpdatedAt()가 (아직 seed 상태인) discounts를 보고 renderHomeSummaryPanel()을
+  // 먼저 부를 수 있는데(기존 레이스 대응 로직), 그 시점엔 이 값이 false이므로 카운트업 없이
+  // seed 숫자를 즉시 표시만 하고, "최초 1회 애니메이션" 기회를 소모하지 않는다.
+  let discountsLoadedFromAirtable = false;
+
+  // 이미 계산되어 있는 최종값(target)을 0에서부터 requestAnimationFrame으로 부드럽게 올린다.
+  // 새로운 숫자 계산 로직이 아니라 "표시" 단계에만 관여하며, ease-out(1-(1-t)^3)으로 700~900ms
+  // 사이에 도달한다. 중간값은 Math.round + toLocaleString으로 최종 포맷과 동일하게 맞추고,
+  // 완료 시점엔 부동소수 오차 없이 정확한 target으로 마무리한다.
+  function animateCountUp(el, target, duration){
+    if (!el) return;
+    const start = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * eased).toLocaleString('ko-KR');
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = target.toLocaleString('ko-KR');
+    }
+    requestAnimationFrame(tick);
+  }
+
   // 오늘의 할인 요약 패널: 숫자는 매번 discounts 배열에서 다시 계산한다(하드코딩 없음).
   // - 오늘 확인된 할인 수: isDiscountLive를 통과한 개별 할인 항목 수
   // - 비교 가능한 브랜드 수: 위 항목을 groupDiscountsByBrand()로 묶은 그룹 수
-  // - 현재 가장 큰 할인: 위 항목 중 getSortValue() 최댓값 1건(브랜드명 + formatDiscount 그대로 사용)
-  // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용
+  // - 현재 가장 큰 할인: 위 항목 중 getSortValue() 최댓값 1건(브랜드명 + formatDiscount 그대로 사용) — 애니메이션 없이 즉시 표시
+  // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용, 앞에 고정 녹색 점만 추가
+  // [통계 카운트업] 오늘 확인된 할인/비교 가능한 브랜드 두 숫자만 최초 1회 0→실제값 카운트업한다.
+  // reduced-motion이거나 이미 한 번 카운트했으면 최종값을 즉시 그대로 표시(기존 방식과 동일).
   function renderHomeSummaryPanel(){
     const panel = document.getElementById('home-summary-panel');
     if (!panel) return;
@@ -3129,14 +3164,19 @@
     const maxItem = live.reduce((m, d) => getSortValue(d) > getSortValue(m) ? d : m, live[0]);
     const updatedBadge = formatUpdatedBadge(discountUpdatedAtValue).replace('🟢 UPDATED ', '');
 
+    const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shouldAnimate = !homeSummaryCounted && !reducedMotion && discountsLoadedFromAirtable;
+    const liveCountText = shouldAnimate ? '0' : live.length.toLocaleString('ko-KR');
+    const brandCountText = shouldAnimate ? '0' : groups.length.toLocaleString('ko-KR');
+
     panel.innerHTML = `
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
         <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${live.length.toLocaleString('ko-KR')}</p>
+          <p id="home-summary-count-live" class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${liveCountText}</p>
           <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">오늘 확인된 할인</p>
         </div>
         <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${groups.length.toLocaleString('ko-KR')}</p>
+          <p id="home-summary-count-brands" class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${brandCountText}</p>
           <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">비교 가능한 브랜드</p>
         </div>
         <div class="min-w-0">
@@ -3144,10 +3184,16 @@
           <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--muted);">${escapeHtml(brandDisplayName(maxItem.name))} · 오늘 최대 할인</p>
         </div>
         <div>
-          <p class="font-mono text-base sm:text-lg font-bold" style="color:var(--text);">${escapeHtml(updatedBadge || '-')}</p>
+          <p class="font-mono text-base sm:text-lg font-bold flex items-center gap-1.5" style="color:var(--text);"><span aria-hidden="true" style="display:inline-block; width:6px; height:6px; border-radius:9999px; background:var(--success); flex:none;"></span>${escapeHtml(updatedBadge || '-')}</p>
           <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
         </div>
       </div>`;
+
+    if (shouldAnimate){
+      homeSummaryCounted = true; // 애니메이션 시작 즉시 표시해, 이 사이 다시 호출돼도 재카운트하지 않는다.
+      animateCountUp(document.getElementById('home-summary-count-live'), live.length, 800);
+      animateCountUp(document.getElementById('home-summary-count-brands'), groups.length, 800);
+    }
   }
 
   // 지금 볼 만한 할인: 오늘 라이브 할인을 브랜드로 통합(groupDiscountsByBrand, 기존과 동일한
@@ -10731,8 +10777,13 @@
     renderCategoryChips();
     renderDiscountList();
     if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
-    // [실험판 v1] 안전장치 경로에서도 요약/지금 볼 만한 할인을 함께 채운다
-    if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
+    // [통계 카운트업] 이 안전장치 경로는 원래 무조건 다시 그렸는데, 정상 로드 시에는 이미 위
+    // loadDiscountsFromAirtable() 성공 경로 안에서 renderHomeSummaryPanel()이 한 번 호출돼
+    // 카운트업 애니메이션이 막 시작된 상태다. 여기서 조건 없이 또 부르면 그 즉시 최종값으로
+    // 덮어써서 애니메이션이 보이지도 않고 끝나버린다. homeSummaryCounted는 그 첫 호출이
+    // 애니메이션을 "시작"하는 순간 true가 되므로, 이미 시작됐다면 건너뛰고, Airtable 연동이
+    // 안 됐거나 실패해서 애초에 그 경로를 못 탄 경우(=진짜 안전장치가 필요한 경우)에만 그대로 실행된다.
+    if (typeof renderHomeSummaryPanel === 'function' && !homeSummaryCounted) renderHomeSummaryPanel();
     if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
     startAirtablePolling();
   })();
