@@ -9681,6 +9681,16 @@
           <h4 class="font-display text-base break-keep" style="color:var(--text);">먼저 골라본 ${picks.length}개</h4>
         </div>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
+        <!-- [2026-09-24] 쿠팡 파트너스 고지 — 이 섹션의 첫 상품 카드(고수PICK 1)가 시작되기 직전에
+             배치했다(요건: 승인 심사 시 상품/링크 노출 전에 고지가 먼저 보여야 함). 경고 박스처럼
+             보이지 않도록 위 picks-wrap의 노란 틴트와 다른 중립 var(--card) 배경 + 얇은 var(--line)
+             테두리를 쓰고, 제목 "쿠팡 파트너스 안내"는 작은 안내 라벨로만, 공식 문구 자체는 한 글자도
+             바꾸지 않았다. 문구는 이 한 곳에서만 출력된다(옛 필터-picks 사이 자리에 있던 동일 문구는
+             제거 — 중복 없음). -->
+        <div class="rounded-md p-2.5 sm:p-3 mb-3" style="background:var(--card); border:1px solid var(--line);">
+          <p class="text-xs font-semibold mb-0.5 break-keep" style="color:var(--text);">쿠팡 파트너스 안내</p>
+          <p class="text-[11px] leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${cardsHtml}</div>
         ${extraCount > 0 ? `<button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" class="w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">고수PICK ${extraCount}개 더 보기 ▼</button>` : ''}
       </div>`;
@@ -9821,13 +9831,6 @@
       return (!p.partnersHtml && !autumnGiftIsRenderDuplicate(i)) ? autumnGiftListRowHtml(p, i) : '';
     }).join('');
 
-    // 추석 종료일(HOTDEALS_CHUSEOK_END_DATE) 전에는 추석 제목, 지나면 시즌 중립 제목으로 자동 전환.
-    const chuseok = HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive();
-    const sectionTitle = chuseok ? '🎁 추석 선물세트 핫딜' : '🔥 쇼핑핫딜';
-    const sectionSub = chuseok
-      ? '추석 선물세트와 명절 선물용 상품을 한곳에서 확인해보세요.'
-      : '지금 주목할 만한 쿠팡 상품을 한곳에서 확인해보세요.';
-
     root.innerHTML = `
       <section class="mb-8" style="position:relative;">
         <!-- ④ 스크롤 고정 요약바 — 기본 숨김. 사이트 상단 sticky 헤더 바로 아래에 붙도록 top을
@@ -9841,16 +9844,13 @@
             </div>
           </div>
         </div>
-        <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
-        <p class="text-xs mb-1.5 break-keep" style="color:var(--muted);">${sectionSub}</p>
-        <!-- [2026-09-24] 쿠팡 파트너스 최종승인 고지 위치 개선: 이 섹션의 첫 쿠팡 상품(바로 아래
-             autumnGiftPicksSectionHtml()의 고수PICK)이 등장하기 "직전"으로 옮겼다. 기존에는 이
-             문구가 상품 그리드·리스트 전부를 지난 뒤(옛 9862행 자리, .agp-light 맨 끝)에만 있어
-             실제 상품/링크를 다 본 다음에야 고지를 보게 되는 구조였다. 문구·톤·다른 고지 인스턴스
-             (홈 광고 카드, 추석 페스타 CTA 카드 — 각자 다른 쿠팡 링크라 그대로 둠)는 손대지 않고
-             이 한 줄만 이동했다. 폰트도 10px→12px(text-xs)로 살짝 키워 "지나치게 작은 폰트" 우려를
-             없앴다(opacity 축소는 원래도 없었음, 그대로 유지). -->
-        <p class="text-xs mb-3 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
+        <!-- [2026-09-24] 필터 바로 아래에서 반복되던 두 번째 "🔥 쇼핑핫딜"/"🎁 추석 선물세트 핫딜"
+             제목+부제(예전 sectionTitle/sectionSub)를 제거했다. 페이지 최상단 renderHotdealsHero()의
+             제목("쇼핑핫딜")과 짧은 구간에서 중복돼 구분 역할이 약했다는 지적 반영 — 필터 → 고수PICK
+             영역으로 바로 이어지게 한다. 쿠팡 파트너스 고지문구는 삭제가 아니라 고수PICK 섹션
+             내부(autumnGiftPicksSectionHtml, 설명 문단 바로 아래)로 옮겼다 — 그 안에서만 정확히
+             1번 출력되므로 중복 노출 없음. 추석 D-day 안내 스트립(autumnGiftDeadlineStripHtml)은
+             이번 작업 범위(요건 9: 시즌 문구 미변경)가 아니라 그대로 둔다. -->
         ${autumnGiftDeadlineStripHtml()}
         <div class="agp-light rounded-xl p-3 sm:p-4">
         ${autumnGiftPicksSectionHtml()}
