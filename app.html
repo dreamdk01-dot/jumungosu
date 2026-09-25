@@ -242,6 +242,15 @@
   }
 
 
+  /* [소식·제보 목록 UI 개선] #board-list를 하나의 카드(rounded-lg + var(--card))로 감싸면서,
+     각 글(postCardHtml)이 저마다 갖고 있던 border-bottom이 마지막 글에서는 카드 자체의 아래쪽
+     테두리와 겹쳐 두 줄처럼 보인다 — 그 마지막 글의 border-bottom만 지운다. postCardHtml의
+     마크업 자체(border-bottom 지정 방식)는 건드리지 않고 CSS로만 정리했다.
+     board-post-row는 클릭 가능한 글 목록 행에 마우스를 올렸을 때 surface가 아주 살짝
+     밝아지는 정도의 절제된 hover만 준다(강한 노랑/이동 애니메이션 없음, 요건10). */
+  #board-list > div:last-child{ border-bottom:none !important; }
+  .board-post-row:hover{ background:var(--card-alt); }
+
   .dashed-divider{
     border-top:2px dashed var(--line);
   }
@@ -798,27 +807,40 @@
      함수명·URL(/board)·DB 컬럼(board, is_notice)은 그대로다. -->
 <main id="page-board" class="max-w-5xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
-    <h2 id="page-board-title" class="font-display text-2xl mb-1 break-keep" style="color:var(--primary);">주문의고수 소식·제보</h2>
-    <p class="text-sm mb-4 break-keep" style="color:var(--muted);">주문의고수 업데이트 소식과 할인·쇼핑 정보 제보, 추천 질문을 확인해보세요.</p>
+    <!-- [소식·제보 목록 UI 개선] 제목을 배달할인 페이지와 같은 색상 위계로 맞췄다 — 예전엔 제목
+         전체가 var(--primary)(노랑)였는데, 배달할인 제목은 기본이 밝은 --text이고 강조 문구만
+         --primary를 쓴다. 여기서도 "제목 전체 노랑" 대신 기본 --text로 바꾸고, 설명문은
+         --text-secondary(배달할인 설명문과 동일 색)로, 제목-설명 간격도 배달할인의 mb-3/mb-6
+         리듬을 그대로 가져왔다. -->
+    <h2 id="page-board-title" class="font-display text-2xl sm:text-3xl font-extrabold leading-snug mb-2 break-keep" style="color:var(--text);">주문의고수 소식·제보</h2>
+    <p class="text-sm sm:text-base leading-relaxed mb-6 break-keep" style="color:var(--text-secondary);">주문의고수 업데이트 소식과 할인·쇼핑 정보 제보, 추천 질문을 확인해보세요.</p>
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
-      <!-- 좌측 사이드바: 카테고리 메뉴 (전체 / 소식 / 제보·질문) -->
+      <!-- 좌측 사이드바: 카테고리 메뉴 (전체 / 소식 / 제보·질문). [목록 UI 개선] 선택 상태를
+           "면적 전체 노랑 채우기"에서 "다크 surface 유지 + 얇은 노란 테두리 + 노란 텍스트"로
+           바꿨다 — 배달할인 chip의 큰 stamp 채우기는 작은 pill에는 어울려도, 이렇게 큰
+           사이드바 버튼 전체를 채우면 화면을 지배해 버려서(요건 6) 여기서는 border-accent로
+           절제했다. 비선택은 배달할인 카드와 같은 --card/--line, hover도 같은 계열로 추가. -->
       <aside class="sm:col-span-1">
         <nav class="grid grid-cols-3 gap-2 sm:flex sm:flex-col">
-          <button id="board-tab-all" onclick="switchBoardTab('all')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-bold transition break-keep" style="background:var(--primary); color:#1C1A17;">🗂 전체</button>
-          <button id="board-tab-news" onclick="switchBoardTab('news')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition break-keep" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📢 소식</button>
-          <button id="board-tab-report" onclick="switchBoardTab('report')" class="sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition break-keep" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 제보·질문</button>
+          <button id="board-tab-all" onclick="switchBoardTab('all')" class="board-tab-btn sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-bold transition break-keep" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">🗂 전체</button>
+          <button id="board-tab-news" onclick="switchBoardTab('news')" class="board-tab-btn sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition break-keep" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">📢 소식</button>
+          <button id="board-tab-report" onclick="switchBoardTab('report')" class="board-tab-btn sm:shrink-0 sm:w-full text-center sm:text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold transition break-keep" style="background:var(--card); color:var(--muted); border:1px solid var(--line);">🚨 제보·질문</button>
         </nav>
       </aside>
 
       <!-- 우측 메인 콘텐츠: 글쓰기 + 게시글 리스트 -->
       <div class="sm:col-span-3">
-        <!-- 정렬 탭 + 글쓰기 CTA (한 줄에 배치해 목록에 더 빨리 도달하도록 함) -->
+        <!-- 정렬 탭 + 글쓰기 CTA (한 줄에 배치해 목록에 더 빨리 도달하도록 함). [목록 UI 개선]
+             정렬 탭도 왼쪽 카테고리와 같은 언어(card-alt 배경 + primary 텍스트)로 통일해 "최신"이
+             큰 노란 알약처럼 튀지 않게 했다. 글쓰기 버튼은 점선 테두리 대신, 이 파일 다른 곳의
+             보조 버튼(예: "조건 변경")과 같은 실선 --line 테두리 + --card-alt 배경으로 바꿔
+             나머지 UI와 따로 노는 느낌을 줄였다 — 클릭/권한 로직은 그대로다. -->
         <div class="flex items-center justify-between gap-2 mb-4">
           <div class="flex items-center gap-1">
-            <button id="board-sort-latest" onclick="setBoardSort('latest')" class="px-3 py-1.5 rounded-md text-xs font-bold" style="background:var(--primary); color:#1C1A17;">🕐 최신</button>
+            <button id="board-sort-latest" onclick="setBoardSort('latest')" class="px-3 py-1.5 rounded-md text-xs font-bold" style="background:var(--card-alt); color:var(--primary);">🕐 최신</button>
             <button id="board-sort-popular" onclick="setBoardSort('popular')" class="px-3 py-1.5 rounded-md text-xs font-semibold" style="background:transparent; color:var(--muted);">🔥 인기</button>
           </div>
-          <button onclick="openBoardCompose()" class="shrink-0 px-4 py-2 rounded-md font-display text-sm" style="background:var(--card); border:1px dashed var(--line); color:var(--muted);">✏️ 글쓰기</button>
+          <button onclick="openBoardCompose()" class="shrink-0 px-4 py-2 rounded-md font-display text-sm font-semibold" style="background:var(--card-alt); border:1px solid var(--line); color:var(--text);">✏️ 글쓰기</button>
         </div>
 
         <!-- 글쓰기 폼 -->
@@ -999,8 +1021,12 @@
           <p id="board-compose-error" class="text-xs hidden" style="color:var(--accent);"></p>
         </div>
 
-        <!-- 게시글 목록 -->
-        <div id="board-list"></div>
+        <!-- 게시글 목록. [목록 UI 개선] 예전엔 각 글이 페이지 배경 위에 바로 떠 있고 얇은
+             구분선만 있었는데, 배달할인의 "오늘 선착순 쿠폰" 리스트(#limited-time-coupons-list)와
+             같은 방식 — rounded-lg + var(--card) + var(--line) 테두리로 감싼 하나의 카드 —
+             로 통일해 "카드와 표의 중간"인 정돈된 리스트로 만들었다. 안의 각 글 마크업/로직
+             (postCardHtml)은 그대로다 — 마지막 글의 중복 하단 테두리만 CSS(:last-child)로 지운다. -->
+        <div id="board-list" class="rounded-lg" style="background:var(--card); border:1px solid var(--line);"></div>
         <div id="board-pagination"></div>
       </div>
     </div>
@@ -4771,7 +4797,7 @@
       const btn = document.getElementById(`board-tab-${c.key}`);
       if (!btn) return;
       if (c.key === tab){
-        btn.style.background = 'var(--primary)'; btn.style.color = '#1C1A17'; btn.style.border = 'none';
+        btn.style.background = 'var(--card-alt)'; btn.style.color = 'var(--primary)'; btn.style.border = '1px solid var(--primary)';
       } else {
         btn.style.background = 'var(--card)'; btn.style.color = 'var(--muted)'; btn.style.border = '1px solid var(--line)';
       }
@@ -6840,12 +6866,12 @@
         ? `<span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:var(--primary); color:#1C1A17;">📌 공지</span>`
         : '';
       return `
-      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="flex items-start gap-3 py-3 px-1 cursor-pointer" style="border-bottom:1px solid var(--line); ${p.isNotice ? 'background:rgba(244,200,74,0.06);' : ''}">
+      <div id="board-post-${p.id}" onclick="togglePostExpand(${p.id})" class="board-post-row flex items-start gap-3 px-3 sm:px-4 py-3 cursor-pointer" style="border-bottom:1px solid var(--line); ${p.isNotice ? 'background:rgba(244,200,74,0.06);' : ''}">
         ${noticeBadge}
-        <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:${tag.color}22; color:${tag.color};">${escapeHtml(tag.label)}</span>
+        <span class="text-[11px] font-bold px-1.5 py-1 rounded shrink-0 mt-0.5" style="background:${tag.color}18; color:${tag.color};">${escapeHtml(tag.label)}</span>
         <div class="flex-1 min-w-0">
           <p class="text-sm sm:text-base font-semibold break-keep" style="color:var(--text);">${escapeHtml(title)}${commentCount > 0 ? ` <span class="text-xs font-bold whitespace-nowrap" style="color:var(--primary);">[${commentCount}]</span>` : ''}</p>
-          <div class="flex items-center gap-1.5 text-[12px] mt-1 flex-wrap" style="color:var(--muted);">
+          <div class="flex items-center gap-1.5 text-[12px] mt-1.5 flex-wrap" style="color:var(--muted);">
             <span>${authorLevelBadge(p.author, p.authorId)}${escapeHtml(p.author)}</span>
             <span>·</span>
             <span>${relativeTimeLabel(p.createdAt)}</span>
@@ -6857,7 +6883,7 @@
           if (!imgs.length) return '';
           return `
             <div class="relative shrink-0 mt-0.5">
-              <img src="${imgs[0]}" class="w-12 h-12 rounded-md object-cover" style="background:var(--card-alt);" alt="" loading="lazy">
+              <img src="${imgs[0]}" class="w-12 h-12 rounded-md object-cover" style="background:var(--card-alt); border:1px solid var(--line);" alt="" loading="lazy">
               ${imgs.length > 1 ? `<span class="absolute -top-1 -right-1 text-[9px] font-bold px-1 rounded-full leading-tight" style="background:var(--accent); color:#fff;">+${imgs.length - 1}</span>` : ''}
             </div>`;
         })()}
@@ -6909,7 +6935,7 @@
     const latestBtn = document.getElementById('board-sort-latest');
     const popularBtn = document.getElementById('board-sort-popular');
     if (latestBtn && popularBtn){
-      const activeStyle = { background: 'var(--primary)', color: '#1C1A17', fontWeight: '700' };
+      const activeStyle = { background: 'var(--card-alt)', color: 'var(--primary)', fontWeight: '700' };
       const inactiveStyle = { background: 'transparent', color: 'var(--muted)', fontWeight: '600' };
       const apply = (btn, style) => { btn.style.background = style.background; btn.style.color = style.color; };
       apply(latestBtn, mode === 'latest' ? activeStyle : inactiveStyle);
