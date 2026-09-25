@@ -329,17 +329,6 @@
     --agp-price:#C2410C;
     background:var(--bg); color:var(--text);
   }
-  /* [소식·제보 디자인 통일] 게시판 전용 스코프 — .agp-light와 완전히 같은 값(쇼핑핫딜에서 이미
-     검증된 팔레트)을 그대로 재사용하되, 별도 selector로 둬서 "쇼핑용"과 "게시판용"이 서로 다른
-     이유로 나중에 바뀌어도 서로 영향을 주지 않게 한다(요건: 게시판 전용 selector/scope 사용).
-     #page-board 전체(제목/카테고리 사이드바/정렬탭/글쓰기폼/목록/상세/댓글)에 적용한다 — 안쪽은
-     이미 거의 전부 var(--card)/var(--text)/var(--muted)/var(--primary)/var(--line)을 쓰고
-     있어서 이 스코프 하나로 자동으로 따라온다. */
-  .board-light{
-    --bg:#F5F6F8; --surface:#FFFFFF; --card:#FFFFFF; --card-alt:#EEF0F3;
-    --text:#171717; --text-secondary:#3C4451; --muted:#5F6B7A; --line:#E1E4E9; --line-strong:#C9CED6; --primary:#A86E00; --accent:#D8320A;
-    background:var(--bg); color:var(--text);
-  }
   .agp-price{ color:var(--agp-price); }
   /* 카드 본문(텍스트 영역) 링크: 밑줄 없이 카드처럼 보이되 hover 시 살짝 강조 */
   .agp-card-link{ text-decoration:none; color:inherit; display:block; }
@@ -807,7 +796,7 @@
      (할인의 고수·실시간 제보·오늘 뭐 먹지·우점자·레시피) 글은 DB를 건드리지 않고 표시 단계에서
      boardTabOfPost()로 두 분류에 묶어 보여준다(기존 recipe 숨김 처리와 같은 방식). 내부 탭 id·
      함수명·URL(/board)·DB 컬럼(board, is_notice)은 그대로다. -->
-<main id="page-board" class="board-light max-w-5xl mx-auto px-4 pb-20 hidden">
+<main id="page-board" class="max-w-5xl mx-auto px-4 pb-20 hidden">
   <section class="mt-8">
     <h2 id="page-board-title" class="font-display text-2xl mb-1 break-keep" style="color:var(--primary);">주문의고수 소식·제보</h2>
     <p class="text-sm mb-4 break-keep" style="color:var(--muted);">주문의고수 업데이트 소식과 할인·쇼핑 정보 제보, 추천 질문을 확인해보세요.</p>
