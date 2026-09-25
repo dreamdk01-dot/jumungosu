@@ -16,9 +16,9 @@
   gtag('js', new Date());
   gtag('config', 'G-E39CSMV1DV');
 </script>
-<title>주문의고수 | 배달의민족·요기요·쿠팡이츠·땡겨요 할인 통합 비교</title>
-<meta id="meta-description" name="description" content="배달의민족·요기요·쿠팡이츠·땡겨요 치킨·피자·버거 할인쿠폰을 한 곳에서 비교하세요. 매일 업데이트되는 브랜드별 최저가 할인정보!">
-<meta name="keywords" content="배달앱 할인, 배달의민족 할인, 요기요 할인, 쿠팡이츠 할인, 땡겨요 할인, 치킨 할인, 배달 쿠폰, 프랜차이즈 할인 비교">
+<title>주문의고수 | 배달의민족·쿠팡이츠·요기요·땡겨요 할인 통합 비교</title>
+<meta id="meta-description" name="description" content="배달의민족·쿠팡이츠·요기요·땡겨요 치킨·피자·버거 할인쿠폰을 한 곳에서 비교하세요. 매일 업데이트되는 브랜드별 최저가 할인정보!">
+<meta name="keywords" content="배달앱 할인, 배달의민족 할인, 쿠팡이츠 할인, 요기요 할인, 땡겨요 할인, 치킨 할인, 배달 쿠폰, 프랜차이즈 할인 비교">
 <meta id="meta-robots" name="robots" content="index, follow">
 <link id="meta-canonical" rel="canonical" href="https://www.jumungosu.com/">
 
@@ -58,7 +58,7 @@
         {
           "@type": "Question",
           "name": "주문의고수는 어떤 서비스인가요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "배민·요기요·쿠팡이츠·땡겨요의 정액 할인 정보를 한 화면에서 비교하고, 조건에 맞는 쇼핑 상품을 탐색할 수 있는 서비스입니다." }
+          "acceptedAnswer": { "@type": "Answer", "text": "배민·쿠팡이츠·요기요·땡겨요의 정액 할인 정보를 한 화면에서 비교하고, 조건에 맞는 쇼핑 상품을 탐색할 수 있는 서비스입니다." }
         },
         {
           "@type": "Question",
@@ -90,7 +90,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="주문의고수">
 <meta id="meta-og-title" property="og:title" content="주문의고수 | 배달앱 할인 통합 비교">
-<meta id="meta-og-description" property="og:description" content="배달의민족·요기요·쿠팡이츠·땡겨요 프랜차이즈 정액 할인을 한 곳에서 비교하세요. 매일 업데이트!">
+<meta id="meta-og-description" property="og:description" content="배달의민족·쿠팡이츠·요기요·땡겨요 프랜차이즈 정액 할인을 한 곳에서 비교하세요. 매일 업데이트!">
 <meta id="meta-og-url" property="og:url" content="https://www.jumungosu.com/">
 <meta property="og:image" content="https://www.jumungosu.com/og-image.png">
 <meta property="og:locale" content="ko_KR">
@@ -173,6 +173,7 @@
     --accent-hover:#FF8B74;
     --warning:#FF7657;
     --success:#65C69A;
+    --shopping-accent-border: rgba(255,107,107,.35); /* 쇼핑 유도 배너(추석선물 등) 전용 — 노란 CTA보다는 약하게, 코랄핑크(#FF6B6B) 테두리 */
     --tag-baemin:#34C9B0;
     --tag-yogiyo:#FF3D71;
     --tag-coupang:#5B8DEF;
@@ -362,6 +363,32 @@
   }
   .form-input:disabled{ cursor: not-allowed; }
 
+  /* 메인 검색창(#hero_search_brand) 전용 — 다크 Hero 배경과 구분되도록 이 입력 하나만 흰색.
+     [검색/필터 통합] 기존엔 이 위에 별도의 하단 브랜드 검색창(#search_brand)이 하나 더 있어
+     동일 셀렉터를 공유했지만, 그 입력을 완전히 제거하고 이 검색창 하나만 남기면서 셀렉터도
+     여기 하나로 정리했다. 전역 .form-input(로그인/회원가입/게시판/관리자 입력)은 건드리지 않는다.
+     포커스 링은 위 .form-input:focus(골드 border + 옅은 골드 그림자)를 그대로 물려받는다. */
+  #hero_search_brand{
+    background:#FFFFFF;
+    color:#171717;
+    border:1px solid #D9DDE3;
+    -webkit-text-fill-color:#171717; /* iOS Safari가 type=search에 자체 글자색을 입히는 것 방지 */
+  }
+  #hero_search_brand::placeholder{ color:#9CA3AF; opacity:1; font-size:.9em; } /* 360px에서 문구 끝이 잘리지 않도록 살짝(입력 글자 17.3px → 약 15.5px) 축소. 입력한 글자 크기는 그대로 */
+  .hero-search-icon{ color:#4B5563; }
+  #brand-search-clear{ color:#6B7280 !important; } /* 하단 검색창에서 옮겨온 × 삭제 버튼 — 흰 배경에 맞춘 회색 그대로 재사용 */
+
+  /* [모바일 Sticky 검색 — 입력 글자색 수정] #hero_search_brand_sticky는 배경이 흰색인데 입력 글자색이
+     다크 테마 기본값(거의 흰색)을 그대로 물려받아 타이핑한 글자가 안 보이는 문제가 있었다. 배경/
+     테두리/크기/위치는 전혀 건드리지 않고, 위 #hero_search_brand와 동일한 방식(진한 텍스트색 +
+     -webkit-text-fill-color로 iOS Safari의 자체 글자색 강제 방지)만 이 입력에도 적용한다.
+     placeholder는 기존과 동일한 회색(#9CA3AF)으로 실제 입력값과 확실히 구분되게 유지한다. */
+  #hero_search_brand_sticky{
+    color:#111827;
+    -webkit-text-fill-color:#111827;
+  }
+  #hero_search_brand_sticky::placeholder{ color:#9CA3AF; opacity:1; }
+
   .scrollbar-none::-webkit-scrollbar{ display:none; }
   .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
 
@@ -412,9 +439,11 @@
     padding-top: max(32px, calc(env(safe-area-inset-top, 0px) + 16px));
   }
 
-  /* type="search" 사용 시 브라우저 기본 취소(x) 버튼이 커스텀 × 버튼과 겹치지 않도록 숨김 */
-  #search_brand::-webkit-search-cancel-button,
-  #search_brand::-webkit-search-decoration{
+  /* type="search" 사용 시 브라우저 기본 취소(x) 버튼이 커스텀 × 버튼(#brand-search-clear)과
+     겹치지 않도록 숨김. 원래 하단 검색창(#search_brand) 전용 규칙이었는데, 그 입력이 메인
+     검색창(#hero_search_brand) 하나로 통합되면서 셀렉터도 그대로 옮겨왔다. */
+  #hero_search_brand::-webkit-search-cancel-button,
+  #hero_search_brand::-webkit-search-decoration{
     -webkit-appearance: none;
     appearance: none;
   }
@@ -492,15 +521,29 @@
   </div>
 </header>
 
-<!-- ===== 카카오 애드핏 배너 (320x50) — id는 /shopping, /hot-deals에서만 숨기기 위한 것으로,
-     광고 자체의 스크립트/ID/정책 문구는 그대로 둔다 ===== -->
-<div id="top-ad-banner-wrap" class="max-w-5xl mx-auto px-4 pt-3 flex justify-center">
-  <ins class="kakao_ad_area" style="display:none;"
-    data-ad-unit = "DAN-dW2bG0VTBIhfCcOV"
-    data-ad-width = "320"
-    data-ad-height = "50"></ins>
+<!-- [모바일 Sticky 검색] 원본 검색창(#hero_search_brand)이 스크롤로 고정 헤더 아래로 사라지면
+     JS(setupMobileStickySearchObserver, IntersectionObserver 기반)가 이 bar를 보여준다.
+     헤더/네비게이션 자체는 그대로 두고(기존 sticky 동작 무변경), 이 bar만 헤더 바로 아래에
+     별도로 고정한다(top은 JS가 헤더 실측 높이로 매번 맞춤 — autumnGiftUpdateStickyBar()와 동일한
+     기존 패턴 재사용). 검색 로직은 새로 만들지 않고 기존 handleBrandSearchInput()/brandSearchQuery를
+     그대로 공유하며, 이 input은 그 값을 미러링만 한다(handleBrandSearchInputSynced(), 정의부는
+     clearBrandSearch() 근처 참고). class="hidden sm:hidden"은 중복이 아니라 안전장치다 —
+     JS가 모바일에서만 앞의 hidden을 떼어 보여주고, sm:hidden은 PC 폭에서 항상 이겨 어떤 경우에도
+     PC에는 노출되지 않게 한다. -->
+<div id="mobile-sticky-search" class="hidden sm:hidden fixed left-0 right-0 z-40 px-4 py-2" style="top:0; background:rgba(24,27,35,0.96); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-bottom:1px solid var(--line);">
+  <div class="relative">
+    <input id="hero_search_brand_sticky" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
+      oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand_sticky')"
+      class="form-input w-full pl-11 pr-9 py-3 rounded-xl text-sm outline-none">
+    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
+    <button id="brand-search-clear-sticky" onclick="clearBrandSearch()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
+  </div>
+  <!-- [모바일 자동완성] 검색어가 있을 때만 검색창 바로 아래로 자연스럽게 확장된다(fixed bar 자체의
+       일반 흐름 안이라 별도 absolute 오버레이가 아니다 — bar 높이가 그만큼 늘어날 뿐). 다크 테마
+       카드 톤(var(--card))이라 흰 입력창보다 시각적으로 차분하다. 내용은 renderStickyAutocomplete()
+       가 채운다. -->
+  <div id="mobile-sticky-search-suggestions" class="hidden mt-2 rounded-xl overflow-hidden" style="background:var(--card); border:1px solid var(--line);"></div>
 </div>
-<script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
 
 <!-- ===== HOME PAGE ===== -->
 <main id="page-home" class="max-w-5xl mx-auto px-4 pb-20">
@@ -512,143 +555,105 @@
        찾아 <h1>로 승격/복원하는 데 쓰는 값이라 절대 바꾸지 않고 그대로 유지했다(텍스트/스타일만
        교체 — 프로모트 로직은 id 참조라 영향 없음). -->
   <section class="mt-6 mb-8 sm:mt-12 sm:mb-12">
-    <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);">배민 · 요기요 · 쿠팡이츠 · 땡겨요 할인 비교</p>
-    <h2 id="page-home-title" class="font-display text-[28px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
-      먹고 싶은 브랜드, <span style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
+    <!-- [최상단 앱명 브랜드 컬러] 앱 이름 4개에만 하단 "상세조건 > 배달 앱" 필터 버튼이 이미 쓰는
+         고유색(--tag-baemin/--tag-yogiyo/--tag-coupang/--tag-ddangyo)을 그대로 재사용한다 —
+         새 색상 값을 만들지 않았다. 구분자 「·」와 "할인 비교"는 기존 --text-secondary 그대로.
+         font-size/weight/letter-spacing/줄바꿈 등은 부모 <p>의 기존 클래스를 그대로 물려받으므로
+         span에는 color만 추가했다. -->
+    <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);"><span style="color:var(--tag-baemin);">배민</span> · <span style="color:var(--tag-coupang);">쿠팡이츠</span> · <span style="color:var(--tag-yogiyo);">요기요</span> · <span style="color:var(--tag-ddangyo);">땡겨요</span> 할인 비교</p>
+    <h2 id="page-home-title" class="font-display text-[24px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
+      먹고 싶은 브랜드,<br class="sm:hidden"> <span class="whitespace-nowrap" style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
     </h2>
     <p class="text-sm sm:text-base leading-relaxed break-keep mb-6" style="color:var(--text-secondary);">
       여러 배달앱을 하나씩 열어보지 않아도 원하는 브랜드의 할인을 한곳에서 비교할 수 있어요.
     </p>
 
-    <!-- Hero 검색창: 별도의 새 입력(#hero_search_brand)이지만 기존 브랜드 검색 로직
-         (brandSearchQuery/handleBrandSearchInput/renderDiscountList)을 그대로 재사용한다.
-         handleHeroSearchInput()은 값을 아래 STEP 섹션의 실제 입력(#search_brand)에도
-         동기화한 뒤 handleBrandSearchInput()을 호출하므로, 필터링 로직은 완전히 동일하다.
-         결과는 화면 아래(기존 할인 리스트)에 그려지므로 Enter를 누르면 그 지점으로
-         스크롤한다(기존 scrollToBrandSearch() 재사용). -->
-    <div class="relative mb-4">
-      <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛처럼 브랜드를 검색하세요" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
-        oninput="handleHeroSearchInput(this.value)"
-        onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
-        class="form-input w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none" style="background:var(--card-alt); border:1px solid var(--line-strong); color:var(--text);">
-      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg" style="color:var(--muted);">🔍</span>
-    </div>
-
-    <!-- 인기 브랜드 칩: renderTodayBrandLinks()가 이미 존재했지만(기존 코드에 정의만 되어 있고
-         대상 DOM이 없어 실제로는 한 번도 그려지지 않던 미사용 함수) 실제 요청 요건과
-         정확히 일치해 그대로 재사용했다 — BRAND_LINKS(브랜드 SEO 페이지 10개) 중 "오늘"
-         실제로 라이브 할인이 있는 브랜드만 금액 큰 순 최대 5개, 하드코딩 없이 실데이터 기준.
-         템플릿(칩 스타일)만 새로 입혔고 데이터 로직/함수명은 전혀 손대지 않았다. -->
-    <div id="today-brand-links-section" class="hidden flex items-start gap-2 flex-wrap">
-      <span class="text-xs shrink-0 mt-1.5" style="color:var(--text-secondary);">인기 검색:</span>
-      <div id="today-brand-links" class="flex items-center gap-2 flex-wrap"></div>
-    </div>
-  </section>
-
-  <!-- ===== [실험판 v1] 목적별 빠른 선택 =====
-       기존 STEP2 카테고리 칩(#category-filters)과 별개의 새 버튼들이지만, 누르면 기존
-       activeCategoryFilters/updateChipStyles/renderDiscountList를 그대로 호출해 아래
-       STEP2 칩과 동일한 상태를 공유한다(새 필터 시스템을 만들지 않음). -->
-  <section class="mb-8 sm:mb-10">
-    <div class="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
-      <button type="button" onclick="quickFilterCategory('치킨')" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--card); border:1px solid var(--line-strong); color:var(--text);">치킨 할인</button>
-      <button type="button" onclick="quickFilterCategory('피자')" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--card); border:1px solid var(--line-strong); color:var(--text);">피자 할인</button>
-      <button type="button" onclick="quickFilterCategory('버거')" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--card); border:1px solid var(--line-strong); color:var(--text);">버거 할인</button>
-      <button type="button" onclick="quickFilterCategory('카페/디저트')" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--card); border:1px solid var(--line-strong); color:var(--text);">카페·디저트</button>
-      <button type="button" onclick="quickSortByMaxDiscount()" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--primary-soft); border:1px solid var(--primary); color:var(--primary);">할인 큰 순</button>
-      <button type="button" onclick="showAllBrandDiscounts()" class="chip shrink-0 px-4 py-2 rounded-full text-sm font-semibold" style="background:var(--card); border:1px solid var(--line-strong); color:var(--text);">전체 할인 보기</button>
-    </div>
-  </section>
-
-  <!-- ===== [실험판 v1] 오늘의 할인 요약 =====
-       숫자는 하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서
-       매번 다시 계산한다 — 초기 Airtable 로딩 완료 시 + 5분 폴링마다 자동 갱신. -->
-  <section class="mb-8 sm:mb-10">
-    <div id="home-summary-panel" class="rounded-lg p-5 sm:p-6" style="background:var(--card); border:1px solid var(--line);">
+    <!-- [현황판 위치 이동] 설명문 바로 아래, 검색영역(코랄 wrapper)보다 위로 옮겼다. 숫자는
+         하드코딩하지 않고 renderHomeSummaryPanel()이 discounts 배열(기존 데이터)에서 매번 다시
+         계산한다 — 초기 Airtable 로딩 완료 시 + 5분 폴링마다 자동 갱신(로직 무변경). 래퍼
+         자체는 더 이상 PC 카드 스타일을 직접 갖지 않는다 — renderHomeSummaryPanel()이 PC용
+         4칸 카드(hidden sm:block, 기존 스타일 그대로)와 모바일용 컴팩트 요약바(sm:hidden, 새로
+         추가)를 각각 자기 스타일과 함께 렌더링해 같은 데이터를 다르게 표현한다(정의부 참고). -->
+    <div id="home-summary-panel" class="mb-8 sm:mb-10">
       <p class="text-sm" style="color:var(--text-secondary);">오늘 할인 정보를 불러오는 중이에요…</p>
     </div>
-  </section>
 
-  <!-- ===== [실험판 v1] 지금 볼 만한 할인 =====
-       선정 기준: 카테고리 무관, 오늘 라이브(isDiscountLive)인 할인을 기존 groupDiscountsByBrand()로
-       브랜드 통합한 뒤 groupMaxValue(브랜드 내 최고 할인액) 내림차순 정렬 → 상위 6개.
-       "상세 보기"는 새 모달을 만들지 않고 기존 goToBrandInDiscountList()를 재사용해 아래
-       실제 할인 리스트의 해당 브랜드 카드로 스크롤 이동 + 하이라이트한다. -->
-  <section id="home-spotlight-section" class="hidden mb-10 sm:mb-12">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="font-display text-lg sm:text-xl" style="color:var(--text);">지금 볼 만한 할인</h2>
-      <button type="button" onclick="showAllBrandDiscounts()" class="text-xs sm:text-sm font-semibold" style="color:var(--primary);">전체 보기 →</button>
-    </div>
-    <div id="home-spotlight-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-  </section>
+    <!-- [검색 영역 통합] 브랜드 검색창 + 인기검색 + 상세조건을 하나의 wrapper로 묶어 "여기가
+         검색/탐색 영역"임을 한 눈에 보이게 한다. 테두리는 쇼핑 배너와 같은 --shopping-accent-border
+         (코랄핑크, 옅은 opacity)를 재사용해 새 색상 토큰을 만들지 않았고, 배경은 --bg(페이지
+         배경과 동일)라 별도의 밝은 카드처럼 보이지 않는다. 상세조건을 펼치면 이 박스 자체의
+         높이가 늘어나며 내부에서 자연스럽게 확장된다(별도 카드 없음). 내부 요소(검색창/인기검색/
+         상세조건)의 마크업과 로직은 전혀 건드리지 않고 감싸기만 했다. -->
+    <div class="rounded-lg p-4 sm:p-5" style="background:var(--bg); border:1px solid var(--shopping-accent-border);">
+      <!-- [검색/필터 통합] 메인 검색창 — 기존엔 이 입력(#hero_search_brand)이 아래 "할인 찾기" 박스의
+           #search_brand로 값을 동기화하는 보조 입력이었지만, 이제 브랜드 검색을 담당하는 유일한
+           입력이다. 기존 brandSearchQuery/handleBrandSearchInput()/renderDiscountList()를 그대로
+           재사용하며(필터링 로직 변경 없음), 오직 #search_brand로의 동기화 코드만 걷어냈다.
+           결과는 화면 아래(기존 할인 리스트)에 그려지므로 Enter를 누르면 그 지점으로
+           스크롤한다(scrollToBrandSearch() — 대상이 사라진 옛 #brand-search-section 대신 이제
+           #discount-list-section으로 스크롤하도록 재사용, 아래 함수 정의부 주석 참고).
+           우측 × 버튼(#brand-search-clear)은 기존 하단 검색창에 있던 것을 그대로 옮겨왔다. -->
+      <div class="relative mb-4">
+        <input id="hero_search_brand" type="search" value="" placeholder="BBQ, BHC, 피자헛 등 브랜드 검색" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"
+          oninput="handleBrandSearchInputSynced(this.value, 'hero_search_brand')"
+          onkeydown="if(event.key==='Enter'){ scrollToBrandSearch(); }"
+          class="form-input w-full pl-12 pr-9 py-4 rounded-xl text-base outline-none">
+        <span class="hero-search-icon absolute left-4 top-1/2 -translate-y-1/2 text-sm" aria-hidden="true">🔍</span>
+        <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-lg leading-none" aria-label="검색어 지우기">×</button>
+      </div>
 
+      <!-- [인기검색 정리] renderTodayBrandLinks()가 그린다 — 가격 없이 브랜드명만, 한 줄에
+           들어가는 만큼만 노출한다(정확한 로직은 함수 정의부 주석 참고). 라벨+칩을 한 flex row로
+           합쳐 flex-nowrap + overflow-hidden으로 무조건 한 줄만 허용하고, 넘치는 칩은 JS가 렌더
+           전에 미리 개수를 줄여서 잘라내지(...) 않는다. -->
+      <div id="today-brand-links-section" class="hidden flex items-center gap-2 flex-nowrap overflow-hidden">
+        <span class="text-xs shrink-0" style="color:var(--text-secondary);">인기 검색:</span>
+        <div id="today-brand-links" class="flex items-center gap-2 flex-nowrap overflow-hidden"></div>
+      </div>
 
-  <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, 작고 담백한
-       시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
-       syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다.
-       디자인: 인스타 카드뉴스 후킹 톤의 2단 카피 + 큰 CTA 구성.
-       [실험판 v2] 이전엔 고정 하드코딩 색(짙은 갈색 배경/노랑 CTA/아이보리 글자)이었는데, 홈 전체가
-       새 팔레트로 바뀌면서 이 배너만 다른 사이트처럼 보이는 문제가 있어 var(--card-alt)/--line-strong/
-       --text/--muted/--primary 로 바꿔 나머지 홈 섹션과 같은 톤을 쓰게 했다.
-       왼쪽: "쇼핑도 주문의고수"(가장 작은 muted 보조문구) + "추석선물?"(밝은 글자, 존재감 있게).
-       오른쪽: "3초면 똭!" 자체가 큰 코랄 CTA 버튼("3초면 똭! →")이 되어 배너에서 가장
-       눈에 띄는 요소 — 기존의 작은 "선물 찾기 →" CTA는 제거했다.
-       모바일도 PC와 동일하게 가로 배치(왼쪽 카피 + 오른쪽 CTA, 세로 중앙 정렬)를 유지하고,
-       320px 폭에서도 "추석선물?"/CTA가 줄바꿈되지 않도록 모바일 전용 폰트·패딩·gap만 축소했다.
-       sm: 접두사가 붙은 값은 PC에서 충분히 크게 보이도록 새로 키운 값(이전 CTA보다 확실히 큼).
-       기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
-  <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
-    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--card-alt); border:1px solid var(--line-strong);">
-      <span class="min-w-0">
-        <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:var(--muted); font-weight:600;">쇼핑도 주문의고수</span>
-        <span class="block leading-tight break-keep whitespace-nowrap text-[18px] sm:text-[30px]" style="color:var(--text); font-weight:800;">추석선물?</span>
-      </span>
-      <span class="shrink-0 self-center text-[20px] sm:text-[34px] px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-md break-keep whitespace-nowrap" style="background:var(--primary); color:#181B23; font-weight:900;">3초면 똭! →</span>
-    </button>
-  </section>
-
-  <!-- ===== [v4] 전체 할인 탐색 안내 =====
-       discountListRevealed(전역 상태) === false일 때만 보이는 안내 패널. 아래 검색·필터 영역
-       (STEP1/2/브랜드검색)은 이 패널과 무관하게 항상 보인다 — 가려지는 건 그 아래 "할인 리스트"
-       결과 영역(#discount-list-section)뿐이다. Hero보다 강하게 보이지 않도록 작은 제목 + 짧은
-       설명 + 버튼 하나만 두고 카드 장식은 쓰지 않는다. 목록이 열리면 revealDiscountList()가
-       이 패널을 hidden 처리한다. -->
-  <section id="discount-list-guide" class="max-sm:mb-7 sm:mb-8 text-center py-6 sm:py-8">
-    <p class="font-display text-base sm:text-lg mb-1.5" style="color:var(--text);">원하는 브랜드만 골라보세요</p>
-    <p class="text-xs sm:text-sm mb-4 break-keep" style="color:var(--text-secondary);">검색이나 메뉴 선택으로 관련 할인만 볼 수 있고, 원한다면 전체 브랜드도 바로 확인할 수 있어요.</p>
-    <button type="button" onclick="showAllBrandDiscounts()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 브랜드 할인 보기</button>
-  </section>
-
-  <!-- 할인 찾기: STEP1(앱)/STEP2(카테고리)/브랜드검색을 하나의 기능 영역으로 묶어서
-       "여기서 조건을 고르면 아래 리스트가 바뀐다"는 것이 한눈에 보이게 함.
-       id="brand-search-section"은 scrollToBrandSearch()의 스크롤 대상이라 그대로 유지. -->
-  <section id="brand-search-section" class="max-sm:mb-7 sm:mb-8 rounded-lg p-4 sm:p-5" style="background:var(--surface); border:1px solid var(--line);">
-    <p class="font-display text-base sm:text-lg mb-0.5" style="color:var(--text);">🔎 할인 찾기</p>
-    <p class="text-xs sm:text-sm mb-4" style="color:var(--text-secondary);">조건을 선택하면 아래 할인 리스트가 바로 바뀌어요</p>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 1 · 배달 어플 선택</p>
-    <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
-      <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
-      <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
-      <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
-      <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
-    </div>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">STEP 2 · 메뉴 카테고리 선택</p>
-    <div class="flex gap-2 flex-wrap scrollbar-none pb-4 mb-4" id="category-filters" style="border-bottom:1px solid var(--line);"></div>
-
-    <p class="font-mono text-xs mb-2" style="color:var(--muted);">브랜드 검색</p>
-    <div class="relative max-w-[320px]">
-      <input id="search_brand" name="search_brand" type="search" value="" placeholder="브랜드명 검색 (예: BHC, 도미노)" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" oninput="handleBrandSearchInput(this.value)" class="w-full pl-9 pr-9 py-2.5 rounded-lg text-sm outline-none" style="background:var(--card-alt); border:1px solid var(--line-strong); color:var(--text);">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted);">🔍</span>
-      <button id="brand-search-clear" onclick="clearBrandSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm leading-none" style="color:var(--muted);" aria-label="검색어 지우기">×</button>
+      <!-- [검색/필터 통합] 상세조건 — 기존 "🔎 할인 찾기" 박스(별도 섹션, STEP1/STEP2 표현)를
+           걷어내고, 그 안의 배달앱/카테고리 필터만 여기 접이식 패널로 옮겼다.
+           activeAppFilters/activeCategoryFilters/toggleAppFilter/toggleCategoryFilter/
+           renderCategoryChips/updateChipStyles/renderDiscountList는 전부 기존 함수 그대로이며,
+           #app-filters・#category-filters도 같은 id를 유지해 그 함수들이 손 하나 안 대고 그대로
+           동작한다. 접고 펼치는 것은 이 패널의 hidden 클래스만 토글할 뿐 activeAppFilters/
+           activeCategoryFilters는 전혀 건드리지 않으므로, 접었다 다시 펴도 선택 상태가 유지된다.
+           [검색 영역 통합] 바깥 wrapper에 이미 코랄 테두리가 있으므로 이 토글 자체엔 별도
+           테두리/배경 없이 코랄 텍스트+화살표로만 강조하고, 세로 padding으로 탭 영역만 넉넉히 뒀다. -->
+      <button type="button" id="advanced-filter-toggle" onclick="toggleAdvancedFilter()" aria-expanded="false" aria-controls="advanced-filter-panel" class="mt-4 py-1 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold" style="color:#FF6B6B;">
+        상세조건 <span id="advanced-filter-toggle-icon" aria-hidden="true">▾</span>
+      </button>
+      <div id="advanced-filter-panel" class="hidden mt-3 pt-4" style="border-top:1px solid var(--line);">
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">배달 앱</p>
+        <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
+          <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
+          <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
+          <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
+          <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
+        </div>
+        <p class="font-mono text-xs mb-2" style="color:var(--muted);">메뉴 카테고리</p>
+        <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
+      </div>
     </div>
   </section>
+
+  <!-- [전체 배달할인 펼치기] 검색영역(코랄 wrapper) 바깥, 바로 아래의 독립 컨트롤. 코랄 박스
+       내부에 넣지 않는다. #discount-list-section 자체가 이 바로 다음(통계보다 앞)으로 옮겨져
+       있어(HTML 아래 참고), hidden만 풀면 스크롤 없이 이 자리에서 그대로 펼쳐진다. 클릭 핸들러
+       (toggleDiscountListSection)는 기존 revealDiscountList()를 재사용한다(정의부는 근처 참고).
+       기본 상태는 접힘이라 HTML에도 "펼치기 ↓"를 그대로 하드코딩해뒀다. -->
+  <div class="mb-8 sm:mb-10 text-center">
+    <button type="button" id="discount-list-toggle-btn" onclick="toggleDiscountListSection()" aria-expanded="false" aria-controls="discount-list-section" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 펼치기 ↓</button>
+  </div>
 
   <!-- DISCOUNT LIST — [v4] discountListRevealed가 true가 되기 전까지 hidden. 안에서 그려지는
        내용(renderDiscountList 등)은 항상 정상 동작하고 데이터도 계속 최신으로 유지되며(5분 폴링
        포함), 여기서는 오직 "보이는지"만 막는다 — 광고 카드 로딩 방식/정책을 건드리지 않기 위한
-       선택이며 결과 보고에도 명시했다. -->
+       선택이며 결과 보고에도 명시했다.
+       [펼치기 위치 변경] 이 섹션 전체를 검색영역 바로 아래(통계/선착순/배너보다 앞)로 물리적으로
+       옮겼다 — DOM에 같은 id로 두 번 존재하는 게 아니라 원래 있던 그 노드를 그대로 이동한 것이다.
+       이렇게 해야 펼쳤을 때 브라우저가 자동으로 "그 자리에서 아래로 밀어내며" 통계/선착순/배너를
+       내려보내고, 우리가 스크롤 계산을 할 필요가 전혀 없어진다(요건: 자동 스크롤 금지). -->
   <section id="discount-list-section" class="hidden">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-3 mb-1 sm:justify-between">
       <h3 class="font-display text-xl whitespace-nowrap shrink-0" style="color:var(--text);">할인 리스트</h3>
@@ -679,25 +684,58 @@
 
     <div id="discount-list-more" class="grid sm:grid-cols-2 gap-4 mt-4 mb-8 sm:mb-10"></div>
 
-  <!-- 오늘의 선착순 쿠폰 배너 — 할인 리스트의 기존 '⏰ 선착순' 필터로 바로 유도하기 위해 추가.
-       서버에서 문구를 불러오지 않는 정적 배너라 별도 스켈레톤/JS 로직이 필요 없음. -->
-  <button type="button" onclick="goToLimitedTimeCoupons()" class="w-full mb-4 rounded-lg px-5 py-4 flex items-center justify-between text-left"
-    style="background:linear-gradient(90deg, rgba(244,200,74,0.14), rgba(255,115,89,0.14)); border:1px dashed var(--primary);">
-    <span class="font-bold text-base sm:text-lg break-keep" style="color:var(--text);">⏰ 오늘의 <span style="color:var(--accent);">선착순</span> 쿠폰 <span style="color:var(--text-secondary); font-weight:500;">지금 받을 수 있는 선착순 할인만 빠르게 확인하세요</span></span>
-    <span class="font-bold text-lg sm:text-xl shrink-0 ml-3" style="color:var(--primary);">시간 확인하기 →</span>
-  </button>
-
-  <!-- 실시간 1위 할인 자랑글 유입 배너 -->
-  <button id="home-promo-banner" onclick="goToTopDiscountPost()" class="hidden w-full mb-10 rounded-lg px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left transition"
-    style="background:linear-gradient(90deg, rgba(255,115,89,0.14), rgba(244,200,74,0.10)); border:1px solid var(--accent); box-shadow:0 0 20px rgba(255,115,89,0.22);">
-    <div class="flex-1 min-w-0">
-      <span id="home-promo-banner-badge" class="inline-block text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full mb-2" style="background:var(--accent); color:#ffffff;"></span>
-      <p id="home-promo-banner-title" class="font-bold text-base sm:text-lg leading-snug break-keep" style="color:var(--text);"></p>
+    <!-- [펼치기 위치 변경] 목록의 가장 마지막 컨트롤. 펼쳐졌을 때만(hidden 아닐 때만) 보이고,
+         누르면 이 섹션 전체를 다시 숨긴다. 위쪽 펼치기 버튼은 그 순간 다시 나타난다(같은
+         toggleDiscountListSection()이 두 버튼의 표시 여부를 함께 맞춘다).
+         [섹션 간 여백] 모바일에서 이 wrapper(접기 버튼 컨테이너, 즉 "전체 배달할인" 섹션의
+         실제 마지막 요소)에 mb-7(≈30px, 요청한 28~32px 범위)을 줘서 다음 "⏰ 오늘 선착순 쿠폰"
+         제목과 분리감을 준다. 제목 자체에 margin을 넣지 않고, PC(sm 이상)는 sm:mb-0으로 지금까지
+         유지되던 간격(사실상 0)을 그대로 둔다. -->
+    <div class="hidden text-center mb-7 sm:mb-0" id="discount-list-toggle-btn-bottom-wrap">
+      <button type="button" id="discount-list-toggle-btn-bottom" onclick="toggleDiscountListSection()" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 접기 ↑</button>
     </div>
-    <span class="font-bold text-sm sm:text-base shrink-0 self-end sm:self-auto inline-flex items-center px-3 py-1 rounded-full" style="background:var(--accent); color:#ffffff;">꿀팁 보러가기 ➔</span>
-  </button>
-  <div id="home-promo-banner-skeleton" class="w-full mb-10 rounded-lg animate-pulse" style="background:var(--card-alt); height:96px;"></div>
   </section>
+
+  <!-- ⏰ 오늘 선착순 쿠폰: 전체 할인 리스트(기본 접힘)와 달리 페이지 최초 진입부터 항상 노출.
+       renderLimitedTimeCoupons()가 매번 discounts 배열에서 다시 계산한다(하드코딩 없음) —
+       isDiscountLive()로 오늘 유효한 것만, 그중 limitedTime(선착순 시간) 필드가 있는 것만,
+       parseLimitedTimeHour()(관리자 화면에서 이미 쓰던 시간 파싱 함수 재사용)로 뽑은 시(0~23)
+       오름차순 정렬. 새 추천 알고리즘이나 카드형 UI는 만들지 않고 컴팩트한 리스트로만 표시한다. -->
+  <section id="limited-time-coupons-section" class="hidden mb-8 sm:mb-10">
+    <h2 class="font-display text-lg sm:text-2xl sm:font-extrabold mb-3" style="color:var(--text);">⏰ 오늘 선착순 쿠폰</h2>
+    <div id="limited-time-coupons-list" class="rounded-lg overflow-hidden" style="background:var(--card); border:1px solid var(--line);"></div>
+  </section>
+
+  <!-- 추석 기획전 진입 배너 — 홈의 본체는 여전히 배달 할인 비교이므로, 작고 담백한
+       시즌 프로모션 카드 하나로만 존재한다. HOTDEALS_SEASONAL_ENABLED가 꺼지면(추석 종료 후)
+       syncHomeSeasonalBanner()가 이 배너 자체를 숨긴다.
+       디자인: 인스타 카드뉴스 후킹 톤의 2단 카피 + 큰 CTA 구성.
+       [실험판 v2] 이전엔 고정 하드코딩 색(짙은 갈색 배경/노랑 CTA/아이보리 글자)이었는데, 홈 전체가
+       새 팔레트로 바뀌면서 이 배너만 다른 사이트처럼 보이는 문제가 있어 var(--card-alt)/--line-strong/
+       --text/--muted/--primary 로 바꿔 나머지 홈 섹션과 같은 톤을 쓰게 했다.
+       왼쪽: "쇼핑도 주문의고수"(가장 작은 muted 보조문구) + "추석선물?"(밝은 글자, 존재감 있게).
+       오른쪽: "3초면 똭!" 자체가 큰 코랄 CTA 버튼("3초면 똭! →")이 되어 배너에서 가장
+       눈에 띄는 요소 — 기존의 작은 "선물 찾기 →" CTA는 제거했다.
+       모바일도 PC와 동일하게 가로 배치(왼쪽 카피 + 오른쪽 CTA, 세로 중앙 정렬)를 유지하고,
+       320px 폭에서도 "추석선물?"/CTA가 줄바꿈되지 않도록 모바일 전용 폰트·패딩·gap만 축소했다.
+       sm: 접두사가 붙은 값은 PC에서 충분히 크게 보이도록 새로 키운 값(이전 CTA보다 확실히 큼).
+       기능(goToHotdealsFromHomeSeasonal/퍼널 추적)은 손대지 않고 마크업/카피/스타일만 변경. -->
+  <section id="home-seasonal-banner" class="hidden max-sm:mb-7 sm:mb-8">
+    <!-- 테두리를 코랄핑크 계열로(--shopping-accent-border, :root에 정의) 바꿔 배달 할인 영역과
+         시각적으로 구분한다. 배경은 --card-alt가 아니라 var(--bg) — 이 배너를 감싸는
+         <main id="page-home">엔 별도 background가 없어 실제로는 body{background:var(--bg)}가
+         그대로 비쳐 보이므로, 주변과 완전히 같은 색으로 맞추려면 --card-alt가 아닌 --bg를 써야
+         한다(이전엔 --card-alt를 써서 주변보다 밝은 회색 박스처럼 보였음). 노란 CTA(3초면 똭!)와
+         onclick(goToHotdealsFromHomeSeasonal)은 그대로 둔다. -->
+    <button type="button" onclick="goToHotdealsFromHomeSeasonal()" class="w-full text-left rounded-lg p-4 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-4" style="background:var(--bg); border:1px solid var(--shopping-accent-border);">
+      <span class="min-w-0">
+        <span class="block leading-tight break-keep whitespace-nowrap text-[11px] sm:text-[12px] mb-0.5" style="color:#FF6B6B; font-weight:600;">쇼핑도 주문의고수</span>
+        <span class="block leading-tight break-keep whitespace-nowrap text-[18px] sm:text-[30px]" style="color:var(--text); font-weight:800;">추석선물?</span>
+      </span>
+      <span class="shrink-0 self-center text-[20px] sm:text-[34px] px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-md break-keep whitespace-nowrap" style="background:var(--primary); color:#181B23; font-weight:900;">3초면 똭! →</span>
+    </button>
+  </section>
+
   <!-- [v4] FAQ/SEO 본문과 북마크 팁 배너는 여기서부터 #discount-list-section 밖으로 옮겨
        항상 보이게 했다 — section 4가 숨기라고 명시한 목록("할인 리스트" 제목/정렬/카드/광고/
        업데이트 문구)에 FAQ·북마크 배너는 포함되지 않고, section 5도 "FAQ 및 SEO 본문은
@@ -711,7 +749,7 @@
       <h2 class="font-display text-lg mb-3 break-keep" style="color:var(--text);">배달앱 할인 비교를 한곳에서</h2>
       <div class="text-sm leading-relaxed break-keep space-y-3" style="color:var(--text-secondary);">
         <p>
-          배달의민족, 요기요, 쿠팡이츠, 땡겨요는 서로 다른 시기에 다른 조건으로 할인과 쿠폰을 제공합니다. 오늘 어느 앱이 가장 저렴한지 확인하려면 4개 앱을 모두 열어봐야 하는 번거로움이 있었는데, 주문의고수는 오늘 진행 중인 배달앱 할인 정보를 한 화면에 실시간으로 모아 브랜드별로 비교할 수 있도록 제공합니다.
+          배달의민족, 쿠팡이츠, 요기요, 땡겨요는 서로 다른 시기에 다른 조건으로 할인과 쿠폰을 제공합니다. 오늘 어느 앱이 가장 저렴한지 확인하려면 4개 앱을 모두 열어봐야 하는 번거로움이 있었는데, 주문의고수는 오늘 진행 중인 배달앱 할인 정보를 한 화면에 실시간으로 모아 브랜드별로 비교할 수 있도록 제공합니다.
         </p>
         <p>
           치킨, 피자, 햄버거 등 인기 프랜차이즈 브랜드의 할인 금액을 확인하고, 실제로 받는 금액(원 단위) 기준의 정액 할인 정보를 오늘 어느 배달앱에서 가장 큰 혜택으로 받을 수 있는지 비교해보세요. 선착순으로 마감될 수 있는 이벤트는 별도로 표시해 놓쳐서 아쉬운 상황을 줄여드리고 있습니다.
@@ -726,7 +764,7 @@
         <div class="space-y-4">
           <div>
             <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 주문의고수는 어떤 서비스인가요?</p>
-            <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">배민·요기요·쿠팡이츠·땡겨요의 정액 할인 정보를 한 화면에서 비교해주는 서비스입니다.</p>
+            <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">배민·쿠팡이츠·요기요·땡겨요의 정액 할인 정보를 한 화면에서 비교해주는 서비스입니다.</p>
           </div>
           <div>
             <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 회원가입이 필요한가요?</p>
@@ -762,11 +800,6 @@
   <section class="mt-8">
     <h2 id="page-board-title" class="font-display text-2xl mb-1 break-keep" style="color:var(--primary);">주문의고수 소식·제보</h2>
     <p class="text-sm mb-4 break-keep" style="color:var(--muted);">주문의고수 업데이트 소식과 할인·쇼핑 정보 제보, 추천 질문을 확인해보세요.</p>
-    <!-- 상단 광고(#top-ad-banner-wrap)는 원래 모든 <main> 위에 있어 이 페이지에선 제목보다 먼저
-         보였다. 광고 코드·링크·추적은 그대로 두고, 소식·제보 탭에 있을 때만 syncBoardAdPlacement()가
-         그 DOM 노드를 이 슬롯으로 옮겨 "제목 → 설명 → 광고 → 목록" 순서가 되게 한다. -->
-    <div id="board-ad-slot" class="mb-4"></div>
-
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
       <!-- 좌측 사이드바: 카테고리 메뉴 (전체 / 소식 / 제보·질문) -->
       <aside class="sm:col-span-1">
@@ -1093,7 +1126,7 @@
       주문의고수(jumungosu.com)는 소비자가 주문하거나 구매할 때 여러 서비스와 상품을 일일이 비교해야 하는 번거로움을 줄이고, 자신의 상황에 더 적합한 선택을 할 수 있도록 돕는 정보 서비스입니다.
     </p>
     <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
-      현재 운영 중인 배달 할인 비교에서는 배달의민족·요기요·쿠팡이츠·땡겨요 4개 배달앱에서 진행되는 정액 할인 정보를 한 화면에 모아 보여드립니다.
+      현재 운영 중인 배달 할인 비교에서는 배달의민족·쿠팡이츠·요기요·땡겨요 4개 배달앱에서 진행되는 정액 할인 정보를 한 화면에 모아 보여드립니다.
     </p>
     <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">
       쇼핑에서는 추천대상·예산·카테고리 조건으로 상품을 좁혀보며 쿠팡 상품을 탐색할 수 있습니다. 상황을 입력하면 맞는 선물을 찾아주는 맞춤 쇼핑 기능은 관련 데이터와 기능 준비가 완료된 이후 제공할 예정입니다.
@@ -1104,7 +1137,7 @@
     <h2 class="font-display text-xl mb-3 break-keep" style="color:var(--text);">현재 제공하는 서비스</h2>
     <h3 class="font-display text-base mb-2 break-keep" style="color:var(--primary);">배달 할인 비교</h3>
     <ul class="text-[15px] leading-[1.5] break-keep space-y-2 mb-3" style="color:var(--text);">
-      <li>✔ 배민·요기요·쿠팡이츠·땡겨요의 정액 할인 정보</li>
+      <li>✔ 배민·쿠팡이츠·요기요·땡겨요의 정액 할인 정보</li>
       <li>✔ 여러 배달앱의 브랜드별 할인금액 비교</li>
       <li>✔ 선착순으로 마감될 수 있는 할인 이벤트 표시</li>
       <li>✔ 브랜드별·카테고리별로 정리된 할인 목록</li>
@@ -1141,7 +1174,7 @@
   <section class="mb-10">
     <h2 class="font-display text-xl mb-3 break-keep" style="color:var(--text);">정보는 이렇게 운영해요</h2>
     <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
-      현재 제공 중인 배달 할인 정보는 배민, 요기요, 쿠팡이츠, 땡겨요 앱을 직접 확인해 정리하고 있습니다. 할인 이벤트가 갑자기 변경되거나 조기에 마감되면 사이트 반영이 늦어질 수 있습니다.
+      현재 제공 중인 배달 할인 정보는 배민, 쿠팡이츠, 요기요, 땡겨요 앱을 직접 확인해 정리하고 있습니다. 할인 이벤트가 갑자기 변경되거나 조기에 마감되면 사이트 반영이 늦어질 수 있습니다.
     </p>
     <p class="text-[15px] leading-[1.5] break-keep mb-3" style="color:var(--text);">
       사이트에 표시된 정보는 비교와 선택을 돕기 위한 참고 정보입니다. 실제 주문이나 구매 전에는 해당 배달앱 또는 외부 판매처에서 최종 가격과 적용 조건을 다시 확인해주세요.
@@ -1159,7 +1192,7 @@
     <div class="space-y-5">
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 주문의고수에서는 무엇을 비교할 수 있나요?</p>
-        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">배민·요기요·쿠팡이츠·땡겨요의 배달 할인 정보를 비교할 수 있고, 추천대상·예산·카테고리 조건으로 쇼핑 상품도 탐색할 수 있습니다.</p>
+        <p class="text-[15px] leading-[1.5] break-keep" style="color:var(--text);">배민·쿠팡이츠·요기요·땡겨요의 배달 할인 정보를 비교할 수 있고, 추천대상·예산·카테고리 조건으로 쇼핑 상품도 탐색할 수 있습니다.</p>
       </div>
       <div>
         <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--primary);">Q. 쇼핑에서는 무엇을 할 수 있나요?</p>
@@ -1420,7 +1453,7 @@
   <section class="mb-10">
     <h2 class="font-display text-xl mb-3 break-keep" style="color:var(--text);">왜 주문의고수인가요</h2>
     <ul class="text-[15px] leading-[1.5] break-keep list-disc list-inside space-y-1" style="color:var(--text);">
-      <li>배민·요기요·쿠팡이츠·땡겨요 등 여러 배달앱의 할인정보를 한 곳에서 비교</li>
+      <li>배민·쿠팡이츠·요기요·땡겨요 등 여러 배달앱의 할인정보를 한 곳에서 비교</li>
       <li>할인에 관심 있는 사용자에게 브랜드 프로모션 노출 가능</li>
       <li>최신 할인정보 중심의 실사용자 접점</li>
     </ul>
@@ -1515,7 +1548,7 @@
      같은 탭 안에서 인트로(shopping-view-intro)와 질문 플로우(shopping-view-chuseok)를
      JS로 토글하며, 실제 주소도 각각 /shopping, /shopping/chuseok로 유지한다.
      이번 단계는 화면 골격만 구현하며 실제 상품/추천 데이터는 다음 단계에서 연결된다. ===== -->
-<main id="page-shopping" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+<main id="page-shopping" class="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-20 hidden">
 
   <!-- ---- 인트로 화면 (/shopping) ---- -->
   <!-- 바깥 div는 display 관련 유틸리티를 전혀 갖지 않는다(순수하게 JS의 hidden 토글 대상 역할만).
@@ -1591,15 +1624,18 @@
      제목·설명 텍스트는 renderHotdealsHero()가, 쿠팡 추석 페스타 CTA는 renderHotdealsCoupangFestaCta()가,
      필터는 renderHotdealsFilterUI()가, 상품 영역은 renderHotdealsProducts()가 채운다
      (switchTab에서 hotdeals 탭 진입 시 호출). -->
-<main id="page-hotdeals" class="max-w-3xl mx-auto px-4 pb-20 hidden">
+<main id="page-hotdeals" class="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-20 hidden">
   <div class="pt-8 pb-2">
     <p id="hotdeals-hero-eyebrow" class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);"></p>
     <h2 id="page-hotdeals-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);"></h2>
     <p id="hotdeals-hero-desc" class="text-[15px] leading-[1.5] break-keep" style="color:var(--muted);"></p>
     <p id="hotdeals-hero-sub" class="text-sm leading-[1.5] break-keep mt-2" style="color:var(--muted);"></p>
-    <!-- 쇼핑 SEO 허브 페이지 연결(2026-09-19) — 정적 <a> 링크라 JS 없이도 크롤러가 그대로 읽는다.
-         renderHotdealsHero()가 채우는 텍스트와 무관하게 항상 보이며, 필터/iframe 로직은 건드리지 않는다. -->
-    <a href="/chuseok-gift" class="inline-block text-xs font-semibold mt-2 break-keep" style="color:var(--primary);">추석 선물세트 조건별로 찾아보기 →</a>
+    <!-- 쇼핑 SEO 허브 페이지 연결(2026-09-19). [상시 쇼핑핫딜 전환] 이 링크가 가리키는
+         /chuseok-gift는 추석 전용 SSR 페이지(seo-shopping.js, 이번 작업 범위 밖)라, 시즌이
+         끝난 뒤에도 이 링크만 항상 보이면 사용자를 시즌이 끝난 페이지로 계속 유도하게 된다.
+         renderHotdealsHero()가 히어로 문구와 같은 조건(추석 시즌 여부)으로 hidden을 함께
+         토글한다 — 필터/iframe 로직은 그대로 둔다. -->
+    <a id="hotdeals-chuseok-seo-link" href="/chuseok-gift" class="hidden inline-block text-xs font-semibold mt-2 break-keep" style="color:var(--primary);">추석 선물세트 조건별로 찾아보기 →</a>
   </div>
 
   <div id="hotdeals-filter-root" class="mt-2 mb-2"></div>
@@ -1724,7 +1760,7 @@
           </div>
         </div>
 
-        <div class="pt-1">
+        <div class="pt-1" id="footer-seo-delivery-shopping-crosslink">
           <a href="/chuseok-gift" class="footer-link font-semibold inline-block" style="color:var(--primary);">추석 선물·쇼핑 정보 전체보기 →</a>
         </div>
       </div>
@@ -2066,6 +2102,11 @@
   // ---------- DATA ----------
   const APP_LABEL = { baemin:'배민', yogiyo:'요기요', coupang:'쿠팡이츠', ddangyo:'땡겨요' };
   const APP_COLOR = { baemin:'var(--tag-baemin)', yogiyo:'var(--tag-yogiyo)', coupang:'var(--tag-coupang)', ddangyo:'var(--tag-ddangyo)' };
+  // [배달앱 순서 통일] 주문의고수 공식 배달앱 표시 순서(배민→쿠팡이츠→요기요→땡겨요)를 여기 하나로
+  // 명시한다. APP_LABEL/APP_COLOR는 계속 key로 조회하는 용도로만 쓰고(선언 순서에 의미를 두지
+  // 않음), "순서"가 필요한 곳(게시판 글쓰기 배달앱 select, REPORT_DELIVERY_APPS 등)은 이 배열을
+  // 그대로 쓰거나 이어붙여 쓴다 — 객체 key 선언 순서에 우연히 의존하던 구조를 없앴다.
+  const APP_ORDER = ['baemin', 'coupang', 'yogiyo', 'ddangyo'];
   const CATEGORIES = ['치킨','피자','카페/디저트','찜/탕','고기/구이','일식/회/해물','분식','양식','한식','버거','족발/보쌈','샐러드/샌드위치','도시락/죽','중식/아시안'];
 
   // 할인 데이터가 마지막으로 등록/수정/삭제된 날짜(KST, YYYY-MM-DD). Supabase의 app_config
@@ -2077,8 +2118,10 @@
   // "홈페이지 UPDATED" 카드는 이 상태를 봐서 조회 실패 시 옛날 날짜 대신 "조회 실패"를 보여준다.
   let discountUpdatedAtLoadState = 'loading'; // 'loading' | 'ok' | 'error'
 
-  // 메인 화면 로딩 시 DB에서 최신 날짜를 조회해 배지를 다시 그린다.
-  async function loadDiscountUpdatedAt(){
+  // DB(app_config.discount_updated_at)에서 최신 값을 읽어 discountUpdatedAtValue만 갱신한다.
+  // 화면은 그리지 않는다 — 호출한 쪽이 렌더 시점을 정하도록 분리해서, 5분 폴링 경로에서
+  // 같은 패널을 두 번 그리는 일이 없게 한다.
+  async function fetchDiscountUpdatedAt(){
     try {
       const { data, error } = await supabaseClient.rpc('get_discount_updated_at');
       if (error) throw error;
@@ -2090,7 +2133,17 @@
       console.warn('[주문의 고수] 할인 업데이트 날짜 조회 실패 (app_config/get_discount_updated_at 확인 필요)', e);
       discountUpdatedAtLoadState = 'error';
     }
+  }
+
+  // 메인 화면 로딩 시 DB에서 최신 날짜를 조회해 배지를 다시 그린다.
+  async function loadDiscountUpdatedAt(){
+    await fetchDiscountUpdatedAt();
     renderUpdatedBadges();
+    // 초기 로드 레이스 대응: /api/discounts(엣지 캐시)가 이 RPC보다 먼저 끝나면 홈 요약 패널이
+    // fallback 날짜로 먼저 그려지므로, RPC 결과가 반영된 뒤 패널을 한 번 더 그린다.
+    // 아직 할인 데이터가 없으면(패널이 "불러오는 중" 상태) 건너뛴다 — 그 경우엔
+    // loadDiscountsFromAirtable()가 곧 최신 값으로 그리게 된다.
+    if (typeof renderHomeSummaryPanel === 'function' && discounts.some(isDiscountLive)) renderHomeSummaryPanel();
     renderAdminOpsSummary();
   }
 
@@ -2836,10 +2889,14 @@
   // - source가 'seed' 또는 'airtable'인 항목(코드 기본값 또는 이전 Airtable 동기화 결과)만
   //   지우고 최신 Airtable 데이터로 새로 채웁니다.
   // - 네트워크 오류 등으로 실패하면 기존 데이터(마지막으로 성공한 데이터 또는 코드 기본값)를 그대로 유지합니다.
-  async function loadDiscountsFromAirtable(){
+  // opts.refreshUpdatedAt=true 이면(5분 폴링 경로) 할인 데이터를 받은 뒤 app_config의
+  // discount_updated_at도 다시 읽어, 아래 렌더가 최신 시각으로 한 번에 그려지게 한다.
+  // 초기 로드에서는 부팅 코드의 loadDiscountUpdatedAt()이 이미 같은 RPC를 호출하므로 생략(중복 방지).
+  async function loadDiscountsFromAirtable(opts = {}){
     try {
       airtableSkippedSamples = [];
       const records = await fetchAllAirtableRecords();
+      if (opts.refreshUpdatedAt) await fetchDiscountUpdatedAt();
       let idCursor = nextDiscountId;
       const mapped = groupGachaDiscounts(
         records
@@ -2862,9 +2919,12 @@
       if (typeof renderCategoryChips === 'function') renderCategoryChips();
       if (typeof renderDiscountList === 'function') renderDiscountList();
       if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
-      // [실험판 v1] 홈 요약 패널 + 지금 볼 만한 할인: discounts가 갱신될 때마다 함께 다시 계산
+      if (opts.refreshUpdatedAt) renderUpdatedBadges(); // 할인 리스트 제목의 UPDATED 배지도 같은 주기로 갱신
+      // [실험판 v1] 홈 요약 패널: discounts가 갱신될 때마다 함께 다시 계산
+      // (위에서 discountUpdatedAtValue까지 갱신된 뒤이므로 '최근 업데이트'도 이 한 번의 렌더로 최신값이 된다)
       if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
-      if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
+      // ⏰ 오늘 선착순 쿠폰도 discounts가 갱신될 때마다(5분 폴링 포함) 함께 다시 계산
+      if (typeof renderLimitedTimeCoupons === 'function') renderLimitedTimeCoupons();
       renderAdminOpsSummary();
     } catch (err){
       console.warn('[주문의 고수] Airtable에서 할인 정보를 불러오지 못했습니다. 기존 데이터를 계속 사용합니다.', err);
@@ -2876,7 +2936,8 @@
   // 탭을 오래 켜둔 사용자도 최신 데이터를 볼 수 있도록 주기적으로 재조회
   function startAirtablePolling(){
     if (!isAirtableConfigured()) return;
-    setInterval(loadDiscountsFromAirtable, AIRTABLE_POLL_INTERVAL_MS);
+    // 기존 5분 타이머를 그대로 쓰되, 폴링 때는 discount_updated_at도 함께 재조회한다.
+    setInterval(() => loadDiscountsFromAirtable({ refreshUpdatedAt: true }), AIRTABLE_POLL_INTERVAL_MS);
   }
 
   // Airtable에서 방금 수정한 내용이 바로 반영되는지 테스트하고 싶을 때, 브라우저 개발자도구 콘솔에서
@@ -2894,44 +2955,83 @@
     return true;
   }
 
-  // "전체 할인 N개 보기 →" / 할인 추천 배너 클릭 시 공용으로 쓰는 스크롤 함수.
-  // scrollIntoView(block:'start')만 쓰면 sticky 헤더(모바일은 퀵내비 줄까지 2단)가
-  // 목적지 상단을 가려서 "브랜드 검색"이 안 보이는 문제가 생길 수 있어, 헤더의 실제 높이를
-  // 매번 직접 측정해 그만큼 보정한 좌표로 window.scrollTo를 호출한다.
-  // (헤더 높이를 하드코딩하지 않고 offsetHeight로 매번 재는 이유: 모바일/PC 헤더 높이가
-  //  다르고, 로그인 여부에 따라 표시되는 버튼이 달라져 높이가 살짝 바뀔 수 있기 때문)
+  // [펼치기 위치 변경] 메인 검색창 Enter 시 호출되던 스크롤 함수. 이제 아무 스크롤도 하지 않는다
+  // (아래 함수 정의부 주석 참고) — 요건 9: 검색으로 결과가 자동 펼쳐질 때도 화면을 강제 이동시키지
+  // 않는다. 이름은 다른 코드가 호출하는 그대로 유지했다(Enter 키 핸들러 변경 없음).
   function scrollToBrandSearch(){
-    const target = document.getElementById('brand-search-section');
-    if (!target) return;
-    const header = document.querySelector('header');
-    const headerH = header ? header.offsetHeight : 0;
-    const extraGap = 12; // 헤더 바로 아래 딱 붙지 않도록 약간의 여백
-    const targetY = target.getBoundingClientRect().top + window.pageYOffset - headerH - extraGap;
-    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+    // [펼치기 위치 변경] 예전엔 여기서 목록 위치로 스크롤했지만, 이제 목록이 검색영역 바로
+    // 아래에서 펼쳐지므로(요건 9: 검색/필터로 자동 열려도 화면을 강제 이동시키지 않는다) 더 이상
+    // 스크롤하지 않는다. 함수 자체는 Hero 검색창 Enter 핸들러가 참조하고 있어 이름 그대로 남겨둔다.
   }
 
   // ===== [v4] 전체 할인 목록 단계적 노출 =====
-  // 최초 진입 시 #discount-list-section(할인 리스트 제목/정렬/카드/광고/안내문구 전부)을 숨기고
-  // #discount-list-guide(안내 패널)만 보여준다. renderDiscountList()는 숨겨진 동안에도 평소처럼
-  // 계속 호출되어 내부를 최신 상태로 채워두므로(5분 폴링 포함), 목록을 여는 시점에 광고/데이터를
-  // 별도로 다시 로드하거나 광고 정책을 새로 고민할 필요가 없다 — 순수하게 "보이는지"만 이 상태로
-  // 제어한다. 한 번 열리면 검색어를 지워도 다시 닫지 않는다(요건 4 — 닫는 기능은 이번 버전에 없음).
+  // [펼치기 위치 변경] "펼치기"(검색영역 바로 아래)와 "접기"(목록 맨 끝) 버튼이 서로 다른 위치의
+  // 별개 요소다. revealDiscountList()는 검색·필터·인기검색·브랜드 이동 등 여러 경로에서
+  // 호출되므로(요건 5/9: 검색/필터 결과가 있으면 자동으로 펼쳐져야 하고, 이때도 화면을 강제
+  // 이동시키지 않는다), 몇 번을 호출해도 안전하게 매번 hidden을 해제하고 두 버튼의 표시 여부를
+  // 동기화할 뿐 스크롤은 절대 하지 않는다. discountListRevealed는 트래킹 이벤트를 최초 1회만
+  // 남기기 위한 것으로, DOM 표시 여부와는 별개로 둔다.
   let discountListRevealed = false;
 
   function revealDiscountList(){
+    const section = document.getElementById('discount-list-section');
+    if (section) section.classList.remove('hidden');
+    syncDiscountListToggleVisibility();
     if (discountListRevealed) return;
     discountListRevealed = true;
-    const guide = document.getElementById('discount-list-guide');
-    const section = document.getElementById('discount-list-section');
-    if (guide) guide.classList.add('hidden');
-    if (section) section.classList.remove('hidden');
     // 새 외부 추적 시스템을 추가하지 않고, 기존 퍼널 추적 구조(trackFunnelEvent)에 이벤트만
-    // 하나 더 기록한다. revealDiscountList() 자체가 최초 1회만 실행되므로 중복 기록 걱정이 없다.
+    // 하나 더 기록한다. discountListRevealed 덕분에 최초 1회만 기록된다.
     if (typeof trackFunnelEvent === 'function') trackFunnelEvent('discount_list_expand');
   }
 
-  // "할인 리스트" 섹션 상단으로 스크롤(요건 4/13: 목록을 연 뒤 "목록 상단으로 이동"). 헤더 높이를
-  // 매번 재서 보정하는 방식은 기존 scrollToBrandSearch()와 동일하다.
+  // [펼치기 위치 변경] 위쪽 "펼치기 ↓" 버튼과 아래쪽(#discount-list-section 맨 끝) "접기 ↑" 버튼을
+  // 실제 hidden 상태에 맞춰 서로 반대로 표시한다 — 접혀 있으면 위 버튼만, 펼쳐져 있으면 아래 버튼만
+  // 보인다. revealDiscountList()가 호출되는 모든 경로에서 공통으로 호출되므로, 검색으로 자동
+  // 펼쳐지든 버튼을 직접 눌러 펼치든 항상 맞게 유지된다.
+  function syncDiscountListToggleVisibility(){
+    const section = document.getElementById('discount-list-section');
+    const topBtn = document.getElementById('discount-list-toggle-btn');
+    const bottomWrap = document.getElementById('discount-list-toggle-btn-bottom-wrap');
+    if (!section) return;
+    const hidden = section.classList.contains('hidden');
+    if (topBtn){
+      topBtn.classList.toggle('hidden', !hidden);
+      topBtn.setAttribute('aria-expanded', String(!hidden));
+    }
+    if (bottomWrap) bottomWrap.classList.toggle('hidden', hidden);
+  }
+
+  // [전체 배달할인 펼치기/접기] 버튼 클릭 핸들러(위/아래 버튼이 공유). 펼칠 때는 기존
+  // revealDiscountList()를 그대로 재사용하고(검색/필터가 여는 것과 동일한 경로), 필터를
+  // 초기화하지는 않는다 — 이 버튼은 순수 표시/숨김 토글이지 "전체 초기화" 기능이 아니다.
+  // 요건 5: 펼치기에는 스크롤을 절대 넣지 않는다 — #discount-list-section이 물리적으로 검색영역
+  // 바로 아래에 있어(HTML 참고) hidden만 풀면 그 자리에서 자연스럽게 통계/선착순/배너를 아래로
+  // 밀어내며 나타난다. 접을 때도 hidden만 다시 추가할 뿐 스크롤하지 않는다.
+  function toggleDiscountListSection(){
+    const section = document.getElementById('discount-list-section');
+    if (!section) return;
+    if (section.classList.contains('hidden')){
+      revealDiscountList();
+    } else {
+      section.classList.add('hidden');
+      syncDiscountListToggleVisibility();
+      // 요건 8(선택 사항): 접기 버튼까지 스크롤해서 내려와 있던 사용자가 그대로 남으면, 목록이
+      // 사라진 만큼 문서 높이가 줄어들어 브라우저가 스크롤 위치를 페이지 맨 위(헤더 근처)로
+      // 되돌려버리는 것을 실측으로 확인했다 — 검색영역과 한참 떨어진 엉뚱한 위치다. 새 애니메이션
+      // 없이 기존 헤더 높이 보정 스크롤(scrollToDiscountListSection()과 동일한 계산)을 펼치기
+      // 버튼 위치로만 재사용한다. 펼치기(expand) 쪽에는 이 스크롤을 절대 넣지 않는다(요건 5).
+      const topBtn = document.getElementById('discount-list-toggle-btn');
+      if (topBtn){
+        const header = document.querySelector('header');
+        const headerH = header ? header.offsetHeight : 0;
+        const targetY = topBtn.getBoundingClientRect().top + window.pageYOffset - headerH - 12;
+        window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+      }
+    }
+  }
+
+  // [펼치기 위치 변경] 더 이상 이 함수를 호출해 목록 위치로 스크롤하는 곳이 없다(toggleDiscountListSection
+  // 도 더 이상 부르지 않음) — 하지만 정의 자체는 다른 곳에서 참조할 수 있어 그대로 남겨둔다.
   function scrollToDiscountListSection(){
     const target = document.getElementById('discount-list-section');
     if (!target) return;
@@ -2943,40 +3043,42 @@
 
   // 브랜드 SEO 페이지(seo.js의 singleBrand 10개)와 정확히 매칭되도록, 그쪽과 동일한 브랜드
   // 판정 키워드를 그대로 씁니다 (seo.js normBrand(d.name).includes(key) 로직과 동일한 규칙).
+  // [인기검색 정리] 배열 순서 자체가 노출 우선순위다(할인금액 정렬 없음) — 카테고리가 앞쪽에
+  // 몰리지 않도록 치킨/피자/버거를 번갈아 배치했다(원래는 치킨 5개가 먼저 나열돼 있었음).
   const BRAND_LINKS = [
     { slug: 'bbq-discount', label: 'BBQ', key: 'bbq' },
-    { slug: 'bhc-discount', label: 'BHC', key: 'bhc' },
-    { slug: 'gyochon-discount', label: '교촌치킨', key: '교촌' },
-    { slug: 'gubne-discount', label: '굽네치킨', key: '굽네' },
-    { slug: 'chegatjip-discount', label: '처갓집', key: '처갓집' },
     { slug: 'dominopizza-discount', label: '도미노피자', key: '도미노' },
+    { slug: 'mcdonald-discount', label: '맥도날드', key: '맥도날드' },
+    { slug: 'bhc-discount', label: 'BHC', key: 'bhc' },
     { slug: 'pizzahut-discount', label: '피자헛', key: '피자헛' },
     { slug: 'lotteria-discount', label: '롯데리아', key: '롯데리아' },
-    { slug: 'mcdonald-discount', label: '맥도날드', key: '맥도날드' },
+    { slug: 'gyochon-discount', label: '교촌치킨', key: '교촌' },
     { slug: 'momstouch-discount', label: '맘스터치', key: '맘스터치' },
+    { slug: 'gubne-discount', label: '굽네치킨', key: '굽네' },
+    { slug: 'chegatjip-discount', label: '처갓집', key: '처갓집' },
   ];
   function normalizeBrandNameForLink(s){
     return String(s || '').replace(/\s+/g, '').toLowerCase();
   }
 
 
-  // "오늘 할인 브랜드" 섹션: 브랜드 SEO 페이지가 있는 10개 브랜드 중, 오늘 실제로 라이브인
-  // 할인이 있는 브랜드만 금액 큰 순서로 최대 5개 보여주고 각 브랜드 페이지로 링크합니다.
-  // 오늘 하나도 없으면(운영 초기 등) 섹션 자체를 숨겨서 빈 껍데기가 노출되지 않게 합니다.
+  // "인기 검색" 칩: 브랜드 SEO 페이지가 있는 10개 브랜드(BRAND_LINKS, 카테고리를 번갈아 배치한
+  // 고정 순서) 중 오늘 실제로 라이브인 할인이 있는 브랜드만, 그 순서 그대로 노출한다.
+  // [인기검색 정리] 이전엔 할인금액 큰 순으로 정렬해 최대 5개를 보여줬지만, 인기검색과 최대할인은
+  // 다른 개념이라는 요건에 따라 금액 정렬을 없앴다 — 대신 BRAND_LINKS 배열 순서(카테고리가 골고루
+  // 섞이도록 미리 배치해둔 순서)를 그대로 우선순위로 쓴다. 몇 개를 보여줄지도 더 이상 고정값(5)이
+  // 아니라, 실제로 한 줄에 들어가는 만큼만 보이도록 전부 그려본 뒤 넘치면 뒤에서부터 하나씩
+  // 줄여 다시 측정한다 — PC/모바일이 같은 DOM과 같은 로직을 쓰고, 다만 화면이 좁을수록
+  // 자연스럽게 적은 개수만 남는다. 오늘 하나도 없으면(운영 초기 등) 섹션 자체를 숨긴다.
   function renderTodayBrandLinks(){
     const sectionEl = document.getElementById('today-brand-links-section');
     const el = document.getElementById('today-brand-links');
     if (!sectionEl || !el) return;
 
     const live = discounts.filter(isDiscountLive);
-    const matched = BRAND_LINKS.map(b => {
-      const rows = live.filter(d => normalizeBrandNameForLink(d.name).includes(b.key));
-      if (!rows.length) return null;
-      const maxAmount = Math.max(...rows.map(d => d.amount));
-      return { ...b, amount: maxAmount };
-    }).filter(Boolean).sort((a, b) => b.amount - a.amount).slice(0, 5);
+    const candidates = BRAND_LINKS.filter(b => live.some(d => normalizeBrandNameForLink(d.name).includes(b.key)));
 
-    if (!matched.length){
+    if (!candidates.length){
       sectionEl.classList.add('hidden');
       el.innerHTML = '';
       return;
@@ -2988,51 +3090,52 @@
     // 맞지 않는다. 그래서 <button>으로 바꾸고 기존 goToBrandInDiscountList()를 그대로
     // 재사용한다(새 검색·스크롤 로직을 만들지 않음) — 대신 브랜드 SEO 페이지로의 내부 링크는
     // 이 칩에서는 더 이상 제공되지 않는다는 점을 결과 보고에 명시했다.
-    el.innerHTML = matched.map(b => `
-      <button type="button" onclick="goToBrandInDiscountList('${b.label.replace(/'/g, "\\'")}')" class="chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition hover:brightness-110" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">
-        ${escapeHtml(b.label)} <span style="color:var(--primary);">${b.amount.toLocaleString('ko-KR')}원</span>
-      </button>`).join('');
+    const chipHtml = b => `<button type="button" onclick="goToBrandInDiscountList('${b.label.replace(/'/g, "\\'")}')" class="chip shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition hover:brightness-110" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">${escapeHtml(b.label)}</button>`;
+
+    let count = candidates.length;
+    el.innerHTML = candidates.map(chipHtml).join('');
+    // overflow 판정은 바깥 sectionEl이 아니라 칩을 담는 el(#today-brand-links) 자신을 기준으로
+    // 한다 — sectionEl에도 overflow-hidden이 걸려 있는데, overflow가 hidden인 flex 아이템은
+    // 자동 최소폭이 0이 되어(스펙상 동작) 아무리 넘쳐도 스스로 줄어들어 버려 sectionEl.scrollWidth가
+    // 절대 clientWidth를 넘지 않는다(그래서 처음엔 감지가 안 됐다). el 자신은 "라벨을 제외하고
+    // 실제로 배정된 폭"을 clientWidth로 가지므로 이 폭 기준으로 재는 것이 정확하다.
+    while (count > 1 && el.scrollWidth > el.clientWidth){
+      count -= 1;
+      el.innerHTML = candidates.slice(0, count).map(chipHtml).join('');
+    }
   }
+
+  // 창 크기 변경/회전 시 인기검색 줄을 다시 맞춘다 — renderTodayBrandLinks() 자체가 매번
+  // 전체를 다시 그려보고 넘치는 만큼만 줄이므로, 여기서는 단순히 다시 호출하기만 하면 된다.
+  // resize 이벤트가 짧은 시간에 여러 번 발생할 수 있어 requestAnimationFrame으로 한 번만 묶는다.
+  let todayBrandLinksResizeQueued = false;
+  function scheduleRenderTodayBrandLinks(){
+    if (todayBrandLinksResizeQueued) return;
+    todayBrandLinksResizeQueued = true;
+    requestAnimationFrame(() => {
+      todayBrandLinksResizeQueued = false;
+      if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
+    });
+  }
+  window.addEventListener('resize', scheduleRenderTodayBrandLinks);
+  window.addEventListener('orientationchange', scheduleRenderTodayBrandLinks);
 
   // ===== [실험판 v1] 홈 Hero — 검색/빠른 선택/요약/지금 볼 만한 할인 =====
   // 아래 함수들은 모두 새로 추가된 것으로, 기존 activeAppFilters/activeCategoryFilters/
   // brandSearchQuery/sortDirection/onlyLimitedTimeFilter 같은 전역 상태와 updateChipStyles/
   // renderDiscountList/scrollToBrandSearch/goToBrandInDiscountList 등 기존 함수를 그대로
   // 호출만 할 뿐, 새로운 필터 시스템이나 데이터 구조를 만들지 않는다.
+  // [검색/필터 통합] 이 입력이 값을 동기화하던 하단 #search_brand가 제거되면서, 그 동기화만
+  // 하던 handleHeroSearchInput() 래퍼는 더 이상 필요 없어 삭제했다 — 아래 handleBrandSearchInput()을
+  // 메인 검색창 oninput에서 바로 호출한다(HTML 참고).
 
-  // Hero 검색창 입력 → 아래 STEP 섹션의 실제 검색 입력(#search_brand)에도 값을 동기화한 뒤
-  // 기존 handleBrandSearchInput()을 그대로 호출한다(필터링 로직 완전히 동일). 값이 있으면
-  // 전체 목록을 연다(요건: Hero 검색이 목록 오픈 트리거).
-  function handleHeroSearchInput(value){
-    const lowerInput = document.getElementById('search_brand');
-    if (lowerInput) lowerInput.value = value;
-    if (value) revealDiscountList();
-    handleBrandSearchInput(value);
-  }
-
-  // 목적별 빠른 선택 칩: 항상 해당 카테고리 "단독" 필터로 설정한다(기존 STEP2 칩의 다중 토글과
-  // 달리, 빠른 선택은 "이거 하나만 보고 싶다"는 의도가 분명하므로 단일 선택으로 시작하는 편이 낫다고
-  // 판단). 이후 사용자가 아래 STEP2 칩에서 자유롭게 추가/해제할 수 있다.
-  function quickFilterCategory(cat){
-    activeCategoryFilters = [cat];
-    updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
-    revealDiscountList();
-    renderDiscountList();
-    scrollToDiscountListSection();
-  }
-
-  // "할인 큰 순" 빠른 선택: 기존 toggleSort()는 토글이라 이미 '할인 최대' 상태에서 누르면
-  // '할인 최소'로 바뀌어버리므로, 항상 명확하게 '할인 최대(desc)'로 고정하는 별도 함수로 둔다.
-  function quickSortByMaxDiscount(){
-    sortDirection = 'desc';
-    const btn = document.getElementById('sort-toggle-btn');
-    const label = document.getElementById('sort-toggle-label');
-    if (label) label.textContent = '할인 최대';
-    if (btn){ btn.style.background = 'var(--primary)'; btn.style.color = '#1C1A17'; btn.style.borderColor = 'var(--primary)'; }
-    revealDiscountList();
-    renderDiscountList();
-    scrollToDiscountListSection();
-  }
+  // [검색 영역 통합] 카테고리 빠른 선택 버튼 줄(#quick-filter-scroll)과 그 전용 모바일 스크롤
+  // 인디케이터(syncQuickFilterScrollThumb/setupQuickFilterScrollIndicator), 단일-카테고리
+  // 빠른 선택(quickFilterCategory), "할인 큰 순" 빠른 선택(quickSortByMaxDiscount)을 모두
+  // 제거했다. 카테고리 선택은 상세조건의 메뉴 카테고리 칩(toggleCategoryFilter)으로,
+  // "할인 큰 순"은 할인 리스트 안의 정렬 버튼(#sort-toggle-btn/toggleSort())으로 계속 접근
+  // 가능하다. "전체 할인 보기"는 showAllBrandDiscounts()가 다른 곳(지금 볼 만한 할인 하단의
+  // "전체 배달 할인 보기 ↓" 버튼 등)에서 계속 쓰이므로 이 함수 자체는 그대로 남겨둔다.
 
   // "전체 브랜드 할인 보기"(안내 패널 CTA + 빠른 선택 칩이 함께 쓰는 단일 함수 — 중복 로직을
   // 만들지 않기 위해 하나로 합쳤다). 모든 필터를 기본값으로 리셋하고, 요건대로 모든 브랜드 카드를
@@ -3045,8 +3148,6 @@
     expandedDiscountBrands.clear();
     lastAutoExpandedBrandKey = null;
 
-    const searchInput = document.getElementById('search_brand');
-    if (searchInput) searchInput.value = '';
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
     const searchClearBtn = document.getElementById('brand-search-clear');
@@ -3063,11 +3164,18 @@
     scrollToDiscountListSection();
   }
 
-  // 오늘의 할인 요약 패널: 숫자는 매번 discounts 배열에서 다시 계산한다(하드코딩 없음).
+  // 오늘의 할인 요약: 숫자는 매번 discounts 배열에서 다시 계산한다(하드코딩 없음).
   // - 오늘 확인된 할인 수: isDiscountLive를 통과한 개별 할인 항목 수
   // - 비교 가능한 브랜드 수: 위 항목을 groupDiscountsByBrand()로 묶은 그룹 수
   // - 현재 가장 큰 할인: 위 항목 중 getSortValue() 최댓값 1건(브랜드명 + formatDiscount 그대로 사용)
-  // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용
+  // - 최근 업데이트: 기존 discountUpdatedAtValue + formatUpdatedBadge()를 그대로 재사용, 앞에 고정 녹색 점 표시
+  // [모바일 현황바] PC용 4칸 카드(hidden sm:block)와 모바일용 컴팩트 요약바(sm:hidden)를 같은 값
+  // (live/groups/maxItem/updatedBadge)으로 함께 렌더링한다 — 계산은 한 번만, 표현만 둘로 나눈다.
+  // 모바일 문구는 최대 할인을 빼고 "총 N개 할인 → M개 브랜드로 정리"만 보여주고, 업데이트 시각은
+  // PC와 같은 데이터(discountUpdatedAtValue)에서 이미 계산된 updatedBadge("MM/DD HH:mm")의
+  // 시간 부분만 뽑아 "오늘 HH:MM 업데이트"로 표시한다(날짜는 항상 "오늘" 고정 문구, 시간은
+  // 실제 값). 시간 정보가 아직 없는 극히 드문 경우(첫 동기화 전 날짜만 있는 상태)에는 시간 없이
+  // "오늘 업데이트"로 자연스럽게 줄어든다.
   function renderHomeSummaryPanel(){
     const panel = document.getElementById('home-summary-panel');
     if (!panel) return;
@@ -3081,74 +3189,141 @@
     const groups = groupDiscountsByBrand(live);
     const maxItem = live.reduce((m, d) => getSortValue(d) > getSortValue(m) ? d : m, live[0]);
     const updatedBadge = formatUpdatedBadge(discountUpdatedAtValue).replace('🟢 UPDATED ', '');
+    const updatedTimeOnly = updatedBadge.split(' ')[1] || ''; // "MM/DD HH:mm" → "HH:mm"만(없으면 '')
+    const mobileUpdateText = updatedTimeOnly ? `오늘 ${updatedTimeOnly} 업데이트` : '오늘 업데이트';
+    const greenDot = `<span aria-hidden="true" style="display:inline-block; width:6px; height:6px; border-radius:9999px; background:var(--success); flex:none;"></span>`;
 
     panel.innerHTML = `
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-        <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${live.length.toLocaleString('ko-KR')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">오늘 확인된 할인</p>
+      <div class="hidden sm:block rounded-lg p-5 sm:p-6" style="background:var(--card); border:1px solid var(--line);">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div>
+            <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${live.length.toLocaleString('ko-KR')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">오늘 확인된 할인</p>
+          </div>
+          <div>
+            <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${groups.length.toLocaleString('ko-KR')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">비교 가능한 브랜드</p>
+          </div>
+          <div class="min-w-0">
+            <p class="font-mono text-base sm:text-2xl font-bold break-keep leading-tight" style="color:var(--primary);">${formatDiscount(maxItem)}</p>
+            <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--muted);">${escapeHtml(brandDisplayName(maxItem.name))} · 오늘 최대 할인</p>
+          </div>
+          <div>
+            <p class="font-mono text-base sm:text-lg font-bold flex items-center gap-1.5" style="color:var(--text);">${greenDot}${escapeHtml(updatedBadge || '-')}</p>
+            <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
+          </div>
         </div>
-        <div>
-          <p class="font-mono text-2xl sm:text-3xl font-bold" style="color:var(--text);">${groups.length.toLocaleString('ko-KR')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">비교 가능한 브랜드</p>
-        </div>
-        <div class="min-w-0">
-          <p class="font-mono text-base sm:text-2xl font-bold break-keep leading-tight" style="color:var(--primary);">${formatDiscount(maxItem)}</p>
-          <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--muted);">${escapeHtml(brandDisplayName(maxItem.name))} · 오늘 최대 할인</p>
-        </div>
-        <div>
-          <p class="font-mono text-base sm:text-lg font-bold" style="color:var(--text);">${escapeHtml(updatedBadge || '-')}</p>
-          <p class="text-[11px] sm:text-xs mt-1" style="color:var(--muted);">최근 업데이트</p>
-        </div>
+      </div>
+      <div class="sm:hidden flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2" style="background:var(--card); border:1px solid var(--line);">
+        <p class="font-mono text-xs" style="color:var(--text);">총 <span class="font-bold">${live.length.toLocaleString('ko-KR')}</span>개 할인 → <span class="font-bold">${groups.length.toLocaleString('ko-KR')}</span>개 브랜드로 정리</p>
+        <p class="font-mono text-xs flex items-center gap-1.5 shrink-0" style="color:var(--muted);">${greenDot}${escapeHtml(mobileUpdateText)}</p>
       </div>`;
   }
 
-  // 지금 볼 만한 할인: 오늘 라이브 할인을 브랜드로 통합(groupDiscountsByBrand, 기존과 동일한
-  // 브랜드 병합 규칙 재사용)한 뒤, 브랜드 내 최고 할인액(groupMaxValue) 기준 내림차순 상위 6개.
-  // 카드의 "상세 보기"는 새로 상세 화면을 만들지 않고 기존 goToBrandInDiscountList()를 호출해
-  // 아래 실제 할인 리스트의 해당 브랜드 카드로 스크롤+하이라이트한다(요건: "카드를 누르면 기존
-  // 할인 상세 정보가 나타나야 한다"를 새 UI 없이 충족).
-  function renderHomeSpotlight(){
-    const section = document.getElementById('home-spotlight-section');
-    const el = document.getElementById('home-spotlight-list');
+  // ⏰ 오늘 선착순 쿠폰: 통계 아래 항상 노출되는 컴팩트 리스트(카드형 아님). 새 추천 로직 없이
+  // 기존 discounts/isDiscountLive()를 그대로 쓰고, 정렬 기준은 오직 하나 — limitedTime(선착순
+  // 시간, 자유 텍스트) 필드를 parseLimitedTimeHour()(관리자 "오늘 선착순 할인" 화면에서 이미
+  // 쓰던 함수, 새로 안 만듦)로 파싱한 시(0~23) 오름차순이다. 할인금액 순 정렬은 절대 쓰지 않는다.
+  // 시간을 못 읽은 항목(예: 형식이 다른 자유 텍스트)은 정렬만 맨 뒤로 보내고, 화면엔 원본
+  // limitedTime 문자열을 그대로 보여줘 정보를 잃지 않는다. 동일 시(hour) 안에서는 Array.sort가
+  // 안정 정렬이므로 discounts 배열 순서가 그대로 유지된다(요건: "기존 데이터 순서" 허용).
+  // 실시간 소진 여부를 판단할 데이터가 없으므로 그 부분은 추정하지 않고, 나머지 목록과 동일하게
+  // isDiscountLive()(시작일/종료일 기준)만으로 "오늘 유효한지"를 판단한다.
+  // [시간 그룹 표시] 같은 시간(연속된 행)이면 첫 행에만 시간을 보여주고, 나머지 행은 시간
+  // 텍스트만 비운다 — 데이터/정렬/필터링 로직은 전혀 건드리지 않고 오직 "표시" 단계에서만
+  // 바로 이전 행과 timeLabel을 비교한다(요건: 하드코딩 없이 자동 판별). 시간 칸은 항상
+  // min-width:5ch(모노스페이스 폰트라 "09:00" 5글자와 정확히 일치)로 폭을 고정해, 비어 있는
+  // 행에서도 브랜드 시작 위치가 전혀 흔들리지 않는다. 그룹의 첫 행(맨 위 제외)에는 기존
+  // border-bottom(매 행에 그대로 유지)에 더해 border-top(--line-strong, 기존 칩 테두리에도
+  // 쓰는 톤 재사용)을 얹어, 두 선이 맞닿으며 살짝 더 또렷한 경계로 보이게 한다 — 새 카드나
+  // 배지를 추가하지 않고 기존 톤 안에서만 구분한다.
+  // [PC 레이아웃 재설계] 이전엔 시간을 매 행 반복하고 전체를 max-width로 가운데 모았지만, 이번엔
+  // PC에서 시간을 "그룹 헤더"로 한 번만 보여주고 같은 시간 쿠폰들을 grid-cols-2로 나란히 배치한다
+  // (아래 함수 정의부에 구체적인 구현 설명). 모바일 표시(시간 공란 처리 포함)는 전혀 바꾸지 않았다.
+  // [PC 레이아웃 재설계] 직전 라운드의 "가운데로 좁게 모으기" 방식을 버리고, PC 전용으로 완전히
+  // 별도의 DOM을 만든다 — 모바일 블록(.sm:hidden)은 예전 마크업을 한 글자도 바꾸지 않고 그대로
+  // 옮겨왔을 뿐이고, 정렬된 items 배열(동일 소스, 재계산 없음)을 그룹으로만 다시 묶어(groups)
+  // PC 블록(.hidden.sm:block)에서 시간을 "그룹 헤더"로, 같은 시간 쿠폰들을 grid-cols-2로 배치한다.
+  // 데이터/정렬/필터링은 전혀 건드리지 않고 표시 방식만 두 갈래로 나눴다.
+  function renderLimitedTimeCoupons(){
+    const section = document.getElementById('limited-time-coupons-section');
+    const el = document.getElementById('limited-time-coupons-list');
     if (!section || !el) return;
 
     const live = discounts.filter(isDiscountLive);
-    if (!live.length){
-      section.classList.add('hidden');
-      el.innerHTML = '';
+    const items = live
+      .filter(d => d.limitedTime)
+      .map(d => ({ d, hour: parseLimitedTimeHour(d.limitedTime) }))
+      .sort((a, b) => (a.hour === null ? 24 : a.hour) - (b.hour === null ? 24 : b.hour))
+      .map(({ d, hour }) => ({ d, timeLabel: hour !== null ? `${String(hour).padStart(2, '0')}:00` : d.limitedTime }));
+
+    section.classList.remove('hidden');
+
+    if (!items.length){
+      el.innerHTML = `<p class="text-sm px-3 sm:px-4 py-4" style="color:var(--muted);">오늘 예정된 선착순 쿠폰이 없습니다.</p>`;
       return;
     }
 
-    const groups = groupDiscountsByBrand(live)
-      .slice()
-      .sort((a, b) => groupMaxValue(b) - groupMaxValue(a))
-      .slice(0, 6);
-
-    section.classList.remove('hidden');
-    el.innerHTML = groups.map(g => {
-      const sortedBadges = g.badges.slice().sort((a, b) => b.sortValue - a.sortValue);
-      const top = sortedBadges[0];
-      const appCount = new Set(g.badges.map(b => b.app)).size;
-      const soonest = groupMinDaysLeft(g);
-      const soonBadge = (soonest !== null && soonest <= 3)
-        ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style="background:var(--warning); color:#1C1A17;">종료임박</span>`
-        : '';
-      const safeName = g.displayName.replace(/'/g, "\\'");
+    // ----- 모바일(.sm:hidden): 기존 flat-row 마크업 그대로, 바깥 wrapper 한 겹만 추가 -----
+    const mobileHtml = items.map(({ d, timeLabel }, i) => {
+      const isNewGroup = i === 0 || timeLabel !== items[i - 1].timeLabel;
+      const timeText = isNewGroup ? escapeHtml(timeLabel) : '';
+      const appLabel = APP_LABEL[d.app[0]] || d.app[0];
+      const discountText = formatDiscount(d);
+      const borderStyle = i < items.length - 1 ? 'border-bottom:1px solid var(--line);' : '';
+      const groupTopBorder = (isNewGroup && i > 0) ? 'border-top:1px solid var(--line-strong);' : '';
       return `
-        <div class="rounded-lg p-3 sm:p-4 flex flex-col justify-between" style="background:var(--card); border:1px solid var(--line);">
-          <div class="min-w-0">
-            <div class="flex items-start justify-between gap-1.5 mb-2">
-              <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(g.displayName)}</p>
-              ${soonBadge}
-            </div>
-            <p class="font-mono text-base sm:text-xl font-extrabold leading-tight mb-1" style="color:var(--primary);">${top.discountText}</p>
-            <p class="text-[11px] sm:text-xs" style="color:var(--muted);">${appCount}개 앱에서 비교 가능</p>
+        <div class="px-3 py-2.5" style="${borderStyle}${groupTopBorder}">
+          <div class="flex items-baseline gap-2">
+            <span class="font-mono text-sm font-bold shrink-0" style="color:var(--primary); min-width:5ch; display:inline-block;">${timeText}</span>
+            <span class="font-semibold text-sm truncate" style="color:var(--text);">${escapeHtml(d.name)}</span>
           </div>
-          <button type="button" onclick="goToBrandInDiscountList('${safeName}')" class="mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold self-start" style="color:var(--primary);">상세 보기 →</button>
+          <p class="text-xs mt-0.5" style="color:var(--text-secondary);">${escapeHtml(appLabel)} · <span style="color:var(--primary); font-weight:600;">${discountText}</span></p>
         </div>`;
     }).join('');
+
+    // ----- PC(hidden sm:block): 같은 items를 "연속된 timeLabel"끼리만 묶는다(재정렬 아님, 기존
+    // 순서 그대로 1→왼쪽/2→오른쪽/3→왼쪽... 배치). -----
+    const groups = [];
+    items.forEach(item => {
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.timeLabel === item.timeLabel) lastGroup.coupons.push(item);
+      else groups.push({ timeLabel: item.timeLabel, coupons: [item] });
+    });
+
+    // 쿠폰 셀 하나(브랜드|앱|할인금액 3열 grid, 모든 셀 동일 폭이라 열 시작점이 항상 일치).
+    // isRightCol이면 은은한 세로 구분선(--line)을, row가 그룹의 첫 줄이 아니면 가로 구분선도
+    // 같은 톤으로 얹는다(홀수 개일 때 마지막 셀은 왼쪽에만 남고 오른쪽은 grid가 자동으로 비워둔다
+    // — 강제로 폭을 늘리지 않음).
+    const cellHtml = (item, isRightCol, isFirstRow) => {
+      const appLabel = APP_LABEL[item.d.app[0]] || item.d.app[0];
+      const discountText = formatDiscount(item.d);
+      const dividerStyle = `${isRightCol ? 'border-left:1px solid var(--line); padding-left:1.5rem;' : ''}${!isFirstRow ? 'border-top:1px solid var(--line); padding-top:0.6rem;' : ''}`;
+      return `
+        <div class="grid items-center py-2.5" style="grid-template-columns:minmax(0,1fr) 92px 150px; column-gap:0.75rem; ${dividerStyle}">
+          <span class="font-semibold text-base truncate" style="color:var(--text); min-width:0;">${escapeHtml(item.d.name)}</span>
+          <span class="text-sm" style="color:var(--text-secondary);">${escapeHtml(appLabel)}</span>
+          <span class="font-mono text-base font-bold" style="color:var(--primary);">${discountText}</span>
+        </div>`;
+    };
+
+    const pcHtml = groups.map((g, gi) => {
+      const cells = g.coupons.map((item, i) => cellHtml(item, i % 2 === 1, i < 2)).join('');
+      return `
+        <div class="${gi > 0 ? 'mt-6' : ''}">
+          <p class="font-mono text-base font-bold pb-2 mb-1" style="color:var(--primary); border-bottom:1px solid var(--line);">${escapeHtml(g.timeLabel)}</p>
+          <div class="grid grid-cols-2">${cells}</div>
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="sm:hidden">${mobileHtml}</div>
+      <div class="hidden sm:block px-4 sm:px-6 py-4">${pcHtml}</div>`;
   }
+
+  // [지금 볼 만한 할인 제거] renderHomeSpotlight()는 #home-spotlight-section/#home-spotlight-list
+  // 대상 DOM이 사라져 삭제했다. getDiscountDaysLeft()(할인 리스트 카드에서 계속 씀)는 그대로
+  // 남겨뒀고, 이 함수 전용이던 groupMinDaysLeft()만 함께 정리했다(정의부 참고).
 
   // 남은 일수 계산 (오늘 KST 기준). endDate가 없으면 null(상시/기한 없음으로 간주, 정렬 시 맨 뒤로 보냄)
   function getDiscountDaysLeft(d){
@@ -3306,9 +3481,9 @@
   const BOARD_REPORT_FORM_TYPES = ['delivery', 'shopping', 'correction', 'question'];
   let boardReportFormType = 'question';
 
-  // 배달앱 칩 — 기존 APP_LABEL(배민/요기요/쿠팡이츠/땡겨요) 값을 그대로 쓰고, 목록에 없는 '기타'만
-  // delivery_other로 덧붙인다. APP_LABEL 자체는 수정하지 않아 기존 글 표시가 그대로 유지된다.
-  const REPORT_DELIVERY_APPS = ['baemin', 'coupang', 'yogiyo', 'ddangyo', 'delivery_other'];
+  // 배달앱 칩 — [배달앱 순서 통일] 공통 APP_ORDER를 그대로 쓰고, 목록에 없는 '기타'만
+  // delivery_other로 덧붙인다. 라벨은 기존처럼 APP_LABEL 값을 그대로 쓴다(수정 없음, 기존 글 표시 그대로 유지).
+  const REPORT_DELIVERY_APPS = [...APP_ORDER, 'delivery_other'];
   const REPORT_DELIVERY_LABEL = Object.assign({}, APP_LABEL, { delivery_other: '기타' });
   // 쇼핑몰 — 기존 배달앱 값과 충돌하지 않도록 shop_ 접두사를 쓴다.
   const REPORT_SHOP_LABEL = {
@@ -3889,28 +4064,235 @@
     renderDiscountList();
   }
 
-  // 브랜드(프랜차이즈) 이름 실시간 검색 — 대소문자 구분 없이 부분 일치. Hero 검색창(#hero_search_brand)과
-  // 값을 항상 동기화하고(요건: 두 입력이 같은 값을 유지), 검색어가 있으면 전체 목록을 연다.
+  // 브랜드(프랜차이즈) 이름 실시간 검색 — 대소문자 구분 없이 부분 일치. 검색어가 있으면 전체
+  // 목록을 연다. [검색/필터 통합] 예전엔 상단 Hero와 하단 #search_brand 두 입력의 값을
+  // 서로 동기화하는 코드가 있었지만, 입력이 메인 검색창(#hero_search_brand) 하나로 통합되면서
+  // 그 동기화 로직은 삭제했다 — 필터링 로직(brandSearchQuery/renderDiscountList)은 그대로다.
   function handleBrandSearchInput(value){
     brandSearchQuery = (value || '').trim();
-    document.getElementById('brand-search-clear').classList.toggle('hidden', brandSearchQuery.length === 0);
-    const heroInput = document.getElementById('hero_search_brand');
-    if (heroInput && heroInput.value !== value) heroInput.value = value;
+    const clearBtn = document.getElementById('brand-search-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', brandSearchQuery.length === 0);
     if (brandSearchQuery) revealDiscountList();
     renderDiscountList();
   }
 
+  // [모바일 Sticky 검색] 원본(#hero_search_brand)과 sticky(#hero_search_brand_sticky) 두 입력이
+  // 검색 state(brandSearchQuery) 하나를 공유하도록 감싸는 얇은 래퍼 — 검색 로직 자체
+  // (handleBrandSearchInput)는 그대로 재사용하고, 여기서는 "입력하지 않은 쪽 input의 값"과
+  // sticky 쪽 지우기(×) 버튼만 맞춰준다(원본 쪽 × 버튼은 handleBrandSearchInput이 이미 처리).
+  function handleBrandSearchInputSynced(value, sourceId){
+    const otherId = sourceId === 'hero_search_brand' ? 'hero_search_brand_sticky' : 'hero_search_brand';
+    const otherInput = document.getElementById(otherId);
+    if (otherInput && otherInput.value !== value) otherInput.value = value;
+    handleBrandSearchInput(value);
+    const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
+    if (stickyClearBtn) stickyClearBtn.classList.toggle('hidden', !value || !value.trim());
+    // [버그1 수정] 예전엔 sticky 입력 자신의 oninput에만 자동완성 렌더 호출이 붙어 있어서,
+    // 원본 검색창(#hero_search_brand)에서 입력해 값이 sticky로 "동기화"만 되는 경우에는
+    // 자동완성이 전혀 그려지지 않았다. 두 입력 모두 결국 이 함수를 거치므로, 렌더 호출을
+    // 여기 한 곳으로 옮기면 어느 쪽에서 입력하든 항상 같이 갱신된다(sticky 쪽 oninput에 있던
+    // 중복 호출은 제거). renderStickyAutocomplete()는 sticky bar가 아직 안 보여도(스크롤 전)
+    // box의 내용/hidden 상태만 미리 갱신해두므로, 나중에 IntersectionObserver가 bar를 보여주는
+    // 순간에는 이미 최신 자동완성이 채워져 있다 — 별도의 "sticky 등장 시 복원" 로직이 필요 없다.
+    if (!stickyAutocompleteComposing) renderStickyAutocomplete();
+  }
+
+  // [모바일 Sticky 자동완성] 한글 IME 조합 중(ㅂ→비→비ㅂ→비비→...)에는 자동완성 목록을 다시
+  // 그리지 않는다 — compositionstart~compositionend 사이의 중간 글자에 매번 DOM을 다시 그리면
+  // 일부 모바일 브라우저에서 조합이 끊길 수 있다. 검색 state 동기화(handleBrandSearchInputSynced)
+  // 자체는 원래 하던 대로 매 input마다 그대로 실행되며 건드리지 않는다 — 자동완성 "표시"만 미룬다.
+  // 이 플래그는 setupMobileStickySearchObserver() 안의 addEventListener('compositionstart'/'compositionend')
+  // 가 실제로 켜고 끈다(합성 이벤트는 oninput/onclick과 달리 인라인 on* 속성이 표준이 아니라
+  // JS로 직접 리스너를 붙여야 동작한다).
+  let stickyAutocompleteComposing = false;
+
+  // 자동완성 후보 계산 — 새 검색 로직이 아니라 renderDiscountList()의 브랜드 검색 필터와 정확히
+  // 같은 판정(그룹 표시명 + BRAND_SEARCH_ALIASES, 대소문자 무시, 부분일치)을 그대로 재사용한다.
+  // 그 위에 관련성 우선순위만 추가한다: 0=정확 일치(별칭 포함) → 1=시작 일치 → 2=이름에 포함 →
+  // 3=별칭에 포함, 동순위는 현재 최대 할인금액(groupMaxValue, 기존 함수)이 큰 쪽을 우선한다.
+  function getStickyAutocompleteMatches(rawQuery, limit){
+    const q = (rawQuery || '').trim().toLowerCase();
+    if (!q) return [];
+    const live = discounts.filter(isDiscountLive);
+    const groups = groupDiscountsByBrand(live);
+    const scored = [];
+    groups.forEach(g => {
+      const name = (g.displayName || '').toLowerCase();
+      const aliases = (BRAND_SEARCH_ALIASES[g.displayName] || []).map(a => a.toLowerCase());
+      let rank = null;
+      if (name === q || aliases.includes(q)) rank = 0;
+      else if (name.startsWith(q) || aliases.some(a => a.startsWith(q))) rank = 1;
+      else if (name.includes(q)) rank = 2;
+      else if (aliases.some(a => a.includes(q))) rank = 3;
+      if (rank === null) return;
+      scored.push({ name: g.displayName, maxAmount: groupMaxValue(g), rank });
+    });
+    scored.sort((a, b) => a.rank - b.rank || b.maxAmount - a.maxAmount);
+    return scored.slice(0, limit);
+  }
+
+  // 자동완성 패널을 그린다. 검색어가 비어 있으면 완전히 숨긴다(요건10 — × 로 지울 때도
+  // clearBrandSearch()가 이 패널을 함께 숨긴다). 매칭되는 라이브 할인이 없으면(브랜드를 아예
+  // 모르는지, 브랜드는 있으나 오늘 할인이 없는지 구분할 별도 DB가 없어 현재 데이터 범위 안에서)
+  // 한 줄 안내만 보여준다(요건11). 최대 할인금액은 절대 하드코딩하지 않고 매번 다시 계산한다.
+  function renderStickyAutocomplete(){
+    const input = document.getElementById('hero_search_brand_sticky');
+    const box = document.getElementById('mobile-sticky-search-suggestions');
+    if (!input || !box) return;
+    const query = input.value;
+    if (!query || !query.trim()){
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      return;
+    }
+    const matches = getStickyAutocompleteMatches(query, 5);
+    if (!matches.length){
+      box.classList.remove('hidden');
+      box.innerHTML = `<p class="text-sm px-3 py-3" style="color:var(--muted);">현재 확인된 할인정보가 없어요.</p>`;
+      return;
+    }
+    box.classList.remove('hidden');
+    box.innerHTML = matches.map((m, i) => {
+      const borderTop = i > 0 ? 'border-top:1px solid var(--line);' : '';
+      const safeName = m.name.replace(/'/g, "\\'");
+      return `
+        <button type="button" onclick="handleStickyAutocompletePick('${safeName}')" class="w-full flex items-center justify-between gap-3 px-3 py-3 text-left" style="${borderTop}">
+          <span class="text-sm font-semibold truncate" style="color:var(--text);">${escapeHtml(m.name)}</span>
+          <span class="text-xs font-bold shrink-0 whitespace-nowrap" style="color:var(--primary);">최대 ${m.maxAmount.toLocaleString('ko-KR')}원 할인 〉</span>
+        </button>`;
+    }).join('');
+  }
+
+  // 자동완성 후보 클릭 — 새 이동 로직을 만들지 않고 기존 goToBrandInDiscountList()를 그대로
+  // 재사용한다(필터 초기화 + 목록 펼침 + 해당 카드로 스크롤 + post-highlight-flash 강조까지
+  // 전부 그 함수 안에 이미 있다 — 이번에 그 함수에 sticky 입력 정리만 추가했다).
+  function handleStickyAutocompletePick(brandName){
+    const box = document.getElementById('mobile-sticky-search-suggestions');
+    if (box){ box.classList.add('hidden'); box.innerHTML = ''; }
+    goToBrandInDiscountList(brandName);
+  }
+
+  // [검색/필터 통합] × 버튼은 하단 #search_brand에서 메인 검색창으로 그대로 옮겨왔고, 동작도
+  // 동일하다(검색어만 비우고, 이미 열린 전체 목록은 닫지 않는다 — discountListRevealed 불변).
+  // [모바일 Sticky 검색] sticky 입력/× 버튼도 원본과 함께 비운다(두 UI, 하나의 검색 state).
   function clearBrandSearch(){
     brandSearchQuery = '';
-    document.getElementById('search_brand').value = '';
-    // [실험판 v1] Hero 검색창(#hero_search_brand)도 함께 비운다 — 존재할 때만(원본 파일에는 없는
-    // 요소이므로 존재 체크 후 처리). 기존 동작(아래 클리어 버튼)은 그대로.
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
-    document.getElementById('brand-search-clear').classList.add('hidden');
-    // [v4] 검색어를 지웠다는 이유만으로 전체 목록을 다시 닫지 않는다 — discountListRevealed는
-    // 여기서 건드리지 않고 그대로 열린 상태를 유지한다.
+    const stickyInput = document.getElementById('hero_search_brand_sticky');
+    if (stickyInput) stickyInput.value = '';
+    const clearBtn = document.getElementById('brand-search-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
+    if (stickyClearBtn) stickyClearBtn.classList.add('hidden');
+    // [모바일 Sticky 자동완성] × 로 지우면 자동완성도 즉시 닫힌다(요건10).
+    const stickySuggestions = document.getElementById('mobile-sticky-search-suggestions');
+    if (stickySuggestions){ stickySuggestions.classList.add('hidden'); stickySuggestions.innerHTML = ''; }
     renderDiscountList();
+  }
+
+  // [모바일 Sticky 검색] 원본 검색창(#hero_search_brand)이 고정 헤더 아래로 사라지는 순간에만
+  // #mobile-sticky-search를 보여준다. scroll 이벤트를 직접 구독하지 않고 IntersectionObserver로
+  // "원본 입력창이 보이는지"만 관찰한다(성능 요건: 매 프레임 layout 측정/scroll 이벤트 남발 방지).
+  // rootMargin을 헤더의 실측 높이만큼 위로 당겨서, 원본 입력창이 물리적 뷰포트를 벗어나는 시점이
+  // 아니라 "고정 헤더에 가려지는" 시점을 기준으로 삼는다 — 헤더 높이(햄버거 메뉴 열림 등으로)가
+  // 바뀌면 ResizeObserver가 감지해 관찰을 그 높이로 다시 만든다. PC(sm 이상)에서는 관찰 결과와
+  // 무관하게 항상 숨긴다(요건 10) — 이 JS 체크는 정적 CSS 안전장치(sm:hidden, 마크업 주석 참고)에
+  // 더해진 이중 방어일 뿐, 핵심 방어는 CSS 쪽이다.
+  // [노출 범위 수정] #mobile-sticky-search는 fixed UI라 #page-home 바깥에 있다(DOM 위치는
+  // 그대로 둔다) — 그런데 다른 탭으로 이동하면 switchTab()이 #page-home 자체에 hidden을
+  // 씌우고, 그 안의 #hero_search_brand는 더 이상 레이아웃을 갖지 않아 IntersectionObserver가
+  // "노출 안 됨"으로 잘못 해석해 Sticky를 계속/다시 보여주는 문제가 있었다. 이제 표시 여부를
+  // 판단하는 지점을 updateMobileStickySearchVisibility() 한 곳으로 모아, "현재 home 탭이
+  // 활성 상태인가"(#page-home의 hidden 클래스 — 기존에 switchTab()이 이미 관리하던 상태를
+  // 그대로 재사용, 새 상태 시스템을 만들지 않음)를 항상 최우선으로 확인한다. observer/resize/
+  // switchTab 등 여러 곳에서 직접 classList를 건드리지 않고 전부 이 함수만 호출하므로,
+  // "한쪽에서 숨겼는데 다른 쪽이 다시 보여주는" 경쟁 상태가 생기지 않는다.
+  let mobileStickySearchIO = null;
+  let heroSearchInputIntersecting = true; // IntersectionObserver가 마지막으로 알려준 원본 입력창의 노출 상태
+
+  function isHomeTabActive(){
+    const homePage = document.getElementById('page-home');
+    return !!homePage && !homePage.classList.contains('hidden');
+  }
+
+  // Sticky 검색창을 보여줄지 결정하는 단일 지점. 요건: 모바일 + home 활성 + 원본 입력창이
+  // 헤더에 가려진 상태 세 가지를 모두 만족할 때만 표시한다. home이 아니면 자동완성 패널도
+  // 함께 비우고(요건7 — 검색어 자체/brandSearchQuery는 손대지 않는다), home이면 현재 sticky
+  // 입력값 기준으로 자동완성을 다시 채워둬(요건8) 복귀 직후에도 최신 상태로 보이게 한다.
+  function updateMobileStickySearchVisibility(){
+    const stickyBar = document.getElementById('mobile-sticky-search');
+    if (!stickyBar) return;
+    const onHome = isHomeTabActive();
+    const shouldShow = window.innerWidth < 640 && onHome && !heroSearchInputIntersecting;
+    stickyBar.classList.toggle('hidden', !shouldShow);
+    if (!onHome){
+      const box = document.getElementById('mobile-sticky-search-suggestions');
+      if (box){ box.classList.add('hidden'); box.innerHTML = ''; }
+    } else if (typeof renderStickyAutocomplete === 'function'){
+      renderStickyAutocomplete();
+    }
+  }
+
+  function setupMobileStickySearchObserver(){
+    const originalInput = document.getElementById('hero_search_brand');
+    const stickyBar = document.getElementById('mobile-sticky-search');
+    const header = document.querySelector('header.sticky');
+    if (!originalInput || !stickyBar) return;
+
+    function currentHeaderHeight(){ return header ? header.offsetHeight : 0; }
+    function updateStickyBarTop(){ stickyBar.style.top = currentHeaderHeight() + 'px'; }
+
+    function rebuildObserver(){
+      if (mobileStickySearchIO) mobileStickySearchIO.disconnect();
+      mobileStickySearchIO = new IntersectionObserver((entries) => {
+        heroSearchInputIntersecting = entries[0].isIntersecting;
+        updateMobileStickySearchVisibility();
+      }, { rootMargin: `-${currentHeaderHeight()}px 0px 0px 0px`, threshold: 0 });
+      mobileStickySearchIO.observe(originalInput);
+    }
+
+    updateStickyBarTop();
+    rebuildObserver();
+
+    if (header && typeof ResizeObserver !== 'undefined'){
+      new ResizeObserver(() => { updateStickyBarTop(); rebuildObserver(); }).observe(header);
+    } else {
+      window.addEventListener('resize', () => { updateStickyBarTop(); rebuildObserver(); });
+    }
+    // 창 폭이 모바일↔PC 경계를 넘나드는 순간(리사이즈)에도 즉시 반영하는 안전망.
+    window.addEventListener('resize', updateMobileStickySearchVisibility);
+
+    // [모바일 자동완성 — 한글 IME] compositionstart/compositionend는 oninput/onclick과 달리
+    // 표준 인라인 on* HTML 속성이 없어(브라우저가 자동으로 이벤트 리스너로 연결해주지 않음),
+    // 여기서 addEventListener로 직접 붙여야 실제로 동작한다. 검색 state 동기화
+    // (handleBrandSearchInputSynced, oninput에 그대로 남아있음)는 조합 중에도 원래대로 매번
+    // 실행되고, 오직 자동완성 목록 다시 그리기만 조합이 끝날 때까지 미룬다.
+    const stickySearchInput = document.getElementById('hero_search_brand_sticky');
+    if (stickySearchInput){
+      stickySearchInput.addEventListener('compositionstart', () => {
+        stickyAutocompleteComposing = true;
+      });
+      stickySearchInput.addEventListener('compositionend', () => {
+        stickyAutocompleteComposing = false;
+        renderStickyAutocomplete();
+      });
+    }
+  }
+
+  // [검색/필터 통합] "상세조건" 접기/펼치기 — 새로 추가된 유일한 토글로, activeAppFilters/
+  // activeCategoryFilters 등 필터 상태는 전혀 건드리지 않고 #advanced-filter-panel의 hidden
+  // 클래스와 버튼의 aria-expanded만 맞바꾼다. 그래서 필터를 선택한 채로 접었다 다시 펼쳐도
+  // 선택 상태가 그대로 유지된다.
+  function toggleAdvancedFilter(){
+    const btn = document.getElementById('advanced-filter-toggle');
+    const panel = document.getElementById('advanced-filter-panel');
+    const icon = document.getElementById('advanced-filter-toggle-icon');
+    if (!btn || !panel) return;
+    const nowExpanded = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(nowExpanded));
+    panel.classList.toggle('hidden', !nowExpanded);
+    if (icon) icon.textContent = nowExpanded ? '▴' : '▾';
   }
 
   function updateChipStyles(selector, attr, activeList, colorMap){
@@ -3990,12 +4372,6 @@
 
   function groupMaxValue(group){
     return Math.max(...group.badges.map(b => b.sortValue));
-  }
-
-  // 그룹(브랜드) 안에서 가장 임박한(가장 적게 남은) 종료일 기준 잔여일. 기한이 하나도 없으면 null(맨 뒤로 정렬됨)
-  function groupMinDaysLeft(group){
-    const values = group.badges.map(b => b.daysLeft).filter(v => v !== null && v !== undefined);
-    return values.length ? Math.min(...values) : null;
   }
 
   // 브랜드 통합 카드: 최고 할인액을 대표 텍스트로 강조하고, 플랫폼별
@@ -4085,7 +4461,9 @@
     const safeAttrKey = escapeHtml(group.key);
     const jsKey = group.key.replace(/'/g, "\\'");
     const detailId = `discount-detail-${safeAttrKey.replace(/[^a-zA-Z0-9가-힣]/g, '')}`;
-    const chevronMobile = isExpanded ? '︿' : '〉';
+    // [모바일 펼침/접기 텍스트화] 데스크탑(chevronDesktop)은 그대로 두고, 모바일 전용
+    // chevronMobile은 방향 아이콘 없이 "펼침"/"접기" 텍스트만 표시한다.
+    const chevronMobile = isExpanded ? '접기' : '펼침';
     const chevronDesktop = isExpanded ? '비교 접기 ︿' : '비교하기 〉';
 
     return `
@@ -4097,7 +4475,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-2">
                 <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(group.displayName)}</p>
-                <span class="discount-card-chevron-mobile sm:hidden shrink-0 text-sm" style="color:var(--muted);">${chevronMobile}</span>
+                <span class="discount-card-chevron-mobile sm:hidden shrink-0 text-xs font-semibold whitespace-nowrap" style="color:#FF6B6B;">${chevronMobile}</span>
               </div>
               <p class="font-mono text-sm sm:text-xl font-extrabold leading-tight mt-0.5 break-keep" style="color:var(--primary);">${headlineText}</p>
               <p class="text-[11px] sm:text-xs mt-1 truncate" style="color:var(--text-secondary);"><span class="font-semibold px-1.5 py-0.5 rounded" style="background:${APP_COLOR[topApps[0]]}; color:#1C1A17; font-size:10px;">${escapeHtml(topAppLabel)}</span> · ${appCount}개 앱 비교</p>
@@ -4125,12 +4503,18 @@
     onlyLimitedTimeFilter = false;
     sortDirection = 'desc';
 
-    const searchInput = document.getElementById('search_brand');
-    if (searchInput) searchInput.value = '';
     const heroInput = document.getElementById('hero_search_brand');
     if (heroInput) heroInput.value = '';
     const searchClearBtn = document.getElementById('brand-search-clear');
     if (searchClearBtn) searchClearBtn.classList.add('hidden');
+    // [모바일 Sticky 검색/자동완성] 이 함수로 이동할 때(자동완성 후보 클릭 포함) sticky 쪽도
+    // 원본과 함께 비운다 — 두 입력이 하나의 검색 state를 공유한다는 원칙을 계속 지킨다.
+    const stickyInput = document.getElementById('hero_search_brand_sticky');
+    if (stickyInput) stickyInput.value = '';
+    const stickyClearBtn = document.getElementById('brand-search-clear-sticky');
+    if (stickyClearBtn) stickyClearBtn.classList.add('hidden');
+    const stickySuggestions = document.getElementById('mobile-sticky-search-suggestions');
+    if (stickySuggestions){ stickySuggestions.classList.add('hidden'); stickySuggestions.innerHTML = ''; }
 
     updateChipStyles('[data-filter-app]', 'filter-app', activeAppFilters, APP_COLOR);
     updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
@@ -4219,7 +4603,7 @@
     const nowExpanded = !wasExpanded;
     if (detail) detail.setAttribute('data-expanded', String(nowExpanded));
     if (header) header.setAttribute('aria-expanded', String(nowExpanded));
-    if (chevronMobile) chevronMobile.textContent = nowExpanded ? '︿' : '〉';
+    if (chevronMobile) chevronMobile.textContent = nowExpanded ? '접기' : '펼침';
     if (chevronDesktop) chevronDesktop.textContent = nowExpanded ? '비교 접기 ︿' : '비교하기 〉';
     // [v4] 펼친 카드만 좌측 골드 라인 + 살짝 밝은 배경(.is-expanded, CSS)으로 구분 — 테두리 색은
     // 인라인 스타일이라 여기서 함께 맞춰준다.
@@ -4334,15 +4718,6 @@
       }
     }
     renderDiscountList();
-  }
-
-  // 홈의 "오늘의 선착순 쿠폰" 배너 클릭 시 호출. 새 필터 로직을 만들지 않고 기존
-  // toggleLimitedTimeFilter()/onlyLimitedTimeFilter를 그대로 재사용한다. toggleLimitedTimeFilter()는
-  // '토글'이라 이미 켜진 상태에서 또 부르면 꺼지므로, 꺼져있을 때만 호출해 항상 "켜짐"으로 만든다.
-  // 스크롤은 기존 scrollToBrandSearch()(전체 할인 보기 버튼과 동일한 함수)를 그대로 재사용한다.
-  function goToLimitedTimeCoupons(){
-    if (!onlyLimitedTimeFilter) toggleLimitedTimeFilter();
-    scrollToBrandSearch();
   }
 
   function emptyState(){
@@ -4694,12 +5069,13 @@
     if (titleInput) titleInput.classList.toggle('hidden', !isReport && isStore);
   }
 
-  // 게시판 글쓰기 폼의 배달앱 셀렉트 옵션 초기화 (배달의민족/요기요/쿠팡이츠/땡겨요/주문의고수)
+  // 게시판 글쓰기 폼의 배달앱 셀렉트 옵션 초기화 — [배달앱 순서 통일] 예전엔 Object.keys(APP_LABEL)
+  // 로 객체 선언 순서에 우연히 의존했지만, 이제 공통 APP_ORDER를 명시적으로 순회한다.
   function renderBoardComposeAppSelect(){
     const el = document.getElementById('board-compose-app');
     if (!el) return;
     el.innerHTML = '<option value="">배달 어플 선택</option>' +
-      Object.keys(APP_LABEL).map(key => `<option value="${key}">${APP_LABEL[key]}</option>`).join('');
+      APP_ORDER.map(key => `<option value="${key}">${APP_LABEL[key]}</option>`).join('');
   }
 
   // 파일 선택 시(여러 장 동시 선택 가능) 남은 슬롯 개수만큼만 받아서 미리보기 항목으로 추가한다.
@@ -6608,35 +6984,16 @@
     if (listEl) listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // 메인 화면의 '실시간 1위 할인 자랑글' 배너 클릭 시:
-  // 게시판 탭 → 🔥 할인의 고수 카테고리 자동 선택 → 해당 글로 스무스 스크롤 + 하이라이트 반짝임
   // 관리자가 설정한 홈 배너 내용 (Supabase app_config에서 불러옴). promoPostId가 없거나
   // 실제로 존재하지 않는 글이면, 식품 게시판에서 할인액이 가장 큰 글로 자동 대체된다.
+  // [선착순/실시간 배너 제거] 이 값을 화면에 그리던 renderHomeBanners()는 홈에서 배너 2개가
+  // 사라지며 삭제했지만, homeBannerConfig 자체와 관리자 설정 화면(renderAdminBannerPostSelect/
+  // saveHomeBannerConfig)은 그대로 둔다 — 게시판 관리자 기능이라 이번 작업 범위 밖이다.
   const homeBannerConfig = {
     promoBadge: '🔥 실시간 할인 1위 노하우 대공개',
     promoTitle: 'BBQ 12,000원 할인! 도대체 어떻게 받았을까?',
     promoPostId: null,
   };
-
-  function renderHomeBanners(loadedSuccessfully){
-    const promoBanner = document.getElementById('home-promo-banner');
-    const promoSkeleton = document.getElementById('home-promo-banner-skeleton');
-    const badgeEl = document.getElementById('home-promo-banner-badge');
-    const titleEl = document.getElementById('home-promo-banner-title');
-
-    if (!loadedSuccessfully){
-      // 네트워크/서버 문제로 실제 배너 문구를 못 가져온 경우: 예전 테스트 문구가 그대로
-      // 남아있는 것보다는, 스켈레톤을 걷어내고 배너 자체를 아예 안 보여주는 쪽이 안전하다.
-      if (promoSkeleton) promoSkeleton.classList.add('hidden');
-      return;
-    }
-
-    if (badgeEl) badgeEl.textContent = homeBannerConfig.promoBadge;
-    if (titleEl) titleEl.textContent = homeBannerConfig.promoTitle;
-
-    if (promoSkeleton) promoSkeleton.classList.add('hidden');
-    if (promoBanner) promoBanner.classList.remove('hidden');
-  }
 
   // 페이지 로드 시 Supabase에서 홈 배너 설정값을 불러온다. (누구나 조회 가능, 값이 없으면 위 기본값 유지)
   //
@@ -6662,7 +7019,6 @@
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 설정 조회 실패 (app_config/get_app_config_value 확인 필요)', e);
     }
-    renderHomeBanners(loadedSuccessfully);
     renderAdminBannerPostSelect();
   }
 
@@ -6712,49 +7068,11 @@
       homeBannerConfig.promoBadge = promoBadge;
       homeBannerConfig.promoTitle = promoTitle;
       homeBannerConfig.promoPostId = promoPostId || null;
-      renderHomeBanners(true);
       showToast('홈 배너가 저장되었습니다 ✅');
     } catch (e){
       console.warn('[주문의 고수] 홈 배너 저장 실패 (set_home_banner_config RPC 확인 필요)', e);
       showToast('배너 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
-  }
-
-  function goToTopDiscountPost(){
-    // 관리자가 지정한 글이 있으면 카테고리 상관없이 전체 게시글에서 찾고,
-    // 지정된 게 없거나 그 글이 삭제됐으면 할인액이 가장 큰 할인 게시글로 자동 이동
-    let target = null;
-    if (homeBannerConfig.promoPostId){
-      target = boardPosts.find(p => String(p.id) === String(homeBannerConfig.promoPostId)) || null;
-    }
-    if (!target){
-      const discountPosts = boardPosts.filter(p => isDiscountFormCategory(p.board));
-      if (discountPosts.length){
-        target = discountPosts.slice().sort((a, b) => (b.totalDiscount || 0) - (a.totalDiscount || 0))[0];
-      }
-    }
-
-    switchTab('board');
-    switchBoardTab(target ? boardTabOfPost(target) : 'report');
-
-    if (!target) return;
-
-    // 화면 목록과 같은 필터·정렬(getBoardListOrder)로 페이지를 계산한다 — 예전처럼 DB 카테고리(board)
-    // 기준으로 세면 소식/제보·질문 탭의 실제 순서와 어긋난다(2026-09-20 수정).
-    const page = getBoardPageForPost(target.id);
-    if (page){
-      boardPage = page;
-      expandedPostIds.add(target.id); // 애니메이션 효과가 꺼진 기기에서도 이동했는지 눈으로 바로 확인되도록 펼친 상태로 이동
-      renderBoardList();
-    }
-
-    setTimeout(() => {
-      const el = document.getElementById(`board-post-${target.id}`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('post-highlight-flash');
-      setTimeout(() => el.classList.remove('post-highlight-flash'), 2200);
-    }, 150);
   }
 
   // ---------- 관리자 페이지 진입 게이트 (이메일 기반) ----------
@@ -8296,8 +8614,8 @@
   // 각 탭이 서로 다른 고유 페이지로 인식되게 한다.
   const PAGE_SEO = {
     home: {
-      title: '주문의고수 | 배달의민족·요기요·쿠팡이츠·땡겨요 할인 통합 비교',
-      description: '배달의민족·요기요·쿠팡이츠·땡겨요 치킨·피자·버거 할인쿠폰을 한 곳에서 비교하세요. 매일 업데이트되는 브랜드별 최저가 할인정보!',
+      title: '주문의고수 | 배달의민족·쿠팡이츠·요기요·땡겨요 할인 통합 비교',
+      description: '배달의민족·쿠팡이츠·요기요·땡겨요 치킨·피자·버거 할인쿠폰을 한 곳에서 비교하세요. 매일 업데이트되는 브랜드별 최저가 할인정보!',
       ogTitle: '주문의고수 | 배달앱 할인 통합 비교',
       indexable: true,
     },
@@ -8309,7 +8627,7 @@
     },
     about: {
       title: '서비스 소개 | 주문의고수',
-      description: '배달앱 할인 비교와 쇼핑 상품 탐색 서비스 주문의고수를 소개합니다. 배민·요기요·쿠팡이츠·땡겨요 할인 정보와 조건별 쇼핑 상품을 한눈에 확인하세요.',
+      description: '배달앱 할인 비교와 쇼핑 상품 탐색 서비스 주문의고수를 소개합니다. 배민·쿠팡이츠·요기요·땡겨요 할인 정보와 조건별 쇼핑 상품을 한눈에 확인하세요.',
       ogTitle: '서비스 소개 | 주문의고수',
       indexable: true,
     },
@@ -8919,49 +9237,28 @@
 
 
   // 맞춤 쇼핑/핫딜 전용 처리들이 공통으로 쓰는 "지금 쇼핑 관련 탭인가" 판정.
-  // (광고 숨김·쇼핑 메뉴 활성 표시·라이트 테마 세 곳에서 동일한 조건이라 하나로 통일)
+  // (쇼핑 메뉴 활성 표시·라이트 테마에서 동일한 조건이라 하나로 통일)
   const SHOPPING_TABS = ['shopping', 'hotdeals'];
-
-  // 맞춤 쇼핑/핫딜에서는 헤더 바로 아래 카카오 애드핏 배너를 숨긴다(쿠팡 제휴 전환이 핵심 수익모델이라
-  // 질문 시작 전 외부 광고로 이탈하는 것을 막기 위함). 광고 스크립트·ID·정책 문구는 건드리지 않고
-  // 레이아웃용 래퍼(#top-ad-banner-wrap)의 표시 여부만 탭 단위로 토글한다.
-  function syncShoppingAdVisibility(tab){
-    const wrap = document.getElementById('top-ad-banner-wrap');
-    if (!wrap) return;
-    wrap.classList.toggle('hidden', SHOPPING_TABS.includes(tab));
-  }
-
-  // 소식·제보 페이지에서만 상단 광고를 "제목 → 설명 → 광고 → 목록" 순서가 되도록 제목 아래의
-  // #board-ad-slot 안으로 옮기고, 다른 탭으로 나가면 원래 자리(모든 <main> 위)로 되돌린다.
-  // 광고 코드·단위·링크·추적은 건드리지 않고 같은 DOM 노드의 위치만 바꾼다(2026-09-20).
-  let topAdOriginalParent = null;
-  let topAdOriginalNext = null;
-  function syncBoardAdPlacement(tab){
-    const wrap = document.getElementById('top-ad-banner-wrap');
-    const slot = document.getElementById('board-ad-slot');
-    if (!wrap || !slot) return;
-    if (tab === 'board'){
-      if (wrap.parentNode !== slot){
-        if (!topAdOriginalParent){ topAdOriginalParent = wrap.parentNode; topAdOriginalNext = wrap.nextSibling; }
-        slot.appendChild(wrap);
-      }
-    } else if (topAdOriginalParent && wrap.parentNode === slot){
-      topAdOriginalParent.insertBefore(wrap, topAdOriginalNext);
-    }
-  }
 
   // 하단 SEO 내부링크 영역 전환(2026-09-19): /hot-deals에서만 쇼핑 SEO 10개 링크 블록을 보여주고
   // 배달 SEO 링크 블록은 숨긴다. 그 외 모든 탭(홈 포함)은 기존 그대로 배달 SEO 블록만 보인다
   // (이번 작업 범위가 배달할인/쇼핑핫딜 두 화면으로 한정되어 있어 다른 탭은 손대지 않음).
   // 두 블록 모두 실제 <a href> 정적 링크라 이 토글은 hidden 클래스만 바꿀 뿐 링크 자체는 항상
   // DOM에 존재한다(JS 없이도 크롤러가 두 블록 다 읽을 수 있음).
+  // [상시 쇼핑핫딜 전환] #footer-seo-shopping은 seo-shopping.js의 10개 추석 전용 SSR 페이지로
+  // 연결되는 정적 링크 모음이다(이번 작업 범위 밖 파일). 예전엔 tab==='hotdeals'이기만 하면
+  // 시즌과 무관하게 항상 보였는데, 시즌이 끝난 뒤에도 "추석 선물 조건별로 찾아보기" 링크 10개가
+  // 계속 노출되는 건 상시 페이지 정체성과 맞지 않아 시즌 조건을 더했다.
   function updateFooterSeoRegion(tab){
     const deliveryBlock = document.getElementById('footer-seo-delivery');
     const shoppingBlock = document.getElementById('footer-seo-shopping');
     if (!deliveryBlock || !shoppingBlock) return;
     const onHotdeals = (tab === 'hotdeals');
+    const chuseok = HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive();
     deliveryBlock.classList.toggle('hidden', onHotdeals);
-    shoppingBlock.classList.toggle('hidden', !onHotdeals);
+    shoppingBlock.classList.toggle('hidden', !(onHotdeals && chuseok));
+    const crosslink = document.getElementById('footer-seo-delivery-shopping-crosslink');
+    if (crosslink) crosslink.classList.toggle('hidden', !chuseok);
   }
 
   // '쇼핑' 드롭다운 버튼은 PAGES.forEach의 'tab-' + p 규칙에 걸리지 않는 별도 UI라,
@@ -9195,7 +9492,7 @@
     { name: "한국삼 데일리 꿀홍삼스틱, 100회분, 1개", price: "29,840원", category: "건강식품, 홍삼", url: "https://www.coupang.com/vp/products/250904090?itemId=792086063", isSearchUrl: false, rating: 4.5, reviews: 1433, partnersUrl: "https://link.coupang.com/a/g9jiLx9Yt2", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuBV\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "가족", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "참다한 홍삼정, 240g, 1개", price: "70,410원", category: "건강식품, 홍삼", url: "https://www.coupang.com/vp/products/4705095766?itemId=5931025561", isSearchUrl: false, rating: 4.5, reviews: 80, partnersUrl: "https://link.coupang.com/a/g9jnmBX9k4", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuEX\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "가족", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "경희장생 홍삼정 골드, 240g, 2개", price: "69,900원", category: "건강식품, 홍삼", url: "https://www.coupang.com/vp/products/8087964641?itemId=2600935198", isSearchUrl: false, rating: 4.5, reviews: 3696, partnersUrl: "https://link.coupang.com/a/g9jrC8QqiG", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuHH\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "가족", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
-    { name: "스팸 8C호 선물세트, 1세트", price: "27,900원", category: "식품, 통조림", url: "https://www.coupang.com/vp/products/34050118?itemId=24016460098", isSearchUrl: false, rating: 5, reviews: 13288, partnersUrl: "https://link.coupang.com/a/g9jFG41MrY", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuQI\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["가족", "직장·거래처"], pick: 4, pickLabel: "가족", pickReason: "명절에 하나 받아두면 두고두고 반찬으로 활용하기 좋아요. 리뷰가 1만 3천 개가 넘는 익숙한 제품이라 가족 선물로 편하게 고를 수 있어요." },
+    { name: "스팸 8C호 선물세트, 1세트", price: "27,900원", category: "식품, 통조림", url: "https://www.coupang.com/vp/products/34050118?itemId=24016460098", isSearchUrl: false, rating: 5, reviews: 13288, partnersUrl: "https://link.coupang.com/a/g9jFG41MrY", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuQI\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["가족", "직장·거래처"], pick: 4, pickLabel: "가족", pickReason: "하나 사두면 두고두고 반찬으로 활용하기 좋아요. 리뷰가 1만 3천 개가 넘는 익숙한 제품이라 가족 선물로 편하게 고를 수 있어요." },
     { name: "스팸 3C호 선물세트, 1세트", price: "45,900원", category: "식품, 통조림", url: "https://www.coupang.com/vp/products/8276805592?itemId=23866704834", isSearchUrl: false, rating: 5, reviews: 1834, partnersUrl: "https://link.coupang.com/a/g9jJrlaaaW", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuTb\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["가족", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "스팸 1호 선물세트, 4.08kg, 4세트", price: "222,590원", category: "식품, 통조림", url: "https://www.coupang.com/vp/products/9723792530?itemId=29098999322", isSearchUrl: false, rating: 5, reviews: 5834, partnersUrl: "https://link.coupang.com/a/g9jSWMdA04", partnersHtml: "<iframe src=\"https://coupa.ng/cpBuY7\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["가족", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "해표 안심특선 S32호 선물세트", price: "20,800원", category: "식품", url: "https://www.coupang.com/vp/products/1958987069?itemId=20103802302", isSearchUrl: false, rating: 5, reviews: 1461, partnersUrl: "https://link.coupang.com/a/g9j7AvyV4K", partnersHtml: "<iframe src=\"https://coupa.ng/cpBu8f\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["가족", "지인"], pick: 0, pickLabel: "", pickReason: "" },
@@ -9308,7 +9605,7 @@
     { name: "스타벅스 카페모먼트 스무스 선물세트, 스무스 65g + 스므스 스틱 10p + 브라이트 스틱 10p x 2p + 머그 350ml, 1세트", price: "48,360원", category: "식품, 커피·차", url: "https://www.coupang.com/vp/products/8996081308?itemId=29013669196", isSearchUrl: false, rating: 5, reviews: 157, partnersUrl: "https://link.coupang.com/a/hahiKvzSWO", partnersHtml: "<iframe src=\"https://coupa.ng/cpBXXg\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["직장·거래처", "지인", "연인"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "농협안심한우 1등급 구이세트 1호 900g (등심300g + 갈비살300g + 채끝300g) (냉장)", price: "107,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/9025994820?itemId=27537326869", isSearchUrl: false, rating: 5, reviews: 78, partnersUrl: "https://link.coupang.com/a/hahx425Wwu", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYiQ\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "농협안심한우 1++(7)등급 안심특선 23호 1kg (등심200g + 채끝200g + 갈비살200g + 부채살200g + 살치살200g) (냉장), 1세트, 200g", price: "151,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/8297813889?itemId=23934531628", isSearchUrl: false, rating: 5, reviews: 1296, partnersUrl: "https://link.coupang.com/a/hahB6Wlz9U", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYqp\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
-    { name: "농협안심한우 1+등급 구이세트 900g (등심250g + 채끝 250g + 부채살 200g + 업진살200g) (냉장), 1세트, 250g + 250g + 200g + 200g", price: "118,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/6936882535?itemId=16807353773", isSearchUrl: false, rating: 4.5, reviews: 2197, partnersUrl: "https://link.coupang.com/a/hahFafw3z2", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYvh\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 3, pickLabel: "부모님 · 직장", pickReason: "부모님이나 감사한 분께 제대로 된 선물을 하고 싶을 때 좋아요. 농협안심한우 1+등급에 구이용으로 구성돼 명절 선물로 손색없어요." },
+    { name: "농협안심한우 1+등급 구이세트 900g (등심250g + 채끝 250g + 부채살 200g + 업진살200g) (냉장), 1세트, 250g + 250g + 200g + 200g", price: "118,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/6936882535?itemId=16807353773", isSearchUrl: false, rating: 4.5, reviews: 2197, partnersUrl: "https://link.coupang.com/a/hahFafw3z2", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYvh\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 3, pickLabel: "부모님 · 직장", pickReason: "부모님이나 감사한 분께 제대로 된 선물을 하고 싶을 때 좋아요. 농협안심한우 1+등급에 구이용으로 구성돼 선물로 손색없어요." },
     { name: "농협안심한우 1등급 채반세트 1호 1kg (등심500g + 채끝300g + 안심 200g) (냉장), 1세트, 500g + 채끝 300g + 안심 200g", price: "103,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/7389795180?itemId=19103657646", isSearchUrl: false, rating: 4.5, reviews: 1862, partnersUrl: "https://link.coupang.com/a/hahI33k9Ce", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYzd\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "횡성한우 1등급 정육 세트 1.6kg (불고기 400g 2p + 국거리 400g + 산적 400g) (냉장)", price: "116,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/1930938197?itemId=3277909479", isSearchUrl: false, rating: 4.5, reviews: 445, partnersUrl: "https://link.coupang.com/a/hahUDvUpky", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYKy\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
     { name: "농협안심한우 1등급 안심특선 3호 1kg (등심200g + 채끝200g + 갈비살200g + 부채살200g + 살치살200g) (냉장)", price: "128,000원", category: "식품, 한우·육류", url: "https://www.coupang.com/vp/products/9296705826?itemId=27537327430", isSearchUrl: false, rating: 5, reviews: 65, partnersUrl: "https://link.coupang.com/a/hahX0ACkdE", partnersHtml: "<iframe src=\"https://coupa.ng/cpBYOI\" width=\"120\" height=\"240\" frameborder=\"0\" scrolling=\"no\" referrerpolicy=\"unsafe-url\"></iframe>", fixNeeded: "", targets: ["부모님", "직장·거래처"], pick: 0, pickLabel: "", pickReason: "" },
@@ -9630,13 +9927,25 @@
   // (id가 autumn-gift-pick-N이라 applyAutumnGiftFilterVisibility가 건드리지 않음), iframe은 아래
   // 그리드와 같은 지연 로드 슬롯(.autumn-gift-iframe-slot, data-agp-index=원본 인덱스)을 쓴다.
   // 같은 상품이 PICK과 그리드에 각각 한 번씩 나오는 건 의도한 것(PICK은 추천, 그리드는 전체 목록).
-  function autumnGiftPickCardHtml(p, i, extra){
+  function autumnGiftPickCardHtml(p, i, tier){
     const ratingText = (p.rating !== null && p.rating !== undefined) ? `⭐ ${p.rating}` : '';
     const reviewsText = (p.reviews !== null && p.reviews !== undefined) ? ` (${Number(p.reviews).toLocaleString('ko-KR')})` : '';
-    // extra=true면 "더보기"로만 펼쳐지는 나머지 픽 — 기본은 숨겨두되 DOM 자체는 항상 만들어 둔다
-    // (다른 곳과 마찬가지로 hidden 토글만으로 여닫아야 iframe이 다시 로드되지 않는다).
+    // tier 0 = 항상 노출. tier 1 = PC(1024px+)에서는 기본 노출, 그보다 좁으면(모바일/태블릿)
+    // "더보기"로만 열림 — agp-pick-extra(더보기 토글 대상) + hidden(기본 숨김) + lg:flex(1024px+
+    // 에서는 hidden을 무시하고 무조건 보이게 하는 정적 CSS 오버라이드)을 함께 준다.
+    // [PC 고수PICK 레이아웃 수정] 이전엔 lg:block을 썼는데, 카드 자체가 display:flex(이미지 좌측+
+    // 정보 우측 2열 구성)라 lg:block이 그 flex를 덮어써 1024px+에서만 정보가 이미지 아래로
+    // 통째로 떨어지는(스택형으로 깨지는) 문제가 있었다(Tailwind 반응형 유틸리티가 .hidden보다
+    // 뒤에 있어 이기는 것까지는 의도대로였지만, block이 아니라 flex로 이겨야 했다). 카드의
+    // 실제 display 값(flex)과 맞춰 lg:flex로 바꿔 "숨김 해제"와 "레이아웃 유지"를 동시에
+    // 만족시킨다 — 쇼핑 인트로 화면의 sm:flex와 같은 원리.
+    // tier 2 = 기존과 동일, 모든 화면에서 "더보기"로만 열림. DOM 자체는 항상 만들어 두고 hidden
+    // 토글만으로 여닫아야 iframe이 다시 로드되지 않는다.
+    const extraClass = tier === 1 ? 'agp-pick-extra hidden lg:flex '
+                      : tier === 2 ? 'agp-pick-extra hidden '
+                      : '';
     return `
-      <div id="autumn-gift-pick-${p.pick}" class="${extra ? 'agp-pick-extra hidden ' : ''}rounded-lg p-3 flex gap-3" style="background:var(--card); border:1px solid var(--line);">
+      <div id="autumn-gift-pick-${p.pick}" class="${extraClass}rounded-lg p-3 flex gap-3" style="background:var(--card); border:1px solid var(--line);">
         <div class="shrink-0 autumn-gift-iframe-slot" data-agp-index="${i}" style="width:120px; height:240px; overflow:hidden;"></div>
         <a class="agp-card-link min-w-0 flex-1 flex flex-col" href="${escapeHtml(autumnGiftClickHref(p))}" target="_blank" rel="noopener sponsored" onclick="autumnGiftTrackClick(${i}, 'pick')">
           <div class="flex items-center gap-2 mb-1">
@@ -9650,17 +9959,25 @@
         </a>
       </div>`;
   }
-  // 처음엔 몇 개만 보여줄지 — 8개 중 4개(모바일 2열×2줄/PC 2열×2줄 기준 한 화면에 자연스럽게
-  // 들어오는 수). 신뢰 신호(고수PICK)는 남기되 첫 화면 부담은 줄이자는 절충안(2026-09-19).
-  const AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT = 4;
+  // [PC 초기 노출 최적화] 모바일/태블릿(1024px 미만, 2열까지)은 4개가 정확히 2줄로 맞아떨어져
+  // 이미 빈칸이 없었으므로 그대로 두고(요건: 모바일 현재 그대로 유지), PC(1024px+, 3열)에서만
+  // 6개(3열×2줄)로 늘려 빈칸을 없앤다 — grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 와 짝을 맞춘 값.
+  const AUTUMN_GIFT_PICKS_MOBILE_DEFAULT = 4;
+  const AUTUMN_GIFT_PICKS_PC_DEFAULT = 6;
   let autumnGiftPicksExpanded = false;
   function toggleAutumnGiftPicksExpanded(){
     autumnGiftPicksExpanded = !autumnGiftPicksExpanded;
     document.querySelectorAll('.agp-pick-extra').forEach(el => el.classList.toggle('hidden', !autumnGiftPicksExpanded));
     const btn = document.getElementById('autumn-gift-picks-more');
-    if (btn){
-      const extraCount = document.querySelectorAll('.agp-pick-extra').length;
-      btn.textContent = autumnGiftPicksExpanded ? '접기 ▲' : `고수PICK ${extraCount}개 더 보기 ▼`;
+    if (!btn) return;
+    const mobileLabel = btn.querySelector('[data-role="mobile-label"]');
+    const pcLabel = btn.querySelector('[data-role="pc-label"]');
+    if (autumnGiftPicksExpanded){
+      if (mobileLabel) mobileLabel.textContent = '접기 ▲';
+      if (pcLabel) pcLabel.textContent = '접기 ▲';
+    } else {
+      if (mobileLabel) mobileLabel.textContent = `고수PICK ${btn.dataset.mobileExtra}개 더 보기 ▼`;
+      if (pcLabel) pcLabel.textContent = `고수PICK ${btn.dataset.pcExtra}개 더 보기 ▼`;
     }
   }
   function autumnGiftPicksSectionHtml(){
@@ -9669,8 +9986,24 @@
       .filter(x => Number(x.p.pick) > 0 && x.p.partnersHtml)
       .sort((a, b) => Number(a.p.pick) - Number(b.p.pick));
     if (!picks.length) return '';
-    const cardsHtml = picks.map((x, idx) => autumnGiftPickCardHtml(x.p, x.i, idx >= AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT)).join('');
-    const extraCount = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_VISIBLE_DEFAULT);
+    const cardsHtml = picks.map((x, idx) => {
+      const tier = idx < AUTUMN_GIFT_PICKS_MOBILE_DEFAULT ? 0 : (idx < AUTUMN_GIFT_PICKS_PC_DEFAULT ? 1 : 2);
+      return autumnGiftPickCardHtml(x.p, x.i, tier);
+    }).join('');
+    // [PC 초기 노출 최적화] "더보기" 남은 개수가 breakpoint마다 다르다(모바일: 4개 기준,
+    // PC: 6개 기준) — 버튼 하나 안에 두 라벨을 넣고 CSS로 하나만 보이게 한다. 6개 이하면
+    // PC에는 더 보여줄 게 없으므로 버튼 자체를 PC에서 숨긴다(lg:hidden).
+    const mobileExtra = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_MOBILE_DEFAULT);
+    const pcExtra = Math.max(0, picks.length - AUTUMN_GIFT_PICKS_PC_DEFAULT);
+    let moreButtonHtml = '';
+    if (mobileExtra > 0){
+      const pcHasMore = pcExtra > 0;
+      moreButtonHtml = `
+        <button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" data-mobile-extra="${mobileExtra}" data-pc-extra="${pcExtra}" class="${pcHasMore ? '' : 'lg:hidden '}w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">
+          <span data-role="mobile-label" class="lg:hidden">고수PICK ${mobileExtra}개 더 보기 ▼</span>
+          <span data-role="pc-label" class="hidden lg:inline">고수PICK ${pcExtra}개 더 보기 ▼</span>
+        </button>`;
+    }
     // 테두리로 "이건 운영자가 직접 고른 구역"임을 시각적으로 딱 구분한다(2026-09-19) — 아래
     // 필터 결과 구역과 배경이 같아서 헷갈린다는 피드백 반영. 노란(브랜드 --primary) 테두리 +
     // 옅은 배경 틴트로 하나의 "박스"처럼 보이게 한다.
@@ -9681,18 +10014,8 @@
           <h4 class="font-display text-base break-keep" style="color:var(--text);">먼저 골라본 ${picks.length}개</h4>
         </div>
         <p class="text-xs mb-3 break-keep" style="color:var(--muted);">리뷰와 가격을 하나씩 비교해 보고 먼저 골랐어요. 어떤 점이 좋았는지도 함께 적어뒀습니다.</p>
-        <!-- [2026-09-24] 쿠팡 파트너스 고지 — 이 섹션의 첫 상품 카드(고수PICK 1)가 시작되기 직전에
-             배치했다(요건: 승인 심사 시 상품/링크 노출 전에 고지가 먼저 보여야 함). 경고 박스처럼
-             보이지 않도록 위 picks-wrap의 노란 틴트와 다른 중립 var(--card) 배경 + 얇은 var(--line)
-             테두리를 쓰고, 제목 "쿠팡 파트너스 안내"는 작은 안내 라벨로만, 공식 문구 자체는 한 글자도
-             바꾸지 않았다. 문구는 이 한 곳에서만 출력된다(옛 필터-picks 사이 자리에 있던 동일 문구는
-             제거 — 중복 없음). -->
-        <div class="rounded-md p-2.5 sm:p-3 mb-3" style="background:var(--card); border:1px solid var(--line);">
-          <p class="text-xs font-semibold mb-0.5 break-keep" style="color:var(--text);">쿠팡 파트너스 안내</p>
-          <p class="text-[11px] leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${cardsHtml}</div>
-        ${extraCount > 0 ? `<button type="button" id="autumn-gift-picks-more" onclick="toggleAutumnGiftPicksExpanded()" class="w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);">고수PICK ${extraCount}개 더 보기 ▼</button>` : ''}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${cardsHtml}</div>
+        ${moreButtonHtml}
       </div>`;
   }
 
@@ -9777,7 +10100,7 @@
   // 들어간다(iframe 중복 생성 방지). 묶음 배정 규칙은 targets/가격을 보고 정한 고정 규칙이며 데이터는
   // 바꾸지 않는다: 부모님께 = 부모님 태그 & 5만원 이상 / 가족 실속 = 가족 태그(연인 제외) /
   // 연인·지인 = 연인 태그 또는 (지인 & 직장 아님) / 직장·거래처 = 나머지 직장 태그.
-  // 각 묶음은 정렬 기준 상위 AUTUMN_GIFT_GROUP_LIMIT개만 펼치고 나머지는 "더보기"로 연다(펼침 상태는
+  // 각 묶음은 정렬 기준 상위 autumnGiftGroupLimit()개만 펼치고 나머지는 "더보기"로 연다(펼침 상태는
   // 세션 동안 유지, DOM은 그대로이고 hidden/표시만 바뀌므로 iframe 재로드 없음).
   const AUTUMN_GIFT_GROUPS = [
     { key: 'parents', title: '부모님께', sub: '5만원 이상, 제대로 챙기고 싶을 때' },
@@ -9785,7 +10108,19 @@
     { key: 'work',    title: '직장·거래처 답례', sub: '부담 없는 가격대로 돌리기 좋은 것' },
     { key: 'friends', title: '연인·지인', sub: '뷰티와 간식 위주' },
   ];
-  const AUTUMN_GIFT_GROUP_LIMIT = 6;
+  // [PC 초기 노출 최적화] 예전엔 고정 6개였는데, 이 grid는 breakpoint마다 열 수가 다르다
+  // (기본 2열, sm 3열, lg 4열, xl 5열 — grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3
+  // lg:grid-cols-4 xl:grid-cols-5). 6은 2열·3열에서는 이미 딱 맞아떨어져(3줄/2줄) 빈칸이 없었고
+  // 실제 문제가 보고된 건 4열·5열(PC 컨테이너 확대 이후 추가된 breakpoint)뿐이므로, 그 두 구간만
+  // 열 수의 배수(4열→8, 5열→10)로 바꾸고 나머지(모바일 포함)는 기존 6을 그대로 둔다 — "모바일은
+  // 현재 그대로 유지" 요건과 실제 깨졌던 구간만 고치는 최소 수정 원칙을 함께 만족한다.
+  function autumnGiftGroupLimit(){
+    const w = window.innerWidth;
+    if (w >= 1280) return 10; // xl: 5열 × 2줄
+    if (w >= 1024) return 8;  // lg: 4열 × 2줄
+    return 6;                 // 그 이하(모바일 포함, 기존 sm 3열도 포함) — 기존 값 그대로, 이미 빈칸 없음
+  }
+
   const autumnGiftExpandedGroups = new Set();
   function autumnGiftGroupOf(p){
     const has = (t) => Array.isArray(p.targets) && p.targets.includes(t);
@@ -9822,7 +10157,7 @@
               <p class="text-[11px] break-keep" style="color:var(--muted);">${g.sub}</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div>
+          <div class="grid grid-cols-2 max-[380px]:grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${cards}</div>
           <button type="button" id="autumn-gift-more-${g.key}" onclick="toggleAutumnGiftGroup('${g.key}')" class="hidden w-full mt-3 py-2.5 rounded-md text-sm font-semibold" style="background:var(--card); color:var(--text); border:1px solid var(--line);"></button>
         </div>`;
     }).join('');
@@ -9830,6 +10165,13 @@
       const p = AUTUMN_GIFT_PRODUCTS[i];
       return (!p.partnersHtml && !autumnGiftIsRenderDuplicate(i)) ? autumnGiftListRowHtml(p, i) : '';
     }).join('');
+
+    // 추석 종료일(HOTDEALS_CHUSEOK_END_DATE) 전에는 추석 제목, 지나면 시즌 중립 제목으로 자동 전환.
+    const chuseok = HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive();
+    const sectionTitle = chuseok ? '🎁 추석 선물세트 핫딜' : '🔥 쇼핑핫딜';
+    const sectionSub = chuseok
+      ? '추석 선물세트와 명절 선물용 상품을 한곳에서 확인해보세요.'
+      : '지금 주목할 만한 쿠팡 상품을 한곳에서 확인해보세요.';
 
     root.innerHTML = `
       <section class="mb-8" style="position:relative;">
@@ -9844,14 +10186,10 @@
             </div>
           </div>
         </div>
-        <!-- [2026-09-24] 필터 바로 아래에서 반복되던 두 번째 "🔥 쇼핑핫딜"/"🎁 추석 선물세트 핫딜"
-             제목+부제(예전 sectionTitle/sectionSub)를 제거했다. 페이지 최상단 renderHotdealsHero()의
-             제목("쇼핑핫딜")과 짧은 구간에서 중복돼 구분 역할이 약했다는 지적 반영 — 필터 → 고수PICK
-             영역으로 바로 이어지게 한다. 쿠팡 파트너스 고지문구는 삭제가 아니라 고수PICK 섹션
-             내부(autumnGiftPicksSectionHtml, 설명 문단 바로 아래)로 옮겼다 — 그 안에서만 정확히
-             1번 출력되므로 중복 노출 없음. 추석 D-day 안내 스트립(autumnGiftDeadlineStripHtml)은
-             이번 작업 범위(요건 9: 시즌 문구 미변경)가 아니라 그대로 둔다. -->
+        <h3 class="font-display text-lg mb-1 break-keep" style="color:var(--text);">${sectionTitle}</h3>
+        <p class="text-xs mb-3 break-keep" style="color:var(--muted);">${sectionSub}</p>
         ${autumnGiftDeadlineStripHtml()}
+        ${hotdealsAffiliateDisclosureHtml()}
         <div class="agp-light rounded-xl p-3 sm:p-4">
         ${autumnGiftPicksSectionHtml()}
         <!-- ① 조건이 걸리면 PICK 대신 여기에 "부모님 · 3~5만원 · 33개"를 크게 보여준다. 기본은 숨김. -->
@@ -9877,6 +10215,20 @@
     if (!autumnGiftStickyListenerBound){
       window.addEventListener('scroll', autumnGiftUpdateStickyBar, { passive: true });
       autumnGiftStickyListenerBound = true;
+    }
+    // [PC 초기 노출 최적화] 창 크기를 바꿔 breakpoint(1024/1280)를 넘나들 때도 autumnGiftGroupLimit()
+    // 값이 CSS grid의 실제 열 수와 계속 맞아야 한다. applyAutumnGiftFilterVisibility()는 hidden
+    // 클래스만 토글하므로(위 주석 참고) 몇 번을 다시 불러도 iframe이 재로드되지 않아 안전하다 —
+    // 다만 매 resize 이벤트마다 부르지 않고, 실제로 한도 값이 달라졌을 때만 다시 계산한다.
+    if (!autumnGiftResizeListenerBound){
+      let lastLimit = autumnGiftGroupLimit();
+      window.addEventListener('resize', () => {
+        const nextLimit = autumnGiftGroupLimit();
+        if (nextLimit === lastLimit) return;
+        lastLimit = nextLimit;
+        applyAutumnGiftFilterVisibility();
+      });
+      autumnGiftResizeListenerBound = true;
     }
   }
 
@@ -9917,9 +10269,10 @@
     order.forEach((idx, r) => { rank[idx] = r; });
     let lastVisibleRow = null;
     let lastVisibleRowRank = -1;
-    // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(AUTUMN_GIFT_GROUP_LIMIT) 넘는 건 숨긴다.
+    // 그룹별로 "조건에 맞는 카드"를 정렬 순위대로 모아 한도(autumnGiftGroupLimit()) 넘는 건 숨긴다.
     // 단, 조건이 걸려 있으면(①) 한도를 적용하지 않고 매칭된 걸 전부 보여준다 — "33개라며 왜 13개만
     // 보이냐"는 혼란을 없애기 위함(2026-09-19).
+    const groupLimit = autumnGiftGroupLimit();
     const groupMatched = {};
     AUTUMN_GIFT_GROUPS.forEach(g => { groupMatched[g.key] = []; });
     AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
@@ -9942,7 +10295,7 @@
     AUTUMN_GIFT_GROUPS.forEach((g) => {
       const items = groupMatched[g.key].sort((a, b) => a.r - b.r);
       const expanded = hasFilter || autumnGiftExpandedGroups.has(g.key);
-      items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= AUTUMN_GIFT_GROUP_LIMIT); });
+      items.forEach((it, idx) => { it.el.classList.toggle('hidden', !expanded && idx >= groupLimit); });
       const wrap = document.getElementById('autumn-gift-group-' + g.key);
       if (wrap){
         wrap.classList.toggle('hidden', items.length === 0);
@@ -9957,7 +10310,7 @@
       if (cnt) cnt.textContent = items.length ? `${items.length}개` : '';
       const more = document.getElementById('autumn-gift-more-' + g.key);
       if (more){
-        const rest = items.length - AUTUMN_GIFT_GROUP_LIMIT;
+        const rest = items.length - groupLimit;
         if (!hasFilter && rest > 0){
           more.classList.remove('hidden');
           more.textContent = expanded ? '접기 ▲' : `더보기 ${rest}개 ▼`;
@@ -10021,6 +10374,7 @@
   //  · autumnGiftStickyListenerBound: ④ 스크롤 고정 요약바용 scroll 리스너를 한 번만 등록하기 위한 가드.
   let hotdealsDetailFiltersOpen = false;
   let autumnGiftStickyListenerBound = false;
+  let autumnGiftResizeListenerBound = false; // [PC 초기 노출 최적화] resize 리스너 중복 등록 방지 가드
 
   // 대상/예산/카테고리 중 하나라도 '전체'가 아니거나, 체크박스(⭐5.0만/리뷰1,000개↑) 중 하나라도
   // 켜져 있으면 "조건이 걸린 상태"로 본다. ①(PICK·묶음 접힘 숨기고 결과만 보여주기), ②(자동 스크롤),
@@ -10130,8 +10484,11 @@
     const title = document.getElementById('page-hotdeals-title');
     const desc = document.getElementById('hotdeals-hero-desc');
     const sub = document.getElementById('hotdeals-hero-sub');
+    const chuseokSeoLink = document.getElementById('hotdeals-chuseok-seo-link');
     if (!eyebrow || !title || !desc || !sub) return;
-    if (HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive()){
+    const chuseok = HOTDEALS_SEASONAL_ENABLED && hotdealsChuseokActive();
+    if (chuseokSeoLink) chuseokSeoLink.classList.toggle('hidden', !chuseok);
+    if (chuseok){
       eyebrow.textContent = '🎁 2026 추석 페스타 추천상품';
       title.textContent = '아무거나 추천하지 않습니다';
       desc.textContent = '추석 선물부터 명절 준비 상품까지, 주문의고수가 고른 추석 행사상품을 소개합니다.';
@@ -10248,14 +10605,13 @@
       </div>`;
   }
 
+  // [상시 쇼핑핫딜 전환] 이 필터(용도/추천대상/예산/카테고리)는 추석 전용이 아니라 상시 쇼핑
+  // 탐색의 핵심 기능이라, 더 이상 HOTDEALS_SEASONAL_ENABLED에 의존하지 않는다(예전엔 이 플래그가
+  // 꺼지면 필터 전체가 빈 칸이 되던 문제가 있었다). HOTDEALS_SEASONAL_ENABLED는 이제 추석 한정
+  // 프로모션 요소(홈 배너/히어로 추석 카피/쿠팡 추석 페스타 CTA/D-day 띠)에만 쓰인다.
   function renderHotdealsFilterUI(){
     const root = document.getElementById('hotdeals-filter-root');
     if (!root) return;
-    if (!HOTDEALS_SEASONAL_ENABLED){
-      // 시즌 종료 후: 지금은 일반 핫딜 전용 필터 UI를 별도로 설계하지 않으므로 비워둔다.
-      root.innerHTML = '';
-      return;
-    }
     const presetsHtml = hotdealsPresetRowHtml();
     const showTarget = hotdealsHasAnyTargetData();
     // 대상 줄을 숨기는 동안 상태값이 '전체'가 아니면(과거 선택이 남아 있으면) 보이지 않는 조건이
@@ -10413,7 +10769,7 @@
   }
 
   function hotdealsProductGridHtml(items){
-    return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${items.map(hotdealsProductCardHtml).join('')}</div>`;
+    return `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">${items.map(hotdealsProductCardHtml).join('')}</div>`;
   }
 
   function hotdealsBestSectionHtml(categoryLabel, items){
@@ -10435,19 +10791,15 @@
       </section>`;
   }
 
+  // [상시 쇼핑핫딜 전환] 예전엔 이 문구도 두 갈래 다 "추석"을 전제로 쓰여 있었다(OFF 분기조차
+  // "추석 페스타 추천상품을..."이라 시즌 플래그를 꺼도 추석 표현이 남는 문제가 있었다). 지금은
+  // 실제 상품이 186개 있어 이 함수가 호출될 일이 거의 없지만, 데이터가 일시적으로 비는 경우를
+  // 대비해 상시형 문구 하나로 통일한다.
   function hotdealsEmptyStateHtml(){
-    if (HOTDEALS_SEASONAL_ENABLED){
-      return `
-        <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
-          <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">주문의고수 추천상품 가격 검증 중</p>
-          <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">쿠팡과 주요 온라인 판매처의 가격을 비교해 가격 경쟁력이 확인된 추석 선물을 준비하고 있습니다.</p>
-          <p class="text-xs leading-relaxed break-keep mt-1" style="color:var(--muted);">검증이 완료된 상품부터 순차적으로 소개합니다.</p>
-        </div>`;
-    }
     return `
       <div class="rounded-lg p-8 text-center" style="background:var(--card-alt); border:1px solid var(--line);">
         <p class="text-sm font-semibold mb-2 break-keep" style="color:var(--text);">아직 등록된 상품이 없습니다.</p>
-        <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">추석 페스타 추천상품을 순차적으로 채워나갈 예정입니다.</p>
+        <p class="text-xs leading-relaxed break-keep" style="color:var(--muted);">주문의고수 추천상품을 순차적으로 채워나갈 예정입니다.</p>
       </div>`;
   }
 
@@ -10462,8 +10814,13 @@
   // (새 법적 문구를 임의로 만들지 않기 위함). 쿠팡 추석 페스타 CTA 또는 실제 상품 중 하나라도
   // 화면에 노출되어 있으면 반드시 함께 보여준다. 중복 고지를 피하기 위해 renderHotdealsPage()에서
   // 한 곳에서만 호출되도록 관리한다(CTA가 보이면 CTA 쪽에서, CTA가 없고 상품만 있으면 상품 쪽에서).
+  // [쿠팡 파트너스 고지 위치 개선] 첫 상품이 나오기 직전(섹션 제목/부제 바로 아래)에 두는 단일
+  // 고지문구 — renderAutumnGiftOnce()에서 호출한다. 예전엔 opacity:0.65 + 10px로 페이지 맨
+  // 아래(상품 다 지나간 뒤)에 있어 눈에 잘 안 띄었는데, 파트너스 최종승인 심사용으로는 "실제로
+  // 확인 가능한" 크기/대비가 필요해 text-xs(12px)로 키우고 opacity 감쇠를 없앴다(숨기는 것처럼
+  // 보이면 안 된다는 요건). 문구 자체는 기존 그대로, 변경하지 않았다.
   function hotdealsAffiliateDisclosureHtml(){
-    return `<p class="text-[10px] mt-3 leading-relaxed break-keep" style="color:var(--muted); opacity:0.65;">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>`;
+    return `<p class="text-xs mt-2 mb-1 leading-relaxed break-keep" style="color:var(--muted);">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>`;
   }
 
   // 쿠팡 2026 추석 페스타 공식 제휴 CTA — 상품 30선 가격검증이 끝나기 전에도 쿠팡 공식 추석
@@ -10521,9 +10878,6 @@
     // 실제 노출 가능한 개수 기준 — setHotdealsXFilter()들이 인자 없이 이 함수를 호출하므로
     // 매번 스스로 최신 상태를 판단해야 정확한 빈 상태 문구가 나온다).
     const hasAnyVisibleProduct = seasonalVisible.length > 0 || generalVisible.length > 0 || AUTUMN_GIFT_PRODUCTS.length > 0;
-    // 쿠팡 파트너스 링크가 노출되는 두 지점(추석 페스타 CTA / 상품 카드) 중 CTA가 위쪽에 항상
-    // 먼저 노출되므로, CTA가 보이는 동안은 고지문을 CTA 쪽에서만 보여주고 여기서는 생략한다.
-    const disclosureAlreadyShown = HOTDEALS_SEASONAL_ENABLED;
 
     let topHtml = '';
     topHtml += bestHtml;
@@ -10537,10 +10891,6 @@
       bottomHtml += hotdealsEmptyStateHtml();
     } else if (seasonalFiltered.length === 0 && generalFiltered.length === 0 && autumnGiftVisibleCount === 0){
       bottomHtml += hotdealsNoFilterMatchHtml();
-    }
-
-    if (hasAnyVisibleProduct && !disclosureAlreadyShown){
-      bottomHtml += hotdealsAffiliateDisclosureHtml();
     }
 
     bottomRoot.innerHTML = bottomHtml;
@@ -10604,9 +10954,13 @@
     document.getElementById('mobile-menu').classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'instant' });
 
+    // [모바일 Sticky 검색 — 노출 범위 수정] 탭이 바뀌는 이 시점에 즉시 재평가한다 — home을
+    // 벗어나면 그 즉시 숨기고(스크롤/observer 재실행을 기다리지 않음), home으로 돌아오면 방금
+    // window.scrollTo(0)으로 원본 검색창이 다시 보이는 상태이므로 자연스럽게 숨김으로
+    // 재평가된다(단, 다음 IntersectionObserver 콜백이 실제 값으로 다시 확정한다).
+    if (typeof updateMobileStickySearchVisibility === 'function') updateMobileStickySearchVisibility();
+
     updateSeoTags(tab);
-    syncShoppingAdVisibility(tab);
-    syncBoardAdPlacement(tab);
     updateFooterSeoRegion(tab);
     updateShoppingNavActiveState(tab);
     // 대표 제목(H1) 승격: shopping 탭은 /shopping과 /shopping/chuseok 중 무엇을 보여줄지
@@ -10675,6 +11029,7 @@
   })();
 
   trackSiteVisit();
+  setupMobileStickySearchObserver(); // [모바일 Sticky 검색]
   applySavedLoginEmail();
   // /privacy, /terms 독립 페이지 본문을 회원가입 모달과 완전히 동일한 콘텐츠로 채운다
   // (TERMS_CONTENT/PRIVACY_CONTENT를 두 곳이 그대로 공유하므로 내용이 서로 달라질 수 없음).
@@ -10706,9 +11061,9 @@
     renderCategoryChips();
     renderDiscountList();
     if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
-    // [실험판 v1] 안전장치 경로에서도 요약/지금 볼 만한 할인을 함께 채운다
+    // [실험판 v1] 안전장치 경로에서도 요약을 함께 채운다
     if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
-    if (typeof renderHomeSpotlight === 'function') renderHomeSpotlight();
+    if (typeof renderLimitedTimeCoupons === 'function') renderLimitedTimeCoupons();
     startAirtablePolling();
   })();
   syncHomeSeasonalBanner();
