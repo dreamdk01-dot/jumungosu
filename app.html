@@ -601,7 +601,8 @@
          배경과 동일)라 별도의 밝은 카드처럼 보이지 않는다. 상세조건을 펼치면 이 박스 자체의
          높이가 늘어나며 내부에서 자연스럽게 확장된다(별도 카드 없음). 내부 요소(검색창/인기검색/
          상세조건)의 마크업과 로직은 전혀 건드리지 않고 감싸기만 했다. -->
-    <div class="rounded-lg p-4 sm:p-5" style="background:var(--bg); border:1px solid var(--shopping-accent-border);">
+    <!-- [외곽선 강화] 색상(--shopping-accent-border)은 그대로, 두께만 1px → 2px. -->
+    <div class="rounded-lg p-4 sm:p-5" style="background:var(--bg); border:2px solid var(--shopping-accent-border);">
       <!-- [검색/필터 통합] 메인 검색창 — 기존엔 이 입력(#hero_search_brand)이 아래 "할인 찾기" 박스의
            #search_brand로 값을 동기화하는 보조 입력이었지만, 이제 브랜드 검색을 담당하는 유일한
            입력이다. 기존 brandSearchQuery/handleBrandSearchInput()/renderDiscountList()를 그대로
@@ -4104,7 +4105,9 @@
       <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="${hideOnMobile}chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
     `;
     }).join('');
-    const moreBtnHtml = `<button type="button" onclick="toggleCategoryFiltersExpand()" class="sm:hidden chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--text-secondary);">${categoryFiltersExpanded ? '접기 −' : '더보기 +'}</button>`;
+    const moreBtnHtml = `<button type="button" onclick="toggleCategoryFiltersExpand()" class="sm:hidden chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--accent); color:var(--accent); background:var(--accent-soft);">${categoryFiltersExpanded ? '접기 −' : '더보기 +'}</button>`;
+    // [더보기 강조] 더보기/접기 버튼만 기존 코랄 포인트(--accent 테두리/텍스트 + --accent-soft 옅은 배경)로
+    // 일반 카테고리 칩과 구분한다. data-filter-cat이 없어 updateChipStyles가 이 스타일을 덮어쓰지 않는다.
     el.innerHTML = chipsHtml + moreBtnHtml;
     updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
   }
