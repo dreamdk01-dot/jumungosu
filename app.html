@@ -4564,7 +4564,7 @@
     // 기본은 접힌 요약 카드, expandedDiscountBrands에 이 브랜드 키가 있으면(사용자가 직접 펼쳤거나
     // 검색/이동으로 자동 펼쳐진 경우) 처음부터 펼친 상태로 그린다. 상세 영역은 hidden이 아니라
     // 항상 DOM에 있고(SEO/접근성 보존) .discount-card-detail의 data-expanded로만 높이가 전환된다.
-    const isExpanded = expandedDiscountBrands.has(group.key);
+    const isExpanded = isDiscountCardExpanded(group.key);
     const safeAttrKey = escapeHtml(group.key);
     const jsKey = group.key.replace(/'/g, "\\'");
     const detailId = `discount-detail-${safeAttrKey.replace(/[^a-zA-Z0-9가-힣]/g, '')}`;
@@ -4689,6 +4689,16 @@
   // 다시 강제로 펼치지 않는다(아래 renderDiscountList의 "달라졌을 때만" 처리 참고).
   let lastAutoExpandedBrandKey = null;
 
+  // [선착순 자동 펼침] "⏰ 선착순" 필터(onlyLimitedTimeFilter)가 켜져 있는 동안에는 결과 카드를 전부
+  // 펼친 상태로 그린다. 일반 펼침 상태(expandedDiscountBrands)는 전혀 건드리지 않고, 선착순 ON 중에
+  // 사용자가 직접 접은 카드만 별도 Set에 담는다 — 그래서 한 카드를 접어도 다른 카드는 영향이 없고,
+  // 필터를 끄면 expandedDiscountBrands가 그대로 남아 있어 일반 목록의 원래 펼침 상태로 돌아간다.
+  // 이 Set은 선착순 필터를 켜고 끌 때마다(toggleLimitedTimeFilter) 비운다.
+  const limitedTimeCollapsedBrands = new Set();
+  function isDiscountCardExpanded(key){
+    return onlyLimitedTimeFilter ? !limitedTimeCollapsedBrands.has(key) : expandedDiscountBrands.has(key);
+  }
+
   // [v4] 카드 헤더가 실제 <button>이 됐으므로(요건 10: 접근성) Enter/Space는 브라우저가 기본으로
   // 처리한다 — 별도 keydown 핸들러가 필요 없어져 v3의 handleDiscountCardKeydown()은 제거했다.
 
@@ -4696,8 +4706,12 @@
   // renderDiscountList() 재호출 없이) — 그래야 grid-template-rows 트랜지션이 실제로 보인다.
   // 필터·검색 등 목록 자체가 바뀌는 경우는 기존처럼 renderDiscountList()가 전체를 다시 그린다.
   function toggleDiscountCardExpand(key){
-    const wasExpanded = expandedDiscountBrands.has(key);
-    if (wasExpanded) expandedDiscountBrands.delete(key);
+    const wasExpanded = isDiscountCardExpanded(key);
+    if (onlyLimitedTimeFilter){
+      // 선착순 ON: 이 카드만 개별로 접기/다시 펼치기(일반 펼침 Set은 건드리지 않음)
+      if (wasExpanded) limitedTimeCollapsedBrands.add(key);
+      else limitedTimeCollapsedBrands.delete(key);
+    } else if (wasExpanded) expandedDiscountBrands.delete(key);
     else expandedDiscountBrands.add(key);
 
     const card = document.querySelector(`[data-brand-key="${CSS.escape(key)}"]`);
@@ -4816,6 +4830,7 @@
   // '선착순' 버튼: 선착순 시간이 등록된(limitedTime 있는) 항목만 걸러서 보여준다
   function toggleLimitedTimeFilter(){
     onlyLimitedTimeFilter = !onlyLimitedTimeFilter;
+    limitedTimeCollapsedBrands.clear(); // 켤 때는 매번 전부 펼친 상태로 시작, 끌 때는 일반 펼침 상태로 복귀
     const btn = document.getElementById('limited-time-filter-btn');
     if (btn){
       if (onlyLimitedTimeFilter){
