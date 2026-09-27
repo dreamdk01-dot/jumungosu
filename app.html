@@ -620,29 +620,21 @@
         <div id="today-brand-links" class="flex items-center gap-2 flex-nowrap overflow-hidden"></div>
       </div>
 
-      <!-- [검색/필터 통합] 상세조건 — 기존 "🔎 할인 찾기" 박스(별도 섹션, STEP1/STEP2 표현)를
-           걷어내고, 그 안의 배달앱/카테고리 필터만 여기 접이식 패널로 옮겼다.
-           activeAppFilters/activeCategoryFilters/toggleAppFilter/toggleCategoryFilter/
-           renderCategoryChips/updateChipStyles/renderDiscountList는 전부 기존 함수 그대로이며,
-           #app-filters・#category-filters도 같은 id를 유지해 그 함수들이 손 하나 안 대고 그대로
-           동작한다. 접고 펼치는 것은 이 패널의 hidden 클래스만 토글할 뿐 activeAppFilters/
-           activeCategoryFilters는 전혀 건드리지 않으므로, 접었다 다시 펴도 선택 상태가 유지된다.
-           [검색 영역 통합] 바깥 wrapper에 이미 코랄 테두리가 있으므로 이 토글 자체엔 별도
-           테두리/배경 없이 코랄 텍스트+화살표로만 강조하고, 세로 padding으로 탭 영역만 넉넉히 뒀다. -->
-      <button type="button" id="advanced-filter-toggle" onclick="toggleAdvancedFilter()" aria-expanded="false" aria-controls="advanced-filter-panel" class="mt-4 py-1 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold" style="color:#FF6B6B;">
-        상세조건 <span id="advanced-filter-toggle-icon" aria-hidden="true">▾</span>
-      </button>
-      <div id="advanced-filter-panel" class="hidden mt-3 pt-4" style="border-top:1px solid var(--line);">
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">배달 앱</p>
-        <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
-          <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
-          <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
-          <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
-          <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
-        </div>
-        <p class="font-mono text-xs mb-2" style="color:var(--muted);">메뉴 카테고리</p>
-        <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
+      <!-- [상세조건 UI 간소화] 예전엔 "상세조건 ▾" 버튼을 눌러야 배달앱/카테고리 필터가 열리는
+           접이식 패널이었다. 이제 배달앱 4개는 항상 노출하고, 메뉴는 자주 쓰는 3개(치킨/피자/버거)
+           만 기본 노출 + "더보기"로 나머지를 연다. activeAppFilters/activeCategoryFilters/
+           toggleAppFilter/toggleCategoryFilter/updateChipStyles/renderDiscountList는 전부 기존
+           함수 그대로이고, #app-filters・#category-filters도 같은 id를 유지해 그 함수들이 손
+           하나 안 대고 그대로 동작한다(토글 버튼과 hidden 패널만 없앴다). -->
+      <p class="font-mono text-xs mb-2 mt-4" style="color:var(--muted);">배달 앱</p>
+      <div class="flex gap-2 flex-wrap pb-4 mb-4" id="app-filters" style="border-bottom:1px solid var(--line);">
+        <button data-filter-app="baemin" onclick="toggleAppFilter('baemin')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-baemin); color:var(--tag-baemin);">배달의민족</button>
+        <button data-filter-app="coupang" onclick="toggleAppFilter('coupang')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-coupang); color:var(--tag-coupang);">쿠팡이츠</button>
+        <button data-filter-app="yogiyo" onclick="toggleAppFilter('yogiyo')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--tag-yogiyo); color:var(--tag-yogiyo);">요기요</button>
+        <button data-filter-app="ddangyo" onclick="toggleAppFilter('ddangyo')" class="chip chip-ddangyo px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:#FF5216; color:#FF5216;">땡겨요</button>
       </div>
+      <p class="font-mono text-xs mb-2" style="color:var(--muted);">메뉴</p>
+      <div class="flex gap-2 flex-wrap scrollbar-none" id="category-filters"></div>
     </div>
   </section>
 
@@ -4069,11 +4061,35 @@
   }
 
   // ---------- RENDER: FILTER CHIPS ----------
+  // [상세조건 UI 간소화] 기본으로는 자주 쓰는 3개(치킨/피자/버거)만 보여주고 "더보기"로 나머지
+  // 전체(CATEGORIES, 기존 배열 그대로 — 추가/삭제/이름변경 없음)를 연다. 카테고리 데이터/선택
+  // 로직(activeCategoryFilters, toggleCategoryFilter)은 전혀 새로 만들지 않고 그대로 재사용한다.
+  const CATEGORY_DEFAULT_VISIBLE = ['치킨', '피자', '버거'];
+  let categoryFiltersExpanded = false;
+
   function renderCategoryChips(){
     const el = document.getElementById('category-filters');
-    el.innerHTML = CATEGORIES.map(c => `
+    if (!el) return;
+    // 더보기 안에 있는 카테고리가 이미 선택된 상태라면(예: 이전 세션/외부 진입) 자동으로
+    // 펼쳐서 보여준다 — 선택된 필터가 화면에서 사라져 보이는 일이 없게 한다(요건7).
+    if (activeCategoryFilters.some(c => !CATEGORY_DEFAULT_VISIBLE.includes(c))){
+      categoryFiltersExpanded = true;
+    }
+    const restCategories = CATEGORIES.filter(c => !CATEGORY_DEFAULT_VISIBLE.includes(c));
+    const list = categoryFiltersExpanded ? [...CATEGORY_DEFAULT_VISIBLE, ...restCategories] : CATEGORY_DEFAULT_VISIBLE;
+    const chipsHtml = list.map(c => `
       <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
     `).join('');
+    const moreBtnHtml = `<button type="button" onclick="toggleCategoryFiltersExpand()" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--text-secondary);">${categoryFiltersExpanded ? '접기 −' : '더보기 +'}</button>`;
+    el.innerHTML = chipsHtml + moreBtnHtml;
+    updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
+  }
+
+  // 더보기/접기 버튼 — 카테고리 선택 상태(activeCategoryFilters)는 전혀 건드리지 않고 목록에
+  // 몇 개를 그릴지만 바꾼다. 다시 그릴 때 updateChipStyles가 선택 표시를 그대로 복원한다.
+  function toggleCategoryFiltersExpand(){
+    categoryFiltersExpanded = !categoryFiltersExpanded;
+    renderCategoryChips();
   }
 
   function toggleAppFilter(app){
@@ -4304,21 +4320,6 @@
         renderStickyAutocomplete();
       });
     }
-  }
-
-  // [검색/필터 통합] "상세조건" 접기/펼치기 — 새로 추가된 유일한 토글로, activeAppFilters/
-  // activeCategoryFilters 등 필터 상태는 전혀 건드리지 않고 #advanced-filter-panel의 hidden
-  // 클래스와 버튼의 aria-expanded만 맞바꾼다. 그래서 필터를 선택한 채로 접었다 다시 펼쳐도
-  // 선택 상태가 그대로 유지된다.
-  function toggleAdvancedFilter(){
-    const btn = document.getElementById('advanced-filter-toggle');
-    const panel = document.getElementById('advanced-filter-panel');
-    const icon = document.getElementById('advanced-filter-toggle-icon');
-    if (!btn || !panel) return;
-    const nowExpanded = btn.getAttribute('aria-expanded') !== 'true';
-    btn.setAttribute('aria-expanded', String(nowExpanded));
-    panel.classList.toggle('hidden', !nowExpanded);
-    if (icon) icon.textContent = nowExpanded ? '▴' : '▾';
   }
 
   function updateChipStyles(selector, attr, activeList, colorMap){
