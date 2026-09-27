@@ -230,6 +230,33 @@
   h1.font-display{ font-weight:800; }
   h2.font-display, h3.font-display{ font-weight:700; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
+  /* ===== [시그니처 CTA] 전체 배달할인 보기 — 이 버튼 전용 클래스로만 격리(전역 button/.chip 무변경) =====
+     4초 한 사이클: 0~1.0s 네 앱 도트가 살짝 밝아지며 중앙 아래(버튼 상단 중앙)로 모여 스며들고 →
+     그 순간 테두리 골드 glow가 한 번 → ↓가 4px 한 번 내려갔다 복귀 → 도트는 제자리에서 다시 나타남(~1.5s)
+     → 나머지 약 2.5초는 정지. 색은 기존 --tag-* / --primary / --card / --text 변수만 사용.
+     glow는 box-shadow를 직접 애니메이트하지 않고 ::after의 opacity만 바꿔 레이아웃/페인트 부담을 줄였다. */
+  .dl-cta{ display:inline-flex; flex-direction:column; align-items:center; gap:10px; background:transparent; border:0; padding:0; cursor:pointer; }
+  /* 기존 syncDiscountListToggleVisibility()가 펼칠 때 붙이는 .hidden이 위 display:inline-flex에 지지 않도록(스타일 순서와 무관하게) */
+  .dl-cta.hidden{ display:none; }
+  .dl-cta-dots{ display:flex; gap:11px; height:7px; }
+  .dl-cta-dot{ width:7px; height:7px; border-radius:9999px; opacity:.8; animation:dl-dot 4s ease-in-out infinite; will-change:transform, opacity; }
+  .dl-cta-box{ position:relative; display:inline-flex; align-items:center; justify-content:center; gap:10px; min-width:240px; padding:12px 24px; border-radius:8px; background:var(--card); border:1px solid var(--primary); color:var(--text); font-weight:700; font-size:14px; transition:background .15s ease; }
+  .dl-cta-box::after{ content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 16px 1px var(--primary); opacity:0; pointer-events:none; animation:dl-glow 4s ease-in-out infinite; }
+  .dl-cta:hover .dl-cta-box{ background:var(--card-alt); }
+  .dl-cta-arrow{ color:var(--primary); display:inline-block; animation:dl-arrow 4s ease-in-out infinite; }
+  @media (min-width:640px){ .dl-cta-box{ min-width:300px; padding:13px 32px; font-size:15px; } }
+  @keyframes dl-dot{
+    0%, 5%   { transform:translate(0,0) scale(1);   opacity:.8; }
+    10%      { transform:translate(0,0) scale(1.1); opacity:1; }
+    24%      { transform:translate(var(--dl-dx), 16px) scale(.45); opacity:0; }
+    25%      { transform:translate(0,-3px) scale(.6); opacity:0; }
+    37%,100% { transform:translate(0,0) scale(1);   opacity:.8; }
+  }
+  @keyframes dl-glow{ 0%, 20% { opacity:0; } 26% { opacity:.45; } 40%, 100% { opacity:0; } }
+  @keyframes dl-arrow{ 0%, 25% { transform:translateY(0); } 30% { transform:translateY(4px); } 36%, 100% { transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){
+    .dl-cta-dot, .dl-cta-box::after, .dl-cta-arrow{ animation:none !important; }
+  }
   /* 홈 최상단 "배민 · 쿠팡이츠 · 요기요 · 땡겨요 할인 비교"의 구분자 전용 — 본문(body)과 같은 비례폭 폰트 */
   .hero-app-eyebrow-sep{ font-family:'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; margin:0 0.15em; }
   /* 헤더 메인 로고 텍스트("주문의고수") 전용 — 기존 Black Han Sans(과도하게 두꺼운 디스플레이
@@ -652,8 +679,24 @@
        있어(HTML 아래 참고), hidden만 풀면 스크롤 없이 이 자리에서 그대로 펼쳐진다. 클릭 핸들러
        (toggleDiscountListSection)는 기존 revealDiscountList()를 재사용한다(정의부는 근처 참고).
        기본 상태는 접힘이라 HTML에도 "펼치기 ↓"를 그대로 하드코딩해뒀다. -->
+  <!-- [시그니처 CTA 실험] 버튼의 id/onclick/aria 속성과 펼치기 로직(toggleDiscountListSection,
+       syncDiscountListToggleVisibility)은 그대로다. 4개 앱 도트는 버튼 "안"에 장식(aria-hidden)으로
+       넣어서, 목록이 펼쳐질 때 기존 로직이 버튼에 hidden을 주면 도트도 함께 사라진다(JS 수정 없음).
+       애니메이션은 전부 CSS(.dl-cta-*)로, transform/opacity만 움직인다. 정의부는 <style>의
+       "[시그니처 CTA]" 블록 참고. -->
   <div class="mb-8 sm:mb-10 text-center">
-    <button type="button" id="discount-list-toggle-btn" onclick="toggleDiscountListSection()" aria-expanded="false" aria-controls="discount-list-section" class="px-5 py-2.5 rounded-md font-semibold text-sm" style="background:var(--primary); color:#181B23;">전체 배달할인 펼치기 ↓</button>
+    <button type="button" id="discount-list-toggle-btn" onclick="toggleDiscountListSection()" aria-expanded="false" aria-controls="discount-list-section" class="dl-cta">
+      <span class="dl-cta-dots" aria-hidden="true">
+        <span class="dl-cta-dot" style="--dl-dx:27px; background:var(--tag-baemin);"></span>
+        <span class="dl-cta-dot" style="--dl-dx:9px; background:var(--tag-coupang);"></span>
+        <span class="dl-cta-dot" style="--dl-dx:-9px; background:var(--tag-yogiyo);"></span>
+        <span class="dl-cta-dot" style="--dl-dx:-27px; background:var(--tag-ddangyo);"></span>
+      </span>
+      <span class="dl-cta-box">
+        <span class="dl-cta-label">전체 배달할인 보기</span>
+        <span class="dl-cta-arrow" aria-hidden="true">↓</span>
+      </span>
+    </button>
   </div>
 
   <!-- DISCOUNT LIST — [v4] discountListRevealed가 true가 되기 전까지 hidden. 안에서 그려지는
