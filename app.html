@@ -233,7 +233,7 @@
   /* ===== [시그니처 CTA] (크기 확대: 도트 7→11px·간격 11→17px, 버튼 모바일 min(82vw,340px)/PC 380px, 글자 14→16/15→17px)
      전체 배달할인 보기 — 이 버튼 전용 클래스로만 격리(전역 button/.chip 무변경) =====
      4초 한 사이클: 0~1.0s 네 앱 도트가 살짝 밝아지며 중앙 아래(버튼 상단 중앙)로 모여 스며들고 →
-     그 순간 테두리 골드 glow가 한 번 → ↓가 4px 한 번 내려갔다 복귀 → 도트는 제자리에서 다시 나타남(~1.5s)
+     그 순간 테두리 골드 glow가 한 번 → 도트는 제자리에서 다시 나타남(~1.5s). ↓ 화살표는 이 사이클과 분리돼 1.7s로 상시 흐름(dl-arrow-flow)
      → 나머지 약 2.5초는 정지. 색은 기존 --tag-* / --primary / --card / --text 변수만 사용.
      glow는 box-shadow를 직접 애니메이트하지 않고 ::after의 opacity만 바꿔 레이아웃/페인트 부담을 줄였다. */
   .dl-cta{ display:inline-flex; flex-direction:column; align-items:center; gap:14px; background:transparent; border:0; padding:0; cursor:pointer; }
@@ -244,7 +244,7 @@
   .dl-cta-box{ position:relative; display:inline-flex; align-items:center; justify-content:center; gap:10px; width:min(82vw, 340px); padding:15px 28px; border-radius:8px; background:var(--card); border:1px solid var(--primary); color:var(--text); font-weight:700; font-size:16px; transition:background .15s ease; }
   .dl-cta-box::after{ content:''; position:absolute; inset:-1px; border-radius:inherit; box-shadow:0 0 16px 1px var(--primary); opacity:0; pointer-events:none; animation:dl-glow 4s ease-in-out infinite; }
   .dl-cta:hover .dl-cta-box{ background:var(--card-alt); }
-  .dl-cta-arrow{ color:var(--primary); display:inline-block; font-size:1.15em; line-height:1; animation:dl-arrow 4s ease-in-out infinite; }
+  .dl-cta-arrow{ color:var(--primary); display:inline-block; font-size:1.15em; line-height:1; animation:dl-arrow-flow 1.7s cubic-bezier(.45,0,.4,1) infinite; }
   @media (min-width:640px){ .dl-cta-box{ width:380px; padding:16px 36px; font-size:17px; } }
   @keyframes dl-dot{
     0%, 5%   { transform:translate(0,0) scale(1);   opacity:.8; }
@@ -254,7 +254,15 @@
     37%,100% { transform:translate(0,0) scale(1);   opacity:.8; }
   }
   @keyframes dl-glow{ 0%, 20% { opacity:0; } 26% { opacity:.45; } 40%, 100% { opacity:0; } }
-  @keyframes dl-arrow{ 0%, 25% { transform:translateY(0); } 30% { transform:translateY(4px); } 36%, 100% { transform:translateY(0); } }
+  /* [화살표 상시 흐름] 도트 사이클(4s)과 분리된 ↓ 전용 1.7s 반복: 원위치에서 4px 아래로 천천히 흘러가며
+     흐려짐(opacity 1→0.3) → 흐린 상태에서 원위치로 복귀 → 제자리에서 다시 선명해짐. transform/opacity만
+     사용(크기·좌우 변화 없음, glow 없음). inline-block이라 레이아웃/버튼 크기에 영향 없음. */
+  @keyframes dl-arrow-flow{
+    0%   { transform:translateY(0);   opacity:1; }
+    60%  { transform:translateY(4px); opacity:.3; }
+    61%  { transform:translateY(0);   opacity:.3; }
+    100% { transform:translateY(0);   opacity:1; }
+  }
   @media (prefers-reduced-motion: reduce){
     .dl-cta-dot, .dl-cta-box::after, .dl-cta-arrow{ animation:none !important; }
   }
