@@ -4061,32 +4061,49 @@
   }
 
   // ---------- RENDER: FILTER CHIPS ----------
-  // [상세조건 UI 간소화] 기본으로는 자주 쓰는 3개(치킨/피자/버거)만 보여주고 "더보기"로 나머지
-  // 전체(CATEGORIES, 기존 배열 그대로 — 추가/삭제/이름변경 없음)를 연다. 카테고리 데이터/선택
-  // 로직(activeCategoryFilters, toggleCategoryFilter)은 전혀 새로 만들지 않고 그대로 재사용한다.
+  // [상세조건 UI 간소화] 모바일(sm 미만)에서는 자주 쓰는 3개(치킨/피자/버거)만 기본 노출하고
+  // "더보기"로 나머지를 연다. 카테고리 데이터/선택 로직(activeCategoryFilters,
+  // toggleCategoryFilter)은 전혀 새로 만들지 않고 그대로 재사용한다.
+  // [메뉴 순서/노출 방식 수정] 표시 순서는 아래 CATEGORY_DISPLAY_ORDER를 따른다(기본 노출
+  // 우선순위). CATEGORIES(데이터 원본)에는 있지만 이 목록에 빠진 카테고리(현재 '양식')는
+  // 삭제하지 않고 맨 뒤에 그대로 이어 붙인다 — 이름을 새로 만들거나 바꾸지 않는다.
+  // PC(sm 이상)에서는 처음부터 전부 보이고 더보기/접기 버튼이 없다. 이걸 JS로 innerWidth를
+  // 재지 않고 CSS 반응형 클래스로만 처리한다: 칩은 항상 전부 렌더링하되, 접힌 상태의 기본 3개
+  // 외 칩에 `hidden sm:inline-block`(모바일에서만 숨김), 더보기 버튼에 `sm:hidden`을 준다.
+  // 그래서 창 폭 변경/기기 회전에도 resize 리스너 없이 Tailwind sm breakpoint와 똑같이 움직인다.
   const CATEGORY_DEFAULT_VISIBLE = ['치킨', '피자', '버거'];
+  const CATEGORY_DISPLAY_ORDER = ['치킨', '피자', '버거', '분식', '카페/디저트', '샐러드/샌드위치', '한식', '중식/아시안', '일식/회/해물', '족발/보쌈', '도시락/죽', '찜/탕', '고기/구이'];
   let categoryFiltersExpanded = false;
+
+  function orderedCategories(){
+    const listed = CATEGORY_DISPLAY_ORDER.filter(c => CATEGORIES.includes(c));
+    const rest = CATEGORIES.filter(c => !CATEGORY_DISPLAY_ORDER.includes(c));
+    return [...listed, ...rest];
+  }
 
   function renderCategoryChips(){
     const el = document.getElementById('category-filters');
     if (!el) return;
     // 더보기 안에 있는 카테고리가 이미 선택된 상태라면(예: 이전 세션/외부 진입) 자동으로
-    // 펼쳐서 보여준다 — 선택된 필터가 화면에서 사라져 보이는 일이 없게 한다(요건7).
+    // 펼쳐서 보여준다 — 선택된 필터가 화면에서 사라져 보이는 일이 없게 한다. PC는 어차피
+    // 전부 보이므로 이 플래그가 켜져도 아무 영향이 없다.
     if (activeCategoryFilters.some(c => !CATEGORY_DEFAULT_VISIBLE.includes(c))){
       categoryFiltersExpanded = true;
     }
-    const restCategories = CATEGORIES.filter(c => !CATEGORY_DEFAULT_VISIBLE.includes(c));
-    const list = categoryFiltersExpanded ? [...CATEGORY_DEFAULT_VISIBLE, ...restCategories] : CATEGORY_DEFAULT_VISIBLE;
-    const chipsHtml = list.map(c => `
-      <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
-    `).join('');
-    const moreBtnHtml = `<button type="button" onclick="toggleCategoryFiltersExpand()" class="chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--text-secondary);">${categoryFiltersExpanded ? '접기 −' : '더보기 +'}</button>`;
+    const chipsHtml = orderedCategories().map(c => {
+      const hideOnMobile = (!categoryFiltersExpanded && !CATEGORY_DEFAULT_VISIBLE.includes(c)) ? 'hidden sm:inline-block ' : '';
+      return `
+      <button data-filter-cat="${c}" onclick="toggleCategoryFilter('${c}')" class="${hideOnMobile}chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--muted);">${c}</button>
+    `;
+    }).join('');
+    const moreBtnHtml = `<button type="button" onclick="toggleCategoryFiltersExpand()" class="sm:hidden chip px-3 py-1.5 rounded-full text-xs font-semibold border" style="border-color:var(--line); color:var(--text-secondary);">${categoryFiltersExpanded ? '접기 −' : '더보기 +'}</button>`;
     el.innerHTML = chipsHtml + moreBtnHtml;
     updateChipStyles('[data-filter-cat]', 'filter-cat', activeCategoryFilters, null);
   }
 
-  // 더보기/접기 버튼 — 카테고리 선택 상태(activeCategoryFilters)는 전혀 건드리지 않고 목록에
-  // 몇 개를 그릴지만 바꾼다. 다시 그릴 때 updateChipStyles가 선택 표시를 그대로 복원한다.
+  // 더보기/접기 버튼(모바일 전용) — 카테고리 선택 상태(activeCategoryFilters)는 전혀 건드리지
+  // 않고 기본 3개 외 칩의 모바일 숨김만 바꾼다. 다시 그릴 때 updateChipStyles가 선택 표시를
+  // 그대로 복원한다.
   function toggleCategoryFiltersExpand(){
     categoryFiltersExpanded = !categoryFiltersExpanded;
     renderCategoryChips();
