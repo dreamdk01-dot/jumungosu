@@ -230,6 +230,8 @@
   h1.font-display{ font-weight:800; }
   h2.font-display, h3.font-display{ font-weight:700; }
   .font-mono{ font-family:'IBM Plex Mono', monospace; }
+  /* 홈 최상단 "배민 · 쿠팡이츠 · 요기요 · 땡겨요 할인 비교"의 구분자 전용 — 본문(body)과 같은 비례폭 폰트 */
+  .hero-app-eyebrow-sep{ font-family:'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; margin:0 0.15em; }
   /* 헤더 메인 로고 텍스트("주문의고수") 전용 — 기존 Black Han Sans(과도하게 두꺼운 디스플레이
      서체)를 걷어내고 사이트 본문과 같은 Pretendard Variable 700으로 통일한다. .font-display는
      다른 제목·버튼 등 수십 곳에서 그대로 쓰이므로 전역 정의는 건드리지 않고, 이 요소에만 적용되는
@@ -569,7 +571,13 @@
          새 색상 값을 만들지 않았다. 구분자 「·」와 "할인 비교"는 기존 --text-secondary 그대로.
          font-size/weight/letter-spacing/줄바꿈 등은 부모 <p>의 기존 클래스를 그대로 물려받으므로
          span에는 color만 추가했다. -->
-    <p class="font-mono text-xs sm:text-sm tracking-wide mb-3 break-keep" style="color:var(--text-secondary);"><span style="color:var(--tag-baemin);">배민</span> · <span style="color:var(--tag-coupang);">쿠팡이츠</span> · <span style="color:var(--tag-yogiyo);">요기요</span> · <span style="color:var(--tag-ddangyo);">땡겨요</span> 할인 비교</p>
+    <!-- [자간 조정] 넓어 보이던 주원인은 tracking-wide(0.025em)보다 font-mono(IBM Plex Mono) 쪽이었다 —
+         고정폭 폰트라 구분자 "·"가 한 글자 칸(약 0.6em)을 통째로 차지하고 앞뒤 공백도 고정폭이라,
+         " · " 한 묶음이 약 16px로 한글 한 글자(13px)보다 넓었다. 문구 자체의 font-mono(앱 이름/글자
+         모양)는 그대로 두고, 구분자 " · "만 본문과 같은 비례폭 폰트(.hero-app-eyebrow-sep)로 그려
+         약 8px로 줄였다. tracking-wide → tracking-normal은 이 한 줄에만 적용(음수 자간 없음).
+         앱별 색상 span, 글자 크기/굵기/줄바꿈 클래스는 그대로다. -->
+    <p class="font-mono text-xs sm:text-sm tracking-normal mb-3 break-keep" style="color:var(--text-secondary);"><span style="color:var(--tag-baemin);">배민</span><span class="hero-app-eyebrow-sep"> · </span><span style="color:var(--tag-coupang);">쿠팡이츠</span><span class="hero-app-eyebrow-sep"> · </span><span style="color:var(--tag-yogiyo);">요기요</span><span class="hero-app-eyebrow-sep"> · </span><span style="color:var(--tag-ddangyo);">땡겨요</span> 할인 비교</p>
     <h2 id="page-home-title" class="font-display text-[24px] sm:text-5xl font-extrabold leading-[1.25] sm:leading-[1.2] mb-3 break-keep" style="color:var(--text);">
       먹고 싶은 브랜드,<br class="sm:hidden"> <span class="whitespace-nowrap" style="color:var(--primary);">가장 큰 할인</span>부터 찾아보세요.
     </h2>
