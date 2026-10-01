@@ -290,6 +290,29 @@ revoke all on function public.is_site_admin() from public, anon, authenticated;
 revoke all on function public.is_site_master() from public, anon, authenticated;
 
 -- ------------------------------------------------------------------
+-- 이 프로젝트의 public 스키마 기본 권한: 새로 만든 테이블·함수·시퀀스에 anon/authenticated/service_role 이 전부 기본 부여된다
+-- (pg_default_acl 확인). "RLS 켜고 정책 없음"만으로는 접근이 막히긴 해도 권한 자체는 남아 RLS 한 겹에만 의존하게 되므로,
+-- 새 객체의 권한을 명시적으로 회수한다. service_role(서버 API)은 그대로 쓴다. 관리자 RPC 는 SECURITY DEFINER 라 소유자 권한으로 테이블에 접근한다.
+-- 1번 마이그레이션이 만든 테이블(situation_products, coupang_api_calls)도 여기서 함께 회수한다.
+-- ------------------------------------------------------------------
+revoke all on table public.situation_products from public, anon, authenticated;
+revoke all on table public.coupang_api_calls from public, anon, authenticated;
+revoke all on table public.category_review_thresholds from public, anon, authenticated;
+
+do $$
+declare
+  v_seq text := pg_get_serial_sequence('public.coupang_api_calls', 'id');
+begin
+  if v_seq is not null then
+    execute format('revoke all on sequence %s from public, anon, authenticated', v_seq);
+  end if;
+end $$;
+
+-- 트리거 함수는 직접 호출할 수 없지만(트리거로만 실행됨) 기본 권한이 남지 않게 정리한다.
+revoke all on function public.situation_products_touch() from public, anon, authenticated;
+revoke all on function public.situation_products_enforce_thresholds() from public, anon, authenticated;
+
+-- ------------------------------------------------------------------
 -- 되돌리기(필요할 때만 실행)
 --   drop trigger if exists situation_products_enforce_thresholds_trg on public.situation_products;
 --   drop function if exists public.situation_products_enforce_thresholds();

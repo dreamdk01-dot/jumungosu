@@ -69,18 +69,35 @@
 - **Supabase 운영 DB(읽기 전용 조회만)**: 새 테이블·함수·이벤트 없음, 기존 마이그레이션 7개(`20260920…`~`20260921…`) 확인. **아무것도 적용하지 않았다.**
   임시 Postgres 16 에서는 두 마이그레이션 적용·재실행·권한·제약을 모두 단정 테스트로 확인했다(`tools/db-test`). 단 `auth.jwt()` 와 역할은 스텁이라 **실제 Supabase 에서 한 번 더 확인**해야 한다.
 
-## SQL 검토 요약 (적용 전 확인용)
+## SQL 검토 요약 (적용 전 확인용, 2026-10-01 최신 SQL 기준)
 
-| 변경 | 내용 | 위험·참고 |
-|---|---|---|
-| 1번 마이그레이션 | `situation_products`·`coupang_api_calls` 테이블(RLS 켬, 정책 없음), 관리자 RPC 3개, 헬퍼 함수 2개 | 기존 테이블 변경 없음. `drop`/`truncate` 없음 |
-| 2번: 컬럼 추가 | `review_verified_at/by`, `review_read_count`, `review_basis`, `refresh_failures` | 새 테이블에만 영향 |
-| 2번: 제약 교체 | 승인 조건에 상품평 기록 필수, 돌잔치 구분 필수 | 새 테이블에만 영향 |
-| 2번: **데이터 변경 1건** | 새 조건을 못 채우는 `approved` 행을 `hold` 로 내림 | 1번만 적용된 뒤 승인 행이 있었을 때만 해당. **지금은 테이블이 없어 영향 0행**. 삭제 아님 |
-| 2번: 새 테이블·트리거·RPC | `category_review_thresholds`(RLS, 정책 없음), 승인 시 기준 검사 트리거, 기준 RPC 3개 | 기본 기준 시드 없음 |
-| 권한 | 새 RPC 는 `authenticated` 만 실행, 내부에서 이메일 재확인(조회=매니저, 저장=마스터). 헬퍼 함수는 누구도 직접 실행 불가 | 기존 `get_funnel_stats` 와 같은 방식 |
-| 참고 | `RETURNS TABLE` 미사용 → 별칭 충돌 문제 없음. UPDATE/DELETE 는 모두 별칭(`sp`, `t`) 사용 | Security Advisor 의 "RLS enabled, no policy" INFO 는 기존 테이블들과 같은 의도된 설계 |
-| 되돌리기 | 각 파일 맨 아래 주석 | |
+- **대상**: Supabase 프로젝트 `jumungosu`(ref `sxuqkuqpopckhttvpwvh`, ap-southeast-1, Postgres 17, 정상). 계정에 프로젝트 하나뿐이고 `app.html` 의 Supabase URL 과 일치. 운영 DB 한 곳이며 Preview 도 같은 DB 를 쓴다.
+- **적용 전 조회(읽기 전용)로 확인**: 이름 충돌 없음(새 테이블 3개·함수 10개 모두 미존재), `funnel_events` 컬럼이 통계 RPC 가 쓰는 것과 일치(1,000행), `pgcrypto` 있음.
+- **적용 순서**: ① `20261001000000_situation_products.sql` → ② `20261002000000_review_verification.sql` 를 **같은 세션에서 연달아**(①만 적용된 사이에는 헬퍼 함수가 anon 에 열려 있다). 둘 다 여러 번 실행해도 안전.
+
+| 구분 | 내용 |
+|---|---|
+| 새 테이블 3개 | `situation_products`, `coupang_api_calls`, `category_review_thresholds` (RLS 켬, 정책 없음) |
+| 새 함수 10개 | 관리자 RPC 6(`admin_list_situation_products`, `admin_save_situation_product`, `admin_get_situation_stats`, `admin_list_category_thresholds`, `admin_save_category_threshold`, `admin_delete_category_threshold`), 헬퍼 2(`is_site_admin`, `is_site_master`), 트리거 함수 2 |
+| 트리거 2개 | `updated_at` 자동 갱신, 승인 시 카테고리 기준 검사 |
+| 기존 객체 | **변경·삭제 없음.** `funnel_events` 는 읽기만(통계 RPC). `drop`/`truncate` 없음 |
+| 기존 데이터 영향 | 없음. 2번의 `update ... set review_state='hold'` 는 새 테이블의 승인 행에만 해당 → 지금은 0행 |
+| 권한(이 프로젝트는 새 테이블·함수에 anon/authenticated/service_role 이 기본 부여됨) | 테이블 3개와 시퀀스는 anon/authenticated 권한을 **명시적으로 회수**(service_role 유지) · 관리자 RPC 6개는 authenticated 만 실행(anon 불가, 내부에서 이메일 재확인: 조회=매니저 3명, 저장=마스터) · 헬퍼·트리거 함수는 아무도 직접 실행 불가 |
+| 데이터 변경 SQL | 시드 데이터 없음(기본 카테고리 기준도 없음) |
+| 되돌리기 | 각 파일 맨 아래 주석 |
+
+**Security Advisor 기준선(적용 전)**: `rls_enabled_no_policy` 5건(INFO), `function_search_path_mutable` 1, `anon_security_definer_function_executable` 27, `authenticated_security_definer_function_executable` 29, `auth_leaked_password_protection` 1.
+**적용 후 예상**: `rls_enabled_no_policy` 5→8(의도: 새 테이블 3개, 기존 테이블과 같은 방식), `authenticated_…executable` 29→35(의도: 관리자 RPC 6개), `anon_…executable` 27 그대로(새 항목 없어야 함). 이와 다르면 적용을 되돌리고 확인한다.
+**기존(이번 작업 밖) 관찰**: 기존 SECURITY DEFINER 함수 중 `set_home_banner_config`, `get_funnel_stats()` 등이 anon 에게 실행 가능하다(내부에서 이메일을 확인하긴 함). 이번에 건드리지 않았다.
+
+**적용 후 확인 항목**
+1. 객체 존재: 테이블 3·함수 10·트리거 2 (`pg_class`/`pg_proc`/`pg_trigger`).
+2. 권한: anon·authenticated 의 새 테이블 권한 없음, 헬퍼·트리거 함수 실행 불가, 관리자 RPC 는 anon 불가·authenticated 가능(`has_table_privilege`/`has_function_privilege`).
+3. Security Advisor 수치가 위 예상과 일치.
+4. 실제 로그인으로: 마스터 — 저장·카테고리 기준 저장 가능 / 매니저 — 조회만, 저장은 "마스터 계정만" 오류 / 일반 회원·비로그인 — 관리자 RPC 거부.
+5. 승인 조건: 상품평 검토 없이 승인 → 거부, 돌잔치 구분 없이 승인 → 거부(관리자 화면에서 확인).
+6. 공개 API: `/api/situation-products` 가 `table_missing`(503)에서 승인 상품 0개일 때 `{"products":[]}`(200)로 바뀜.
+7. 기존 기능 회귀: 홈·`/hot-deals` 정상, `partner_click` 이벤트 계속 기록, 관리자 대시보드 통계 정상.
 
 ## Preview 500(FUNCTION_INVOCATION_FAILED) 사고 기록
 

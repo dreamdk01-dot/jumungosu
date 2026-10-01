@@ -191,7 +191,13 @@ test('마이그레이션 2: 승인 조건·돌잔치 구분·기준 트리거·�
     'situation_products_dol_subtype_required', "'dol' = any (situations)", 'cardinality(subtypes) >= 1',
     'category_review_thresholds', 'situation_products_enforce_thresholds', 'refresh_failures',
     'revoke all on function public.is_site_admin() from public, anon, authenticated',
-    'revoke all on function public.is_site_master() from public, anon, authenticated']) assert.ok(sql.includes(frag), frag);
+    'revoke all on function public.is_site_master() from public, anon, authenticated',
+    // Supabase 기본 권한(새 테이블·함수에 anon/authenticated 전부 부여) 대응: 명시적 회수
+    'revoke all on table public.situation_products from public, anon, authenticated',
+    'revoke all on table public.coupang_api_calls from public, anon, authenticated',
+    'revoke all on table public.category_review_thresholds from public, anon, authenticated',
+    'revoke all on function public.situation_products_touch() from public, anon, authenticated',
+    'revoke all on function public.situation_products_enforce_thresholds() from public, anon, authenticated']) assert.ok(sql.includes(frag), frag);
   assert.ok(!/returns table/i.test(sql), 'RETURNS TABLE 사용 금지(별칭 충돌 방지)');
   // 모든 UPDATE/DELETE 대상에 별칭
   for (const m of sql.matchAll(/\b(update|delete from) public\.\w+(?: as (\w+))?/gi)) assert.ok(m[2], '별칭 없는 ' + m[0]);

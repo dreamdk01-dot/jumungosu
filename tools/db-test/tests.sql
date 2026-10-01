@@ -148,3 +148,31 @@ do $$ begin
   execute 'reset role';
   raise notice 'OK 7) 기준 값 검증';
 end $$;
+
+-- ============ 8) Supabase 기본 권한(스텁이 흉내냄)에도 불구하고 새 객체의 권한이 회수돼 있다 ============
+do $$
+declare r record; n int := 0;
+begin
+  execute 'reset role';
+  -- 테이블: anon/authenticated 는 어떤 권한도 없고, service_role(서버 API)은 읽고 쓸 수 있다
+  for r in select unnest(array['situation_products','coupang_api_calls','category_review_thresholds']) as t loop
+    assert not has_table_privilege('anon', 'public.'||r.t, 'select,insert,update,delete'), 'anon 에 테이블 권한 남음: '||r.t;
+    assert not has_table_privilege('authenticated', 'public.'||r.t, 'select,insert,update,delete'), 'authenticated 에 테이블 권한 남음: '||r.t;
+    assert has_table_privilege('service_role', 'public.'||r.t, 'select,insert,update,delete'), 'service_role 권한 없음: '||r.t;
+    n := n + 1;
+  end loop;
+  assert not has_sequence_privilege('anon', pg_get_serial_sequence('public.coupang_api_calls','id'), 'usage,select,update'), 'anon 에 시퀀스 권한 남음';
+  assert not has_sequence_privilege('authenticated', pg_get_serial_sequence('public.coupang_api_calls','id'), 'usage,select,update'), 'authenticated 에 시퀀스 권한 남음';
+  -- 함수: 헬퍼·트리거 함수는 누구도 직접 실행 불가, 관리자 RPC 는 authenticated 만(anon 불가)
+  for r in select unnest(array['is_site_admin()','is_site_master()','situation_products_touch()','situation_products_enforce_thresholds()']) as f loop
+    assert not has_function_privilege('anon', 'public.'||r.f, 'execute'), 'anon 이 실행 가능: '||r.f;
+    assert not has_function_privilege('authenticated', 'public.'||r.f, 'execute'), 'authenticated 가 실행 가능: '||r.f;
+    n := n + 1;
+  end loop;
+  for r in select unnest(array['admin_list_situation_products()','admin_save_situation_product(jsonb)','admin_get_situation_stats(text)','admin_list_category_thresholds()','admin_save_category_threshold(jsonb)','admin_delete_category_threshold(text)']) as f loop
+    assert not has_function_privilege('anon', 'public.'||r.f, 'execute'), 'anon 이 관리자 RPC 실행 가능: '||r.f;
+    assert has_function_privilege('authenticated', 'public.'||r.f, 'execute'), 'authenticated 가 실행 불가: '||r.f;
+    n := n + 1;
+  end loop;
+  raise notice 'OK 8) 권한 회수 (% 개 객체 확인)', n;
+end $$;

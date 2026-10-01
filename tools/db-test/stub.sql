@@ -5,3 +5,10 @@ create function auth.jwt() returns jsonb language sql stable as $$ select coales
 create table public.funnel_events (id bigint generated always as identity primary key, session_id text, event_name text, source text, campaign text, placement text, metadata jsonb default '{}', created_at timestamptz default now());
 grant usage on schema public, auth to anon, authenticated, service_role;
 grant execute on function auth.jwt() to anon, authenticated, service_role;
+
+-- 이 Supabase 프로젝트의 public 스키마 기본 권한을 흉내낸다(운영 DB 조회 결과 기준):
+-- 새로 만든 테이블·함수·시퀀스에 anon/authenticated/service_role 이 기본으로 전부 부여된다.
+-- 이 설정 없이는 "RLS 만으로 막혀 있는지, 권한을 실제로 회수했는지"를 구분할 수 없다.
+alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on functions to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated, service_role;
