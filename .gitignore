@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+env
+node_modules/
+.vercel/
+tools/e2e/tw.css
+tools/e2e/shots/
