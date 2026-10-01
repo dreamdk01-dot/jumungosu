@@ -82,6 +82,17 @@
 | 참고 | `RETURNS TABLE` 미사용 → 별칭 충돌 문제 없음. UPDATE/DELETE 는 모두 별칭(`sp`, `t`) 사용 | Security Advisor 의 "RLS enabled, no policy" INFO 는 기존 테이블들과 같은 의도된 설계 |
 | 되돌리기 | 각 파일 맨 아래 주석 | |
 
+## Preview 500(FUNCTION_INVOCATION_FAILED) 사고 기록
+
+- **증상**: Preview 의 `/api/situation-products` 가 JSON 이 아니라 Vercel 500 화면, `/shopping` 은 "추천 상품을 불러오지 못했어요".
+- **마이그레이션 누락이 아니다**: 테이블이 없으면 이 함수는 503 JSON(`table_missing`)을 돌려주도록 만들어져 있고, 어떤 입력에서도 JSON 을 돌려주는 것을 재현으로 확인했다.
+- **재현된 원인(가장 유력, Vercel 로그로는 미확인)**: 프로젝트에 `package.json` 이 없어 Vercel 이 `api/*.js` 를 ESM→CJS 로 변환한다(`@vercel/node` 로 같은 빌드를 재현). `.mjs` 는 변환되지 않고 ESM 으로 남아,
+  변환된 함수의 `require('./_lib/supabase-rest.mjs')` 가 `require(esm)` 이 안 되는 환경에서 `ERR_REQUIRE_ESM` 으로 **모듈 로딩 단계에서** 죽는다. 운영 저장소에는 `.mjs` 가 0개였고 기존 함수는 `.js`→`.js` 만 쓴다.
+  Vercel 런타임이 실제로 `require(esm)` 을 막고 있는지는 확인하지 못했다. 이 증상을 낼 수 있는 경로가 이것 하나뿐이라는 것까지만 재현으로 확인했다.
+- **수정**: `api/_lib/*.mjs` → `.js`(기존 함수와 같은 방식), 함수 안에서 요청 시점에 동적 import + 실패 시 `{error:'module_load_failed', code}` JSON, `package.json` 은 추가하지 않음.
+- **검증**: `tools/vercel-bundle-check.mjs`(Vercel 빌더로 빌드→로드→호출): 수정 전은 `require(esm)` 끄면 FAIL, 수정 후는 기본/끔 모두 PASS, 기존 함수는 영향 없음. 회귀 테스트 4개 추가(106개 중 105개 통과 + DB 1개 별도).
+- **Preview 재검증**: 수정 커밋을 push 한 같은 브랜치의 새 Preview 에서 확인(아래 절차).
+
 ## 남은 설정 / 사람이 해야 하는 것
 
 1. 이 브랜치를 GitHub 에 **`main` 이 아닌 이름으로** push → Vercel Preview 생성 → Preview 환경변수 확인 → Preview 에서 모바일·PC 확인.

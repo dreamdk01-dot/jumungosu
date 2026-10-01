@@ -1,7 +1,7 @@
 // /api/coupang-refresh.js  — 관리자 전용
 //
 // 검토·승인된 상품 중 가격 확인일이 오래된 것부터 몇 개를 골라 쿠팡 파트너스 검색 API로 가격·이미지를 갱신한다.
-// 상품·옵션이 정확히 일치할 때만 갱신하고, 검색 결과에 없다고 품절로 처리하지 않는다(api/_lib/refresh.mjs).
+// 상품·옵션이 정확히 일치할 때만 갱신하고, 검색 결과에 없다고 품절로 처리하지 않는다(api/_lib/refresh.js).
 //
 // 켜기 전 확인: README의 "쿠팡 파트너스 API 검증 체크리스트". 기본은 꺼짐(COUPANG_REFRESH_ENABLED).
 // 필요한 환경변수(값은 Vercel 환경변수에만 등록, 채팅·Git에 붙여넣지 않기):
@@ -13,13 +13,12 @@
 //                                           같은 옵션의 것임을 확인한 뒤에만 켠다(README 체크리스트).
 //   COUPANG_SEARCH_HOURLY_BUDGET(선택, 기본 8), COUPANG_REFRESH_MAX_PER_RUN(선택, 기본 3)
 
-import {
-  createClient, createUsageGuard, createTtlCache, readCredentialsFromEnv, resolveSearchPath, SEARCH_HOURLY_BUDGET_DEFAULT,
-} from './_lib/coupang-partners.mjs';
-import { refreshProducts } from './_lib/refresh.mjs';
-import { readSupabaseEnv, createSupabaseRest, createSupabaseUsageStore } from './_lib/supabase-rest.mjs';
-
-const cache = createTtlCache(60 * 60 * 1000); // 같은 검색어 1시간 재사용(서버리스 인스턴스별)
+// 서버 전용 모듈은 요청 시점에 불러온다(이유는 api/situation-products.js 의 같은 주석 참고).
+async function loadDeps() {
+  const [cp, rf, sb] = await Promise.all([import('./_lib/coupang-partners.js'), import('./_lib/refresh.js'), import('./_lib/supabase-rest.js')]);
+  return { ...cp, ...rf, ...sb };
+}
+let cache = null; // 같은 검색어 1시간 재사용(서버리스 인스턴스별). 모듈을 불러온 뒤 처음 쓸 때 만든다.
 
 function intEnv(name, def, min, max) {
   const n = Number(process.env[name]);
@@ -60,21 +59,28 @@ export default async function handler(req, res) {
 
   if (process.env.COUPANG_REFRESH_ENABLED !== 'true') return res.status(503).json({ error: 'refresh_disabled' });
 
-  const supa = readSupabaseEnv();
+  let deps;
+  try { deps = await loadDeps(); } catch (e) {
+    console.error('[coupang-refresh] module_load_failed', e && e.code ? e.code : (e && e.name) || 'error');
+    return res.status(500).json({ error: 'module_load_failed', code: (e && e.code) || null });
+  }
+  cache = cache || deps.createTtlCache(60 * 60 * 1000);
+
+  const supa = deps.readSupabaseEnv();
   if (!supa.configured) return res.status(503).json({ error: 'not_configured' });
 
   const adminEmail = await verifyAdmin(req, supa);
   if (!adminEmail) return res.status(401).json({ error: 'unauthorized' });
 
-  const cred = readCredentialsFromEnv();
+  const cred = deps.readCredentialsFromEnv();
   if (!cred.configured) return res.status(503).json({ error: 'keys_missing' }); // 어떤 키가 비었는지·값은 알리지 않는다.
 
   try {
-    const rest = createSupabaseRest(supa);
-    const guard = createUsageGuard(createSupabaseUsageStore(rest), {
-      hourlyBudget: intEnv('COUPANG_SEARCH_HOURLY_BUDGET', SEARCH_HOURLY_BUDGET_DEFAULT, 1, 10),
+    const rest = deps.createSupabaseRest(supa);
+    const guard = deps.createUsageGuard(deps.createSupabaseUsageStore(rest), {
+      hourlyBudget: intEnv('COUPANG_SEARCH_HOURLY_BUDGET', deps.SEARCH_HOURLY_BUDGET_DEFAULT, 1, 10),
     });
-    const client = createClient({ accessKey: cred.accessKey, secretKey: cred.secretKey, guard, cache, searchPath: resolveSearchPath() });
+    const client = deps.createClient({ accessKey: cred.accessKey, secretKey: cred.secretKey, guard, cache, searchPath: deps.resolveSearchPath() });
 
     const rows = await rest.call(
       '/rest/v1/situation_products?select=id,name,search_keyword,price_checked_at,review_state,coupang_product_id,coupang_item_id,coupang_vendor_item_id,last_refresh_at,last_refresh_status,refresh_failures&review_state=eq.approved&limit=500'
@@ -91,7 +97,7 @@ export default async function handler(req, res) {
 
     const maxCalls = intEnv('COUPANG_REFRESH_MAX_PER_RUN', 3, 1, 8);
     const nowIso = new Date().toISOString();
-    const { results, stopped, attempted, plan } = await refreshProducts({ products, client, maxCalls, dryRun });
+    const { results, stopped, attempted, plan } = await deps.refreshProducts({ products, client, maxCalls, dryRun });
 
     for (const r of results) {
       // 호출 한도·차단·네트워크 같은 시스템 쪽 실패는 상품의 실패가 아니므로 기록하지 않는다(그러면 멀쩡한 상품이 재시도 대기에 걸린다).

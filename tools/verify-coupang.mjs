@@ -9,7 +9,7 @@
 // - 출력은 "구조"만이다: 필드 이름, 값의 종류, 상품 URL 의 형태(호스트·경로·쿼리 이름). 키·서명·제휴 태그 값은 출력하지 않는다.
 // - 이 출력으로 확인할 것: (1) 인증·경로가 맞는지 (2) 응답 필드 (3) 상품 ID 와 옵션 식별자(itemId/vendorItemId)가 응답에 있는지
 //   (4) 가격이 "어느 옵션의" 가격인지 판단할 근거가 있는지 → 없으면 COUPANG_PRICE_REFRESH_ENABLED 를 켜지 않는다.
-import { createClient, resolveSearchPath, SEARCH_PATH, SEARCH_PATH_V1, readCredentialsFromEnv, parseCoupangIds } from '../api/_lib/coupang-partners.mjs';
+import { createClient, resolveSearchPath, SEARCH_PATH, SEARCH_PATH_V1, readCredentialsFromEnv, parseCoupangIds } from '../api/_lib/coupang-partners.js';
 
 const SENSITIVE_PARAMS = new Set(['lptag', 'traceid', 'subid', 'afid']);
 

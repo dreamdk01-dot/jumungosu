@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import * as C from '../api/_lib/coupang-partners.mjs';
-import { refreshProducts, pickRefreshTargets } from '../api/_lib/refresh.mjs';
+import * as C from '../api/_lib/coupang-partners.js';
+import { refreshProducts, pickRefreshTargets } from '../api/_lib/refresh.js';
 
 const ACCESS = 'TEST_ACCESS_KEY_1234';
 const SECRET = 'TEST_SECRET_KEY_ABCDEFG_DO_NOT_LEAK';
@@ -270,7 +270,7 @@ test('클라이언트: 캐시 적중 시 fetchedAt 은 최초 응답 시각 그�
 });
 
 // ================= 갱신 대상 선정 (실패 상품 반복 선택 방지) =================
-import { planRefresh, classifyForRefresh, backoffMs, FAILURE_BACKOFF_BASE_MS, SUCCESS_MIN_INTERVAL_MS } from '../api/_lib/refresh.mjs';
+import { planRefresh, classifyForRefresh, backoffMs, FAILURE_BACKOFF_BASE_MS, SUCCESS_MIN_INTERVAL_MS } from '../api/_lib/refresh.js';
 const H = 3600 * 1000;
 const T0 = Date.parse('2026-10-01T12:00:00Z');
 const at = (hoursAgo) => new Date(T0 - hoursAgo * H).toISOString();

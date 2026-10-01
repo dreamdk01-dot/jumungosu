@@ -16,9 +16,9 @@ api/
   situation-products.js     승인·상품평 검토된 추천 상품 목록(읽기 전용, 공개)
   coupang-refresh.js        쿠팡 API 확인/가격 갱신(관리자 전용, 기본 꺼짐)
   _lib/                     서버 전용(Vercel 이 함수/정적 파일로 노출하지 않음)
-    coupang-partners.mjs      쿠팡 파트너스 클라이언트(서명·검증·호출한도·응답매핑·정확일치)
-    refresh.mjs               대상 선정(실패 이력·재시도 간격·보완 필요 제외) + 정확 일치 갱신
-    supabase-rest.mjs         service_role REST 도우미 + 호출 기록 저장소
+    coupang-partners.js      쿠팡 파트너스 클라이언트(서명·검증·호출한도·응답매핑·정확일치)
+    refresh.js               대상 선정(실패 이력·재시도 간격·보완 필요 제외) + 정확 일치 갱신
+    supabase-rest.js         service_role REST 도우미 + 호출 기록 저장소
 supabase/migrations/
   20261001000000_situation_products.sql    상품·호출기록 테이블, 관리자 RPC            (운영 DB 미적용)
   20261002000000_review_verification.sql   상품평 검토·돌잔치 구분·카테고리 기준·갱신 실패 추적 (운영 DB 미적용, 1번 다음에 적용)

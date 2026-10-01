@@ -8,7 +8,10 @@
 //
 // 필요한 환경변수: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (discounts.js와 동일)
 
-import { readSupabaseEnv, createSupabaseRest } from './_lib/supabase-rest.mjs';
+// 서버 전용 모듈은 요청 시점에 불러온다. 이 프로젝트는 package.json 이 없어서 Vercel 이 api/*.js 를 ESM→CommonJS 로 변환하는데,
+// 정적 import 가 모듈 로딩 단계에서 실패하면 함수가 통째로 죽어 Vercel 의 FUNCTION_INVOCATION_FAILED 화면만 보인다.
+// 여기서 불러오면 실패해도 오류 코드만 담은 JSON 을 돌려줘서 로그에 접근하지 못해도 원인을 볼 수 있다(비밀값은 담지 않는다).
+async function loadDeps() { return import('./_lib/supabase-rest.js'); }
 
 const ALLOWED_REFERER_HOSTS = ['jumungosu.com', 'www.jumungosu.com'];
 
@@ -67,11 +70,18 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
   if (!isAllowedReferer(req)) return res.status(403).json({ error: 'forbidden' });
 
-  const env = readSupabaseEnv();
+  let deps;
+  try { deps = await loadDeps(); } catch (e) {
+    console.error('[situation-products] module_load_failed', e && e.code ? e.code : (e && e.name) || 'error');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(500).json({ error: 'module_load_failed', code: (e && e.code) || null });
+  }
+
+  const env = deps.readSupabaseEnv();
   if (!env.configured) return res.status(503).json({ error: 'not_configured' });
 
   try {
-    const rest = createSupabaseRest(env);
+    const rest = deps.createSupabaseRest(env);
     const rows = await rest.call(
       `/rest/v1/situation_products?select=${COLUMNS}&review_state=eq.approved&affiliate_url=not.is.null&review_verified_at=not.is.null&order=reviewed_at.desc&limit=500`
     );

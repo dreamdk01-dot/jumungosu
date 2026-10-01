@@ -132,7 +132,7 @@ test('관리자 패널: 마스터만 저장, 매니저는 조회만', () => {
 });
 
 test('이 작업이 만든 파일 어디에도 비밀값 형태 문자열이 없다', () => {
-  const files = ['situation-search.js', 'api/_lib/coupang-partners.mjs', 'api/_lib/refresh.mjs', 'api/_lib/supabase-rest.mjs', 'api/situation-products.js', 'api/coupang-refresh.js', 'supabase/migrations/20261001000000_situation_products.sql']
+  const files = ['situation-search.js', 'api/_lib/coupang-partners.js', 'api/_lib/refresh.js', 'api/_lib/supabase-rest.js', 'api/situation-products.js', 'api/coupang-refresh.js', 'supabase/migrations/20261001000000_situation_products.sql']
     .map((f) => fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
   assert.ok(!/eyJ[A-Za-z0-9_-]{20,}\./.test(files), 'JWT 형태 문자열');
   assert.ok(!/(secret|access)[_-]?key\s*[:=]\s*['"][A-Za-z0-9+/=_-]{16,}['"]/i.test(files), '키 하드코딩');
@@ -222,4 +222,49 @@ test('문서 정확성: 쿠팡 API 검증 상태를 사실대로(공식 확인·
   assert.ok(doc.includes('공식 문서 확인') && doc.includes('실제 호출 성공') && doc.includes('모의 테스트'));
   assert.ok(doc.includes('자료마다 다름'));
   assert.ok(!/(공식 문서(로|를) 확인(했|완료)|실제 호출(에) 성공(했|완료)|검증 완료)/.test(doc.replace(/확인하지 못|확인되지|확인하세요|확인할/g, '')), '검증하지 않은 것을 검증했다고 씀');
+});
+
+// ================= Preview 500(FUNCTION_INVOCATION_FAILED) 재발 방지 =================
+// 원인(재현): 이 프로젝트는 package.json 이 없어 Vercel 이 api/*.js 를 ESM→CommonJS 로 변환한다. 이때 .mjs 는 변환되지 않고 ESM 으로 남아,
+// 변환된 CJS 함수가 require('./_lib/x.mjs') 를 하게 되는데 require(esm) 이 안 되는 런타임에서는 ERR_REQUIRE_ESM 으로 함수 로딩 단계에서 죽는다.
+// 기존 운영 함수는 .js → .js(./seo.js)만 쓴다. 새 서버 모듈도 같은 방식(.js)으로 둔다.
+test('api/ 아래에 .mjs 파일이 없고, 함수가 .mjs 를 import 하지 않는다', () => {
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+  const files = walk(path.join(ROOT, 'api'));
+  assert.deepEqual(files.filter((f) => f.endsWith('.mjs')), []);
+  for (const f of files.filter((x) => x.endsWith('.js'))) {
+    const src = fs.readFileSync(f, 'utf8').replace(/\/\/.*$/gm, '');
+    assert.ok(!/['"`][^'"`\n]*\.mjs['"`]/.test(src), path.relative(ROOT, f) + ' 가 .mjs 를 참조');
+  }
+});
+
+test('package.json 을 새로 만들지 않는다(운영은 package.json 없이 CJS 변환 방식으로 배포 중 — 추가하면 기존 함수의 빌드 방식이 바뀐다)', () => {
+  assert.ok(!fs.existsSync(path.join(ROOT, 'package.json')));
+});
+
+test('모듈 로딩에 실패해도 함수가 죽지 않고 오류 코드가 담긴 JSON(500)을 돌려준다', async () => {
+  const os = await import('node:os');
+  for (const [file, extra] of [['situation-products.js', { method: 'GET', headers: {} }], ['coupang-refresh.js', { method: 'POST', headers: { authorization: 'Bearer x' } }]]) {
+    // _lib 가 없는 임시 폴더에 함수만 복사해서 일부러 로딩을 실패시킨다
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fnload-'));
+    const dest = path.join(dir, file.replace(/\.js$/, '.mjs'));
+    fs.copyFileSync(path.join(ROOT, 'api', file), dest);
+    const mod = await import(dest);
+    const prevFlag = process.env.COUPANG_REFRESH_ENABLED; process.env.COUPANG_REFRESH_ENABLED = 'true';
+    const res = { code: 200, body: null, setHeader() {}, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
+    const origErr = console.error; console.error = () => {};
+    try { await mod.default(extra, res); } finally { console.error = origErr; if (prevFlag === undefined) delete process.env.COUPANG_REFRESH_ENABLED; else process.env.COUPANG_REFRESH_ENABLED = prevFlag; }
+    assert.equal(res.code, 500, file);
+    assert.equal(res.body.error, 'module_load_failed', file);
+    assert.ok(typeof res.body.code === 'string', file + ': 오류 코드가 JSON 에 있어야 한다');
+    assert.ok(!/\/|\\/.test(JSON.stringify(res.body)), '서버 경로가 응답에 노출되면 안 된다');
+  }
+});
+
+test('함수 파일에 서버 전용 모듈의 정적 import 가 남아 있지 않다(요청 시점 로딩)', () => {
+  for (const f of ['api/situation-products.js', 'api/coupang-refresh.js']) {
+    const src = readText(f);
+    assert.ok(!/^import .* from '\.\/_lib\//m.test(src), f + ': 정적 import');
+    assert.ok(/import\('\.\/_lib\//.test(src), f + ': 동적 import 없음');
+  }
 });

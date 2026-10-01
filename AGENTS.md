@@ -16,6 +16,14 @@
 - `app.html` 은 단일 파일 SPA 다. 새 코드는 표시된 블록(`상황별 쇼핑 (2026-10)`, `관리자: 상황별 쇼핑 상품 검토`)에 둔다.
 - 기존 브랜치·변경을 덮어쓰지 말고 작업 브랜치에서 수정한다. 운영 배포 전에는 변경 결과(Preview)를 사람에게 보여준다.
 
+## 서버 함수(api/) 모듈 규칙 — Preview 500 사고에서 얻은 것
+
+- 이 프로젝트는 `package.json` 이 없다. Vercel 이 `api/*.js` 를 **ESM→CommonJS 로 변환**해서 배포한다. `package.json` 을 추가(`"type":"module"` 등)하면 기존 함수의 빌드 방식이 바뀌므로 하지 않는다.
+- `api/` 아래에는 `.mjs` 를 두지 않는다. `.mjs` 는 변환되지 않고 ESM 으로 남아, 변환된 CJS 함수가 `require()` 하면 `require(esm)` 이 안 되는 런타임에서 `ERR_REQUIRE_ESM` 으로 함수가 로딩 단계에서 죽는다(`FUNCTION_INVOCATION_FAILED`).
+  기존 함수처럼 `.js` 가 `.js` 를 import 한다(`seo-shopping.js` → `./seo.js`).
+- 서버 전용 모듈(`api/_lib/`)은 핸들러 안에서 동적 import 로 불러오고, 실패하면 `{error:'module_load_failed', code}` JSON 을 돌려준다(로그에 접근하지 못해도 원인을 볼 수 있게).
+- 함수를 바꿨다면 배포 전에 `VN_DIR=/tmp/vn node tools/vercel-bundle-check.mjs`(`npm i --prefix /tmp/vn @vercel/node @vercel/build-utils` 선행)로 Vercel 빌더 기준 빌드·로드·호출을 확인한다.
+
 ## 비밀값
 
 - Access Key / Secret Key / service_role 키 / OAuth 시크릿은 **서버 환경변수로만** 다룬다.
