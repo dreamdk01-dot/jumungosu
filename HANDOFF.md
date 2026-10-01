@@ -73,6 +73,7 @@
 
 - **대상**: Supabase 프로젝트 `jumungosu`(ref `sxuqkuqpopckhttvpwvh`, ap-southeast-1, Postgres 17, 정상). 계정에 프로젝트 하나뿐이고 `app.html` 의 Supabase URL 과 일치. 운영 DB 한 곳이며 Preview 도 같은 DB 를 쓴다.
 - **적용 전 조회(읽기 전용)로 확인**: 이름 충돌 없음(새 테이블 3개·함수 10개 모두 미존재), `funnel_events` 컬럼이 통계 RPC 가 쓰는 것과 일치(1,000행), `pgcrypto` 있음.
+- **적용 준비물**: `tools/db-apply/`(결합본 `combined.sql` = 두 마이그레이션을 한 트랜잭션으로, `preflight.sql`, `verify-after.sql`, `rollback.sql`, Advisor 기대값/비교 도구) — 사용법은 `tools/db-apply/README.md`. 로컬 임시 DB 에서 정상 적용·실패 롤백(3가지 방식)·검증 SQL 민감도·롤백 후 재적용을 확인했다(`bash tools/db-test/run-combined.sh`). **운영 DB 에는 `preflight.sql` 만(읽기 전용) 실행했고 6개 모두 통과, 마이그레이션은 아직 적용하지 않았다.**
 - **적용 순서**: ① `20261001000000_situation_products.sql` → ② `20261002000000_review_verification.sql` 를 **같은 세션에서 연달아**(①만 적용된 사이에는 헬퍼 함수가 anon 에 열려 있다). 둘 다 여러 번 실행해도 안전.
 
 | 구분 | 내용 |

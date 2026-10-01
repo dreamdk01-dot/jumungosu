@@ -208,6 +208,9 @@ test('DB 테스트(임시 Postgres): RUN_DB_TESTS=1 일 때만 실행', { skip: 
   const r = spawnSync('bash', [path.join(ROOT, 'tools/db-test/run.sh')], { encoding: 'utf8' });
   assert.equal(r.status, 0, (r.stdout || '') + (r.stderr || ''));
   assert.ok(/DB 테스트 통과/.test(r.stdout));
+  const c = spawnSync('bash', [path.join(ROOT, 'tools/db-test/run-combined.sh')], { encoding: 'utf8' });
+  assert.equal(c.status, 0, (c.stdout || '') + (c.stderr || ''));
+  assert.ok(/결합 적용 테스트 전부 통과/.test(c.stdout));
 });
 
 test('문서 정확성: 공개 스위치는 app.html 상수이며 Vercel 환경변수가 아니다', () => {
@@ -273,4 +276,53 @@ test('함수 파일에 서버 전용 모듈의 정적 import 가 남아 있지 �
     assert.ok(!/^import .* from '\.\/_lib\//m.test(src), f + ': 정적 import');
     assert.ok(/import\('\.\/_lib\//.test(src), f + ': 동적 import 없음');
   }
+});
+
+// ================= 적용 준비물(tools/db-apply) =================
+test('결합본 combined.sql 이 원본 마이그레이션과 일치(최신)하고 한 트랜잭션으로 묶여 있다', async () => {
+  const { buildCombined, MIGRATIONS } = await import('../tools/db-apply/build-combined.mjs');
+  const current = fs.readFileSync(path.join(ROOT, 'tools/db-apply/combined.sql'), 'utf8');
+  assert.equal(current, buildCombined(ROOT), '마이그레이션이 바뀌었는데 결합본을 다시 만들지 않았다: node tools/db-apply/build-combined.mjs');
+  assert.deepEqual(MIGRATIONS, ['20261001000000_situation_products.sql', '20261002000000_review_verification.sql']);
+  const body = current.replace(/--.*$/gm, '');
+  assert.equal((body.match(/^begin;$/gm) || []).length, 1); assert.equal((body.match(/^commit;$/gm) || []).length, 1);
+  assert.ok(body.indexOf('begin;') < body.indexOf('create table') && body.lastIndexOf('commit;') > body.lastIndexOf('revoke all'));
+});
+
+test('트랜잭션 안에서 실행할 수 없는 문장이 마이그레이션에 없다', () => {
+  for (const f of ['20261001000000_situation_products.sql', '20261002000000_review_verification.sql']) {
+    const sql = fs.readFileSync(path.join(ROOT, 'supabase/migrations', f), 'utf8').replace(/--.*$/gm, '');
+    for (const re of [/concurrently/i, /^\s*vacuum\b/im, /alter type .* add value/i, /create database/i, /drop database/i, /^\s*(begin|commit|rollback)\s*;/im, /create extension/i])
+      assert.ok(!re.test(sql), f + ' 에 ' + re);
+  }
+});
+
+test('verify-after.sql 은 18개 검증, preflight.sql 은 6개 점검 — 읽기 전용(쓰기 문장 없음)', () => {
+  const v = fs.readFileSync(path.join(ROOT, 'tools/db-apply/verify-after.sql'), 'utf8'), p = fs.readFileSync(path.join(ROOT, 'tools/db-apply/preflight.sql'), 'utf8');
+  assert.equal((v.match(/select '\d\d /g) || []).length, 18);
+  assert.equal((p.match(/select '\d\d /g) || []).length, 6);
+  for (const sql of [v, p]) assert.ok(!/\b(insert|update|delete|drop|alter|create|grant|revoke|truncate)\b\s/i.test(sql.replace(/--.*$/gm, '').replace(/'[^']*'/g, "''")), '쓰기 문장');
+});
+
+test('rollback.sql 은 새 객체만 지운다(기존 테이블·함수 불변)', () => {
+  const sql = fs.readFileSync(path.join(ROOT, 'tools/db-apply/rollback.sql'), 'utf8').replace(/--.*$/gm, '');
+  const dropped = [...sql.matchAll(/drop (?:table|function|trigger) if exists (?:public\.)?(\w+)/g)].map((m) => m[1]).sort();
+  assert.deepEqual(dropped, ['admin_delete_category_threshold', 'admin_get_situation_stats', 'admin_list_category_thresholds', 'admin_list_situation_products', 'admin_save_category_threshold', 'admin_save_situation_product', 'category_review_thresholds', 'coupang_api_calls', 'is_site_admin', 'is_site_master', 'situation_products', 'situation_products_enforce_thresholds', 'situation_products_enforce_thresholds_trg', 'situation_products_touch', 'situation_products_touch_trg'].sort());
+});
+
+test('Security Advisor 기대값: 기준선 대비 +3 테이블, +6 관리자 RPC 뿐이고 anon 항목은 그대로', async () => {
+  const { compareAdvisors } = await import('../tools/db-apply/check-advisors.mjs');
+  const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/db-apply/advisor-expected.json'), 'utf8'));
+  const cnt = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.length]));
+  assert.deepEqual(cnt(doc.baseline), { rls_enabled_no_policy: 5, function_search_path_mutable: 1, anon_security_definer_function_executable: 27, authenticated_security_definer_function_executable: 29, auth_leaked_password_protection: 1 });
+  assert.deepEqual(cnt(doc.expected_after), { rls_enabled_no_policy: 8, function_search_path_mutable: 1, anon_security_definer_function_executable: 27, authenticated_security_definer_function_executable: 35, auth_leaked_password_protection: 1 });
+  assert.deepEqual(doc.expected_after.anon_security_definer_function_executable, doc.baseline.anon_security_definer_function_executable);
+  assert.ok(compareAdvisors(doc.expected_after, doc.expected_after).every((r) => r.ok));
+  assert.ok(compareAdvisors(doc.baseline, doc.expected_after).some((r) => !r.ok), '적용 전 상태는 적용 후 기대값과 달라야 한다');
+  // 예상 밖 변화는 잡는다: anon 에 새 함수가 열리면 FAIL
+  const bad = JSON.parse(JSON.stringify(doc.expected_after)); bad.anon_security_definer_function_executable.push('admin_save_situation_product(p jsonb)');
+  const res = compareAdvisors(bad, doc.expected_after).find((r) => r.lint === 'anon_security_definer_function_executable');
+  assert.equal(res.ok, false); assert.deepEqual(res.unexpectedNew, ['admin_save_situation_product(p jsonb)']);
+  // 새 관리자 RPC 는 authenticated 에만 있어야 한다
+  for (const fn of doc.expected_after.authenticated_security_definer_function_executable.filter((x) => x.startsWith('admin_'))) assert.ok(!doc.expected_after.anon_security_definer_function_executable.includes(fn));
 });
