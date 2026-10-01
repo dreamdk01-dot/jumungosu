@@ -133,6 +133,8 @@
   // createClient를 이용해 정확히 객체를 생성해야 합니다.
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
+<!-- 상황별 쇼핑 검색 규칙(키워드·동의어·예산 추출). 외부 AI 호출 없음. -->
+<script src="/situation-search.js?v=20261001"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -519,7 +521,7 @@
            하나뿐이라, 항목이 1개뿐인 드롭다운 대신 /hot-deals 직접 링크로 둔다(2026-09-19).
            id는 그대로 두어 updateShoppingNavActiveState()의 활성 색상 처리가 그대로 적용된다.
            맞춤쇼핑 공개 시 다시 드롭다운(toggleShoppingNavDropdown)으로 되돌리면 된다. -->
-      <button id="tab-shopping-dropdown-btn" onclick="switchTab('hotdeals')" class="nav-link tab-underline pb-1" style="color:var(--muted);">쇼핑</button>
+      <button id="tab-shopping-dropdown-btn" onclick="switchTab(shoppingNavTab())" class="nav-link tab-underline pb-1" style="color:var(--muted);">쇼핑</button>
       <button id="tab-board" onclick="switchTab('board')" class="nav-link tab-underline pb-1" style="color:var(--muted);">소식·제보</button>
       <button id="tab-auth" onclick="switchTab('auth')" class="nav-link tab-underline pb-1" style="color:var(--muted);">로그인/회원가입</button>
       <button id="tab-logout" onclick="logout()" class="hidden nav-link pb-1 text-xs" style="color:var(--muted);">로그아웃</button>
@@ -1638,57 +1640,33 @@
        'hidden' 클래스를 추가해도 화면에 계속 보이는 문제가 있었다(추석 선물 찾기 클릭 후에도
        소개 화면이 함께 남아 보이던 원인). 그래서 중앙 정렬용 sm:flex는 안쪽 래퍼로 옮겼다. -->
   <div id="shopping-view-intro">
-   <div class="sm:min-h-[60vh] sm:flex sm:flex-col sm:justify-center">
-    <div class="pt-10 pb-8 text-center">
-      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--primary);">주문의고수 맞춤 쇼핑 (준비 중)</p>
-      <h2 id="page-shopping-intro-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">누구에게 드릴 추석 선물인가요?</h2>
-      <p class="text-[15px] leading-[1.5] break-keep mb-8" style="color:var(--muted);">대상과 예산 등 상황을 입력하면<br class="sm:hidden"> 맞는 선물을 찾아주는 기능을 준비하고 있어요.</p>
-      <button type="button" onclick="enterShoppingChuseok()" class="px-8 py-3.5 rounded-md font-display text-base break-keep" style="background:var(--primary); color:#1C1A17;">추석 선물 찾기</button>
+    <div class="pt-8 pb-2">
+      <p class="text-xs font-semibold tracking-wide mb-3 break-keep" style="color:var(--accent);">주문의고수 상황별 쇼핑</p>
+      <h2 id="page-shopping-intro-title" class="font-display text-2xl sm:text-3xl leading-snug mb-3 break-keep" style="color:var(--text);">어떤 상황에 필요한 물건을 찾으세요?</h2>
+      <p class="text-[15px] leading-[1.5] break-keep mb-5" style="color:var(--muted);">상품을 잔뜩 늘어놓지 않고, 직접 검토한 상품 몇 개만 골라 보여드려요.</p>
 
-      <!-- 320px처럼 좁은 화면에서 점(·) 구분 한 줄 표기가 가로로 넘치지 않도록, 모바일에서는 세로로 쌓고
-           sm 이상에서만 기존처럼 점으로 구분된 한 줄로 보여준다. -->
-      <div class="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-center sm:gap-4 mt-6 text-xs break-keep" style="color:var(--muted);">
-        <span>⏱ 약 30초 소요</span>
-        <span class="hidden sm:inline">·</span>
-        <span>회원가입 없이 이용</span>
-        <span class="hidden sm:inline">·</span>
-        <span>가격·배송 가능 여부 자동 반영 예정</span>
+      <form id="situation-form" onsubmit="return submitSituationSearch(event)" role="search" class="mb-2">
+        <label for="situation-input" class="sr-only">어떤 상황인지 입력</label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="situation-input" type="search" maxlength="100" autocomplete="off" enterkeyhint="search" placeholder="예) 친구 아이 돌잔치 선물, 5만원 이하" class="flex-1 min-w-0 px-4 py-3 rounded-lg text-[15px] outline-none" style="background:var(--surface); border:2px solid var(--shopping-accent-border); color:var(--text);">
+          <button type="submit" class="sm:shrink-0 w-full sm:w-auto px-5 py-3 rounded-lg text-sm font-semibold break-keep" style="background:var(--accent); color:#1C1A17;">추천 보기</button>
+        </div>
+      </form>
+      <p class="text-[11px] leading-relaxed mb-5 break-keep" style="color:var(--muted);">돌잔치·집들이 같은 상황 말과 "5만원 이하", "술 빼고" 같은 조건을 읽어요. 자유롭게 쓴 문장을 모두 이해하지는 못해요.</p>
+
+      <p class="text-xs font-semibold mb-2" style="color:var(--text-secondary);">자주 찾는 상황</p>
+      <div id="situation-buttons" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <button type="button" onclick="pickSituation('dol')" data-situation="dol" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🎂</span><span class="block text-sm font-semibold break-keep">돌잔치 선물</span></button>
+        <button type="button" onclick="pickSituation('season')" data-situation="season" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🍂</span><span class="block text-sm font-semibold break-keep">환절기 준비</span></button>
+        <button type="button" onclick="pickSituation('groceries')" data-situation="groceries" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🛒</span><span class="block text-sm font-semibold break-keep">주말 장보기</span></button>
+        <button type="button" onclick="pickSituation('housewarming')" data-situation="housewarming" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🏠</span><span class="block text-sm font-semibold break-keep">집들이 선물</span></button>
+        <button type="button" onclick="pickSituation('solo')" data-situation="solo" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🛏️</span><span class="block text-sm font-semibold break-keep">자취 시작</span></button>
+        <button type="button" onclick="pickSituation('outing')" data-situation="outing" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">🧺</span><span class="block text-sm font-semibold break-keep">주말 나들이</span></button>
       </div>
     </div>
 
-    <!-- 3단계 흐름 안내 — 상품 카드처럼 보이지 않도록 번호 원 + 짧은 문구만 사용.
-         grid-cols-3를 기본으로 써서 320px에서도 세로로 쌓이지 않고 한눈에 흐름이 보이게 하되,
-         칸이 좁아 문구가 밀리는 경우를 대비해 break-keep으로 자연스럽게 줄바꿈되게 한다. -->
-    <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8 sm:mb-10">
-      <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">1</div>
-        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">상황 선택</p>
-        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">대상·예산·수량 입력</p>
-      </div>
-      <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">2</div>
-        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 확인</p>
-        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">우선순위와 제외조건 반영</p>
-      </div>
-      <div class="text-center">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold" style="background:var(--card-alt); color:var(--primary); border:1px solid var(--primary);">3</div>
-        <p class="text-xs sm:text-sm font-semibold break-keep" style="color:var(--text);">조건 요약 확인</p>
-        <p class="text-[10px] sm:text-xs mt-0.5 break-keep leading-snug" style="color:var(--muted);">실제 상품 추천은 준비 중</p>
-      </div>
-    </div>
-
-    <div class="grid sm:grid-cols-2 gap-3 mt-4">
-      <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
-        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🎁 맞춤 쇼핑</p>
-        <p class="text-xs break-keep" style="color:var(--muted);">입력한 상황에 맞춰 선물을 추천하는 기능을 준비하고 있어요.</p>
-      </div>
-      <div class="rounded-lg p-4" style="background:var(--card-alt); border:1px solid var(--line);">
-        <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 쇼핑핫딜</p>
-        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">지금 바로 조건별로 쇼핑 상품을 둘러볼 수 있어요.</p>
-        <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">쇼핑핫딜 보러가기</button>
-      </div>
-    </div>
-   </div>
+    <!-- 결과·안내·오류·쿠팡 파트너스 고지는 JS(situationRender)가 여기에 그린다 -->
+    <div id="situation-root" class="mt-6" aria-live="polite"></div>
   </div>
 
   <!-- ---- 질문 플로우 (/shopping/chuseok) ---- -->
@@ -1716,6 +1694,7 @@
          끝난 뒤에도 이 링크만 항상 보이면 사용자를 시즌이 끝난 페이지로 계속 유도하게 된다.
          renderHotdealsHero()가 히어로 문구와 같은 조건(추석 시즌 여부)으로 hidden을 함께
          토글한다 — 필터/iframe 로직은 그대로 둔다. -->
+    <a id="hotdeals-situation-link" href="/shopping" class="hidden inline-block text-xs font-semibold mt-2 mr-3 break-keep" style="color:var(--primary);">상황별로 추천 받기 →</a>
     <a id="hotdeals-chuseok-seo-link" href="/chuseok-gift" class="hidden inline-block text-xs font-semibold mt-2 break-keep" style="color:var(--primary);">추석 선물세트 조건별로 찾아보기 →</a>
   </div>
 
@@ -3827,6 +3806,17 @@
     </div>
   </section>
 
+  <!-- 상황별 쇼핑 상품 검토 -->
+  <section class="mb-12" id="admin-situation-section">
+    <h3 class="font-display text-xl mb-2" style="color:var(--text);">상황별 쇼핑 상품 검토</h3>
+    <p class="text-xs mb-4 break-keep" style="color:var(--muted);">'검토 완료'로 승인한 상품만 방문자에게 보여요. 상황마다 승인 상품이 몇 개인지, 사람들이 어떤 상황을 찾았는데 결과가 없었는지 여기서 확인하세요.</p>
+    <div id="admin-situation-tools"></div>
+    <div id="admin-situation-form-root"></div>
+    <div id="admin-situation-gaps" class="mb-4"></div>
+    <div id="admin-situation-list"></div>
+    <div id="admin-situation-thresholds" class="mt-8"></div>
+  </section>
+
   <!-- 할인 정보 관리 -->
   <section class="mb-12">
     <h3 class="font-display text-xl mb-4" style="color:var(--text);">할인 정보 관리</h3>
@@ -3942,6 +3932,7 @@
     renderAdminBannerPostSelect();  // 홈 배너 관리 입력값(문구/뱃지/연결 게시글)
     renderReportedPosts();        // 신고된 게시글 목록
     renderAdminOpsSummary();      // 오늘 운영 현황 / 오늘 선착순 할인
+    adminSitLoad();               // 상황별 쇼핑 상품 검토(승인 상품 수·반응 통계)
   }
 
   // 로그아웃 등으로 관리자 권한을 잃었을 때 DOM에서도 관리자 UI를 완전히 비운다.
@@ -8792,9 +8783,9 @@
       indexable: false,
     },
     shopping: {
-      title: '맞춤 쇼핑 (준비 중) - 조건에 맞는 선물 찾기 | 주문의고수',
-      description: '대상, 예산 등 상황에 맞는 선물을 쉽게 찾을 수 있는 맞춤쇼핑을 준비하고 있습니다. 지금은 쇼핑핫딜에서 조건별로 상품을 바로 둘러보실 수 있어요.',
-      ogTitle: '맞춤 쇼핑 (준비 중) | 주문의고수',
+      title: '상황별 쇼핑 - 돌잔치·집들이·자취 시작에 필요한 물건 찾기 | 주문의고수',
+      description: '돌잔치 선물, 집들이 선물, 자취 시작처럼 상황과 예산을 고르면 직접 검토한 상품만 보여드립니다. 아직 상품을 준비하지 못한 상황은 준비 중이라고 안내해요.',
+      ogTitle: '상황별 쇼핑 | 주문의고수',
       indexable: true,
     },
     hotdeals: {
@@ -8855,6 +8846,903 @@
     if (ogUrlEl) ogUrlEl.setAttribute('content', fullUrl);
   }
 
+
+  // ================= 상황별 쇼핑 (2026-10) =================
+  // /shopping 첫 화면: 사용자가 상황을 고르거나 문장으로 입력하면, 운영자가 "검토 완료"로 승인한 상품 중
+  // 그 상황에 맞는 몇 개만 보여준다. 쿠팡 검색 결과를 그대로 늘어놓지 않는다.
+  //
+  // 데이터: GET /api/situation-products (approved 상품만, 서버가 Supabase에서 읽음). 이 화면은 쿠팡 API를 직접 부르지 않는다.
+  // 검색: /situation-search.js (규칙 기반 — 외부 AI 호출 없음). 조건 추출 함수는 setExtractor()로 교체할 수 있다.
+  // 규칙: 가짜 상품·가짜 리뷰·예시 상품으로 빈자리를 채우지 않는다. 상품이 없으면 "준비 중/없음"으로 안내한다.
+  //       평점·리뷰수는 서버가 확인일과 함께 내려준 값만 표시하고, 리뷰 원문·요약은 다루지 않는다.
+  //       원문 검색어는 서버로 보내지 않는다(추적은 상황 id·예산 구간·결과 수만).
+
+  // true로 바꾸면 상단 '쇼핑' 메뉴가 쇼핑핫딜 대신 상황별 쇼핑(/shopping)으로 연결된다.
+  // 승인된 상품이 충분히 쌓이기 전에는 false로 두고 /shopping 주소로만 확인한다.
+  const SITUATION_SHOPPING_PUBLIC = false;
+  function shoppingNavTab(){ return SITUATION_SHOPPING_PUBLIC ? 'shopping' : 'hotdeals'; }
+  function applyShoppingNavTargets(){
+    if (!SITUATION_SHOPPING_PUBLIC) return;
+    const quick = document.getElementById('quicknav-tab-hotdeals');
+    if (quick){ quick.textContent = '쇼핑'; quick.setAttribute('onclick', "switchTab('shopping')"); }
+    document.querySelectorAll('#mobile-menu button[onclick="switchTab(\'hotdeals\')"]').forEach(b => {
+      b.textContent = '쇼핑'; b.setAttribute('onclick', "switchTab('shopping')");
+    });
+    const link = document.getElementById('hotdeals-situation-link');
+    if (link) link.classList.remove('hidden');
+  }
+
+  const SIT_MAX_RESULTS = 6;
+  const SIT_BUDGET_PRESETS = [
+    { label: '3만원 이하', max: 30000 },
+    { label: '5만원 이하', max: 50000 },
+    { label: '10만원 이하', max: 100000 },
+  ];
+
+  const sit = { cond: null, via: 'button', category: 'all', lastNoResultKey: '' };
+  let sitProducts = [];
+  let sitLoadState = 'idle';   // idle | loading | ok | error | unavailable
+  let sitLoadPromise = null;
+
+  function sitS(){ return (typeof window !== 'undefined' && window.SituationSearch) || null; }
+
+  function sitIsSafeProduct(p){
+    return !!p && typeof p.id === 'string' && typeof p.name === 'string'
+      && typeof p.affiliateUrl === 'string' && p.affiliateUrl.indexOf('https://') === 0
+      && Array.isArray(p.situations) && !!p.reviewVerifiedAt;   // 상품평 검토 기록이 없는 상품은 화면에서도 쓰지 않는다
+  }
+
+  // 승인 상품 불러오기. 실패해도 "상품 없음"과 구분해서 보여준다.
+  function loadSituationProducts(force){
+    if (sitLoadPromise && !force) return sitLoadPromise;
+    sitLoadState = 'loading';
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    sitLoadPromise = fetch('/api/situation-products', { headers: { Accept: 'application/json' }, signal: ctrl.signal })
+      .then(async (r) => {
+        if (r.status === 503){ sitProducts = []; sitLoadState = 'unavailable'; return; }   // 서버 설정/테이블 준비 전
+        if (!r.ok) throw new Error('http ' + r.status);
+        const j = await r.json();
+        sitProducts = (Array.isArray(j.products) ? j.products : []).filter(sitIsSafeProduct);
+        sitLoadState = 'ok';
+      })
+      .catch(() => { sitProducts = []; sitLoadState = 'error'; })
+      .finally(() => { clearTimeout(timer); });
+    return sitLoadPromise;
+  }
+
+  function sitRoot(){ return document.getElementById('situation-root'); }
+
+  // ---- 표시 도우미 ----
+  function sitFmtWon(n){ return Number(n).toLocaleString('ko-KR') + '원'; }
+  function sitFmtDate(v){
+    if (!v) return '';
+    const s = String(v);
+    let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);          // date 값은 그대로
+    if (m) return parseInt(m[2], 10) + '/' + parseInt(m[3], 10);
+    const d = new Date(s);                                  // timestamp 값은 KST 기준 날짜
+    if (isNaN(d.getTime())) return '';
+    const k = new Date(d.getTime() + 9 * 3600 * 1000);
+    return (k.getUTCMonth() + 1) + '/' + k.getUTCDate();
+  }
+  function sitSafeHttps(u){ return typeof u === 'string' && u.indexOf('https://') === 0 ? u : ''; }
+  function sitSafeId(id){ return /^[0-9a-fA-F-]{8,40}$/.test(String(id)) ? String(id) : ''; }
+
+  function sitChip(label, onclick, active){
+    const st = active
+      ? 'background:var(--accent-soft); border-color:var(--accent); color:var(--accent);'
+      : 'background:var(--surface); border-color:var(--line); color:var(--text-secondary);';
+    return `<button type="button" onclick="${onclick}" aria-pressed="${active ? 'true' : 'false'}" class="px-3 py-1.5 rounded-full text-xs font-semibold border break-keep" style="${st}">${escapeHtml(label)}</button>`;
+  }
+
+  // ---- 상품 카드 ----
+  function sitProductCardHtml(p, pos){
+    const img = sitSafeHttps(p.imageUrl);
+    const imgHtml = img
+      ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy" referrerpolicy="no-referrer" class="w-full aspect-[4/3] max-h-52 object-cover rounded-md mb-3" style="background:var(--card-alt);">`
+      : `<div class="w-full h-14 rounded-md mb-3 flex items-center justify-center text-[11px]" style="background:var(--card-alt); color:var(--muted);">이미지 준비 중</div>`;
+
+    const priceHtml = (typeof p.price === 'number' && p.price > 0)
+      ? `<p class="mb-1"><span class="text-lg font-extrabold" style="color:var(--text);">${sitFmtWon(p.price)}</span>${p.priceCheckedAt ? `<span class="text-[11px] ml-1.5" style="color:var(--muted);">가격 확인 ${escapeHtml(sitFmtDate(p.priceCheckedAt))}</span>` : ''}</p>`
+      : `<p class="text-sm font-bold mb-1" style="color:var(--text);">가격은 쿠팡에서 확인</p>`;
+
+    // 평점·리뷰수: 서버가 확인일과 함께 준 값만. 어느 한쪽만 있으면 있는 쪽만 보여준다. 리뷰 내용은 다루지 않는다.
+    const bits = [];
+    if (typeof p.rating === 'number') bits.push('평점 ' + p.rating.toFixed(1));
+    if (typeof p.reviewCount === 'number') bits.push('리뷰 ' + p.reviewCount.toLocaleString('ko-KR') + '개');
+    const ratingHtml = (bits.length && p.reviewCheckedAt)
+      ? `<p class="text-[11px] mb-2" style="color:var(--muted);">${escapeHtml(bits.join(' · '))} · ${escapeHtml(sitFmtDate(p.reviewCheckedAt))} 확인</p>`
+      : '';
+
+    // 운영자가 기록한 "상품평 직접 검토일". 읽은 개수·근거·상품평 내용은 보여주지 않는다(없는 내용을 요약한 것처럼 보이지 않게).
+    const verifiedHtml = p.reviewVerifiedAt
+      ? `<p class="text-[11px] mb-2" style="color:var(--muted);">운영자가 상품평을 직접 읽고 확인 · ${escapeHtml(sitFmtDate(p.reviewVerifiedAt))}</p>`
+      : '';
+    const reasonHtml = p.reason
+      ? `<div class="rounded-md px-3 py-2 mb-2" style="background:var(--accent-soft);"><p class="text-[11px] font-semibold mb-0.5" style="color:var(--accent);">이 상황에 추천하는 이유</p><p class="text-sm break-keep" style="color:var(--text);">${escapeHtml(p.reason)}</p></div>`
+      : '';
+    const cautionHtml = p.caution
+      ? `<div class="rounded-md px-3 py-2 mb-3" style="background:var(--card-alt);"><p class="text-[11px] font-semibold mb-0.5" style="color:var(--muted);">구매 전 확인</p><p class="text-xs break-keep" style="color:var(--text-secondary);">${escapeHtml(p.caution)}</p></div>`
+      : '';
+
+    const id = sitSafeId(p.id);
+    return `
+      <article class="rounded-lg p-3 sm:p-4 flex flex-col" style="background:var(--card); border:1px solid var(--line);">
+        ${imgHtml}
+        <h3 class="text-[15px] font-semibold mb-1 break-keep" style="color:var(--text);">${escapeHtml(p.name)}</h3>
+        ${priceHtml}
+        ${ratingHtml}
+        ${verifiedHtml}
+        ${reasonHtml}
+        ${cautionHtml}
+        <a href="${escapeHtml(p.affiliateUrl)}" target="_blank" rel="noopener sponsored" onclick="return situationTrackClick('${id}', ${pos});" class="mt-auto block text-center py-2.5 rounded-md text-sm font-semibold break-keep" style="background:var(--accent); color:#1C1A17;">쿠팡에서 보기</a>
+      </article>`;
+  }
+
+  // ---- 해석한 조건 + 수정 UI ----
+  function sitBudgetText(S, cond){ return S.describeBudget(cond.budget); }
+
+  function sitSummaryHtml(S, cond, candidates){
+    const def = S.SITUATION_BY_ID[cond.situationId];
+    const subtypeChips = def && def.subtypes
+      ? `<div class="flex flex-wrap items-center gap-1.5 mb-3"><span class="text-[11px] w-12 shrink-0" style="color:var(--muted);">돌잔치</span>${def.subtypes.map(st => sitChip(st.label, `situationSetSubtype('${st.id}')`, cond.subtype === st.id)).join('')}</div>`
+      : '';
+    const situationChips = S.SITUATIONS.map(s => sitChip(s.emoji + ' ' + s.short, `situationSetSituation('${s.id}')`, s.id === cond.situationId)).join('');
+
+    // 예산: 미리 정한 값 + 사용자가 문장으로 쓴 값이 그 중 없으면 그 값을 따로 보여준다.
+    const b = cond.budget;
+    const matchesPreset = !b || (b.min == null && SIT_BUDGET_PRESETS.some(p => p.max === b.max && b.kind !== 'about'));
+    const budgetChips = sitChip('예산 제한 없음', 'situationSetBudget(0)', !b)
+      + SIT_BUDGET_PRESETS.map(p => sitChip(p.label, `situationSetBudget(${p.max})`, !!b && b.min == null && b.max === p.max && b.kind !== 'about')).join('')
+      + (b && !matchesPreset ? sitChip(S.describeBudget(b), 'situationSetBudget(0)', true) : '')
+      + (b && b.kind === 'about' ? sitChip(S.describeBudget(b), 'situationSetBudget(0)', true) : '');
+
+    const cats = Array.from(new Set(candidates.map(p => p.category).filter(Boolean)));
+    const catRow = cats.length > 1
+      ? `<div class="flex flex-wrap items-center gap-1.5 mb-3"><span class="text-[11px] w-12 shrink-0" style="color:var(--muted);">카테고리</span>${sitChip('전체', "situationSetCategory('')", sit.category === 'all')}${cats.map((c, i) => sitChip(c, `situationSetCategory(${i})`, sit.category === c)).join('')}</div>`
+      : '';
+
+    const exActive = (cond.exclusions || []).map(e => e.tag);
+    const exChips = S.EXCLUSION_TAGS.map(e => sitChip(e.label + ' 제외', `situationToggleExclusion('${e.tag}')`, exActive.indexOf(e.tag) !== -1)).join('');
+
+    return `
+      <div class="rounded-lg p-3 sm:p-4 mb-4" style="background:var(--surface); border:1px solid var(--shopping-accent-border);">
+        <p class="text-xs mb-2 break-keep" style="color:var(--muted);">이렇게 이해했어요. 다르면 아래에서 바꿔 주세요.</p>
+        <p class="text-[15px] font-semibold mb-3 break-keep" style="color:var(--text);">${escapeHtml((def ? def.label : ''))}${cond.subtype && def && def.subtypes ? ' · ' + escapeHtml(def.subtypes.filter(s => s.id === cond.subtype)[0].label) : ''} · ${escapeHtml(sitBudgetText(S, cond))}</p>
+        <div class="flex flex-wrap items-center gap-1.5 mb-3"><span class="text-[11px] w-12 shrink-0" style="color:var(--muted);">상황</span>${situationChips}</div>
+        ${subtypeChips}
+        <div class="flex flex-wrap items-center gap-1.5 mb-3"><span class="text-[11px] w-12 shrink-0" style="color:var(--muted);">예산</span>${budgetChips}</div>
+        ${catRow}
+        <div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] w-12 shrink-0" style="color:var(--muted);">제외</span>${exChips}</div>
+      </div>`;
+  }
+
+  function sitMessageHtml(title, body, actionsHtml){
+    return `
+      <div class="rounded-lg p-4 sm:p-5 mb-4" style="background:var(--card); border:1px solid var(--line);">
+        <p class="text-[15px] font-semibold mb-1.5 break-keep" style="color:var(--text);">${title}</p>
+        <p class="text-sm leading-relaxed break-keep" style="color:var(--muted);">${body}</p>
+        ${actionsHtml ? `<div class="mt-3 flex flex-wrap gap-2">${actionsHtml}</div>` : ''}
+      </div>`;
+  }
+  function sitLinkBtn(label, onclick, primary){
+    const st = primary ? 'background:var(--accent); color:#1C1A17;' : 'background:var(--card-alt); color:var(--text); border:1px solid var(--line);';
+    return `<button type="button" onclick="${onclick}" class="px-4 py-2 rounded-md text-xs font-semibold break-keep" style="${st}">${escapeHtml(label)}</button>`;
+  }
+  function sitHotdealsTeaser(){
+    return `<div class="rounded-lg p-4 mt-6" style="background:var(--card-alt); border:1px solid var(--line);">
+      <p class="text-sm font-semibold mb-1 break-keep" style="color:var(--text);">🔥 쇼핑핫딜</p>
+      <p class="text-xs mb-2 break-keep" style="color:var(--muted);">상황과 상관없이 조건별로 상품을 둘러보고 싶다면 쇼핑핫딜에서 볼 수 있어요.</p>
+      <button type="button" onclick="switchTab('hotdeals')" class="text-xs font-semibold underline" style="color:var(--primary);">쇼핑핫딜 보러가기</button>
+    </div>`;
+  }
+  function sitDisclosureHtml(){
+    return typeof hotdealsAffiliateDisclosureHtml === 'function' ? `<div class="mt-4">${hotdealsAffiliateDisclosureHtml()}</div>` : '';
+  }
+
+  // ---- 추적 (원문 검색어는 보내지 않는다) ----
+  function sitTrack(eventName, extra, options){
+    try {
+      trackFunnelEvent(eventName, Object.assign({ placement: 'situation_shopping' }, extra || {}), options);
+      if (typeof gtag === 'function') gtag('event', eventName, Object.assign({ placement: 'situation_shopping' }, extra || {}));
+    } catch (e) { /* 추적 실패가 화면을 막지 않게 */ }
+  }
+  function sitTrackSelect(S, cond, resultCount){
+    sitTrack('situation_select', {
+      situation: cond.situationId || '', subtype: cond.subtype || '', via: sit.via,
+      budget_bucket: S.budgetBucket(cond.budget), has_exclusion: (cond.exclusions || []).length > 0, result_count: resultCount,
+    });
+  }
+  function sitTrackNoResult(S, cond, reason){
+    const key = [cond && cond.situationId, cond && cond.subtype, S.budgetBucket(cond && cond.budget), reason].join('|');
+    if (key === sit.lastNoResultKey) return;      // 같은 화면을 다시 그릴 때 중복 기록 방지
+    sit.lastNoResultKey = key;
+    sitTrack('situation_no_result', {
+      situation: (cond && cond.situationId) || '', subtype: (cond && cond.subtype) || '', reason,
+      budget_bucket: S.budgetBucket(cond && cond.budget),
+    });
+  }
+  function situationTrackClick(id, pos){
+    try {
+      const c = sit.cond || {};
+      const p = sitProducts.filter(x => x.id === id)[0];
+      if (typeof gtag === 'function'){
+        gtag('event', 'partner_click', { item_name: p ? p.name : '', item_id: id, placement: 'situation_shopping', price_snapshot: p && p.price ? String(p.price) : '' });
+      }
+      // 기존 쇼핑 퍼널(partner_click) 집계에 그대로 포함되도록 같은 이벤트명으로도 남기고, 상황 정보는 별도 이벤트로 남긴다.
+      trackFunnelEvent('partner_click', { placement: 'situation_shopping', product_name: p ? p.name : '', product_id: id, situation: c.situationId || '', position: pos }, { keepalive: true });
+      trackFunnelEvent('situation_product_click', { placement: 'situation_shopping', situation: c.situationId || '', subtype: c.subtype || '', product_id: id, position: pos }, { keepalive: true });
+    } catch (e) { /* 추적 실패가 클릭을 막으면 안 됨 */ }
+    return true;
+  }
+
+  // ---- URL 상태 (원문 문장은 넣지 않는다) ----
+  function sitSyncUrl(){
+    try {
+      if (location.pathname !== '/shopping') return;
+      const c = sit.cond;
+      const q = new URLSearchParams();
+      if (c && c.situationId){
+        q.set('s', c.situationId);
+        if (c.subtype) q.set('t', c.subtype);
+        if (c.budget && c.budget.min != null) q.set('min', String(c.budget.min));
+        if (c.budget && c.budget.max != null) q.set('max', String(c.budget.max));
+        if ((c.exclusions || []).length) q.set('ex', c.exclusions.map(e => e.tag).join(','));
+        if (sit.category !== 'all') q.set('c', sit.category);
+      }
+      const qs = q.toString();
+      history.replaceState(history.state, '', '/shopping' + (qs ? '?' + qs : ''));
+    } catch (e) { /* 주소 갱신 실패는 무시 */ }
+  }
+  function sitCondFromUrl(S){
+    try {
+      const q = new URLSearchParams(location.search);
+      const s = q.get('s');
+      if (!s || !S.SITUATION_BY_ID[s]) return null;
+      const def = S.SITUATION_BY_ID[s];
+      const num = (k) => { const v = parseInt(q.get(k), 10); return Number.isFinite(v) && v > 0 && v <= 10000000 ? v : null; };
+      const min = num('min'), max = num('max');
+      const t = q.get('t');
+      const subtype = def.subtypes && def.subtypes.some(x => x.id === t) ? t : null;
+      const exTags = (q.get('ex') || '').split(',').filter(Boolean);
+      const exclusions = S.EXCLUSION_TAGS.filter(e => exTags.indexOf(e.tag) !== -1).map(e => ({ tag: e.tag, label: e.label }));
+      const cat = q.get('c');
+      sit.category = cat ? cat.slice(0, 50) : 'all';
+      return {
+        situationId: s, subtype, needsSubtype: !!def.subtypes && !subtype,
+        budget: (min != null || max != null) ? { min, max, kind: min != null && max != null ? 'range' : (max != null ? 'max' : 'min') } : null,
+        recipients: [], exclusions, recognized: true, method: 'url',
+      };
+    } catch (e) { return null; }
+  }
+
+  // ---- 화면 그리기 ----
+  function situationRender(){
+    const root = sitRoot();
+    if (!root) return;
+    const S = sitS();
+    if (!S){
+      root.innerHTML = sitMessageHtml('검색 기능을 불러오지 못했어요', '잠시 후 새로고침해 보시거나, 쇼핑핫딜에서 상품을 둘러보세요.', sitLinkBtn('쇼핑핫딜 보기', "switchTab('hotdeals')", true));
+      return;
+    }
+    const cond = sit.cond;
+    if (!cond){ root.innerHTML = sitHotdealsTeaser() + sitDisclosureHtml(); return; }
+
+    if (sitLoadState === 'loading' || sitLoadState === 'idle'){
+      root.innerHTML = sitMessageHtml('추천 상품을 찾는 중이에요', '잠시만 기다려 주세요.', '');
+      return;
+    }
+    if (sitLoadState === 'error'){
+      root.innerHTML = sitMessageHtml('추천 상품을 불러오지 못했어요', '네트워크 문제일 수 있어요. 다시 시도해 주세요. 상품이 없다는 뜻은 아니에요.', sitLinkBtn('다시 시도', 'situationRetry()', true) + sitLinkBtn('쇼핑핫딜 보기', "switchTab('hotdeals')", false)) + sitDisclosureHtml();
+      return;
+    }
+    if (sitLoadState === 'unavailable'){
+      root.innerHTML = sitMessageHtml('상황별 추천을 준비하고 있어요', '아직 추천 상품을 보여드릴 수 없는 상태예요. 그동안 쇼핑핫딜에서 상품을 둘러보실 수 있어요.', sitLinkBtn('쇼핑핫딜 보기', "switchTab('hotdeals')", true)) + sitDisclosureHtml();
+      return;
+    }
+
+    // 해석하지 못한 문장
+    if (!cond.situationId){
+      sitTrackNoResult(S, cond, 'unrecognized');
+      root.innerHTML = sitMessageHtml('이 문장은 아직 해석하지 못했어요',
+        '지금은 돌잔치·환절기·장보기·집들이·자취·나들이 상황을 알아봐요. 위에서 상황을 골라 주세요. 예산은 "5만원 이하"처럼, 빼고 싶은 건 "술 빼고"처럼 쓰면 읽어요.', '') + sitHotdealsTeaser() + sitDisclosureHtml();
+      sitSyncUrl();
+      return;
+    }
+
+    const def = S.SITUATION_BY_ID[cond.situationId];
+
+    // 뜻이 갈리는 말: 참석 선물 / 답례품
+    if (def.subtypes && !cond.subtype){
+      root.innerHTML = sitMessageHtml(escapeHtml(def.short) + ', 어느 쪽인가요?', '돌잔치에 가는 쪽과 여는 쪽이 찾는 물건이 달라서 먼저 여쭤봐요.',
+        def.subtypes.map(st => `<button type="button" onclick="situationSetSubtype('${st.id}')" class="text-left rounded-lg px-4 py-3 flex-1 min-w-[140px]" style="background:var(--surface); border:2px solid var(--shopping-accent-border);"><span class="block text-sm font-semibold" style="color:var(--text);">${escapeHtml(st.label)}</span><span class="block text-[11px] mt-0.5 break-keep" style="color:var(--muted);">${escapeHtml(st.hint)}</span></button>`).join('')) + sitDisclosureHtml();
+      sitSyncUrl();
+      return;
+    }
+
+    // 후보 = 이 상황(+세부)에 연결된 승인 상품. 카테고리 칩은 이 후보에서 만든다.
+    const baseCond = Object.assign({}, cond, { budget: null, exclusions: [] });
+    const candidates = S.rankProducts(sitProducts, baseCond, { limit: 1000 });
+    if (sit.category !== 'all' && !candidates.some(p => p.category === sit.category)) sit.category = 'all';
+    const pool = sit.category === 'all' ? sitProducts : sitProducts.filter(p => p.category === sit.category);
+    const res = S.resolve(cond, pool, { limit: SIT_MAX_RESULTS });
+    const summary = sitSummaryHtml(S, cond, candidates);
+
+    if (res.state === 'ok'){
+      root.innerHTML = summary
+        + `<p class="text-xs mb-3" style="color:var(--muted);">검토한 상품 ${res.items.length}개${candidates.length > res.items.length && sit.category === 'all' ? ` (이 상황에 승인된 상품 ${candidates.length}개 중)` : ''}</p>`
+        + `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${res.items.map((p, i) => sitProductCardHtml(p, i + 1)).join('')}</div>`
+        + sitHotdealsTeaser() + sitDisclosureHtml();
+      sitSyncUrl();
+      return;
+    }
+
+    // 결과 없음: "이 상황 자체가 준비 중"과 "조건이 너무 좁음"을 구분한다.
+    const anyForSituation = candidates.length > 0;
+    const reason = anyForSituation ? 'filtered_out' : 'no_products';
+    sitTrackNoResult(S, cond, reason);
+    let actions = '';
+    if (anyForSituation){
+      if (cond.budget) actions += sitLinkBtn('예산 조건 빼고 보기', 'situationSetBudget(0)', true);
+      if ((cond.exclusions || []).length) actions += sitLinkBtn('제외 조건 빼고 보기', 'situationClearExclusions()', !cond.budget);
+      if (sit.category !== 'all') actions += sitLinkBtn('카테고리 전체 보기', "situationSetCategory('')", false);
+    }
+    actions += sitLinkBtn('쇼핑핫딜 보기', "switchTab('hotdeals')", false);
+    root.innerHTML = summary + (anyForSituation
+      ? sitMessageHtml('이 조건에 맞는 검토 상품이 아직 없어요', '이 상황에는 검토를 마친 상품이 있지만, 지금 예산·제외 조건에는 맞는 게 없어요. 조건을 조금 넓혀 보세요.', actions)
+      : sitMessageHtml('이 상황은 상품을 준비 중이에요', '직접 검토한 상품만 보여드리는데, 이 상황에는 아직 검토를 마친 상품이 없어요. 다른 상황을 골라 보시거나 쇼핑핫딜을 둘러보세요.', actions))
+      + sitDisclosureHtml();
+    sitSyncUrl();
+  }
+
+  // ---- 동작 ----
+  async function situationRun(){
+    const root = sitRoot();
+    situationRender();                       // 로딩 표시
+    if (root && root.scrollIntoView) root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await loadSituationProducts();
+    const S = sitS();
+    if (S && sit.cond){
+      // 선택/검색 한 번당 situation_select 한 번 (결과 수 포함). 조건을 고치는 건 별도로 세지 않는다.
+      // 돌잔치처럼 세부(참석 선물/답례품)를 아직 안 골랐으면 아직 "선택이 끝난 것"이 아니므로 기록하지 않는다
+      // (세부를 고른 뒤 situationRun()이 다시 호출되면 그때 한 번만 기록).
+      const def = sit.cond.situationId ? S.SITUATION_BY_ID[sit.cond.situationId] : null;
+      const pendingSubtype = !!(def && def.subtypes && !sit.cond.subtype);
+      if (sit.cond.situationId && !pendingSubtype){
+        let count = 0;
+        if (sitLoadState === 'ok'){
+          count = S.resolve(sit.cond, sitProducts, { limit: SIT_MAX_RESULTS }).items.length;
+        }
+        sitTrackSelect(S, sit.cond, count);
+      }
+    }
+    situationRender();
+  }
+
+  function submitSituationSearch(e){
+    if (e && e.preventDefault) e.preventDefault();
+    const S = sitS();
+    const input = document.getElementById('situation-input');
+    const text = ((input && input.value) || '').trim();
+    if (!S){ sit.cond = null; situationRender(); return false; }
+    if (!text){ showToast('상황을 입력하거나 아래 버튼을 눌러 주세요.'); return false; }
+    sit.cond = S.extractConditions(text);     // 원문은 여기서만 쓰고 저장·전송하지 않는다
+    sit.via = 'search'; sit.category = 'all'; sit.lastNoResultKey = '';
+    situationRun();
+    return false;
+  }
+
+  function pickSituation(id){
+    const S = sitS();
+    if (!S || !S.SITUATION_BY_ID[id]) return;
+    const def = S.SITUATION_BY_ID[id];
+    sit.cond = { situationId: id, subtype: null, needsSubtype: !!def.subtypes, budget: null, recipients: [], exclusions: [], recognized: true, method: 'button' };
+    sit.via = 'button'; sit.category = 'all'; sit.lastNoResultKey = '';
+    situationRun();
+  }
+
+  function situationSetSituation(id){
+    const S = sitS();
+    if (!S || !sit.cond || !S.SITUATION_BY_ID[id]) return;
+    const def = S.SITUATION_BY_ID[id];
+    sit.cond = Object.assign({}, sit.cond, { situationId: id, subtype: null, needsSubtype: !!def.subtypes, recognized: true });
+    sit.category = 'all';
+    situationRender();
+  }
+  function situationSetSubtype(id){
+    if (!sit.cond) return;
+    const first = !sit.cond.subtype;
+    sit.cond = Object.assign({}, sit.cond, { subtype: id, needsSubtype: false });
+    sit.category = 'all';
+    if (first){ situationRun(); } else { situationRender(); }
+  }
+  function situationSetBudget(max){
+    if (!sit.cond) return;
+    sit.cond = Object.assign({}, sit.cond, { budget: max > 0 ? { min: null, max, kind: 'max' } : null });
+    situationRender();
+  }
+  function situationSetCategory(i){
+    const S = sitS();
+    if (!S || !sit.cond) return;
+    if (i === '' || i == null){ sit.category = 'all'; situationRender(); return; }
+    const baseCond = Object.assign({}, sit.cond, { budget: null, exclusions: [] });
+    const cats = Array.from(new Set(S.rankProducts(sitProducts, baseCond, { limit: 1000 }).map(p => p.category).filter(Boolean)));
+    sit.category = cats[i] || 'all';
+    situationRender();
+  }
+  function situationToggleExclusion(tag){
+    const S = sitS();
+    if (!S || !sit.cond) return;
+    const cur = sit.cond.exclusions || [];
+    const has = cur.some(e => e.tag === tag);
+    const def = S.EXCLUSION_TAGS.filter(e => e.tag === tag)[0];
+    if (!def) return;
+    sit.cond = Object.assign({}, sit.cond, { exclusions: has ? cur.filter(e => e.tag !== tag) : cur.concat([{ tag: def.tag, label: def.label }]) });
+    situationRender();
+  }
+  function situationClearExclusions(){
+    if (!sit.cond) return;
+    sit.cond = Object.assign({}, sit.cond, { exclusions: [] });
+    situationRender();
+  }
+  function situationRetry(){
+    sitLoadPromise = null;
+    situationRun();
+  }
+
+  // /shopping 인트로 화면에 들어올 때(탭 전환·새로고침·뒤로가기)마다 호출
+  function situationShoppingEnter(){
+    const S = sitS();
+    if (S && !sit.cond){
+      const fromUrl = sitCondFromUrl(S);
+      if (fromUrl){ sit.cond = fromUrl; sit.via = 'url'; situationRun(); return; }
+    }
+    if (S && sit.cond && sitLoadState === 'idle') loadSituationProducts();
+    situationRender();
+  }
+
+  function renderSituationButtons(){
+    // 정적 마크업이 있으면 그대로 둔다(크롤러·JS 지연 대비). 비어 있을 때만 채운다.
+    const box = document.getElementById('situation-buttons');
+    const S = sitS();
+    if (!box || !S || box.children.length) return;
+    box.innerHTML = S.SITUATIONS.map(s => `<button type="button" onclick="pickSituation('${s.id}')" data-situation="${s.id}" class="text-left rounded-lg px-3 py-3 border" style="background:var(--surface); border-color:var(--shopping-accent-border); color:var(--text);"><span class="block text-lg leading-none mb-1">${s.emoji}</span><span class="block text-sm font-semibold break-keep">${escapeHtml(s.label)}</span></button>`).join('');
+  }
+
+  // ================= 관리자: 상황별 쇼핑 상품 검토 (2026-10) =================
+  // 조회는 매니저 전체, 저장·승인·가격갱신은 마스터만(DB RPC가 같은 기준으로 한 번 더 막는다).
+  // 상품은 "검토 완료(approved)"가 되어야 방문자에게 보인다. 승인에는 상황 1개 이상 + 추천 이유 + 제휴 링크가 필요하다.
+  // 가격·평점·리뷰수는 "확인일"과 함께 저장한다. 확인하지 않은 값은 비워 둔다(기존 핫딜의 옛 가격은 참고로만 보여주고 채우지 않는다).
+
+  const ADMIN_SIT_STATES = [
+    { v: 'draft', l: '검토 대기' },
+    { v: 'approved', l: '검토 완료(노출)' },
+    { v: 'hold', l: '보류' },
+    { v: 'rejected', l: '제외' },
+  ];
+  const ADMIN_SIT_MIN_APPROVED = 3;   // 상황별로 이 개수보다 적으면 "상품 부족"으로 표시
+  const adminSit = { products: [], stats: [], thresholds: [], thresholdsError: false, statsError: false, loadState: 'idle', errorMsg: '', filter: 'all', formOpen: false, formId: null, formPrefill: null, formError: '', refreshMsg: '' };
+
+  function adminSitStateLabel(v){ const f = ADMIN_SIT_STATES.filter(s => s.v === v)[0]; return f ? f.l : v; }
+  function adminSitToday(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+
+  async function adminSitLoad(){
+    if (!isManagerUser()) return;
+    adminSit.loadState = 'loading';
+    adminSitRender();
+    try {
+      const [pl, st, th] = await Promise.all([
+        supabaseClient.rpc('admin_list_situation_products'),
+        supabaseClient.rpc('admin_get_situation_stats', { p_period: '30d' }),
+        supabaseClient.rpc('admin_list_category_thresholds'),
+      ]);
+      if (pl.error) throw pl.error;
+      adminSit.products = Array.isArray(pl.data) ? pl.data : [];
+      adminSit.statsError = !!st.error;
+      adminSit.stats = (!st.error && Array.isArray(st.data)) ? st.data : [];
+      adminSit.thresholdsError = !!th.error;
+      adminSit.thresholds = (!th.error && Array.isArray(th.data)) ? th.data : [];
+      adminSit.loadState = 'ok';
+    } catch (e){
+      adminSit.loadState = 'error';
+      adminSit.errorMsg = (e && e.message) ? String(e.message).slice(0, 160) : '';
+    }
+    adminSitRender();
+    adminSitRenderForm();
+  }
+
+  function adminSitGapsHtml(S){
+    const approved = adminSit.products.filter(p => p.review_state === 'approved');
+    const statSum = (event, situation, reason) => adminSit.stats
+      .filter(r => r.event === event && r.situation === situation && (reason == null || r.reason === reason))
+      .reduce((a, r) => a + (r.n || 0), 0);
+    const rows = [];
+    S.SITUATIONS.forEach(s => {
+      const list = s.subtypes
+        ? s.subtypes.map(st => ({ label: s.short + ' · ' + st.label, n: approved.filter(p => (p.situations || []).indexOf(s.id) !== -1 && (p.subtypes || []).indexOf(st.id) !== -1).length }))
+        : [{ label: s.short, n: approved.filter(p => (p.situations || []).indexOf(s.id) !== -1).length }];
+      list.forEach(item => {
+        const short = item.n < ADMIN_SIT_MIN_APPROVED;
+        rows.push(`<div class="flex items-center justify-between gap-2 rounded-md px-3 py-2" style="background:var(--surface);">
+          <span class="text-sm" style="color:var(--text);">${escapeHtml(item.label)}</span>
+          <span class="text-xs font-mono" style="color:${short ? 'var(--accent)' : 'var(--success)'};">승인 ${item.n}개${short ? ' · 부족' : ''}</span>
+        </div>`);
+      });
+    });
+    const demand = S.SITUATIONS.map(s => {
+      const sel = statSum('situation_select', s.id), none = statSum('situation_no_result', s.id), clk = statSum('situation_product_click', s.id);
+      return (sel || none || clk) ? `<tr><td class="py-1 pr-3" style="color:var(--text);">${escapeHtml(s.short)}</td><td class="py-1 pr-3 font-mono">${sel}</td><td class="py-1 pr-3 font-mono" style="color:${none ? 'var(--accent)' : 'inherit'};">${none}</td><td class="py-1 font-mono">${clk}</td></tr>` : '';
+    }).join('');
+    const unrec = adminSit.stats.filter(r => r.event === 'situation_no_result' && r.reason === 'unrecognized').reduce((a, r) => a + (r.n || 0), 0);
+    return `
+      ${(() => {
+        const noOpt = approved.filter(p => !p.coupang_product_id || (!p.coupang_item_id && !p.coupang_vendor_item_id)).length;
+        return noOpt ? `<p class="text-xs mb-3 break-keep" style="color:var(--accent);">승인 상품 중 ${noOpt}개는 쿠팡 상품·옵션 식별자가 없어 가격 자동 확인에서 제외돼요(보완 필요).</p>` : '';
+      })()}
+      <p class="text-xs font-semibold mb-2" style="color:var(--muted);">상황별 승인 상품 수 (${ADMIN_SIT_MIN_APPROVED}개 미만이면 부족)</p>
+      <div class="grid sm:grid-cols-2 gap-2 mb-4">${rows.join('')}</div>
+      <p class="text-xs font-semibold mb-1" style="color:var(--muted);">최근 30일 반응 (원문 검색어는 저장하지 않아요)</p>
+      ${adminSit.statsError ? '<p class="text-xs mb-4" style="color:var(--muted);">반응 통계를 불러오지 못했어요.</p>'
+        : (demand || unrec) ? `<table class="text-xs mb-4"><thead><tr style="color:var(--muted);"><th class="text-left pr-3 font-normal">상황</th><th class="text-left pr-3 font-normal">선택</th><th class="text-left pr-3 font-normal">결과 없음</th><th class="text-left font-normal">상품 클릭</th></tr></thead><tbody>${demand}</tbody></table>${unrec ? `<p class="text-[11px] mb-4" style="color:var(--muted);">해석하지 못한 입력 ${unrec}건 — 어떤 말이었는지는 저장하지 않아서 알 수 없어요.</p>` : ''}`
+        : '<p class="text-xs mb-4" style="color:var(--muted);">아직 기록된 반응이 없어요.</p>'}`;
+  }
+
+  function adminSitListHtml(S){
+    const canWrite = isAdminUser();
+    const f = adminSit.filter;
+    const list = adminSit.products.filter(p => f === 'all' || p.review_state === f);
+    const filters = [{ v: 'all', l: '전체' }].concat(ADMIN_SIT_STATES)
+      .map(s => sitChip(s.l + (s.v === 'all' ? ` ${adminSit.products.length}` : ` ${adminSit.products.filter(p => p.review_state === s.v).length}`), `adminSitSetFilter('${s.v}')`, f === s.v)).join('');
+    const rows = list.map(p => {
+      const sits = (p.situations || []).map(id => (S.SITUATION_BY_ID[id] || {}).short || id).join(', ') || '연결된 상황 없음';
+      const price = (typeof p.price === 'number' && p.price > 0) ? sitFmtWon(p.price) + (p.price_checked_at ? ` (${sitFmtDate(p.price_checked_at)} 확인)` : '') : '가격 미확인';
+      const badgeColor = p.review_state === 'approved' ? 'var(--success)' : (p.review_state === 'draft' ? 'var(--primary)' : 'var(--muted)');
+      const flags = [];
+      if (!p.review_verified_at) flags.push(['상품평 미검토', 'var(--muted)']);
+      if (!p.coupang_product_id) flags.push(['보완 필요: 쿠팡 상품 식별자 없음 · 가격 갱신 불가', 'var(--accent)']);
+      else if (!p.coupang_item_id && !p.coupang_vendor_item_id) flags.push(['보완 필요: 옵션 식별자 없음 · 가격 갱신 불가', 'var(--accent)']);
+      if ((p.situations || []).indexOf('dol') !== -1 && !(p.subtypes || []).length) flags.push(['보완 필요: 돌잔치 세부 구분(참석/답례)', 'var(--accent)']);
+      if ((p.refresh_failures || 0) > 0) flags.push(['가격 확인 실패 ' + p.refresh_failures + '회(품절 아님)', 'var(--muted)']);
+      const flagsHtml = flags.length ? `<p class="text-[11px] mt-1 break-keep">${flags.map(f => `<span class="mr-2" style="color:${f[1]};">${escapeHtml(f[0])}</span>`).join('')}</p>` : '';
+      return `<div class="rounded-md px-3 py-2.5 flex items-start gap-3" style="background:var(--surface);">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold break-keep" style="color:var(--text);">${escapeHtml(p.name)}</p>
+          <p class="text-[11px] mt-0.5 break-keep" style="color:var(--muted);">${escapeHtml(sits)} · ${escapeHtml(price)}${p.last_refresh_status ? ' · 갱신: ' + escapeHtml(String(p.last_refresh_status).slice(0, 40)) : ''}</p>
+          ${flagsHtml}
+        </div>
+        <span class="shrink-0 text-[11px] font-bold" style="color:${badgeColor};">${escapeHtml(adminSitStateLabel(p.review_state))}</span>
+        ${canWrite ? `<button type="button" onclick="adminSitOpenForm('${escapeHtml(p.id)}')" class="shrink-0 text-xs font-semibold underline" style="color:var(--primary);">수정</button>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="flex flex-wrap gap-1.5 mb-3">${filters}</div>
+      <div class="space-y-2">${rows || '<p class="text-xs" style="color:var(--muted);">해당하는 상품이 없어요.</p>'}</div>`;
+  }
+
+  function adminSitField(id, label, value, opts){
+    opts = opts || {};
+    const type = opts.type || 'text';
+    const common = `id="asp-${id}" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"`;
+    const ctl = opts.textarea
+      ? `<textarea ${common} rows="2" maxlength="${opts.max || 300}">${escapeHtml(value == null ? '' : value)}</textarea>`
+      : `<input ${common} type="${type}" ${opts.max ? `maxlength="${opts.max}"` : ''} ${opts.step ? `step="${opts.step}"` : ''} value="${escapeHtml(value == null ? '' : value)}">`;
+    return `<label class="block"><span class="block text-[11px] mb-1" style="color:var(--muted);">${escapeHtml(label)}</span>${ctl}${opts.hint ? `<span class="block text-[10px] mt-1 break-keep" style="color:var(--muted);">${escapeHtml(opts.hint)}</span>` : ''}</label>`;
+  }
+  function adminSitChecks(name, items, selected){
+    return `<div class="flex flex-wrap gap-x-3 gap-y-1.5">${items.map(it => `<label class="flex items-center gap-1.5 text-xs" style="color:var(--text-secondary);"><input type="checkbox" name="asp-${name}" value="${escapeHtml(it.v)}" ${selected.indexOf(it.v) !== -1 ? 'checked' : ''}>${escapeHtml(it.l)}</label>`).join('')}</div>`;
+  }
+
+  function adminSitLegacyOptions(){
+    // 기존 쇼핑핫딜(AUTUMN_GIFT_PRODUCTS)에서 아직 등록 안 된 상품을 후보로 불러온다. 이름+URL이 같은 중복행은 한 번만.
+    const have = new Set(adminSit.products.map(p => p.coupang_product_id).filter(Boolean));
+    const seen = new Set(); const out = [];
+    AUTUMN_GIFT_PRODUCTS.forEach((p, i) => {
+      const key = p.name + '||' + p.url;
+      if (seen.has(key)) return; seen.add(key);
+      const ids = adminSitParseIds(p.url);
+      if (ids.productId && have.has(ids.productId)) return;
+      out.push({ i, name: p.name });
+    });
+    return out;
+  }
+  function adminSitParseIds(url){
+    const out = { productId: '', itemId: '', vendorItemId: '' };
+    try {
+      const u = new URL(String(url));
+      const m = /\/vp\/products\/(\d+)/.exec(u.pathname);
+      if (m) out.productId = m[1];
+      out.itemId = u.searchParams.get('itemId') || '';
+      out.vendorItemId = u.searchParams.get('vendorItemId') || '';
+    } catch (e) { /* 형식이 이상하면 빈 값 */ }
+    return out;
+  }
+
+  function adminSitFormHtml(S){
+    const base = adminSit.formId ? (adminSit.products.filter(p => p.id === adminSit.formId)[0] || {}) : (adminSit.formPrefill || {});
+    const isNew = !adminSit.formId;
+    const dolDef = S.SITUATION_BY_ID.dol;
+    const priceDate = base.price_checked_at ? new Date(new Date(base.price_checked_at).getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10) : '';
+    const legacyOpts = isNew ? adminSitLegacyOptions() : [];
+    const legacyHint = base._legacyHint ? `<p class="text-[11px] mb-3 break-keep rounded-md px-3 py-2" style="background:var(--card-alt); color:var(--muted);">기존 쇼핑핫딜 등록값(확인일 없음, 참고만): ${escapeHtml(base._legacyHint)}. 오늘 직접 확인한 가격이 아니면 아래 가격은 비워 두세요.</p>` : '';
+    return `
+      <div class="rounded-lg p-4 mb-4" style="background:var(--card); border:1px solid var(--shopping-accent-border);">
+        <p class="text-sm font-semibold mb-3" style="color:var(--text);">${isNew ? '상품 후보 추가' : '상품 수정'}</p>
+        ${isNew && legacyOpts.length ? `<label class="block mb-3"><span class="block text-[11px] mb-1" style="color:var(--muted);">기존 쇼핑핫딜에서 불러오기 (이름·링크만 가져와요)</span>
+          <select id="asp-legacy" onchange="adminSitImportLegacy(this.value)" class="w-full px-3 py-2 rounded-md text-sm" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"><option value="">선택하세요</option>${legacyOpts.map(o => `<option value="${o.i}">${escapeHtml(o.name.slice(0, 60))}</option>`).join('')}</select></label>` : ''}
+        ${legacyHint}
+        <div class="grid sm:grid-cols-2 gap-3 mb-3">
+          ${adminSitField('name', '상품명 *', base.name, { max: 200 })}
+          ${adminSitField('category', '카테고리 (결과 화면 보조 필터에 쓰여요)', base.category, { max: 100 })}
+          ${adminSitField('affiliate-url', '쿠팡 파트너스 링크 * (https://link.coupang.com/...)', base.affiliate_url, { max: 500 })}
+          ${adminSitField('coupang-url', '쿠팡 상품 URL (가격 갱신용 식별자 추출)', base.coupang_url, { max: 500 })}
+          ${adminSitField('image-url', '이미지 URL (https, 직접 확인한 것만)', base.image_url, { max: 500 })}
+          ${adminSitField('search-keyword', '가격 갱신 때 쓸 검색어 (비우면 상품명)', base.search_keyword, { max: 100 })}
+          ${adminSitField('price', '가격(원) — 직접 확인한 값만', base.price, { type: 'number', step: '1' })}
+          ${adminSitField('price-date', '가격 확인일 (가격을 적으면 필수)', priceDate || (base.price ? '' : adminSitToday()), { type: 'date' })}
+          ${adminSitField('rating', '평점 (0~5, 확인한 값만)', base.rating, { type: 'number', step: '0.1' })}
+          ${adminSitField('review-count', '리뷰 수 (확인한 값만)', base.review_count, { type: 'number', step: '1' })}
+          ${adminSitField('review-date', '평점·리뷰 확인일 (둘 중 하나라도 적으면 필수)', base.review_checked_at || '', { type: 'date' })}
+          <input type="hidden" id="asp-ids" value="${escapeHtml(JSON.stringify({ p: base.coupang_product_id || '', i: base.coupang_item_id || '', v: base.coupang_vendor_item_id || '' }))}">
+        </div>
+        <div class="rounded-md p-3 mb-3" style="background:var(--surface); border:1px solid var(--line);">
+          <p class="text-[11px] font-semibold mb-1" style="color:var(--text-secondary);">상품평 검토 * (승인하려면 필수)</p>
+          <p class="text-[11px] mb-3 break-keep" style="color:var(--muted);">상품평을 실제로 읽은 경우에만 적어 주세요. 읽지 않았다면 비워 두고 '검토 대기'로 저장하세요. 아래 평점·리뷰 수 숫자와는 별개의 기록이에요.</p>
+          <div class="grid sm:grid-cols-2 gap-3 mb-3">
+            ${adminSitField('review-verified-date', '상품평을 읽고 검토한 날', base.review_verified_at || '', { type: 'date' })}
+            ${adminSitField('review-read-count', '직접 읽은 상품평 수 (1 이상)', base.review_read_count, { type: 'number', step: '1' })}
+          </div>
+          ${adminSitField('review-basis', '검토 근거 (직접 확인한 내용을 본인 문장으로, 10자 이상)', base.review_basis, { textarea: true, max: 500, hint: '시스템이 대신 써 주지 않아요. 읽은 범위와 확인한 내용을 직접 적어 주세요.' })}
+        </div>
+        <p class="text-[11px] font-semibold mb-1" style="color:var(--muted);">연결할 상황 * (1개 이상)</p>
+        <div class="mb-3">${adminSitChecks('situations', S.SITUATIONS.map(s => ({ v: s.id, l: s.label })), base.situations || [])}</div>
+        <p class="text-[11px] font-semibold mb-1" style="color:var(--muted);">돌잔치 세부 구분 (돌잔치 상품은 하나 이상 필수 · 양쪽에 맞는 상품이면 둘 다 직접 선택)</p>
+        <div class="mb-3">${adminSitChecks('subtypes', dolDef.subtypes.map(s => ({ v: s.id, l: s.label })), base.subtypes || [])}</div>
+        <p class="text-[11px] font-semibold mb-1" style="color:var(--muted);">추천 대상</p>
+        <div class="mb-3">${adminSitChecks('recipients', S.RECIPIENTS.map(r => ({ v: r.id, l: r.label })), base.recipients || [])}</div>
+        <p class="text-[11px] font-semibold mb-1" style="color:var(--muted);">이 상품이 해당되면 제외해야 하는 조건</p>
+        <div class="mb-3">${adminSitChecks('exclude-tags', S.EXCLUSION_TAGS.map(e => ({ v: e.tag, l: e.label })), base.exclude_tags || [])}</div>
+        <div class="grid gap-3 mb-3">
+          ${adminSitField('reason', '이 상황에 추천하는 이유 * (승인 필수, 300자 이내)', base.reason, { textarea: true })}
+          ${adminSitField('caution', '구매 전 확인사항 (300자 이내)', base.caution, { textarea: true })}
+        </div>
+        <label class="block mb-3"><span class="block text-[11px] mb-1" style="color:var(--muted);">검토 상태</span>
+          <select id="asp-state" class="w-full sm:w-64 px-3 py-2 rounded-md text-sm" style="background:var(--surface); border:1px solid var(--line); color:var(--text);">${ADMIN_SIT_STATES.map(s => `<option value="${s.v}" ${(base.review_state || 'draft') === s.v ? 'selected' : ''}>${escapeHtml(s.l)}</option>`).join('')}</select></label>
+        <input type="hidden" id="asp-source" value="${escapeHtml(base.source || 'manual')}">
+        <p id="asp-error" role="alert" class="text-xs mb-3 break-keep" style="color:var(--accent);${adminSit.formError ? '' : 'display:none;'}">${escapeHtml(adminSit.formError)}</p>
+        <div class="flex gap-2">
+          <button type="button" onclick="adminSitSave()" class="px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--primary); color:#1C1A17;">저장</button>
+          <button type="button" onclick="adminSitCloseForm()" class="px-5 py-2.5 rounded-md text-sm font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">취소</button>
+        </div>
+      </div>`;
+  }
+
+  function adminSitRender(){
+    const S = sitS();
+    const gaps = document.getElementById('admin-situation-gaps');
+    const list = document.getElementById('admin-situation-list');
+    const tools = document.getElementById('admin-situation-tools');
+    if (!gaps || !list || !tools) return;
+    if (!S){ gaps.innerHTML = '<p class="text-xs" style="color:var(--muted);">검색 모듈을 불러오지 못했어요.</p>'; return; }
+    const canWrite = isAdminUser();
+    tools.innerHTML = canWrite
+      ? `<div class="flex flex-wrap gap-2 mb-3">
+          <button type="button" onclick="adminSitOpenForm(null)" class="px-4 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">+ 상품 후보 추가</button>
+          <button type="button" onclick="adminSitRefresh()" class="px-4 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--text); border:1px solid var(--line);">쿠팡 API로 가격·이미지 갱신</button>
+          <button type="button" onclick="adminSitLoad()" class="px-4 py-2 rounded-md text-xs font-semibold" style="background:var(--surface); color:var(--muted); border:1px solid var(--line);">새로고침</button>
+        </div>${adminSit.refreshMsg ? `<p class="text-xs mb-3 break-keep" style="color:var(--text-secondary);">${escapeHtml(adminSit.refreshMsg)}</p>` : ''}`
+      : '<p class="text-xs mb-3" style="color:var(--muted);">조회만 가능해요. 저장·승인은 마스터 계정에서만 할 수 있어요.</p>';
+    if (adminSit.loadState === 'loading' || adminSit.loadState === 'idle'){ gaps.innerHTML = '<p class="text-xs" style="color:var(--muted);">불러오는 중…</p>'; list.innerHTML = ''; return; }
+    if (adminSit.loadState === 'error'){
+      gaps.innerHTML = `<p class="text-xs break-keep" style="color:var(--accent);">상품 목록을 불러오지 못했어요. 상품 테이블이 아직 없다면 supabase/migrations/20261001000000_situation_products.sql 적용이 필요해요. ${escapeHtml(adminSit.errorMsg)}</p>`;
+      list.innerHTML = ''; return;
+    }
+    gaps.innerHTML = adminSitGapsHtml(S);
+    list.innerHTML = adminSitListHtml(S);
+    adminSitRenderThresholds();
+    // 폼은 여기서 다시 그리지 않는다: 필터 변경·목록 새로고침 때 입력 중인 내용이 사라지지 않게
+    // (열기/닫기/불러오기 때만 adminSitRenderForm()으로 그린다).
+  }
+
+  function adminSitRenderForm(){
+    const S = sitS();
+    const formRoot = document.getElementById('admin-situation-form-root');
+    if (!formRoot) return;
+    formRoot.innerHTML = (S && isAdminUser() && adminSit.formOpen && adminSit.loadState === 'ok') ? adminSitFormHtml(S) : '';
+  }
+
+  // 검증·저장 오류는 폼을 다시 그리지 않고 오류 줄만 바꾼다(입력한 값 유지).
+  function adminSitFormError(msg){
+    adminSit.formError = msg || '';
+    const el = document.getElementById('asp-error');
+    if (!el) return;
+    el.textContent = adminSit.formError;
+    el.style.display = adminSit.formError ? '' : 'none';
+    if (adminSit.formError && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // ---- 카테고리별 승인 기준 ----
+  // 운영자가 정하는 내부 기준이다. 기본은 비어 있고(숫자 기준 없이 상품평 검토 기록만 확인), 방문자 화면에는 기준을 내세우지 않는다.
+  function adminSitRenderThresholds(){
+    const el = document.getElementById('admin-situation-thresholds');
+    if (!el) return;
+    if (adminSit.loadState !== 'ok'){ el.innerHTML = ''; return; }
+    const canWrite = isAdminUser();
+    const cats = Array.from(new Set(adminSit.products.map(p => p.category).filter(Boolean)));
+    const rows = adminSit.thresholds.map((t, i) => `<div class="flex items-center justify-between gap-2 rounded-md px-3 py-2" style="background:var(--surface);">
+        <div class="min-w-0"><p class="text-sm font-semibold break-keep" style="color:var(--text);">${escapeHtml(t.category)}</p>
+          <p class="text-[11px] break-keep" style="color:var(--muted);">${t.min_rating != null ? '평점 ' + escapeHtml(String(t.min_rating)) + ' 이상' : '평점 기준 없음'} · ${t.min_review_count != null ? '리뷰 ' + escapeHtml(String(t.min_review_count)) + '개 이상' : '리뷰수 기준 없음'}${t.note ? ' · ' + escapeHtml(t.note) : ''}</p></div>
+        ${canWrite ? `<button type="button" onclick="adminSitDeleteThreshold(${i})" class="shrink-0 text-xs font-semibold underline" style="color:var(--muted);">삭제</button>` : ''}
+      </div>`).join('');
+    const form = canWrite ? `<div class="grid sm:grid-cols-4 gap-2 mt-3">
+        <label class="block"><span class="block text-[11px] mb-1" style="color:var(--muted);">카테고리</span><input id="ath-category" list="ath-cats" maxlength="100" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"><datalist id="ath-cats">${cats.map(c => `<option value="${escapeHtml(c)}">`).join('')}</datalist></label>
+        <label class="block"><span class="block text-[11px] mb-1" style="color:var(--muted);">최소 평점(0~5, 비우면 없음)</span><input id="ath-rating" type="number" step="0.1" min="0" max="5" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></label>
+        <label class="block"><span class="block text-[11px] mb-1" style="color:var(--muted);">최소 리뷰 수(비우면 없음)</span><input id="ath-count" type="number" step="1" min="0" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></label>
+        <label class="block"><span class="block text-[11px] mb-1" style="color:var(--muted);">메모(선택)</span><input id="ath-note" maxlength="300" class="w-full px-3 py-2 rounded-md text-sm outline-none" style="background:var(--surface); border:1px solid var(--line); color:var(--text);"></label>
+      </div>
+      <button type="button" onclick="adminSitSaveThreshold()" class="mt-2 px-4 py-2 rounded-md text-xs font-semibold" style="background:var(--primary); color:#1C1A17;">기준 저장</button>
+      <p id="ath-error" role="alert" class="text-xs mt-2 break-keep" style="color:var(--accent); display:none;"></p>` : '';
+    el.innerHTML = `<p class="text-xs font-semibold mb-1" style="color:var(--muted);">카테고리별 승인 기준</p>
+      <p class="text-[11px] mb-3 break-keep" style="color:var(--muted);">카테고리마다 승인할 때 필요한 최소 평점·리뷰 수를 정할 수 있어요. 비워 두면 숫자 기준 없이 상품평 검토 기록만 확인해요. 운영 내부용 기준이고, 방문자 화면에서는 '검증된 기준'으로 소개하지 않아요. 기준을 바꿔도 이미 승인된 상품은 그대로이고, 다음에 저장할 때부터 적용돼요.</p>
+      ${adminSit.thresholdsError ? '<p class="text-xs" style="color:var(--accent);">기준을 불러오지 못했어요(마이그레이션 20261002 적용 여부를 확인하세요).</p>' : `<div class="space-y-2">${rows || '<p class="text-xs" style="color:var(--muted);">아직 정한 기준이 없어요. 지금은 상품평 검토 기록만 확인해요.</p>'}</div>${form}`}`;
+  }
+  function adminSitThresholdError(msg){ const e = document.getElementById('ath-error'); if (e){ e.textContent = msg || ''; e.style.display = msg ? '' : 'none'; } }
+  async function adminSitSaveThreshold(){
+    if (!isAdminUser()) return;
+    const v = (id) => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+    const cat = v('ath-category');
+    const rating = v('ath-rating') === '' ? null : Number(v('ath-rating'));
+    const cnt = v('ath-count') === '' ? null : Number(v('ath-count'));
+    if (!cat) return adminSitThresholdError('카테고리를 입력해 주세요.');
+    if (rating != null && !(rating >= 0 && rating <= 5)) return adminSitThresholdError('평점은 0~5 사이여야 해요.');
+    if (cnt != null && !(Number.isInteger(cnt) && cnt >= 0)) return adminSitThresholdError('리뷰 수는 0 이상의 정수여야 해요.');
+    if (rating == null && cnt == null) return adminSitThresholdError('평점이나 리뷰 수 중 하나는 정해 주세요. 기준을 없애려면 목록에서 삭제하세요.');
+    try {
+      const { error } = await supabaseClient.rpc('admin_save_category_threshold', { p: { category: cat, min_rating: rating, min_review_count: cnt, note: v('ath-note') || null } });
+      if (error) throw error;
+      showToast('기준을 저장했어요.');
+      await adminSitLoad();
+    } catch (e){ adminSitThresholdError('저장하지 못했어요. ' + ((e && e.message) ? String(e.message).slice(0, 100) : '')); }
+  }
+  async function adminSitDeleteThreshold(i){
+    if (!isAdminUser()) return;
+    const t = adminSit.thresholds[i];
+    if (!t) return;
+    try {
+      const { error } = await supabaseClient.rpc('admin_delete_category_threshold', { p_category: t.category });
+      if (error) throw error;
+      await adminSitLoad();
+    } catch (e){ adminSitThresholdError('삭제하지 못했어요.'); }
+  }
+
+  function adminSitSetFilter(v){ adminSit.filter = v; adminSitRender(); }
+  function adminSitOpenForm(id){
+    if (!isAdminUser()) return;
+    adminSit.formOpen = true; adminSit.formId = id || null; adminSit.formPrefill = null; adminSit.formError = '';
+    adminSitRenderForm();
+    const el = document.getElementById('admin-situation-form-root');
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function adminSitCloseForm(){ adminSit.formOpen = false; adminSit.formId = null; adminSit.formPrefill = null; adminSit.formError = ''; adminSitRenderForm(); }
+
+  function adminSitImportLegacy(idx){
+    if (idx === '' || idx == null) return;
+    const p = AUTUMN_GIFT_PRODUCTS[Number(idx)];
+    if (!p) return;
+    const ids = adminSitParseIds(p.url);
+    adminSit.formPrefill = {
+      name: p.name, category: (p.category || '').split(',')[0].trim(), affiliate_url: p.partnersUrl || '', coupang_url: p.url || '',
+      coupang_product_id: ids.productId, coupang_item_id: ids.itemId, coupang_vendor_item_id: ids.vendorItemId,
+      source: 'legacy_hotdeal', review_state: 'draft',
+      _legacyHint: [p.price ? '가격 ' + p.price : '', p.rating != null ? '평점 ' + p.rating : '', p.reviews != null ? '리뷰 ' + p.reviews : ''].filter(Boolean).join(' · '),
+    };
+    adminSit.formId = null; adminSit.formError = '';
+    adminSitRenderForm();
+  }
+
+  async function adminSitSave(){
+    if (!isAdminUser()) return;
+    const g = (id) => document.getElementById('asp-' + id);
+    const val = (id) => (g(id) ? g(id).value.trim() : '');
+    const checked = (name) => Array.from(document.querySelectorAll('input[name="asp-' + name + '"]:checked')).map(i => i.value);
+    const numOrNull = (id) => { const v = val(id); return v === '' ? null : Number(v); };
+    const fail = (m) => { adminSitFormError(m); return false; };
+
+    const price = numOrNull('price'), rating = numOrNull('rating'), reviewCount = numOrNull('review-count');
+    if (!val('name')) return fail('상품명을 입력해 주세요.');
+    if (price != null && (!Number.isFinite(price) || price <= 0)) return fail('가격은 0보다 큰 숫자여야 해요.');
+    if (price != null && !val('price-date')) return fail('가격을 적으면 확인일도 함께 적어야 해요.');
+    if ((rating != null || reviewCount != null) && !val('review-date')) return fail('평점·리뷰 수를 적으면 확인일도 함께 적어야 해요.');
+    if (rating != null && (rating < 0 || rating > 5)) return fail('평점은 0~5 사이여야 해요.');
+    const state = val('state');
+    const rvDate = val('review-verified-date'), rvCount = numOrNull('review-read-count'), rvBasis = val('review-basis');
+    if (rvDate){
+      if (rvCount == null || !Number.isInteger(rvCount) || rvCount < 1) return fail('검토일을 적었다면 직접 읽은 상품평 수(1 이상)도 적어 주세요.');
+      if (rvBasis.length < 10) return fail('검토일을 적었다면 검토 근거를 10자 이상 직접 적어 주세요.');
+    }
+    if (state === 'approved'){
+      if (!checked('situations').length) return fail('승인하려면 연결할 상황을 1개 이상 골라 주세요.');
+      if (!val('reason')) return fail('승인하려면 추천 이유가 필요해요.');
+      if (!val('affiliate-url')) return fail('승인하려면 쿠팡 파트너스 링크가 필요해요.');
+      if (!rvDate) return fail('승인하려면 상품평을 직접 읽고 검토한 기록(검토일·읽은 수·근거)이 필요해요.');
+      if (checked('situations').indexOf('dol') !== -1 && !checked('subtypes').length) return fail('돌잔치 상품은 참석 선물/답례품을 하나 이상 선택해야 승인할 수 있어요. 양쪽에 맞으면 둘 다 선택하세요.');
+      // 카테고리별 기준(서버가 같은 검사를 한 번 더 한다)
+      const th = adminSit.thresholds.filter(t => t.category === val('category'))[0];
+      if (th){
+        const dated = !!val('review-date');
+        if (th.min_rating != null && !(rating != null && dated && rating >= Number(th.min_rating))) return fail(`'${th.category}' 카테고리 기준: 평점 ${th.min_rating} 이상(확인일 포함)이어야 승인할 수 있어요.`);
+        if (th.min_review_count != null && !(reviewCount != null && dated && reviewCount >= th.min_review_count)) return fail(`'${th.category}' 카테고리 기준: 리뷰 ${th.min_review_count}개 이상(확인일 포함)이어야 승인할 수 있어요.`);
+      }
+    }
+    // 쿠팡 URL이 있으면 식별자를 다시 추출한다(없으면 기존 값 유지)
+    let ids = {}; try { ids = JSON.parse(val('ids') || '{}'); } catch (e) { ids = {}; }
+    const fromUrl = val('coupang-url') ? adminSitParseIds(val('coupang-url')) : null;
+    const payload = {
+      id: adminSit.formId || null,
+      name: val('name'), category: val('category'),
+      affiliate_url: val('affiliate-url'), coupang_url: val('coupang-url'), image_url: val('image-url'), search_keyword: val('search-keyword'),
+      price: price, price_checked_at: price != null ? val('price-date') + 'T00:00:00+09:00' : null,
+      rating: rating, review_count: reviewCount, review_checked_at: (rating != null || reviewCount != null) ? val('review-date') : null,
+      coupang_product_id: (fromUrl && fromUrl.productId) || ids.p || '',
+      coupang_item_id: (fromUrl && fromUrl.productId ? fromUrl.itemId : ids.i) || '',
+      coupang_vendor_item_id: (fromUrl && fromUrl.productId ? fromUrl.vendorItemId : ids.v) || '',
+      situations: checked('situations'), subtypes: checked('subtypes'), recipients: checked('recipients'), exclude_tags: checked('exclude-tags'),
+      review_verified_at: rvDate || null, review_read_count: rvCount, review_basis: rvBasis || null,
+      reason: val('reason'), caution: val('caution'), review_state: state, source: val('source') || 'manual',
+    };
+    try {
+      const { error } = await supabaseClient.rpc('admin_save_situation_product', { p: payload });
+      if (error) throw error;
+      showToast('저장했어요.');
+      adminSit.formOpen = false; adminSit.formId = null; adminSit.formPrefill = null; adminSit.formError = '';
+      adminSitRenderForm();
+      await adminSitLoad();
+    } catch (e){
+      const m = (e && e.message) ? String(e.message) : '';
+      // DB 제약 위반을 사람이 읽을 말로 바꿔서 보여준다
+      const friendly = /situation_products_coupang_unique/.test(m) ? '같은 쿠팡 상품·옵션이 이미 등록돼 있어요.'
+        : /approved_requirements/.test(m) ? '승인하려면 상황 1개 이상, 추천 이유, 제휴 링크, 상품평 검토 기록이 필요해요.'
+        : /dol_subtype_required/.test(m) ? '돌잔치 상품은 참석 선물/답례품을 하나 이상 선택해야 승인할 수 있어요.'
+        : /review_verified_complete/.test(m) ? '상품평 검토 기록은 검토일·읽은 수(1 이상)·근거(10자 이상)가 모두 있어야 해요.'
+        : /카테고리 ".*" 기준/.test(m) ? m.replace(/^.*?ERROR:\s*/, '').slice(0, 160)
+        : /price_date_required/.test(m) ? '가격을 적으면 확인일도 필요해요.'
+        : /review_date_required/.test(m) ? '평점·리뷰 수를 적으면 확인일도 필요해요.'
+        : /마스터/.test(m) ? '마스터 계정만 저장할 수 있어요.'
+        : '저장하지 못했어요. ' + m.slice(0, 120);
+      adminSitFormError(friendly);
+    }
+  }
+
+  // 검토된 상품의 가격·이미지를 쿠팡 파트너스 API로 갱신(상품·옵션이 정확히 일치할 때만). 서버가 호출 한도를 지킨다.
+  async function adminSitRefresh(){
+    if (!isAdminUser()) return;
+    adminSit.refreshMsg = '갱신 요청 중…'; adminSitRender();
+    const MSG = {
+      refresh_disabled: '가격 갱신 기능이 꺼져 있어요. 쿠팡 파트너스 API를 검증한 뒤 서버 환경변수 COUPANG_REFRESH_ENABLED=true로 켜세요.',
+      keys_missing: '쿠팡 파트너스 API 키가 서버에 설정되지 않았어요. Vercel 환경변수에 등록해 주세요(채팅·Git에는 붙여넣지 마세요).',
+      not_configured: '서버 설정(Supabase 환경변수)이 비어 있어요.',
+      unauthorized: '관리자 로그인이 확인되지 않았어요. 다시 로그인해 주세요.',
+      rate_limited: '시간당 호출 예산을 다 써서 호출하지 않았어요. 잠시 뒤 다시 시도해 주세요.',
+      blocked: '쿠팡이 호출을 제한해서 한동안 호출을 멈춘 상태예요.',
+    };
+    try {
+      const { data } = await supabaseClient.auth.getSession();
+      const token = data && data.session ? data.session.access_token : '';
+      if (!token){ adminSit.refreshMsg = MSG.unauthorized; adminSitRender(); return; }
+      const r = await fetch('/api/coupang-refresh', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok){ adminSit.refreshMsg = MSG[j.error] || ('갱신하지 못했어요 (' + (j.error || r.status) + ')'); }
+      else {
+        const by = {}; (j.results || []).forEach(x => { by[x.outcome] = (by[x.outcome] || 0) + 1; });
+        const parts = Object.keys(by).map(k => ({ updated: '갱신', checked: '확인만(저장 안 함)', not_found: '검색 결과에 없음(품절 아님)', option_mismatch: '옵션 불일치(품절 아님)', skipped: '건너뜀', error: '오류' }[k] || k) + ' ' + by[k]);
+        const extra = [];
+        if (j.mode === 'dry_run') extra.push('확인만 했어요 — 가격·이미지는 저장하지 않았어요(COUPANG_PRICE_REFRESH_ENABLED 꺼짐)');
+        if (j.needsFix) extra.push('보완 필요 ' + j.needsFix + '개(옵션 식별자 없음, 호출 안 함)');
+        if (j.cooling) extra.push('재시도 대기 ' + j.cooling + '개');
+        if (j.recent) extra.push('최근 확인돼 건너뜀 ' + j.recent + '개');
+        adminSit.refreshMsg = '시도 ' + (j.attempted || 0) + '건 — ' + (parts.join(', ') || '대상 없음') + (extra.length ? ' · ' + extra.join(' · ') : '') + (j.stopped ? ' · 중단: ' + (MSG[j.stopped.code] || j.stopped.code) : '');
+      }
+    } catch (e){ adminSit.refreshMsg = '요청에 실패했어요. 네트워크를 확인해 주세요.'; }
+    await adminSitLoad();
+  }
 
   // ================= 맞춤 쇼핑 (추석 V1) =================
   // 이번 단계는 화면·라우팅 골격만 구현한다. 실제 상품 데이터, 쿠팡 API, 고수점수 추천 엔진은
@@ -8961,6 +9849,7 @@
       chuseokEl.classList.add('hidden');
       introEl.classList.remove('hidden');
       refreshShoppingIntroH1();
+      if (typeof situationShoppingEnter === 'function') situationShoppingEnter();
     }
   }
 
@@ -11192,6 +12081,8 @@
     startAirtablePolling();
   })();
   syncHomeSeasonalBanner();
+  applyShoppingNavTargets(); // 상황별 쇼핑 공개 플래그가 켜진 경우에만 메뉴 연결을 바꾼다
+  renderSituationButtons();
   setAuthMode('login');
   updateAuthNavUI();
 
