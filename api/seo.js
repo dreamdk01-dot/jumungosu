@@ -50,7 +50,8 @@ const PAGE_DEFS = {
     h1: '오늘 치킨 할인·쿠폰 비교',
     intro: 'BBQ, BHC, 교촌치킨, 굽네치킨 등 치킨 브랜드가 배민·쿠팡이츠·요기요·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
     filter: d => (d.category || []).includes('치킨'),
-    limit: 15,
+    limit: 15,           // 표시할 브랜드 수(브랜드별로 묶은 뒤 최대 할인금액 순 상위 N개)
+    category: '치킨',   // 홈 카테고리 필터 값(CATEGORIES)과 같은 이름. 브랜드 순위/홈 링크에 쓰인다
   },
   'delivery-app-compare': {
     title: '배달앱 할인·쿠폰 비교 | 배민·쿠팡이츠·요기요·땡겨요 - 주문의고수',
@@ -114,7 +115,8 @@ const PAGE_DEFS = {
     h1: '오늘 피자 할인·쿠폰 비교',
     intro: '도미노피자, 피자헛 등 피자 브랜드가 배민·쿠팡이츠·요기요·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
     filter: d => (d.category || []).includes('피자'),
-    limit: 15,
+    limit: 15,           // 표시할 브랜드 수(브랜드별로 묶은 뒤 최대 할인금액 순 상위 N개)
+    category: '피자',   // 홈 카테고리 필터 값(CATEGORIES)과 같은 이름. 브랜드 순위/홈 링크에 쓰인다
   },
   'today-burger-discount': {
     title: '햄버거 할인·쿠폰 비교 | 오늘 배달앱 햄버거 할인 - 주문의고수',
@@ -122,7 +124,8 @@ const PAGE_DEFS = {
     h1: '오늘 햄버거 할인·쿠폰 비교',
     intro: '맥도날드, 맘스터치, 롯데리아 등 버거 브랜드가 배민·쿠팡이츠·요기요·땡겨요에서 각각 얼마나 할인 중인지 비교했습니다.',
     filter: d => (d.category || []).includes('버거'),
-    limit: 15,
+    limit: 15,           // 표시할 브랜드 수(브랜드별로 묶은 뒤 최대 할인금액 순 상위 N개)
+    category: '버거',   // 홈 카테고리 필터 값(CATEGORIES)과 같은 이름. 브랜드 순위/홈 링크에 쓰인다
   },
 
   // ---- 브랜드별 10개 (브랜드 4개 앱 비교) ----
@@ -454,8 +457,11 @@ const NAV_LINKS = [
 
 const NAV_LABEL = Object.fromEntries(NAV_LINKS);
 
-// 브랜드 페이지(singleBrand) 10개를 카테고리별로 묶어서, 서로 크로스링크할 때 사용합니다.
+// 브랜드 페이지(singleBrand)를 카테고리별로 묶어서, 서로 크로스링크할 때 사용합니다.
 // (예: BBQ 페이지 하단에 "오늘의 치킨 할인" 섹션에서 BHC/교촌/굽네/처갓집을 보여줌)
+// 값은 카테고리 문자열 하나, 또는 여러 카테고리의 배열이다(에어테이블에서 한 브랜드에 카테고리를 여러 개
+// 지정하는 경우와 맞추기 위함). 배열의 첫 번째 값이 "대표 카테고리"이며 경로 표시/BreadcrumbList 에만 쓰인다.
+// 코드에서는 이 객체를 직접 읽지 말고 brandCategories()/brandPrimaryCategory()를 쓴다.
 const BRAND_CATEGORY = {
   'bbq-discount': '치킨',
   'bhc-discount': '치킨',
@@ -466,7 +472,7 @@ const BRAND_CATEGORY = {
   'pizzahut-discount': '피자',
   'lotteria-discount': '버거',
   'mcdonald-discount': '버거',
-  'momstouch-discount': '버거',
+  'momstouch-discount': ['버거', '치킨'],   // 대표: 버거. 에어테이블에서도 버거·치킨 둘 다 지정(피자앤치킨 행은 피자·치킨)
   // ---- 2차 확장 브랜드 (배스킨라빈스/던킨/뚜레쥬르/스타벅스/명랑핫도그/떡참은 이번엔 매핑하지 않음) ----
   'pooradak-discount': '치킨',
   'norangtongdak-discount': '치킨',
@@ -483,6 +489,15 @@ const BRAND_CATEGORY = {
   'burgerking-discount': '버거',
   'whattheburger-discount': '버거',
 };
+
+function brandCategories(pageKey){
+  const v = BRAND_CATEGORY[pageKey];
+  return Array.isArray(v) ? v.slice() : (v ? [v] : []);
+}
+// 대표 카테고리(첫 번째 값): BreadcrumbList/경로 표시는 날마다 바뀌지 않도록 하나만 쓴다.
+function brandPrimaryCategory(pageKey){
+  return brandCategories(pageKey)[0] || null;
+}
 
 // ---------------------------------------------------------------
 // Airtable 캐시 레코드 → 최소 형태로 파싱 (index.html의 로직을 서버에서 쓸 수 있게 축약)
@@ -725,6 +740,7 @@ const FOOTER_BRAND_SECTIONS = [
       ['jadam-discount', '자담치킨'],
       ['pooradak-discount', '푸라닭'],
       ['nene-discount', '네네치킨'],
+      ['momstouch-discount', '맘스터치'],   // 치킨·햄버거 두 그룹에 모두 노출(서로 다른 목록이라 중복 아님)
     ],
   },
   {
@@ -781,10 +797,15 @@ function renderNav(currentKey){
     const active = key === currentKey;
     return `<a href="/${key}" style="display:inline-block; margin:0 6px 8px 0; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; text-decoration:none; ${active ? `background:${PRIMARY}; color:${BG};` : `background:${CARD}; color:${MUTED}; border:1px solid ${LINE};`}">${escapeHtml(label)}</a>`;
   };
-  const section = (icon, title, entries) => `<div style="margin-bottom:14px;">
+  // 같은 목록 안에서는 같은 링크가 두 번 나오지 않게 한다(키 기준, 먼저 나온 것을 유지).
+  const section = (icon, title, entries) => {
+    const seen = new Set();
+    const unique = entries.filter(([key]) => (seen.has(key) ? false : (seen.add(key), true)));
+    return `<div style="margin-bottom:14px;">
     <p style="font-size:12px; font-weight:700; color:${MUTED}; margin:0 0 6px;">${icon ? icon + ' ' : ''}${escapeHtml(title)}</p>
-    <div>${entries.map(pill).join('')}</div>
+    <div>${unique.map(pill).join('')}</div>
   </div>`;
+  };
 
   const parts = [];
   parts.push(section('', '오늘의 할인 비교', [['today-delivery-discount', '오늘 배달 할인 전체']]));
@@ -931,6 +952,74 @@ function renderSingleAppList(list){
   return `<div style="margin:16px 0;">${rows}</div>`;
 }
 
+// ---------------------------------------------------------------
+// 카테고리 종합 페이지(today-chicken / today-pizza / today-burger)의 브랜드 순위
+//  · 브랜드별로 묶는다. 묶는 기준은 홈(app.html)의 BRAND_ALIASES 와 같은 표(표기 차이를 한 브랜드로 본다).
+//    두 표가 어긋나지 않도록 회귀 테스트가 비교한다.
+//  · 그 카테고리에 속한 "오늘 유효한" 할인 중 브랜드별 최대 금액으로 정렬한다(live 는 이미 카테고리 필터를 거친 행).
+//  · 동점은 브랜드명(코드포인트 순)으로 고정한다. 에어테이블/캐시의 행 순서가 바뀌어도 결과가 달라지지 않는다.
+// ---------------------------------------------------------------
+const BRAND_ALIASES = {
+  'bhc': 'BHC', 'bhc치킨': 'BHC',
+  'bbq': 'BBQ', 'bbq치킨': 'BBQ',
+  '오븐마루': '오븐마루', '오븐마루치킨': '오븐마루',
+};
+function brandListKey(name){
+  const cleaned = String(name).trim().toLowerCase().replace(/\s+/g, '');
+  return BRAND_ALIASES[cleaned] || cleaned;
+}
+function brandListName(name){
+  const cleaned = String(name).trim().toLowerCase().replace(/\s+/g, '');
+  return BRAND_ALIASES[cleaned] || String(name).trim();
+}
+function cmpText(a, b){ return a < b ? -1 : (a > b ? 1 : 0); }
+
+// 같은 브랜드의 여러 행 중 대표 행: 금액 큰 순 → 앱 순서 → 종료일 빠른 순 → 이름 → 최소주문금액(작은 순).
+function cmpBrandBestRow(a, b){
+  return (b.amount - a.amount)
+    || (PLATFORM_ORDER.indexOf(a.app[0]) - PLATFORM_ORDER.indexOf(b.app[0]))
+    || cmpText(a.endDate || '9999-99-99', b.endDate || '9999-99-99')
+    || cmpText(a.name, b.name)
+    || ((a.minOrder || 0) - (b.minOrder || 0));
+}
+
+// 반환: 브랜드 순위 전체(자르지 않음). 각 항목은 요약 문구(renderTodaySummary)가 쓰는 group 모양을 함께 가진다.
+function rankBrandsForCategory(live){
+  const best = new Map();
+  live.forEach(d => {
+    const key = brandListKey(d.name);
+    const cur = best.get(key);
+    if (!cur || cmpBrandBestRow(d, cur) < 0) best.set(key, d);
+  });
+  const ranked = Array.from(best.entries()).map(([key, row]) => {
+    const app = row.app[0];
+    return {
+      key, row, app, name: brandListName(row.name), maxAmount: row.amount,
+      apps: { [app]: row.amount },
+      gacha: { [app]: !!row.isRandom },
+      gachaAmounts: { [app]: row.randomAmounts || [row.amount] },
+    };
+  });
+  ranked.sort((a, b) => (b.maxAmount - a.maxAmount) || cmpText(a.name, b.name) || cmpText(a.key, b.key));
+  return ranked;
+}
+
+// 목록 제목 + 홈 전체목록 링크. 자른 경우에만 "상위 N개 브랜드"라고 쓰고, 다 보여주면 전체 개수를 쓴다.
+function renderCategoryListHeader(pageKey, total, shown){
+  const def = PAGE_DEFS[pageKey];
+  const label = TODAY_SUMMARY_LABEL[pageKey];
+  const truncated = total > shown;
+  const title = truncated ? `오늘 ${label} 할인 상위 ${shown}개 브랜드` : `오늘 ${label} 할인 ${total}개 브랜드`;
+  const sub = truncated ? `브랜드별 최대 할인금액 순 · 전체 ${total}개 브랜드 중` : '브랜드별 최대 할인금액 순';
+  // 홈은 /?category=치킨 처럼 카테고리를 받아 해당 필터가 선택된 전체 목록을 연다(app.html consumeCategoryDeepLink).
+  const href = `/?category=${encodeURIComponent(def.category)}`;
+  return `<div class="category-list-header" style="margin:20px 0 8px;">
+    <h2 style="font-size:16px; margin:0 0 4px; color:${TEXT};">${escapeHtml(title)}</h2>
+    <p style="font-size:12px; color:${MUTED}; margin:0 0 6px;">${escapeHtml(sub)}</p>
+    <p style="margin:0;"><a href="${href}" style="color:${PRIMARY}; font-weight:600; font-size:13px; text-decoration:none;">${escapeHtml(label)} 할인 전체 ${total}개 브랜드 보기 →</a></p>
+  </div>`;
+}
+
 // today-delivery/chicken/pizza/burger-discount 4개 페이지 전용 카테고리 라벨.
 // PAGE_DEFS의 h1/intro를 재사용하지 않는 이유: 문장 안에 자연스럽게 들어갈 짧은 명사형이 필요해서.
 const TODAY_SUMMARY_LABEL = {
@@ -949,7 +1038,11 @@ function renderTodaySummary(pageKey, live){
   const label = TODAY_SUMMARY_LABEL[pageKey];
   if (!label || !live.length) return '';
 
-  const groups = groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount);
+  // 카테고리 종합 페이지는 목록과 같은 브랜드 기준(별칭 반영)으로 센다 — "총 N곳"과 목록/홈 카드 수가 어긋나지 않게.
+  const summaryDef = PAGE_DEFS[pageKey];
+  const groups = (summaryDef && summaryDef.category)
+    ? rankBrandsForCategory(live)
+    : groupByBrand(live).sort((a, b) => b.maxAmount - a.maxAmount);
   const top1 = groups[0];
   const bestApp = (g) => PLATFORM_ORDER.find(a => g.apps[a] === g.maxAmount);
   const gachaSuffix = (g, a) => {
@@ -1038,6 +1131,17 @@ async function renderPage(pageKey, discounts){
       + renderTopEditorComment(pageKey, live, null)
       + renderRelatedLinksSection(pageKey);
     listItems = sorted.map(d => `${d.name} - ${fmtWon(d.amount)} 할인`);
+  } else if (def.category){
+    // 카테고리 종합 페이지(치킨/피자/버거): 브랜드별로 묶고 브랜드별 최대 금액 순 상위 def.limit 개.
+    const ranked = rankBrandsForCategory(live);
+    const shownList = ranked.slice(0, def.limit).map(g => ({ ...g.row, name: `${g.name} (${APP_SHORT[g.app]})` }));
+    bodyHtml = renderTodaySummary(pageKey, live)
+      + (shownList.length
+        ? renderCategoryListHeader(pageKey, ranked.length, shownList.length) + renderSingleAppList(shownList)
+        : `<p style="color:${MUTED};">현재 진행 중인 할인 정보가 없어요. 잠시 후 다시 확인해주세요.</p>`)
+      + renderTopEditorComment(pageKey, live, null)
+      + renderRelatedLinksSection(pageKey);
+    listItems = shownList.map(d => `${d.name} - ${fmtWon(d.amount)} 할인`);
   } else {
     const sorted = live.slice().sort((a, b) => b.amount - a.amount).slice(0, def.limit).map(d => ({ ...d, name: `${d.name} (${APP_SHORT[d.app[0]]})` }));
     const summaryHtml = renderTodaySummary(pageKey, live);
@@ -1072,7 +1176,7 @@ async function renderPage(pageKey, discounts){
   // 3단계로, 그 외 페이지는 "홈 > 현재 페이지" 2단계로 만든다. 새 URL/새 페이지를 만들지 않는다.
   const breadcrumbItems = [{ name: '홈', url: `${SITE_URL}/` }];
   if (def.singleBrand){
-    const categoryPage = CATEGORY_TODAY_PAGE[BRAND_CATEGORY[pageKey]];
+    const categoryPage = CATEGORY_TODAY_PAGE[brandPrimaryCategory(pageKey)];   // 대표 카테고리만(맘스터치=버거)
     if (categoryPage){
       breadcrumbItems.push({ name: PAGE_DEFS[categoryPage.pageKey].h1, url: `${SITE_URL}/${categoryPage.pageKey}` });
     }
@@ -1242,10 +1346,9 @@ function baseBrandName(name){
 //           여러 개 있는지" 판정에는 groups(앱당 최대값 1개로 뭉개짐)로는 알 수 없어서 필요.
 function renderBrandInsight(pageKey, groups, live){
   if (!groups.length){
-    const categoryPage = CATEGORY_TODAY_PAGE[BRAND_CATEGORY[pageKey]];
-    const categoryLinkHtml = categoryPage
-      ? `<p style="font-size:13px; margin:8px 0 0;"><a href="/${categoryPage.pageKey}" style="color:${PRIMARY}; font-weight:600; text-decoration:none;">오늘 확인 가능한 ${escapeHtml(categoryPage.label)} 할인 전체 보기 →</a></p>`
-      : '';
+    const categoryLinkHtml = brandCategories(pageKey).map(c => CATEGORY_TODAY_PAGE[c]).filter(Boolean)
+      .map(categoryPage => `<p style="font-size:13px; margin:8px 0 0;"><a href="/${categoryPage.pageKey}" style="color:${PRIMARY}; font-weight:600; text-decoration:none;">오늘 확인 가능한 ${escapeHtml(categoryPage.label)} 할인 전체 보기 →</a></p>`)
+      .join('');
     return `<section class="brand-insight" style="margin:16px 0; padding:14px 16px; background:${SURFACE}; border-radius:8px; border:1px solid ${LINE};">
       <h2 style="font-size:14px; margin:0 0 4px; color:${TEXT};">오늘의 할인 체크포인트</h2>
       <p style="font-size:13px; color:${MUTED}; margin:0;">현재 확인된 할인은 없지만 할인 정보는 변경될 수 있으니 나중에 다시 확인해보세요.</p>
@@ -1454,25 +1557,38 @@ function renderNotifyCta(brandLabel){
   </section>`;
 }
 
+// 브랜드가 속한 카테고리마다 "오늘의 OO 할인" 섹션을 하나씩 만든다(맘스터치: 버거, 치킨).
 function renderCrossLinkSection(currentKey){
-  const category = BRAND_CATEGORY[currentKey];
-  if (!category) return '';
-  const siblings = Object.keys(BRAND_CATEGORY).filter(k => BRAND_CATEGORY[k] === category && k !== currentKey);
-  if (!siblings.length) return '';
-  const chips = siblings.map(k => `<a href="/${k}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)}</a>`).join('');
-  return `<section style="margin:28px 0;">
+  return brandCategories(currentKey).map(category => {
+    const siblings = (CATEGORY_BRAND_PAGES[category] || []).filter(k => k !== currentKey);
+    if (!siblings.length) return '';
+    const chips = siblings.map(k => `<a href="/${k}" style="display:inline-block; margin:0 6px 8px 0; padding:8px 14px; border-radius:8px; background:${CARD}; border:1px solid ${LINE}; color:${TEXT}; font-size:13px; font-weight:600; text-decoration:none;">${escapeHtml(NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)}</a>`).join('');
+    return `<section style="margin:28px 0;">
     <h2 style="font-size:16px; margin:0 0 10px;">오늘의 ${escapeHtml(category)} 할인</h2>
     <div>${chips}</div>
   </section>`;
+  }).join('');
 }
 
 // 카테고리(치킨/피자/버거) → 그 카테고리에 속한 singleBrand 페이지 키 목록. BRAND_CATEGORY를
 // 거꾸로 뒤집은 것뿐이라 새 데이터를 만들지 않는다.
+// 여러 카테고리에 속한 브랜드(맘스터치)는 각 카테고리 목록에 한 번씩 들어간다. 같은 목록 안 중복은 없다.
 const CATEGORY_BRAND_PAGES = {};
-Object.entries(BRAND_CATEGORY).forEach(([pageKey, category]) => {
-  if (!CATEGORY_BRAND_PAGES[category]) CATEGORY_BRAND_PAGES[category] = [];
-  CATEGORY_BRAND_PAGES[category].push(pageKey);
+Object.keys(BRAND_CATEGORY).forEach(pageKey => {
+  brandCategories(pageKey).forEach(category => {
+    if (!CATEGORY_BRAND_PAGES[category]) CATEGORY_BRAND_PAGES[category] = [];
+    if (!CATEGORY_BRAND_PAGES[category].includes(pageKey)) CATEGORY_BRAND_PAGES[category].push(pageKey);
+  });
 });
+
+// 카테고리 종합 페이지(today-*)에 보여줄 브랜드 링크: 앞에서 limit 개 + 여러 카테고리에 걸친 브랜드(항상 포함).
+// 여러 카테고리 브랜드가 순서 때문에 한쪽 목록에서만 빠지는 일이 없게 한다.
+function pickCategoryBrandPages(category, limit = 5){
+  const pages = CATEGORY_BRAND_PAGES[category] || [];
+  const picked = pages.slice(0, limit);
+  pages.forEach(k => { if (brandCategories(k).length > 1 && !picked.includes(k)) picked.push(k); });
+  return picked;
+}
 
 // 카테고리(치킨) → 앱 비교 페이지. 현재 PAGE_DEFS에 실제로 존재하는 것만 연결한다(피자/버거는
 // 전용 앱비교 페이지가 없으므로 링크하지 않음 — 존재하지 않는 URL을 만들어내지 않기 위함).
@@ -1511,22 +1627,26 @@ function renderRelatedLinksSection(pageKey){
     ];
   } else if (def.singleBrand){
     // 브랜드 페이지 → 같은 카테고리 today 종합 페이지 + (있으면) 앱비교 페이지
-    const category = BRAND_CATEGORY[pageKey];
-    const todayPage = CATEGORY_TODAY_PAGE[category];
-    const comparePage = CATEGORY_APP_COMPARE_PAGE[category];
-    if (!todayPage && !comparePage) return '';
+    // 브랜드가 속한 모든 카테고리의 전체 보기(+앱 비교) 링크. 같은 href 는 한 번만.
+    const seenHref = new Set();
+    brandCategories(pageKey).forEach(category => {
+      const todayPage = CATEGORY_TODAY_PAGE[category];
+      const comparePage = CATEGORY_APP_COMPARE_PAGE[category];
+      if (todayPage && !seenHref.has(todayPage.pageKey)){ seenHref.add(todayPage.pageKey); chips.push(linkChip(`/${todayPage.pageKey}`, `오늘 ${todayPage.label} 할인 전체 보기`)); }
+      if (comparePage && !seenHref.has(comparePage)){ seenHref.add(comparePage); chips.push(linkChip(`/${comparePage}`, NAV_LABEL[comparePage])); }
+    });
+    if (!chips.length) return '';
     title = '함께 보면 좋아요';
-    if (todayPage) chips.push(linkChip(`/${todayPage.pageKey}`, `오늘 ${todayPage.label} 할인 전체 보기`));
-    if (comparePage) chips.push(linkChip(`/${comparePage}`, NAV_LABEL[comparePage]));
   } else {
     // today-* 4페이지 → 앱별 페이지 4개 + 같은 카테고리 브랜드 페이지(있는 경우만, 최대 5개)
-    const label = TODAY_SUMMARY_LABEL[pageKey];
-    const brandPages = CATEGORY_BRAND_PAGES[label] || [];
+    // 예전에는 TODAY_SUMMARY_LABEL('햄버거')로 CATEGORY_BRAND_PAGES('버거')를 조회해서 버거 페이지에는
+    // 브랜드 링크 영역이 아예 나오지 않았다. 카테고리 값(def.category)으로 직접 조회한다.
+    const brandPages = def.category ? pickCategoryBrandPages(def.category) : [];
     if (!brandPages.length && pageKey !== 'today-delivery-discount') return '';
     title = '앱/브랜드별로 자세히 보기';
     chips = [
       ...Object.values(SINGLE_APP_PAGE_BY_APP).map(k => linkChip(`/${k}`, NAV_LABEL[k])),
-      ...brandPages.slice(0, 5).map(k => linkChip(`/${k}`, NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)),
+      ...brandPages.map(k => linkChip(`/${k}`, NAV_LABEL[k] || (PAGE_DEFS[k] && PAGE_DEFS[k].h1) || k)),
     ];
   }
 

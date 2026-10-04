@@ -7,6 +7,13 @@
       "includeFiles": "app.html"
     }
   },
+  "redirects": [
+    {
+      "source": "/(tests|tools)(/.*)?",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/",
