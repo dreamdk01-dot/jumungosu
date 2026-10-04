@@ -1792,6 +1792,7 @@
             <a href="/jadam-discount" class="footer-link" style="color:var(--muted);">자담치킨</a>
             <a href="/pooradak-discount" class="footer-link" style="color:var(--muted);">푸라닭</a>
             <a href="/nene-discount" class="footer-link" style="color:var(--muted);">네네치킨</a>
+            <a href="/momstouch-discount" class="footer-link" style="color:var(--muted);">맘스터치</a>
           </div>
         </div>
 
@@ -4179,6 +4180,24 @@
     updateChipStyles('[data-filter-app]', 'filter-app', activeAppFilters, APP_COLOR);
     revealDiscountList();
     renderDiscountList();
+  }
+
+  // [SEO → 홈 전체목록 연결] SEO 카테고리 페이지(/today-chicken-discount 등)의 "전체 보기" 링크가
+  // /?category=치킨 형태로 들어온다. 쉼표로 여러 개도 받고, 실제 존재하는 카테고리(CATEGORIES)만 인정한다
+  // (잘못된 값은 무시 → 필터 없는 기본 홈). 적용한 뒤에는 주소에서 category 만 지운다(utm/post 등 다른 쿼리는
+  // 그대로) — 새로고침/뒤로가기 때 이미 해제한 필터가 다시 강제되지 않게 한다. 홈 canonical 은 '/' 고정이라
+  // 이 쿼리 주소가 별도 페이지로 색인되지 않는다.
+  function consumeCategoryDeepLink(){
+    try {
+      const params = new URLSearchParams(location.search);
+      const raw = params.get('category');
+      if (raw === null) return [];
+      const picked = Array.from(new Set(raw.split(',').map(c => c.trim()).filter(c => CATEGORIES.includes(c))));
+      params.delete('category');
+      const qs = params.toString();
+      history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      return picked;
+    } catch (e){ return []; }
   }
 
   function toggleCategoryFilter(cat){
@@ -11153,6 +11172,10 @@
     history.replaceState({ tab: initialTab }, '', normalizedPath);
   })();
 
+  // 첫 렌더 전에 필터 상태만 먼저 정해 둔다 → 데이터가 도착해 처음 그려지는 목록이 바로 필터된 상태다(깜빡임 없음).
+  const deepLinkCategories = consumeCategoryDeepLink();
+  if (deepLinkCategories.length) activeCategoryFilters = deepLinkCategories;
+
   trackSiteVisit();
   setupMobileStickySearchObserver(); // [모바일 Sticky 검색]
   applySavedLoginEmail();
@@ -11185,6 +11208,11 @@
     // 이 경우 discounts 배열은 코드 내장 기본값 그대로이므로, 그 값으로라도 화면을 채운다.
     renderCategoryChips();
     renderDiscountList();
+    if (deepLinkCategories.length){
+      // 전체 목록 접힘을 풀고(칩 선택 상태는 위에서 이미 반영) 목록 위치로 이동 — 새 스크롤 로직 없이 기존 함수 재사용
+      revealDiscountList();
+      scrollToDiscountListSection();
+    }
     if (typeof renderTodayBrandLinks === 'function') renderTodayBrandLinks();
     // [실험판 v1] 안전장치 경로에서도 요약을 함께 채운다
     if (typeof renderHomeSummaryPanel === 'function') renderHomeSummaryPanel();
