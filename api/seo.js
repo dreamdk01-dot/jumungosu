@@ -512,6 +512,7 @@ const FIELD_ALIASES = {
   endDate: ['종료일', '할인종료일', '만료일', '종료 일', 'EndDate', 'End'],
   limitedTime: ['선착순 시간', '선착순시간', '선착순', 'LimitedTime'],
   isGacha: ['뽑기', '뽑기 여부', '뽑기여부', 'Gacha', 'Random'],
+  badge: ['대표이미지', '뱃지', '아이콘', '대표 이미지', 'Badge'],   // app.html 의 별칭과 같다
 };
 const PLATFORM_ALIASES = {
   baemin: ['배달의민족', '배민', 'baemin'],
@@ -559,6 +560,28 @@ function getTodayKST(){
   return kst.toISOString().slice(0, 10);
 }
 
+// [BRAND_INITIALS_BEGIN] — app.html 과 api/seo.js 에 같은 내용으로 둔다(tests/brand-initials.test.mjs 가 두 구현을 같은 표로 비교한다).
+// 대표이미지 칸에 보여줄 글자. 화면에 그릴 때만 계산하며 원본(에어테이블)·DB 에는 저장하지 않는다.
+//  - 대표이미지 값이 있으면 그 값을 쓴다(기존처럼 앞 2글자까지만 표시).
+//  - 값이 없거나(null/undefined) 빈 문자열·공백만 있으면(일반 공백·전각 공백·줄바꿈·탭·제로폭 문자 포함) 브랜드명 앞 2글자.
+//  - 브랜드명은 앞뒤 공백을 지운 뒤 2글자. 한 글자면 한 글자, 브랜드명도 비어 있으면 '?'.
+//  - 숫자는 글자로 인정한다(7 → '7'). 문자열이 아닌 값(배열·객체·참/거짓, 예: 첨부파일)은 글자가 아니므로 값이 없는 것으로 본다.
+//  - "두 글자"는 눈에 보이는 글자 기준: 이모지(서로게이트 쌍)는 한 글자, 자모가 분리된 한글(NFD)은 합쳐서(NFC) 센다.
+function badgeTextValue(v){
+  if (typeof v === 'number' && Number.isFinite(v)) v = String(v);
+  if (typeof v !== 'string') return '';
+  return v.replace(/^[\s\u200B-\u200D\u2060\uFEFF]+|[\s\u200B-\u200D\u2060\uFEFF]+$/g, '');
+}
+function hasBadgeText(v){ return badgeTextValue(v) !== ''; }
+function firstVisibleChars(text, n){ return Array.from(text.normalize('NFC')).slice(0, n).join(''); }
+function brandInitialText(rawBadge, brandName){
+  const manual = badgeTextValue(rawBadge);
+  if (manual) return firstVisibleChars(manual, 2);
+  const name = badgeTextValue(brandName);
+  return name ? firstVisibleChars(name, 2) : '?';
+}
+// [BRAND_INITIALS_END]
+
 function mapRecord(record){
   const f = record.fields || {};
   const name = (pickField(f, 'name') || '').toString().trim();
@@ -576,8 +599,9 @@ function mapRecord(record){
   const endDate = endDateRaw ? endDateRaw.toString().slice(0, 10) : null;
   const limitedTime = (pickField(f, 'limitedTime') || '').toString().trim() || null;
   const isGacha = pickField(f, 'isGacha') === true; // Airtable 체크박스는 체크 시 true
+  const badgeField = pickField(f, 'badge');         // 대표이미지(원본 값). 표시 글자는 brandInitialText()가 정한다
 
-  return { name, app: [app], category, amount, minOrder, startDate, endDate, limitedTime, isGacha, isRandom: false, randomAmounts: null };
+  return { name, app: [app], category, amount, minOrder, startDate, endDate, limitedTime, isGacha, isRandom: false, randomAmounts: null, badge: brandInitialText(badgeField, name), badgeManual: hasBadgeText(badgeField) };
 }
 
 // index.html의 판정과 동일하게, 시작일이 아직 안 됐으면(예: 브랜드데이를 며칠 전에 미리
@@ -640,7 +664,9 @@ function groupGachaRecords(list){
     }
     const sortedAmounts = rows.map(r => r.amount).sort((a, b) => a - b);
     const base = rows.slice().sort((a, b) => a.amount - b.amount)[0];
-    result.push({ ...base, amount: sortedAmounts[0], isRandom: true, randomAmounts: sortedAmounts });
+    // 가장 낮은 금액 행(base)만 남기면 다른 행에 직접 입력한 대표이미지가 사라지므로, 입력한 행이 있으면 그 값을 쓴다.
+    const manualRow = rows.find(r => r.badgeManual);
+    result.push({ ...base, ...(manualRow ? { badge: manualRow.badge, badgeManual: true } : {}), amount: sortedAmounts[0], isRandom: true, randomAmounts: sortedAmounts });
   });
 
   return result;
@@ -1671,7 +1697,7 @@ function renderReportCta(brandLabel){
 // api/home.js(홈 SSR)가 "오늘 배달 할인 / BEST3 / 오늘 할인 브랜드" 텍스트를 만들 때
 // 이미 검증된 이 파일의 표기 규칙(금액 포맷, HTML 이스케이프, 앱 표시명, 페이지 한글 라벨)을
 // 그대로 재사용하기 위함이며, 기존 함수의 동작은 전혀 바뀌지 않습니다.
-export { PAGE_DEFS, mapRecord, isLive, getTodayKST, fmtWon, escapeHtml, APP_LABEL, NAV_LABEL, groupGachaRecords };
+export { PAGE_DEFS, mapRecord, isLive, getTodayKST, fmtWon, escapeHtml, APP_LABEL, NAV_LABEL, groupGachaRecords, brandInitialText, hasBadgeText };
 
 export default async function handler(req, res){
   const pageKey = (req.query.page || '').toString();

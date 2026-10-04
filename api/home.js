@@ -37,6 +37,7 @@ import {
   escapeHtml,
   APP_LABEL,
   groupGachaRecords,
+  brandInitialText,
 } from './seo.js';
 
 const INDEX_HTML_PATH = path.join(process.cwd(), 'app.html');
@@ -163,7 +164,7 @@ function renderSsrBest3Desktop(list) {
       (d) => `
     <div class="rounded-md p-3 sm:p-4" style="background:var(--surface);">
       <div class="flex items-center gap-2 mb-1.5 sm:mb-3">
-        <div class="w-7 h-7 sm:w-9 sm:h-9 rounded font-mono text-[11px] sm:text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${escapeHtml((d.name || '').slice(0, 2))}</div>
+        <div class="w-7 h-7 sm:w-9 sm:h-9 rounded font-mono text-[11px] sm:text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary);">${escapeHtml(d.badge || brandInitialText(null, d.name))}</div>
         <p class="font-bold text-sm sm:text-base leading-tight">${escapeHtml(d.name)}</p>
       </div>
       <p class="font-mono text-lg sm:text-2xl font-bold mb-1 sm:mb-2" style="color:var(--primary);">${fmtWon(d.amount)} 할인</p>

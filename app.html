@@ -2711,6 +2711,28 @@
     { name:'청년피자', app:'coupang', category:['피자'], prefix:'', amount:7000, periodType:'주간', expiry:'7.19', type:['배달','포장'] },
   ];
 
+  // [BRAND_INITIALS_BEGIN] — app.html 과 api/seo.js 에 같은 내용으로 둔다(tests/brand-initials.test.mjs 가 두 구현을 같은 표로 비교한다).
+  // 대표이미지 칸에 보여줄 글자. 화면에 그릴 때만 계산하며 원본(에어테이블)·DB 에는 저장하지 않는다.
+  //  - 대표이미지 값이 있으면 그 값을 쓴다(기존처럼 앞 2글자까지만 표시).
+  //  - 값이 없거나(null/undefined) 빈 문자열·공백만 있으면(일반 공백·전각 공백·줄바꿈·탭·제로폭 문자 포함) 브랜드명 앞 2글자.
+  //  - 브랜드명은 앞뒤 공백을 지운 뒤 2글자. 한 글자면 한 글자, 브랜드명도 비어 있으면 '?'.
+  //  - 숫자는 글자로 인정한다(7 → '7'). 문자열이 아닌 값(배열·객체·참/거짓, 예: 첨부파일)은 글자가 아니므로 값이 없는 것으로 본다.
+  //  - "두 글자"는 눈에 보이는 글자 기준: 이모지(서로게이트 쌍)는 한 글자, 자모가 분리된 한글(NFD)은 합쳐서(NFC) 센다.
+  function badgeTextValue(v){
+    if (typeof v === 'number' && Number.isFinite(v)) v = String(v);
+    if (typeof v !== 'string') return '';
+    return v.replace(/^[\s\u200B-\u200D\u2060\uFEFF]+|[\s\u200B-\u200D\u2060\uFEFF]+$/g, '');
+  }
+  function hasBadgeText(v){ return badgeTextValue(v) !== ''; }
+  function firstVisibleChars(text, n){ return Array.from(text.normalize('NFC')).slice(0, n).join(''); }
+  function brandInitialText(rawBadge, brandName){
+    const manual = badgeTextValue(rawBadge);
+    if (manual) return firstVisibleChars(manual, 2);
+    const name = badgeTextValue(brandName);
+    return name ? firstVisibleChars(name, 2) : '?';
+  }
+  // [BRAND_INITIALS_END]
+
   let nextDiscountId = rawDiscounts.length + 1;
   // source:'seed' — 코드에 하드코딩된 초기 데이터임을 표시. Airtable 연동이 성공하면
   // 이 항목들은 Airtable에서 받아온 최신 데이터로 자동 교체됩니다. (loadDiscountsFromAirtable 참고)
@@ -2725,7 +2747,8 @@
     prefix: r.prefix,
     periodType: r.periodType,
     expiry: r.expiry,
-    badge: r.name.slice(0, 2),
+    badge: brandInitialText(null, r.name),
+    badgeManual: false,
     isRandom: r.isRandom || false,
     randomAmounts: r.randomAmounts || null,
     minAmount: typeof r.minAmount === 'number' ? r.minAmount : null,
@@ -2747,7 +2770,7 @@
   //   - 최소주문금액   (Number, 선택)      ex) 18000  (없으면 비워둠)
   //   - 시작일         (Date, 선택)        비워두면 즉시 노출
   //   - 종료일         (Date, 선택)        비워두면 상시 할인으로 표시
-  //   - 대표이미지     (Single line text, 선택, 2글자) 비워두면 브랜드명 앞 2글자 사용
+  //   - 대표이미지     (Single line text, 선택, 2글자) 비워두거나 공백만 있으면 브랜드명 앞 2글자를 자동 표시(brandInitialText)
   //   - 선착순 시간    (Single line text, 선택) ex) "17시" / "매일 09시"  ← 비워두면 상시 할인으로 표시
   //   - 뽑기           (Checkbox, 선택)    체크하면 "뽑기(랜덤 당첨)" 항목으로 처리됩니다.
   //                                           같은 브랜드+플랫폼+카테고리로 여러 금액을 각각 행으로 나눠 등록하면
@@ -2866,7 +2889,7 @@
     const categoryRaw = (pickAirtableField(f, 'category') || '').toString().trim();
     const category = categoryRaw ? categoryRaw.split(',').map(c => c.trim()).filter(Boolean) : ['기타'];
     const minOrderNum = parseAirtableNumber(pickAirtableField(f, 'minOrder'));
-    const badgeRaw = (pickAirtableField(f, 'badge') || '').toString().trim();
+    const badgeField = pickAirtableField(f, 'badge');   // 대표이미지(원본 값 그대로). 표시 글자는 brandInitialText()가 정한다
     const startDateRaw = pickAirtableField(f, 'startDate');
     const endDateRaw = pickAirtableField(f, 'endDate');
     const limitedTimeRaw = (pickAirtableField(f, 'limitedTime') || '').toString().trim();
@@ -2883,7 +2906,8 @@
       prefix: '',
       periodType: '',
       expiry: '',
-      badge: (badgeRaw || name).slice(0, 2),
+      badge: brandInitialText(badgeField, name),
+      badgeManual: hasBadgeText(badgeField),   // 직접 입력한 값인지(같은 브랜드의 여러 행 중 입력값을 우선하기 위함)
       isRandom: false,           // 뽑기 그룹핑은 아래 groupGachaDiscounts()에서 후처리로 채워짐
       randomAmounts: null,
       minAmount: null,
@@ -2934,8 +2958,11 @@
       }
       const sortedAmounts = rows.map(r => r.amount).sort((a, b) => a - b);
       const base = rows.slice().sort((a, b) => a.amount - b.amount)[0]; // 가장 낮은(확정) 금액 행을 대표로 사용
+      // 가장 낮은 금액 행(base)만 남기면 다른 행에 직접 입력한 대표이미지가 사라지므로, 입력한 행이 있으면 그 값을 쓴다.
+      const manualRow = rows.find(r => r.badgeManual);
       result.push({
         ...base,
+        ...(manualRow ? { badge: manualRow.badge, badgeManual: true } : {}),
         amount: sortedAmounts[0],
         isRandom: true,
         randomAmounts: sortedAmounts,
@@ -4484,9 +4511,12 @@
     list.forEach(d => {
       const key = brandGroupKey(d.name);
       if (!map.has(key)){
-        map.set(key, { key, displayName: brandDisplayName(d.name), badge: d.badge, badges: [] });
+        map.set(key, { key, displayName: brandDisplayName(d.name), badge: d.badge, badgeManual: !!d.badgeManual, badges: [] });
       }
       const group = map.get(key);
+      // 같은 브랜드의 여러 행 중 대표이미지를 직접 입력한 행이 있으면 그 값을 쓴다(첫 행이 비었다는 이유로 입력값이 무시되지 않게).
+      // 전부 입력했거나 전부 비어 있으면 예전처럼 첫 행의 값이다.
+      if (!group.badgeManual && d.badgeManual){ group.badge = d.badge; group.badgeManual = true; }
       d.app.forEach(a => {
         group.badges.push({
           app: a, id: d.id, type: d.type || [], sortValue: getSortValue(d), discountText: formatDiscount(d), isRandom: !!d.isRandom,
@@ -4599,7 +4629,7 @@
         <button type="button" class="discount-card-header w-full text-left p-3 sm:p-4" aria-expanded="${isExpanded}" aria-controls="${detailId}"
              onclick="toggleDiscountCardExpand('${jsKey}')">
           <div class="flex items-start gap-3">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary); opacity:0.85;">${group.badge.slice(0,2)}</div>
+            <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded font-mono text-xs flex items-center justify-center font-bold" style="background:var(--card-alt); color:var(--primary); opacity:0.85;">${escapeHtml(group.badge)}</div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-2">
                 <p class="font-semibold text-sm sm:text-base truncate" style="color:var(--text);">${escapeHtml(group.displayName)}</p>
